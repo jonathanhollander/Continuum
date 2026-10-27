@@ -1,5 +1,6 @@
 <script lang="ts">
     import { fade, slide } from "svelte/transition";
+    import { onMount, onDestroy } from "svelte";
     import {
         Compass,
         CreditCard,
@@ -9,14 +10,39 @@
         CirclePlus,
         ArrowRight,
     } from "lucide-svelte";
-    import { documentStore } from "$lib/stores/documentStore.svelte";
+    import { documentSync } from "$lib/stores/documentStore.svelte";
     import { financialAssetsSync, isDebt } from "$lib/stores/financialAssetsStore.svelte";
-    import { medicalStore } from "$lib/stores/medicalStore.svelte";
+    import { directiveSync } from "$lib/stores/medicalStore.svelte";
+    import { auth } from "$lib/stores/auth";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
 
-    let activeScenario: "none" | "wallet" | "medical" | "passing" = "none";
-    let simulationState: "idle" | "running" | "complete" = "idle";
+    type Scenario = "wallet" | "medical" | "passing";
+    let activeScenario: "none" | Scenario = "none";
+    let simulationState: "idle" | "running" | "paused" | "complete" = "idle";
     let report: any[] = [];
     let overallStatus: "pass" | "fail" | "warn" = "pass";
+    let runVersion = 0;
+    let runOwner = captureSession();
+    let pausedSources: { name: string; path: string }[] = [];
+    let pauseMessage = "";
+
+    onMount(() => auth.subscribe(() => {
+        if (activeScenario !== "none" && !isCurrentSession(runOwner)) {
+            runVersion++;
+            report = [];
+            pausedSources = [];
+            pauseMessage = "The signed-in account changed. Try Again to read this scenario's records for the current account.";
+            simulationState = "paused";
+        }
+    }));
+    onDestroy(() => { runVersion++; });
+
+    const scenarioSources = (id: Scenario) => [
+        { manager: documentSync, name: "Document Vault", path: "/modules/legal-documents" },
+        id === "medical"
+            ? { manager: directiveSync, name: "Medical directives", path: "/modules/medical" }
+            : { manager: financialAssetsSync, name: "Financial Accounts", path: "/modules/financial-accounts" },
+    ];
 
     const named = (d: any, pattern: RegExp) =>
         pattern.test(`${d?.name ?? ""} ${d?.title ?? ""}`.toLowerCase());
@@ -48,21 +74,31 @@
         },
     ];
 
-    async function runSimulation(id: "wallet" | "medical" | "passing") {
+    async function runSimulation(id: Scenario) {
+        const version = ++runVersion;
+        const owner = captureSession();
+        runOwner = owner;
         activeScenario = id;
         simulationState = "running";
         report = [];
+        pausedSources = [];
+        pauseMessage = "";
 
-        // The records saved in the Document Vault, Financial Accounts and Medical pages
-        await Promise.allSettled([
-            documentStore.sync(),
-            financialAssetsSync.sync(),
-            medicalStore.sync(),
-        ]);
-        if (activeScenario !== id) return; // went back while the records loaded
-        const docs: any[] = documentStore.items;
-        const assets: any[] = financialAssetsSync.items.filter((a: any) => !a.is_closed);
-        const directives: any[] = medicalStore.directives;
+        const sources = scenarioSources(id);
+        await Promise.allSettled(sources.map(({ manager }) => manager.sync()));
+        if (version !== runVersion || activeScenario !== id || !isCurrentSession(owner)) return;
+        // SyncManager catches read failures. A settled promise or a populated cache
+        // alone does not establish that this scenario's required sources answered.
+        pausedSources = sources.filter(({ manager }) => !manager.lastSync || manager.status !== "synced")
+            .map(({ name, path }) => ({ name, path }));
+        if (pausedSources.length > 0) {
+            pauseMessage = "These sources have not been confirmed, so this walkthrough has no result yet. Existing device records are kept. Try Again to refresh the selected scenario.";
+            simulationState = "paused";
+            return;
+        }
+        const docs: any[] = documentSync.items;
+        const assets: any[] = id === "medical" ? [] : financialAssetsSync.items.filter((a: any) => !a.is_closed);
+        const directives: any[] = id === "medical" ? directiveSync.items : [];
         const checks: any[] = [];
 
         if (id === "wallet") {
@@ -161,8 +197,12 @@
     }
 
     function reset() {
+        runVersion++;
         activeScenario = "none";
         simulationState = "idle";
+        report = [];
+        pausedSources = [];
+        pauseMessage = "";
     }
 </script>
 
@@ -263,10 +303,25 @@
                                 Looking over your plan
                             </p>
                             <p class="text-muted-foreground">
-                                Reading your Document Vault, Financial Accounts
-                                and Medical records…
+                                Reading your Document Vault and {activeScenario === "medical" ? "medical directives" : "Financial Accounts"}…
                             </p>
                         </div>
+                    </div>
+                {:else if simulationState === "paused"}
+                    <div class="max-w-2xl mx-auto space-y-6" role="status" data-testid="simulation-paused">
+                        <h2 class="font-serif font-bold text-3xl text-foreground">Records Not Confirmed</h2>
+                        <p class="text-muted-foreground">{pauseMessage}</p>
+                        {#if pausedSources.length > 0}
+                            <ul class="space-y-2">
+                                {#each pausedSources as source}
+                                    <li><a class="text-primary underline underline-offset-2" href={source.path}>{source.name}</a></li>
+                                {/each}
+                            </ul>
+                        {/if}
+                        <button
+                            on:click={() => activeScenario !== "none" && runSimulation(activeScenario)}
+                            class="px-5 py-3 rounded-lg bg-primary text-primary-foreground font-bold hover:bg-primary-hover"
+                        >Try Again</button>
                     </div>
                 {:else if simulationState === "complete"}
                     <div class="max-w-2xl mx-auto" in:slide>
