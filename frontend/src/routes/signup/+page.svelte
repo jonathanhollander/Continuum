@@ -6,6 +6,7 @@
     import { beginSession, captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
     import { API_BASE_URL } from "$lib/config";
     import { apiPost } from "$lib/api/client";
+    import { accessStatus, refreshAccessStatus } from "$lib/services/accessStatus";
     import { notifications } from "$lib/stores/notificationStore";
     import { startRegistration } from "@simplewebauthn/browser";
     import {
@@ -46,7 +47,7 @@
     async function retryPasskeyRegistration() {
         const owner = signupOwner;
         const pending = pendingRegistration;
-        if (isLoading || !owner || !isCurrentSession(owner, true)) return;
+        if ($accessStatus.phase !== "ready" || !$accessStatus.status?.signup_enabled || isLoading || !owner || !isCurrentSession(owner, true)) return;
         if (!pending) {
             step = "email";
             return;
@@ -100,7 +101,7 @@
     });
 
     async function handleEmailSubmit() {
-        if (isLoading) return;
+        if ($accessStatus.phase !== "ready" || !$accessStatus.status?.signup_enabled || isLoading) return;
         if (!email) {
             notifications.showError({
                 message: "Your email address will help us begin.",
@@ -177,7 +178,7 @@
     }
 
     async function handlePasskeyRegistration(options: any, owner = signupOwner, pending = pendingRegistration) {
-        if (!owner || !pending || !isCurrentSession(owner, true) || pendingRegistration !== pending) return;
+        if ($accessStatus.phase !== "ready" || !$accessStatus.status?.signup_enabled || !owner || !pending || !isCurrentSession(owner, true) || pendingRegistration !== pending) return;
         isLoading = true;
         passkeyFailed = false;
 
@@ -245,6 +246,7 @@
     <title>Sign Up - Continuum</title>
 </svelte:head>
 
+{#if $accessStatus.phase === "ready" && $accessStatus.status?.signup_enabled}
 <div
     class="min-h-screen surface-dark bg-background text-foreground flex items-center justify-center p-6 font-sans"
 >
@@ -436,4 +438,16 @@
         </div>
     </div>
 </div>
+{:else}
+<main class="min-h-screen bg-background text-foreground flex items-center justify-center p-6 font-sans">
+    <div class="max-w-lg space-y-6 text-center">
+        <h1 class="text-3xl font-serif font-bold">Continuum is private while it is being prepared</h1>
+        {#if $accessStatus.phase === "error"}
+            <p role="alert">Access status is unavailable. Try again when you are ready.</p>
+            <button class="text-primary font-semibold underline" on:click={() => refreshAccessStatus()}>Try again</button>
+        {:else if $accessStatus.phase === "loading"}<p role="status">Checking access…</p>{/if}
+        <a href={loginHref} class="block text-primary font-semibold underline">Sign in</a>
+    </div>
+</main>
+{/if}
 

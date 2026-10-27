@@ -86,6 +86,7 @@
 	import TakeBreakButton from "$lib/components/TakeBreakButton.svelte";
 	import MediaMigrationNotice from "$lib/components/MediaMigrationNotice.svelte";
 	import { accessibilityStore } from "$lib/stores/accessibilityStore";
+	import { accessStatus, refreshAccessStatus } from "$lib/services/accessStatus";
 
 	let { children } = $props();
 
@@ -173,6 +174,8 @@
 	// Recipient start page and the owner's preview (card X104): both read one server-filtered
 	// payload, so the owner's whole record set is left unsynced there until they move on.
 	let isRecipientRoute = $derived($page.url.pathname.startsWith("/for/"));
+	let isAccessBootstrapRoute = $derived($page.url.pathname === "/login" || $page.url.pathname === "/auth/verify");
+	let accessAllowed = $derived($accessStatus.phase === "ready" && $accessStatus.status?.access_allowed === true);
 
 	// Derived: Is this the Dashboard route? (needs dark background for glassmorphism)
 	let isDashboardRoute = $derived($page.url.pathname === "/dashboard");
@@ -197,12 +200,14 @@
 			lastSyncedToken = null;
 			clearAll();
 		}
-		if ($auth.token && !$auth.loading && $auth.token !== lastSyncedToken && !isRecipientRoute) {
+		if (accessAllowed && $auth.token && !$auth.loading && $auth.token !== lastSyncedToken && !isRecipientRoute) {
 			console.log("[Layout] Auth detected, starting global sync...");
 			lastSyncedToken = $auth.token;
 			// Card X142: the page's own stores first, the rest a moment later (see syncAll);
 			// the dashboard shows every module, so it takes them all at once.
 			syncAll({ everything: isDashboardRoute });
+			contextStore.refresh();
+			estateAudit.runAudit();
 			// Initialize overwhelm detector from user preference
 			if ($auth.user) {
 				overwhelmDetector.initialize(!!$auth.user.overwhelm_muted);
@@ -216,7 +221,7 @@
 		const state = $auth;
 		if (state.loading || !state.token || !state.isAuthenticated || !state.user) {
 			untrack(() => userPreferencesStore.reset());
-		} else if (!isRecipientRoute) {
+		} else if (accessAllowed && !isRecipientRoute) {
 			untrack(() => userPreferencesStore.init());
 		}
 	});
@@ -229,12 +234,6 @@
 	onMount(() => {
 		// Initialize auth store (load token from localStorage, fetch user)
 		auth.init();
-
-		// Initialize context-aware messaging from user profile
-		contextStore.refresh();
-
-		// Run audit on load
-		estateAudit.runAudit();
 
 		// Handoff pickup from the marketing CTA (/start?email=&lang=) only. The /start page reads
 		// the email itself; the account becomes active at sign-in (auth.ts), never from a URL.
@@ -299,7 +298,7 @@
 
 	$effect(() => {
 		// Navigation Guard & Auth Protection
-		if (!$auth.loading) {
+		if (!$auth.loading && accessAllowed) {
 			const isPublicRoute =
 				isWizardRoute || isMarketingRoute || isAuthRoute;
 
@@ -345,12 +344,23 @@
 {/snippet}
 
 <!-- Global Notification Container (appears on ALL pages, including auth) -->
-<NotificationContainer />
+{#if accessAllowed || isAccessBootstrapRoute}<NotificationContainer />{/if}
 
 <!-- Media Migration Notice (prompts IndexedDB → Cloud migration when needed) -->
-<MediaMigrationNotice />
+{#if accessAllowed}<MediaMigrationNotice />{/if}
 
-{#if $auth.loading}
+{#if !isAccessBootstrapRoute && !accessAllowed && $accessStatus.phase !== "loading"}
+	<main class="min-h-screen bg-background text-foreground flex items-center justify-center p-6 font-sans">
+		<div class="max-w-lg space-y-6 text-center">
+			<h1 class="text-3xl font-serif font-bold">Continuum is private while it is being prepared</h1>
+			{#if $accessStatus.phase === "error"}
+				<p role="alert" class="text-muted-foreground">Access status is unavailable. Try again when you are ready.</p>
+				<button class="rounded-xl bg-primary text-primary-foreground px-6 py-3 font-semibold" onclick={() => refreshAccessStatus()}>Try again</button>
+			{/if}
+			<a class="block text-primary font-semibold underline" href="/login">Sign in</a>
+		</div>
+	</main>
+{:else if $auth.loading || (!isAccessBootstrapRoute && !accessAllowed)}
 	<!-- Global Loading State -->
 	<div
 		class="min-h-screen bg-background flex flex-col items-center justify-center p-6 font-sans"
@@ -584,6 +594,7 @@
 	</div>
 {/if}
 
+{#if accessAllowed}
 {#if showCommandCenter}
 	<CommandCenter onclose={() => (showCommandCenter = false)} />
 {/if}
@@ -599,4 +610,5 @@
 
 {#if $magicTrigger}
 	<SuccessParticles />
+{/if}
 {/if}
