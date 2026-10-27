@@ -45,7 +45,6 @@
     import {
         contacts as contactsText,
         getEmptyStateMessage,
-        getActionLabel,
     } from "$lib/utils/contextualMessages";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import { readCustom } from "$lib/utils/customFields";
@@ -310,9 +309,9 @@
             ? "Important contacts and relationships to notify or consult"
             : contextStore.isFamily
               ? "Family and friends connected to the estate"
-              : module.title}
-        detailedDescription="This is more than a contact list—it's your circle of trust. Identify who should be notified and who can help with specific aspects of your estate, from lawyers to close friends."
-        whyMatters="In a crisis, your family needs to know exactly who to turn to. Having updated contact information for your support network gives your family a clear place to turn"
+              : "Family, friends and professional contacts"}
+        detailedDescription="Keep family, friends and professional contacts together. Use the directory to explain who can help and which records they hold. Use the call list to record whom to contact and what has happened."
+        whyMatters="Names, roles and practical notes help your family find the right person. Include legal and financial advisers using the existing roles and describe what each one can help with."
     />
 {/if}
 
@@ -329,13 +328,14 @@
             class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
         >
             <Plus size={18} />
-            {getActionLabel("add")}
+            Add contact
         </button>
     </div>
 
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">
+        <p class="text-sm text-muted-foreground">Describe how a named person can help, or the communication you want to prepare. Review any suggested wording before adding it to their contact notes or using it yourself.</p>
         <AIPromptBar context="contacts" />
     </div>
 
@@ -346,7 +346,7 @@
         >
             <div>
                 <div class="text-xs font-bold uppercase text-muted-foreground">
-                    Total Network
+                    Directory contacts
                 </div>
                 <div class="text-2xl font-bold text-foreground">
                     {contacts.length}
@@ -374,7 +374,7 @@
         >
             <div>
                 <div class="text-xs font-bold uppercase text-success">
-                    Notifications Confirmed
+                    Marked as notified
                 </div>
                 <div class="text-2xl font-bold text-success">
                     {contacts.filter((c) => c.notificationStatus === "Notified")
@@ -422,7 +422,7 @@
                     ? "<strong>Contact information is essential for estate administration.</strong> Phone records, address books and family members are good places to find contact details, when you feel ready.<br/><br/>Gathering these details helps each person hear in the right way."
                     : contextStore.isFamily
                       ? "<strong>Contact information will be helpful for coordinating with family and friends.</strong> Contacts gather here as details are shared.<br/><br/>If you have contact details to contribute, you can add them here."
-                      : "<strong>These are the people who should be notified, who can help, who need to know.</strong> With this list, your family knows who your lawyer is, who has your keys, and who should be at your bedside.<br/><br/>Creating this directory is a gift to whoever handles your affairs—they can reach the right people without searching old emails. Each person you add here removes one more burden from their shoulders."}
+                      : "<strong>Record the people your family may need to contact and what each one can help with.</strong> Include family, friends, legal and financial advisers, and people who hold important records or keys."}
                 encouragement={contextStore.isExecutor
                     ? "Begin gathering contact information at your own pace."
                     : contextStore.isFamily
@@ -430,7 +430,7 @@
                       : "Start with just one person—maybe your executor, spouse, or closest friend. You can build this over time."}
                 icon={Users}
                 iconClass="text-primary"
-                ctaLabel={getActionLabel("add")}
+                ctaLabel="Add contact"
                 onAction={openAdd}
             />
         {:else if activeTab === "call-list"}
@@ -440,9 +440,7 @@
                 >
                     <Shield class="shrink-0" size={20} />
                     <p>
-                        <strong>Caller Strategy:</strong> A gentle order: the people
-                        closest to your loved one hear directly, before the news
-                        travels further.
+                        <strong>Call order:</strong> Use the order you have chosen. Update each status after you make contact; the status buttons record your own update.
                     </p>
                 </div>
 
@@ -653,10 +651,8 @@
     <!-- Add Modal -->
     <Modal
         bind:open={showAddModal}
-        title={editingId !== null ? "Update their details" : "Who should we include?"}
-        description={editingId !== null
-            ? "Keep their details current so the right people are reached in the right way."
-            : "This person matters to you. By adding them here, you're ensuring they'll be included when the time comes—whether that means being notified, consulted, or gently remembered."}
+        title={editingId !== null ? "Update contact details" : "Record a contact"}
+        description="Record how to reach this person, what they can help with and when you would like your family to contact them. Use the call list to track your own updates."
         maxWidth="max-w-lg"
     >
         <div class="space-y-4">
@@ -772,8 +768,7 @@
                 </select>
                 <p class="text-sm text-foreground mt-2">{tierHint}</p>
                 <p class="text-xs text-muted-foreground mt-2">
-                    Think about how they'd want to hear the news. The
-                    people closest to you deserve to hear it directly.
+                    Choose when you want this person to hear. Pulse uses its own tier when you set one; otherwise it can use this call order. Review Pulse contacts for alert recipients.
                 </p>
             </div>
 
@@ -782,8 +777,8 @@
                             job={{job_id:aiJobId("contact", newContact, editingId)+":notes",document_title:newContact.name,source_facts:aiSourceFacts({name:newContact.name,relation:newContact.relation,role:newContact.role})}}
                     bind:value={newContact.notes}
                     context="contact"
-                    placeholder="e.g. 'Speak gently; they love hearing your voice'"
-                    label="Caller Notes"
+                    placeholder="What do they help with? Which records do they hold? How and when should your family contact them?"
+                    label="Contact and caller notes"
                     minHeight="100px"
                 />
             </div>

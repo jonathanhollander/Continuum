@@ -93,6 +93,7 @@
 
     // Modals
     let showAddModal = $state(false);
+    let exampleDraft = $state(false);
     let addType = $state<"transaction" | "maintenance" | "claim" | "account">(
         "transaction",
     );
@@ -103,18 +104,18 @@
     // Temp Form States
     let newTx = $state<Partial<AssetTransaction>>({
         type: "purchase",
-        amount: 0,
+        amount: undefined,
         description: "",
         date: new Date().toISOString().split("T")[0],
     });
     let newMaint = $state<Partial<MaintenanceLog>>({
         item: "",
-        cost: 0,
+        cost: undefined,
         date: new Date().toISOString().split("T")[0],
     });
     let newClaim = $state<Partial<InsuranceClaim>>({
         status: "pending",
-        amountClaimed: 0,
+        amountClaimed: undefined,
         dateFiled: new Date().toISOString().split("T")[0],
     });
     let newAccount = $state<Partial<DigitalAccount>>({
@@ -217,9 +218,10 @@
     }
 
     function resetForm() {
-        if (addType === "transaction") newTx = { type: "purchase", amount: 0, description: "", date: today() };
-        if (addType === "maintenance") newMaint = { item: "", cost: 0, date: today() };
-        if (addType === "claim") newClaim = { status: "pending", amountClaimed: 0, dateFiled: today() };
+        exampleDraft = false;
+        if (addType === "transaction") newTx = { type: "purchase", amount: undefined, description: "", date: today() };
+        if (addType === "maintenance") newMaint = { item: "", cost: undefined, date: today() };
+        if (addType === "claim") newClaim = { status: "pending", amountClaimed: undefined, dateFiled: today() };
         if (addType === "account") newAccount = { platform: "", username: "", preference: "memorialize", priority: "medium" };
         parsedCustomAttributes = {};
         editingId = null;
@@ -237,6 +239,7 @@
     };
 
     function startEdit(kind: "transaction" | "maintenance" | "claim", item: AssetTransaction | MaintenanceLog | InsuranceClaim) {
+        exampleDraft = false;
         const recordKey = `${kind}:${item.id}`;
         registryEdits.get(recordKey)?.release();
         registryEdits.delete(recordKey);
@@ -311,10 +314,10 @@
 >
     <!-- Header -->
     <LivingBlueprintHeader
-        title="Your Full Record"
-        subtitle="A fuller record of your assets, upkeep, and digital legacy"
-        detailedDescription="The Advanced Registry brings together all detailed records about your assets—purchase history, maintenance logs, insurance claims, and digital account management. This comprehensive documentation helps your family understand what you own and its complete history."
-        whyMatters="Detailed asset records give your family the history behind each asset. Your family will know when the roof was last inspected, what warranties still apply, and how to care for your digital footprint."
+        title="Additional records"
+        subtitle="Purchase history, maintenance, claims and online account wishes"
+        detailedDescription="Add the history and practical follow-up behind your main records: purchases, maintenance work, insurance claims and wishes for online accounts. Link the item or policy where a field is available, and name it clearly in your notes."
+        whyMatters="A dated record with its source and next question helps your family continue work already in progress. Account wishes use the same online accounts recorded in Digital Guardian."
     >
         <div class="flex items-center gap-4">
             <div class="relative w-full md:w-64">
@@ -352,6 +355,7 @@
 
 
     <!-- AI Concierge Drafting Assistant -->
+    <p class="text-sm text-muted-foreground">Describe one purchase, maintenance item, claim or account wish. Review the suggested wording, then add it to the record you save.</p>
     <AIPromptBar
         context="advanced-registry"
         promptSource="routes/modules/advanced-registry/+page.svelte:prompts"
@@ -442,9 +446,7 @@
                                 <td
                                     class="px-8 py-5 text-right font-black text-foreground font-mono"
                                 >
-                                    {tx.type === "sale"
-                                        ? "+"
-                                        : "-"}${tx.amount.toLocaleString()}
+                                    {tx.amount == null ? "Not recorded" : `${tx.type === "sale" ? "+" : "-"}$${tx.amount.toLocaleString()}`}
                                 </td>
                                 <td class="px-8 py-5 text-right">
                                     <button aria-label="Edit these details"
@@ -467,8 +469,8 @@
                 </table>
                 {#if filteredTransactions.length === 0}
                     <EmptyState
-                        title="Your financial story, documented"
-                        whyMatters="<strong>Asset transactions tell the story of your financial life—purchases, sales, transfers, and valuations.</strong> This record helps your family understand where each asset came from and who it is meant for."
+                        title="Record a purchase, sale or valuation"
+                        whyMatters="Use the supporting record to describe what happened, when it happened, the related item or account, and the recorded amount. Include the source in the description."
                         encouragement="Start with your most significant assets. You can add more details as you remember them."
                         icon={Repeat}
                         iconClass="text-primary"
@@ -477,7 +479,7 @@
                     />
                     <!-- Sample Data GhostRows -->
                     <div class="px-8 pb-8">
-                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Examples open a record for your own details</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <GhostRow
                                 name="Home Purchase - 123 Oak Street"
@@ -485,7 +487,8 @@
                                 type="Purchase"
                                 value={450000}
                                 onClick={() => {
-                                    newTx = { ...newTx, description: 'Home Purchase - 123 Oak Street', type: 'purchase', amount: 450000 };
+                                    exampleDraft = true;
+                                    newTx = { ...newTx, type: newTx.description ? newTx.type : 'purchase' };
                                     addType = 'transaction';
                                     showAddModal = true;
                                 }}
@@ -496,7 +499,8 @@
                                 type="Sale"
                                 value={18500}
                                 onClick={() => {
-                                    newTx = { ...newTx, description: 'Vehicle Sale - 2019 Honda Accord', type: 'sale', amount: 18500 };
+                                    exampleDraft = true;
+                                    newTx = { ...newTx, type: newTx.description ? newTx.type : 'sale' };
                                     addType = 'transaction';
                                     showAddModal = true;
                                 }}
@@ -507,7 +511,8 @@
                                 type="Valuation"
                                 value={525000}
                                 onClick={() => {
-                                    newTx = { ...newTx, description: 'Annual Property Valuation', type: 'valuation_update', amount: 525000 };
+                                    exampleDraft = true;
+                                    newTx = { ...newTx, type: newTx.description ? newTx.type : 'valuation_update' };
                                     addType = 'transaction';
                                     showAddModal = true;
                                 }}
@@ -557,7 +562,7 @@
                             >
                                 <span>{#if log.provider}Provider: {log.provider}{/if}</span>
                                 <span class="text-foreground font-black"
-                                    >${log.cost}</span
+                                    >{log.cost == null ? "Not recorded" : `$${log.cost}`}</span
                                 >
                             </div>
                             {#if log.nextDueDate}
@@ -574,7 +579,7 @@
                 {#if filteredMaintenance.length === 0}
                     <EmptyState
                         title="Keep your property running smoothly"
-                        whyMatters="<strong>Maintenance records are invaluable for whoever inherits your property.</strong> Knowing when the roof was last inspected, who services the HVAC, or when the septic was pumped helps them care for what you built and keeps warranties in view."
+                        whyMatters="Name the property or item, the work completed and who did it. Add a recorded follow-up date when one is known so your family can find the next step."
                         encouragement="Start with your most recent service call or inspection. The history will build over time."
                         icon={Wrench}
                         iconClass="text-primary"
@@ -583,7 +588,7 @@
                     />
                     <!-- Sample Data GhostRows -->
                     <div class="mt-8">
-                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Examples open a record for your own details</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <GhostRow
                                 name="HVAC Annual Service"
@@ -591,7 +596,8 @@
                                 type="Maintenance"
                                 value={189}
                                 onClick={() => {
-                                    newMaint = { ...newMaint, item: 'HVAC Annual Service', cost: 189, provider: 'ABC Climate Co.' };
+                                    exampleDraft = true;
+                                    newMaint = { ...newMaint };
                                     addType = 'maintenance';
                                     showAddModal = true;
                                 }}
@@ -602,7 +608,8 @@
                                 type="Inspection"
                                 value={250}
                                 onClick={() => {
-                                    newMaint = { ...newMaint, item: 'Roof Inspection', cost: 250, provider: 'Top Roofing Inc.' };
+                                    exampleDraft = true;
+                                    newMaint = { ...newMaint };
                                     addType = 'maintenance';
                                     showAddModal = true;
                                 }}
@@ -613,7 +620,8 @@
                                 type="Maintenance"
                                 value={375}
                                 onClick={() => {
-                                    newMaint = { ...newMaint, item: 'Septic Pumping', cost: 375, provider: 'Clean Septic LLC' };
+                                    exampleDraft = true;
+                                    newMaint = { ...newMaint };
                                     addType = 'maintenance';
                                     showAddModal = true;
                                 }}
@@ -707,7 +715,7 @@
                     {#if filteredClaims.length === 0}
                         <EmptyState
                             title="Track your insurance claims"
-                            whyMatters="<strong>Open claims can take a while.</strong> Noting them here gives your family what they need to follow through."
+                            whyMatters="Record the claim reference and related policy. Use Note / details for the insurer contact, latest update and next question."
                             encouragement="If you have any pending claims, add them here. Even resolved claims create a helpful history."
                             icon={FileCheck}
                             iconClass="text-primary"
@@ -716,7 +724,7 @@
                         />
                         <!-- Sample Data GhostRows -->
                         <div class="mt-8">
-                            <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                            <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Examples open a record for your own details</p>
                             <div class="space-y-4">
                                 <GhostRow
                                     name="Storm Damage - Roof Repair"
@@ -724,7 +732,8 @@
                                     type="Claim"
                                     value={8500}
                                     onClick={() => {
-                                        newClaim = { ...newClaim, claimNumber: 'HM-2024-001', note: 'Storm Damage - Roof Repair', amountClaimed: 8500, status: 'pending' };
+                                        exampleDraft = true;
+                                        newClaim = { ...newClaim };
                                         addType = 'claim';
                                         showAddModal = true;
                                     }}
@@ -735,7 +744,8 @@
                                     type="Claim"
                                     value={2200}
                                     onClick={() => {
-                                        newClaim = { ...newClaim, claimNumber: 'AU-2024-015', note: 'Fender Bender - Rear Bumper', amountClaimed: 2200, status: 'pending' };
+                                        exampleDraft = true;
+                                        newClaim = { ...newClaim };
                                         addType = 'claim';
                                         showAddModal = true;
                                     }}
@@ -768,9 +778,7 @@
                         <p
                             class="text-muted-foreground max-w-2xl font-medium leading-relaxed"
                         >
-                            Define how your online presence should be managed,
-                            with clear wishes for your executor about
-                            memorializing or removing each account.
+                            Record your wishes for each online account and where the provider instructions are kept. Record closure here after completing the provider's process.
                         </p>
                     </div>
                 </div>
@@ -844,7 +852,7 @@
                                         </div>
                                         <span
                                             class="text-[10px] font-black uppercase text-muted-foreground group-hover:text-foreground transition-colors"
-                                            >Closed</span
+                                            >{acc.isClosed ? "Marked closed" : "Mark closed"}</span
                                         >
                                     </button>
                                 </div>
@@ -883,14 +891,14 @@
                                             ></span>
                                             <span
                                                 class="text-[10px] font-black uppercase text-muted-foreground tracking-wider"
-                                                >Protocol: {acc.preference}</span
+                                                >Wish: {acc.preference}</span
                                             >
                                         {/if}
                                     </div>
                                     {#if acc.isClosed && acc.closureDate}
                                         <span
                                             class="text-[10px] font-bold text-muted-foreground italic"
-                                            >Deactivated on {new Date(
+                                            >Marked closed on {new Date(
                                                 acc.closureDate,
                                             ).toLocaleDateString()}</span
                                         >
@@ -933,6 +941,8 @@
             </div>
 
             <div class="p-10 space-y-6">
+                {#if exampleDraft}<p class="text-sm text-primary-hover" role="status">Example starting point: add the details from your own record. Your entered words stay in the form.</p>{/if}
+                <p class="text-sm text-muted-foreground">{addType === "transaction" ? "Use the supporting record for the date and amount. Name the source in the description." : addType === "maintenance" ? "Name the property or item, what work was done, who did it and any recorded follow-up." : addType === "claim" ? "Use Note / details for the insurer contact, latest update and next question." : "Record your wish and where the provider instructions are kept. This updates your account record."}</p>
                 {#if addType === "transaction"}
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
@@ -977,7 +987,7 @@
                                 id="tx-description"
                                 bind:value={newTx.description}
                                 class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
-                                placeholder="Quarterly Valuation"
+                                placeholder="What happened? Include the item, record source and date."
                             />
                         </div>
                         <div class="grid grid-cols-2 gap-4">
@@ -1032,7 +1042,7 @@
                                 id="maint-item"
                                 bind:value={newMaint.item}
                                 class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
-                                placeholder="Roof Inspection"
+                                placeholder="Property or item name, and work completed"
                             />
                         </div>
                         <div class="grid grid-cols-2 gap-4">
@@ -1190,7 +1200,7 @@
                                     id="username-input"
                                     bind:value={newAccount.username}
                                     class="w-full px-5 py-3 bg-background border border-border rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold"
-                                    placeholder="user@gmail.com"
+                                    placeholder="name@example.com"
                                 />
                             </div>
                         </div>
@@ -1243,7 +1253,7 @@
                             <textarea
                                 id="final-instructions"
                                 bind:value={newAccount.instructions}
-                                placeholder="Any specific details about handling this item..."
+                                placeholder="What would you like to happen? Who should help, and where are the provider instructions?"
                                 class="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all h-24 resize-none"
                             ></textarea>
                         </div>
@@ -1257,7 +1267,7 @@
                         aria-busy={registryBusy}
                         class="flex-1 py-4 bg-primary text-primary-foreground rounded-2xl font-black shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm"
                     >
-                        {registryBusy ? "Saving..." : "Save my thoughts"}
+                        {registryBusy ? "Saving..." : addType === "transaction" ? "Save transaction" : addType === "maintenance" ? "Save maintenance" : addType === "claim" ? "Save claim" : "Save account wish"}
                     </button>
                     <button
                         onclick={closeModal}

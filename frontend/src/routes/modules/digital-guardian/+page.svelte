@@ -513,13 +513,14 @@
     <!-- Header -->
     <LivingBlueprintHeader
         title="Digital Guardian"
-        subtitle="Keep your digital legacy within your family's reach"
-        detailedDescription="Your physical assets are protected by law. Your digital assets are protected by passwords. Set up legacy contacts, inactive account managers, and document your digital inventory so your family can reach your photos, emails, and accounts."
-        whyMatters="These setups keep your family connected to irreplaceable memories, important accounts, and digital assets."
+        subtitle="Your online accounts, wishes and recovery arrangements"
+        detailedDescription="Record your online accounts, what you want to happen to each one, and where your recovery instructions are kept. Use each provider's official settings to make any legacy-access arrangements."
+        whyMatters="A useful digital record names the account, the person you want to help, and the provider instructions they should follow. Provider settings determine the access available."
     />
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">
+        <p class="text-sm text-muted-foreground">Describe one account for help recording your wish or questions for the provider. Use placeholders for secrets, review the wording, then add it to the record you save.</p>
         <AIPromptBar context="digital-guardian" />
     </div>
 
@@ -534,13 +535,13 @@
             <div>
                 <span
                     class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1"
-                    >Primary Digital Successor</span
+                    >Person named in your plan</span
                 >
                 <div class="text-xl font-bold text-foreground">
-                    {$estateExecutorName || "Your Lead Executor"}
+                    {$estateExecutorName || "Choose an executor in your plan"}
                 </div>
                 <p class="text-xs text-muted-foreground mt-1">
-                    Synced from your Lead Executor designation.
+                    From your executor details. Record each provider's own legacy or recovery arrangement below.
                 </p>
             </div>
         </div>
@@ -559,14 +560,14 @@
             <div>
                 <span
                     class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1"
-                    >Recovery Verification Info</span
+                    >Recorded identity reference</span
                 >
                 <div class="text-xl font-bold text-foreground">
                     ID: {($estateProfile.ownerName || "").split(" ")[0]} / SSN: ***-**-{$estateProfile.last4SSN ||
                         "####"}
                 </div>
                 <p class="text-xs text-muted-foreground mt-1">
-                    Pre-filled for identity verification forms.
+                    Use your recorded details to help locate official documents a provider may request.
                 </p>
             </div>
         </div>
@@ -585,8 +586,7 @@
                     A gentle practice run
                 </h3>
                 <p class="text-muted-foreground mb-6 max-w-xl leading-relaxed">
-                    Walk through it once with your Legacy Contact, so they know
-                    the way in when it matters.
+                    Use this as your own checklist for a walkthrough with the person you choose. Tick each step after you complete it together and record where the recovery instructions are kept.
                 </p>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -947,11 +947,9 @@
                         <Lock size={18} class="shrink-0 mt-0.5" />
                         <div>
                             <strong
-                                >It is safest to keep your Master Password on paper, in your Red Binder.</strong
+                                >Record where your password manager's emergency instructions are kept and who you want to help.</strong
                             ><br />
-                            It should be written down on the Emergency Card in your
-                            physical Red Binder, or stored in a bank safety deposit
-                            box.
+                            Review the provider's official recovery or emergency-access options and choose arrangements appropriate to your own situation.
                         </div>
                     </div>
 
@@ -962,16 +960,15 @@
                         class="space-y-2 text-sm text-foreground list-disc pl-4 mb-6"
                     >
                         <li>
-                            Export your "Emergency Kit" PDF from your password
-                            manager.
+                            Check whether your provider supplies an emergency kit or recovery instructions.
                         </li>
                         <li>
-                            You can write the Master Password on it.
+                            Record where you keep the instructions needed for your chosen arrangement.
                         </li>
                         <li>
-                            You can seal it in an envelope marked "For Executor".
+                            Discuss the arrangement with the person you want to help.
                         </li>
-                        <li>Place in Red Binder or Safe.</li>
+                        <li>Review the arrangement when your account or provider changes.</li>
                     </ul>
                     <div
                         class="flex items-center gap-4 pt-4 border-t border-border"
@@ -1107,8 +1104,7 @@
                             (stays up) or <strong>Close Account</strong>.
                         </li>
                         <li>
-                            Your executor will have a link to the obituary or the
-                            death certificate ready.
+                            Record where your family can find the documents the provider requests.
                         </li>
                     </ul>
                     <div
@@ -1138,7 +1134,7 @@
                     Digital Asset Inventory
                 </h2>
                 <p class="text-muted-foreground text-sm">
-                    Key accounts your executor needs access to.
+                    Identify the accounts, your wishes for them, and the official process your chosen person should use.
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
@@ -1250,7 +1246,7 @@
                             </div>
                             <label class="block text-sm font-bold text-muted-foreground">
                                 Final Instructions
-                                <textarea bind:value={draft.instructions} name="instructions" rows="3" placeholder="Any specific details about handling this item..." class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground resize-none"></textarea>
+                                <textarea bind:value={draft.instructions} name="instructions" rows="3" placeholder="What would you like to happen? Who should help, and where are the provider or recovery instructions kept?" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground resize-none"></textarea>
                             </label>
                         </div>
                         <div class="px-8 py-4 bg-background border-t border-border flex justify-end gap-3">
@@ -1267,7 +1263,7 @@
                                 aria-busy={savingEdit}
                                 class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50"
                             >
-                                {savingEdit ? "Saving..." : editingId === "new" ? "Save my thoughts" : "Save my updates"}
+                                {savingEdit ? "Saving..." : editingId === "new" ? "Save account details" : "Save my updates"}
                             </button>
                         </div>
                     </form>

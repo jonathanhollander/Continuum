@@ -132,6 +132,7 @@
 </script>
 
 <Modal bind:open={showWizard} title={$t("wizard.start")} maxWidth="max-w-2xl">
+    <p class="mb-4 text-sm text-muted-foreground">Start a list of common account types. Open each new record to add your institution, identifying details and statement information. Use Add account or debt for other records.</p>
     <ConciergeFlow
         steps={wizardSteps}
         oncomplete={handleWizardComplete}
@@ -141,8 +142,8 @@
 <LivingBlueprintHeader
         title={$t("assets")}
         subtitle="Bank accounts, investments and debts, gathered in one place."
-        detailedDescription="Gathering your financial accounts in one place gives your family a clear path to the resources meant for them, and a steady footing during a time of uncertainty."
-        whyMatters="Documenting your accounts now helps your resources reach the people you love, with ease."
+        detailedDescription="Record each account and debt so your son can identify it, find a recent statement, and know which institution or adviser to contact. Use your records to describe ownership, named beneficiaries and any practical instructions."
+        whyMatters="A useful account record explains what it is, where the information comes from, and whom your family should ask about the next step."
     >
         <div class="flex items-center gap-3">
             {#if $userRole !== "Family"}
@@ -158,7 +159,7 @@
                     onclick={() => (showAddForm = true)}
                     class="flex items-center gap-2 px-5 py-3 border border-primary bg-primary text-primary-foreground font-bold rounded-2xl hover:opacity-90 transition-all shadow-lg shadow-primary/20"
                 >
-                    <Plus size={18} /> Share an asset
+                    <Plus size={18} /> Add account or debt
                 </button>
             {/if}
         </div>
@@ -169,6 +170,7 @@
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">
+        <p class="text-sm text-muted-foreground">Describe one account or debt for help drafting a note or questions for the institution. Review the wording, then add it to the record you save.</p>
         <AIPromptBar context="financial" />
     </div>
 

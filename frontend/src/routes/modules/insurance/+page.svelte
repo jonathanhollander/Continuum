@@ -63,6 +63,7 @@
     let showAddModal = $state(false);
     let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('insurance'));
     let isEditing = $state(false);
+    let exampleDraft = $state(false);
     let searchQuery = $state("");
     let filterType = $state("All");
     let openClaims = $state<Record<string, boolean>>({});
@@ -84,7 +85,7 @@
         insuranceType: "Life",
         insurer: "",
         policyNumber: "",
-        premiumAmount: 0,
+        premiumAmount: undefined,
         premiumFrequency: "Monthly",
         beneficiaries: "",
         agentName: "",
@@ -168,7 +169,7 @@
             insuranceType: type,
             insurer: "",
             policyNumber: "",
-            premiumAmount: 0,
+            premiumAmount: undefined,
             premiumFrequency: "Monthly",
             beneficiaries: "",
             agentName: "",
@@ -278,12 +279,13 @@
     ];
 
     function resetForm() {
+        exampleDraft = false;
         newPolicy = {
             policyName: "",
             insuranceType: "Life",
             insurer: "",
             policyNumber: "",
-            premiumAmount: 0,
+            premiumAmount: undefined,
             premiumFrequency: "Monthly",
             beneficiaries: "",
             agentName: "",
@@ -340,6 +342,7 @@
     }
 
     function editPolicy(policy: InsurancePolicy) {
+        exampleDraft = false;
         newPolicy = { ...policy };
         // Parse custom attributes for editing
         parsedCustomAttributes = readCustom(policy);
@@ -398,9 +401,9 @@
 
 <LivingBlueprintHeader
     title="Insurance Portfolio"
-    subtitle="Protecting your loved ones with financial security"
-    detailedDescription="Life insurance and protection policies are acts of love. They bring your family financial support, bridging the gap when they need it most."
-    whyMatters="Cataloging your policies here helps every benefit reach the people you love."
+    subtitle="Policy details, insurer contacts and claims information"
+    detailedDescription="Keep each policy's identifiers, insurer contacts, renewal information and claims instructions together so your family knows where to start. Use the current policy and any insurer confirmation as your sources."
+    whyMatters="A clear record helps your family find the policy and ask the insurer about current cover, beneficiaries and any next steps."
 >
     <div class="flex flex-wrap items-center gap-3">
         <DataViewToggle module="insurance" />
@@ -416,7 +419,7 @@
             class="flex items-center gap-2 bg-primary hover:bg-primary-hover text-primary-foreground px-6 py-3 rounded-2xl transition-all shadow-xl shadow-primary/20 font-bold"
         >
             <Plus size={20} />
-            Share a policy
+            Record a policy
         </button>
     </div>
 </LivingBlueprintHeader>
@@ -442,6 +445,7 @@
                     class="absolute -top-12 right-0 text-white hover:text-white/80"
                     onclick={() => (showWizard = false)}>Go back</button
                 >
+                <p class="mb-3 rounded-xl bg-card p-4 text-sm text-muted-foreground">Guided Setup starts a list of common policy types. Open each new record to add the insurer, policy number and details from your own documents.</p>
                 <ConciergeFlow
                     steps={wizardSteps}
                     oncomplete={handleWizardComplete}
@@ -452,6 +456,7 @@
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">
+        <p class="text-sm text-muted-foreground">Describe one policy for help organizing a contact note or questions for the insurer. Review the wording, then add it to the policy record you save.</p>
         <AIPromptBar context="insurance" />
     </div>
 
@@ -544,17 +549,18 @@
                 <div
                     class="text-[10px] bg-muted text-foreground px-2 py-1 rounded-lg font-bold"
                 >
-                    AUDIT
+                    DETAILS
                 </div>
             </div>
             <p
                 class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
             >
-                Completion Rate
+                Key details recorded
             </p>
             <p class="text-3xl font-black text-foreground tracking-tight">
                 {completionRate}%
             </p>
+            <p class="mt-2 text-xs text-muted-foreground" data-testid="insurance-detail-rule">Five checks per policy: insurer, policy number, recorded beneficiary, a premium above zero, and an agent name or contact. This measures details recorded.</p>
         </div>
     </div>
 
@@ -680,7 +686,7 @@
                             <p
                                 class="text-sm font-semibold text-foreground"
                             >
-                                {formatMoney(policy.premiumAmount)}
+                                {policy.premiumAmount == null ? "Not recorded" : formatMoney(policy.premiumAmount)}
                             </p>
                         </div>
                         <div
@@ -885,9 +891,9 @@
             {:else}
                 <div class="col-span-full">
                     <EmptyState
-                        title="Protect your family's financial future"
-                        whyMatters="<strong>Life insurance gives your family financial security to look after them.</strong> With documentation, your family can find each benefit and the protection you worked for reaches them.<br/><br/>Cataloging your policies here means your family will know exactly what coverage exists, who to contact, and how to file claims. It turns a confusing maze of paperwork into a clear roadmap during their darkest time."
-                        encouragement="Start with just your life insurance. Add health, auto, and home policies as you have time."
+                        title="Start with one policy"
+                        whyMatters="Record the policy name, insurer and identifying number from your documents. Add who to contact, where the policy is kept, and any claims instructions the insurer has provided."
+                        encouragement="Choose a policy you can find today. Add other policies as you gather their documents."
                         icon={Shield}
                         iconClass="text-primary"
                         ctaLabel="Share my first policy"
@@ -897,7 +903,7 @@
 
                 <!-- Sample Data GhostRows -->
                 <div class="col-span-full mt-8">
-                    <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                    <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Examples open a blank policy for your own details</p>
                     <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
                         {#each getSmartSamples($language).insurance || [] as sample}
                             <GhostRow
@@ -906,18 +912,8 @@
                                 type="Policy"
                                 value={sample.premiumAmount}
                                 onClick={() => {
-                                    newPolicy = {
-                                        ...newPolicy,
-                                        policyName: sample.policyName,
-                                        insuranceType: sample.insuranceType,
-                                        insurer: sample.insurer,
-                                        policyNumber: sample.policyNumber,
-                                        premiumAmount: sample.premiumAmount,
-                                        premiumFrequency: sample.premiumFrequency,
-                                        beneficiaries: sample.beneficiaries,
-                                        status: sample.status,
-                                        notes: sample.notes
-                                    };
+                                    exampleDraft = true;
+                                    newPolicy = { ...newPolicy, insuranceType: newPolicy.policyName ? newPolicy.insuranceType : sample.insuranceType };
                                     showAddModal = true;
                                 }}
                             >
@@ -946,9 +942,9 @@
             </div>
         {:else if policies.length === 0}
             <EmptyState
-                title="Protect your family's financial future"
-                whyMatters="<strong>Life insurance gives your family financial security to look after them.</strong> With documentation, your family can find each benefit and the protection you worked for reaches them.<br/><br/>Cataloging your policies here means your family will know exactly what coverage exists, who to contact, and how to file claims. It turns a confusing maze of paperwork into a clear roadmap during their darkest time."
-                encouragement="Start with just your life insurance. Add health, auto, and home policies as you have time."
+                title="Start with one policy"
+                whyMatters="Record the policy name, insurer and identifying number from your documents. Add who to contact, where the policy is kept, and any claims instructions the insurer has provided."
+                encouragement="Choose a policy you can find today. Add other policies as you gather their documents."
                 icon={Shield}
                 iconClass="text-primary"
                 ctaLabel="Share my first policy"
@@ -991,7 +987,7 @@
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{cap(policy.insuranceType)}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{policy.insurer}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">
-                                    {formatMoney(policy.premiumAmount)} {cap(policy.premiumFrequency || "Monthly")}
+                                    {policy.premiumAmount == null ? "Not recorded" : formatMoney(policy.premiumAmount)} {cap(policy.premiumFrequency || "Monthly")}
                                 </td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground max-w-[150px] truncate">
                                     {policy.beneficiaries || '-'}
@@ -1074,13 +1070,14 @@
                         class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2"
                     >
                         <Heart size={12} />
-                        <span>Acts of Love</span>
+                        <span>POLICY RECORD</span>
                     </nav>
                     <h2 class="font-serif font-bold text-xl text-foreground">
-                        {isEditing ? "Update" : "Share"} Protection Details
+                        {isEditing ? "Update" : "Record"} policy details
                     </h2>
                     <p class="text-muted-foreground text-sm mt-2 leading-relaxed">
-                        Document your insurance coverage so your family knows what protection exists when they need it most.
+                        Identify the policy, the source documents and the insurer contact your family should use.
+                            {#if exampleDraft}<span class="block mt-2 text-primary-hover" role="status">Example starting point: enter your own policy name, insurer and details. Your entered words stay in the form.</span>{/if}
                     </p>
                 </div>
                 <button
@@ -1113,7 +1110,7 @@
                             <input id="insurance-policy-name"
                                 type="text"
                                 bind:value={newPolicy.policyName}
-                                placeholder="e.g. Master Life Policy"
+                                placeholder="Your own policy name or short description"
                                 class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
@@ -1199,7 +1196,7 @@
                                         size={12}
                                         class="text-success"
                                     />
-                                    Document secured in vault
+                                    Document attached to this record
                                 </div>
                             {/if}
                         </div>
@@ -1296,7 +1293,7 @@
                             <input id="insurance-beneficiaries"
                                 type="text"
                                 bind:value={newPolicy.beneficiaries}
-                                placeholder="Split 50/50 between children..."
+                                placeholder="As shown on the policy or latest beneficiary confirmation"
                                 class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
@@ -1339,7 +1336,7 @@
                             <textarea id="insurance-claims-procedure"
                                 bind:value={newPolicy.claimsProcedure}
                                 rows="4"
-                                placeholder="Detailed step-by-step for the family..."
+                                placeholder="Who should your family contact first? What instructions has the insurer provided, and where are the current documents?"
                                 class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground resize-none"
                             ></textarea>
                         </div>
@@ -1391,7 +1388,7 @@
                     aria-busy={saving}
                     class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {saving ? "Saving..." : isEditing ? "Save my updates" : "Save my thoughts"}
+                    {saving ? "Saving..." : isEditing ? "Save my updates" : "Save policy details"}
                 </button>
             </div>
         </div>

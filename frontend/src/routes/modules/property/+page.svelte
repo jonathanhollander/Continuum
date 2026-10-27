@@ -74,6 +74,7 @@
         }
     });
     let isEditing = $state(false);
+    let exampleDraft = $state(false);
     let searchQuery = $state("");
     let filterType = $state<string>("All");
     let showWizard = $state(false);
@@ -83,7 +84,7 @@
         name: "",
         type: "Real Estate",
         location: "",
-        valuation: 0,
+        valuation: undefined,
         status: "Owned",
         ownershipDetails: "",
         documents: "",
@@ -162,7 +163,7 @@
             name: name,
             type: type,
             location: "",
-            valuation: 0,
+            valuation: undefined,
             status: "Owned",
             ownershipDetails: "",
             documents: "",
@@ -241,6 +242,7 @@
     ];
 
     function resetForm() {
+        exampleDraft = false;
         // Files added in this form but never saved on the record, except those a Try Again still holds.
         removeMediaQuietly(
             formMediaIds().filter((id) => !savedMediaIds.includes(id) && !retryMediaIds.has(id)),
@@ -251,7 +253,7 @@
             name: "",
             type: "Real Estate",
             location: "",
-            valuation: 0,
+            valuation: undefined,
             status: "Owned",
             ownershipDetails: "",
             documents: "",
@@ -429,6 +431,7 @@
     }
 
     function editItem(item: PropertyItem) {
+        exampleDraft = false;
         newItem = { ...item, evidence: [...(item.evidence ?? [])] };
         savedMediaIds = (item.evidence ?? []).map((e) => e.id);
         parsedCustomAttributes = readCustom(item);
@@ -523,8 +526,8 @@
 <LivingBlueprintHeader
     title="Property & Real Estate"
     subtitle="Your home, your vehicles, the possessions that matter"
-    detailedDescription="These are the physical things you've built, bought, and cared for. Documenting them now means your family can find deeds, titles, and proof of ownership with ease."
-    whyMatters="Clear records of what you own, and where the documents are, give your family a steady path to ownership and access."
+    detailedDescription="Record the home, vehicles and other property your family may need to find or care for. Describe the ownership information you have, where the original papers are kept, and the people who can help."
+    whyMatters="Useful property notes help your family locate keys and originals, identify maintenance contacts, and prepare questions for the lender, insurer or relevant professional."
 >
     <div class="flex flex-wrap items-center gap-3">
         <DataViewToggle module="property" />
@@ -566,6 +569,7 @@
                     class="absolute -top-12 right-0 text-white hover:text-white/80"
                     onclick={() => (showWizard = false)}>Go back</button
                 >
+                <p class="mb-3 rounded-xl bg-card p-4 text-sm text-muted-foreground">Guided Setup starts a list of property types. Open each new record to add its name, location, ownership details and documents.</p>
                 <ConciergeFlow
                     steps={wizardSteps}
                     oncomplete={handleWizardComplete}
@@ -885,6 +889,7 @@
                 </div>
             {:else}
                 <div class="col-span-full space-y-4">
+                    <p class="text-sm text-muted-foreground">Examples open a blank property record for your own details.</p>
                     {#each getSmartSamples($language).property || [] as sample}
                         <GhostRow
                             name={sample.name}
@@ -892,12 +897,8 @@
                             value={sample.valuation}
                             type="Property"
                             onClick={() => {
-                                newItem = {
-                                    ...newItem,
-                                    name: sample.name,
-                                    type: sample.type as any,
-                                    valuation: sample.valuation || 0,
-                                };
+                                exampleDraft = true;
+                                newItem = { ...newItem, type: newItem.name ? newItem.type : sample.type as any };
                                 showAddModal = true;
                             }}
                         >
@@ -940,12 +941,8 @@
                     value={sample.valuation}
                     type="Property"
                     onClick={() => {
-                        newItem = {
-                            ...newItem,
-                            name: sample.name,
-                            type: sample.type as any,
-                            valuation: sample.valuation || 0,
-                        };
+                        exampleDraft = true;
+                        newItem = { ...newItem, type: newItem.name ? newItem.type : sample.type as any };
                         showAddModal = true;
                     }}
                 >
@@ -1126,6 +1123,7 @@
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mt-8">
+        <p class="text-sm text-muted-foreground">Describe one item for help explaining its records, document locations or practical next steps. Review the wording, then add it to the record you save.</p>
         <AIPromptBar context="property" />
     </div>
 </div>
@@ -1158,10 +1156,11 @@
             <div class="flex items-start justify-between px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
                 <div class="flex-1 pr-4">
                     <h2 class="font-serif font-bold text-xl text-foreground">
-                        {isEditing ? "Update" : "Record"} Asset Detail
+                        {isEditing ? "Update" : "Record"} property details
                     </h2>
                     <p class="text-muted-foreground text-sm mt-2 leading-relaxed">
-                        Document your property details to help your family understand what you own and where to find important documents.
+                        Describe this item using your own records. Include where to find it, its ownership papers, and whom your family should contact.
+                    {#if exampleDraft}<span class="block mt-2 text-primary-hover" role="status">Example starting point: enter your own item name and details. Your entered words stay in the form.</span>{/if}
                     </p>
                 </div>
                 <button
@@ -1239,7 +1238,7 @@
                         <div class="space-y-1.5">
                             <label for="property-valuation"
                                 class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
-                                >Current Valuation ($)</label
+                                >Recorded valuation ($)</label
                             >
                             <div class="relative">
                                 <DollarSign
@@ -1309,7 +1308,7 @@
                             <input id="property-ownership-details"
                                 type="text"
                                 bind:value={newItem.ownershipDetails}
-                                placeholder="e.g. Individual Title, Joint with Spouse"
+                                placeholder="Ownership wording from your title, deed or other records"
                                 class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
@@ -1333,7 +1332,7 @@
                             <textarea id="property-notes"
                                 bind:value={newItem.notes}
                                 rows="4"
-                                placeholder="Additional details, disposal instructions, or historical significance..."
+                                placeholder="Where are the keys and originals? Who maintains this item? Include any valuation source/date and questions for the lender, insurer or adviser."
                                 class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground resize-none"
                             ></textarea>
                         </div>
@@ -1345,7 +1344,7 @@
                     <h3
                         class="text-xs font-bold uppercase text-muted-foreground tracking-wide"
                     >
-                        Insurance Evidence
+                        Photos & supporting evidence
                     </h3>
 
                     <EvidenceGalleryUploader
@@ -1380,7 +1379,7 @@
                     aria-busy={saving}
                     class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {saving ? "Saving..." : "Save my thoughts"}
+                    {saving ? "Saving..." : "Save property details"}
                 </button>
             </div>
         </div>

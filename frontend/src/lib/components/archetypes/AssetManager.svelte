@@ -139,6 +139,7 @@
 
     // Reactive object for the custom field manager (binds to this object)
     let parsedCustomAttributes = $state<Record<string, any>>({});
+    let exampleDraft = $state(false);
 
     // AI Intake Mirroring (True Simulation)
     $effect(() => {
@@ -290,6 +291,7 @@
     }
 
     function editAsset(asset: Asset) {
+        exampleDraft = false;
         // Ensure all form fields have defaults to prevent bind:value={undefined} errors
         newAsset = {
             id: asset.id,
@@ -316,6 +318,7 @@
     }
 
     function resetForm() {
+        exampleDraft = false;
         newAsset = {
             id: undefined, // Clear ID to switch back to create mode
             name: "",
@@ -324,7 +327,7 @@
             location: "",
             accountNumber: "",
             ownershipPercentage: 100,
-            beneficiaries: $estateProfile.primaryBeneficiary || "",
+            beneficiaries: "",
             notes: "",
             valueHistory: [],
             loginUrl: "",
@@ -441,8 +444,8 @@
                     location: item.location,
                     accountNumber: "",
                     ownershipPercentage: 100,
-                    beneficiaries: $estateProfile.primaryBeneficiary || "",
-                    notes: "",
+                    beneficiaries: "",
+                    notes: "Starter record: replace the name and add the details from your own records.",
                     valueHistory: [],
                     loginUrl: "",
                     beneficiaryEmail: "",
@@ -519,7 +522,7 @@
             <h2
                 class="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1"
             >
-                Net Estate Value
+                Net financial value recorded
             </h2>
             <div class="text-4xl font-serif font-bold text-foreground" data-testid="estate-net">
                 {#if $userRole !== "Family"}
@@ -528,6 +531,7 @@
                     $•••,•••,•••
                 {/if}
             </div>
+            <p class="text-xs text-muted-foreground mt-1">Open records in this list, after ownership shares and amounts owed. Use the separate Property page for property records.</p>
             {#if $userRole !== "Family" && totals.debts > 0}
                 <p class="text-xs text-muted-foreground mt-1" data-testid="estate-breakdown">
                     {money(totals.assets)} in assets, less {money(totals.debts)} owed
@@ -567,7 +571,7 @@
                     Executor View Active
                 </h4>
                 <p class="text-muted-foreground text-xs mt-1">
-                    You can view and update everything here, whenever the time is right.
+                    Use these recorded details to identify accounts and prepare questions for the institution or relevant professional.
                 </p>
             </div>
         </div>
@@ -604,14 +608,13 @@
                                 class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3"
                             >
                                 <Wallet size={12} />
-                                <span>Asset Inventory</span>
+                                <span>Account record</span>
                             </nav>
                             <h2
                                 id="asset-form-title"
                                 class="text-4xl font-black text-foreground tracking-tighter"
                             >
-                                {newAsset.id ? "Update" : "Add"}
-                                <span class="text-primary">Asset</span>
+                                {newAsset.id ? "Update account or debt" : "Record account or debt"}
                             </h2>
                         </div>
                         <button aria-label="Close"
@@ -631,7 +634,7 @@
                                 <span
                                     class="w-6 h-[2px] bg-primary rounded-full"
                                 ></span>
-                                Asset Details
+                                Account details
                             </h3>
                             <div
                                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
@@ -639,13 +642,13 @@
                                 <div class="space-y-3">
                                     <label for="asset-asset-name"
                                         class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
-                                        >Asset Name</label
+                                        >Account or debt name</label
                                     >
                                     <input
                                         id="asset-asset-name"
                                         type="text"
                                         bind:value={newAsset.name}
-                                        placeholder="e.g. Chase Checking, Tesla Model Y"
+                                        placeholder="e.g. Checking account or credit card"
                                         class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all {$conciergeEngine
                                             .lastExtractedData?.name
                                             ? 'amber-glow border-amber-500/50'
@@ -673,7 +676,7 @@
                                 <div class="space-y-3">
                                     <label for="asset-est-value"
                                         class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1 font-mono"
-                                        >Est. Value ($)</label
+                                        >Balance or amount owed ($)</label
                                     >
                                     <div class="relative">
                                         <DollarSign
@@ -690,18 +693,21 @@
                                 </div>
                             </div>
 
+                            <p class="mt-3 text-sm text-muted-foreground">Enter the full recorded balance before your ownership percentage below. For a debt, choose Debt or loan and enter the amount owed. Add the statement date and source in Notes.</p>
+                            {#if exampleDraft}<p class="mt-3 text-sm text-primary-hover" role="status">Example starting point: enter your own account name and details. Any words you had already entered stay in the form.</p>{/if}
+
                             <div
                                 class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8"
                             >
                                 <div class="space-y-3">
                                     <label for="asset-location-institution"
                                         class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
-                                        >Location / Institution</label
+                                        >Institution or record location</label
                                     >
                                     <input
                                         id="asset-location-institution"
                                         bind:value={newAsset.location}
-                                        placeholder="e.g. 123 Main St, Wallet"
+                                        placeholder="e.g. Institution name or statement location"
                                         class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                                     />
                                 </div>
@@ -791,13 +797,13 @@
                                     <div class="space-y-3">
                                         <label for="asset-beneficiary-name"
                                             class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
-                                            >Beneficiary Name</label
+                                            >Beneficiary recorded on account documents</label
                                         >
                                         <input
                                             id="asset-beneficiary-name"
                                             type="text"
                                             bind:value={newAsset.beneficiaries}
-                                            placeholder="Who inherits this?"
+                                            placeholder="As shown on the institution's paperwork"
                                             class="w-full bg-card border-2 border-transparent focus:border-primary rounded-2xl p-4 text-sm font-bold outline-none transition-all shadow-sm"
                                         />
                                     </div>
@@ -832,7 +838,7 @@
                             </h3>
                             <textarea
                                 bind:value={newAsset.closureNotes}
-                                placeholder="Instructions for the Executor on how to find/close/transfer this..."
+                                placeholder="Where are the latest statement and originals? Who should your family contact, and what should they ask?"
                                 class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[120px] resize-none leading-relaxed"
                             ></textarea>
                             <!-- A closed account stays on record and leaves the estate total. -->
@@ -872,7 +878,7 @@
                             <textarea
                                 id="asset-notes"
                                 bind:value={newAsset.notes}
-                                placeholder="Anything else your family may find helpful..."
+                                placeholder="Statement date and source, ownership details, adviser contact, and questions still to check"
                                 class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[100px] resize-none leading-relaxed"
                             ></textarea>
                         </section>
@@ -895,7 +901,7 @@
                             class="px-10 py-4 rounded-2xl bg-primary hover:bg-primary-hover text-primary-foreground font-black shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50"
                         >
                             <Sparkles size={18} />
-                            {saving ? "Saving..." : newAsset.id ? "Save my changes" : "Save this asset"}
+                            {saving ? "Saving..." : newAsset.id ? "Save my changes" : "Save account or debt"}
                         </button>
                     </div>
                 </div>
@@ -1086,7 +1092,7 @@
             >
                 <Sparkles size={20} />
                 <p class="text-sm font-medium">
-                    Here are a few examples to help you begin.
+                    These examples open a blank record for your own details. Your entered words stay in the form.
                 </p>
             </div>
 
@@ -1099,11 +1105,10 @@
                     value={sampleValue}
                     type="Asset"
                     onclick={() => {
+                        exampleDraft = true;
                         newAsset = {
                             ...newAsset,
-                            name: sample.name,
-                            type: sample.type as AssetType,
-                            value: sampleValue,
+                            type: (newAsset.name ? newAsset.type : sample.type) as AssetType,
                         };
                         showAddForm = true;
                     }}
@@ -1122,7 +1127,7 @@
                         disabled={addingStarter}
                         class="disabled:opacity-50 text-sm font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
-                        <Sparkles size={14} /> Or use the Starter Pack
+                        <Sparkles size={14} /> Add a blank starter list
                     </button>
                     <!-- Fallback manual trigger -->
                     <button
@@ -1133,6 +1138,7 @@
                     </button>
                 {/if}
             </div>
+            <p class="text-center text-xs text-muted-foreground">The starter list adds common record names with blank amounts. Open each record to replace its name and add your own details.</p>
         {/if}
     </div>
     {:else}
