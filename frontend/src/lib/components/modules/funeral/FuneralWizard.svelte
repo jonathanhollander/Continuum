@@ -1,3 +1,10 @@
+<script context="module" lang="ts">
+    export type FuneralShownContext = {
+        wishes: import("$lib/stores/funeralStore.svelte").FuneralWishes;
+        step: number; stage: string; question: string; pending: boolean;
+    };
+</script>
+
 <script lang="ts">
     import { aiRuntimeAssets, aiAssets, assetStrings, observeAIConfig, aiSourceFacts } from "$lib/services/aiCapabilities";
     import { fade, slide } from "svelte/transition";
@@ -20,6 +27,8 @@
         Info,
     } from "lucide-svelte";
     import { onDestroy, onMount } from "svelte";
+    import { auth } from "$lib/stores/auth";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
     import {
         funeralStore,
         type FuneralWishes,
@@ -35,6 +44,18 @@
 
     // The page opens its budget tab from the last step.
     export let onOpenBudget: (() => void) | undefined = undefined;
+    export let onContextChange: ((context: FuneralShownContext | null) => void) | undefined = undefined;
+    const contextOwner = captureSession();
+    let contextMounted = false;
+    let contextCurrent = false;
+    onMount(() => {
+        contextMounted = true;
+        const stop = auth.subscribe(() => {
+            contextCurrent = isCurrentSession(contextOwner);
+            if (!contextCurrent) onContextChange?.(null);
+        });
+        return () => { contextMounted = false; stop(); onContextChange?.(null); };
+    });
 
     // Steps
     const STEPS = [
@@ -72,6 +93,12 @@
             if (!questions[category] && configuredQuestions[category]?.length) questions = {...questions,[category]:configuredQuestions[category][0]};
         }
     }
+    $: if (contextMounted && contextCurrent) onContextChange?.({
+        wishes: JSON.parse(JSON.stringify(wishes)), step: currentStep,
+        stage: STEPS[currentStep - 1].title,
+        question: currentStep === 1 ? questions.foundation : currentStep === 4 ? questions.atmosphere : currentStep === 5 ? questions.legacy : "",
+        pending: draft !== null || saving,
+    });
     function refreshQuestion(category: 'foundation' | 'atmosphere' | 'legacy') {
         const pool = assetStrings(configuredQuestions?.[category]);
         if (!pool.length) return;
