@@ -41,6 +41,7 @@ export default defineRailway(() => {
     source: github("jonathanhollander/Continuum", { checkSuites: true }),
     build: { builder: "NIXPACKS" },
     deploy: { healthcheckPath: "/api/health", sleepApplication: true },
+    volumeMounts: { "continuum-volume": { mountPath: "/data" } },
     variables: Object.fromEntries(preservedVariables.map((name) => [name, preserve()])),
   });
   return project("continuum-saas", {
