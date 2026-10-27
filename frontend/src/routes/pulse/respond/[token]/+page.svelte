@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import { onMount } from "svelte";
-    import { API_BASE_URL } from "$lib/config";
+    import { apiFetch } from "$lib/api/client";
     import {
         Clock,
         CheckCircle2,
@@ -30,8 +30,7 @@
     onMount(async () => {
         const token = $page.params.token;
         try {
-            const baseUrl = API_BASE_URL;
-            const res = await fetch(`${baseUrl}/api/pulse/portal/${token}`);
+            const res = await apiFetch(`/api/pulse/portal/${token}`);
             if (res.ok) {
                 state.data = await res.json();
             } else {
@@ -52,9 +51,8 @@
         const token = $page.params.token;
         state.actionError = null;
         try {
-            const baseUrl = API_BASE_URL;
-            const res = await fetch(
-                `${baseUrl}/api/pulse/respond/${token}?action=${action}`,
+            const res = await apiFetch(
+                `/api/pulse/respond/${token}?action=${action}`,
                 {
                     method: "POST",
                 },
