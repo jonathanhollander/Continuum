@@ -58,11 +58,11 @@
     );
 
     const complexityInfomation = {
-        simple: "Focuses on the essential foundation. Ideal for early-stage planning or straightforward estates.",
+        simple: "Show the initial review checks for contacts, documents, messages and wishes.",
         moderate:
-            "Adds detailed financial and insurance tracking. Recommended for established households.",
+            "Include the initial checks plus more account, property, insurance and service reviews.",
         complex:
-            "Full suite of estate planning tools, including advanced trusts, business assets, and complex legacies.",
+            "Show every check, including brokerage, retirement and digital asset reviews.",
     };
 </script>
 
@@ -83,7 +83,7 @@
                         Builder Tools
                     </h1>
                     <p class="text-muted-foreground font-medium">
-                        Your planning checklist
+                        Your manual review checklist
                     </p>
                 </div>
             </div>
@@ -96,7 +96,7 @@
                 class="flex items-center gap-2 px-4 py-2.5 bg-card border border-border rounded-xl text-muted-foreground font-bold hover:bg-muted transition-all shadow-sm"
             >
                 <Settings2 size={18} />
-                Estate Complexity:
+                Checks shown:
                 <span class="text-primary-hover capitalize"
                     >{($estateComplexity?.level ?? "moderate")}</span
                 >
@@ -118,7 +118,7 @@
             <div class="relative z-10 space-y-6">
                 <div class="flex items-center gap-3">
                     <Zap class="text-gold" />
-                    <h2 class="text-xl font-bold">Configure Planning Depth</h2>
+                    <h2 class="text-xl font-bold text-white">Choose checklist depth</h2>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -170,7 +170,7 @@
             </div>
             <div>
                 <h3 class="font-bold text-foreground mb-1">
-                    Overall Completion
+                    Review checks ticked
                 </h3>
                 <div class="w-full bg-muted rounded-full h-2 mt-2">
                     <div
@@ -249,7 +249,7 @@
                         class="text-xs font-bold uppercase tracking-widest text-muted-foreground shrink-0"
                     >
                         {tasks.filter((t) => t.status === "Complete").length} of
-                        {tasks.length} Done
+                        {tasks.length} checked
                     </span>
                 </div>
 
@@ -357,8 +357,9 @@
                 Why use Builder Tools?
             </h4>
             <p class="text-muted-foreground text-sm mt-1">
-                Each check here is a part of your plan to look over for your
-                loved ones. What you tick is saved as you go.
+                Open a related page, review its records, then tick the check yourself.
+                These percentages count your review checks; they do not assess whether
+                your estate or legal arrangements are complete.
             </p>
         </div>
         <a

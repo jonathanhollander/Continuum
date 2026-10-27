@@ -44,7 +44,7 @@
             <Database size={24} />
         </div>
         <div class="flex-1">
-            <div class="font-serif text-xl font-bold text-foreground">Your records, kept safe</div>
+            <div class="font-serif text-xl font-bold text-foreground">Your record copies</div>
             <p class="text-muted-foreground">See what is saved on this device and in your Continuum space.</p>
         </div>
         <ArrowRight size={20} class="text-muted-foreground group-hover:text-primary-hover transition-colors" />
