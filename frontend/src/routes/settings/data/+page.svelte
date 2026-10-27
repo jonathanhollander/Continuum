@@ -7,6 +7,7 @@
     import { currentProfileId } from "$lib/stores/profileContext";
     import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
     import type { SamplePurgeResult } from "$lib/services/testDataFactory";
+    import { sampleRegistryRevision } from "$lib/services/sampleRegistry";
     import { navGroups, catalogCategories, type NavItem } from "$lib/config/navigation";
     import { dict, userRole } from "$lib/stores/conciergeStore.svelte";
     import { auth } from "$lib/stores/auth";
@@ -54,6 +55,11 @@
 
     // Test Registry Cache (for highlighting)
     let testRegistry = $state<Record<string, string[]>>({});
+
+    $effect(() => {
+        const revision = $sampleRegistryRevision;
+        untrack(refreshTestRegistry);
+    });
 
     $effect(() => {
         const account = $activeAccountId;
