@@ -5,7 +5,9 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
 import json
+import logging
 import os
+import sys
 import uuid
 from typing import List, Optional
 from pydantic import BaseModel
@@ -31,13 +33,14 @@ from backend.utils.logger import get_logger, setup_logging
 from backend.csrf import CSRFMiddleware, get_csrf_token_endpoint
 from backend.private_access import enforce_private_access
 
-def setup_app_documentation(app: FastAPI):
-    """Configure OpenAPI tags and documentation for the app."""
-    # This logic is currently inline in app instantiation, 
-    # but we add this docstring for architectural reference.
-    pass
-
 logger = get_logger(__name__)
+
+# Uvicorn's own startup lines go to stderr, which Railway shows as level "error". The app is
+# imported before uvicorn logs "Started server process", so pointing its handler at stdout here
+# covers every uvicorn line.
+for _handler in logging.getLogger("uvicorn").handlers:
+    if isinstance(_handler, logging.StreamHandler) and _handler.stream is sys.stderr:
+        _handler.setStream(sys.stdout)
 
 # Initialize rate limiter
 # limiter definition moved to backend/limiter.py to avoid circular imports
@@ -54,7 +57,8 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
 
     create_db_and_tables()
-    seed_dev_user()
+    if not settings.is_production():
+        seed_dev_user()
     start_scheduler()
     yield
     # Shutdown
@@ -89,8 +93,9 @@ This API provides endpoints for:
         {"name": "media", "description": "Backend file storage and management"},
         {"name": "email", "description": "Internal email service verification"},
     ],
-    docs_url="/docs" if settings.DEBUG else "/api/docs",
-    redoc_url="/redoc" if settings.DEBUG else "/api/redoc",
+    docs_url="/docs" if settings.DEBUG else None,
+    redoc_url="/redoc" if settings.DEBUG else None,
+    openapi_url="/openapi.json" if settings.DEBUG else None,
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -214,6 +219,8 @@ async def set_secure_headers(request: Request, call_next):
     """Add security headers to all responses."""
     response = await call_next(request)
     secure_headers.set_headers(response)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Permissions-Policy"] = "camera=(self), microphone=(self), geolocation=(), payment=(), usb=()"
     return response
 
 # Configure CORS (Reload Triggered)
