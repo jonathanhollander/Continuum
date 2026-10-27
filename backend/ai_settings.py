@@ -66,8 +66,9 @@ def get_client() -> httpx.AsyncClient:
     return _client
 
 
-def gateway_headers(key: str) -> dict[str, str]:
-    return {"x-bf-vk": key, "Accept": "application/json", "Content-Type": "application/json"}
+def gateway_headers(key: str, application_name: str = "Continuum") -> dict[str, str]:
+    return {"x-bf-vk": key, "Accept": "application/json", "Content-Type": "application/json",
+            "User-Agent": application_name}
 
 
 def validate_model_id(value: str | None) -> str | None:
@@ -208,25 +209,25 @@ def runtime_config(session: Session, purpose: str, variant: str) -> dict:
             "input_slots": INPUT_SLOTS}
 
 
-def request_transport(model_id: str) -> dict:
+def request_transport(model_id: str, application_name: str) -> dict:
     if settings.BIFROST_VIRTUAL_KEY:
         configuration = gateway_configuration()
         if configuration is None:
             return {"name": "unconfigured_gateway", "model": model_id, "url": None, "headers": {}}
         origin, key = configuration
-        return {"name": "bifrost", "model": model_id, "url": f"{origin}/v1/chat/completions", "headers": gateway_headers(key)}
+        return {"name": "bifrost", "model": model_id, "url": f"{origin}/v1/chat/completions", "headers": gateway_headers(key, application_name)}
     key = settings.OPENROUTER_API_KEY or settings.VITE_OPENROUTER_API_KEY
     if key and model_id.startswith("openrouter/"):
         return {"name": "legacy_openrouter", "model": model_id.removeprefix("openrouter/"),
                 "url": "https://openrouter.ai/api/v1/chat/completions",
                 "headers": {"Authorization": f"Bearer {key}", "HTTP-Referer": "https://continuum.estate",
-                            "X-Title": "Continuum Estate", "Content-Type": "application/json"}}
+                            "X-Title": application_name, "User-Agent": application_name, "Content-Type": "application/json"}}
     return {"name": "unconfigured", "model": model_id, "url": None, "headers": {}}
 
 
 def prepare_request(session: Session, body: StructuredRequest) -> tuple[dict, dict]:
     resolved = resolve_configuration(read_settings(session), body.purpose, body.variant)
-    transport = request_transport(resolved["model_id"])
+    transport = request_transport(resolved["model_id"], resolved["effective_config"]["application_name"])
     prepared = assemble_request(body, resolved, transport["model"], transport["name"])
     prepared["can_send"] = prepared["can_send"] and transport["url"] is not None
     return prepared, transport

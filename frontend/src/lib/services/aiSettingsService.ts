@@ -89,6 +89,8 @@ export interface AIPreparedRequest {
     request: { model: string; messages: { role: string; content: string }[]; max_tokens: number; temperature?: number };
     selected_model_id: string;
     transport: string;
+    application_name: string;
+    user_agent: string;
     sources: Record<string, string>;
     included_inputs: { key: string; value: unknown }[];
     omitted_inputs: { key: string; reason: string }[];

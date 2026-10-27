@@ -1,5 +1,6 @@
 {
   "shared": {
+    "application_name": "Continuum",
     "shared_system_template": "",
     "system_template": "",
     "task_template": "{{user_text}}",
