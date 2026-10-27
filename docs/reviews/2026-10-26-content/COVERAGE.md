@@ -51,3 +51,15 @@ Final `npm run check`: **0 errors, 0 warnings**. `npm run build`: **passed**. `g
 - Content changes cannot establish legal validity, current financial facts, access or end-to-end handover completeness. API persistence and real recipient access were not retested by this presentation-only fixture.
 
 Full sources read: the ten changed Svelte files; `analyticsStore.ts`, `auditStore.svelte.ts`, `auditReadiness.svelte.ts`, `readiness.ts`, `AuditSourceStatus.svelte`, admin `ScenarioMode.svelte` and layout. Narrow supporting paths read: source-store mappings/registrations, auth initialization and `syncAll`, dashboard/Pulse score consumers, and export document-state handling. CodeGraph was consulted first; its child-worktree warning led to exact worktree-source reads. No generated indexes were changed.
+
+## X396 appendix — analytics executor-profile source
+
+Last Updated: 2026-10-26 EDT. Base: X390 `9ed4fde`; branch `codex/X396`. Only Analytics and this appendix change; X392's simulator work is independent.
+
+The legal pillar also reads `estateProfile.executorName`, a source outside the audit's eleven lists. The page now waits for the existing profile store's confirmed `synced` state before displaying a definitive legal percentage/checkboxes. A successfully loaded contact list may independently prove a positive executor check, using the exact existing `findExecutorName({}, contactSync.items)` helper. An absent contact does not establish that an unavailable profile is empty. No formula or membership rule changes.
+
+Profile loading/error text remains visible, and **Try Again** calls the existing `estateProfile.sync()`. Profile-dependent review topics also wait for confirmation because they read executor/beneficiary profile fields. The guardian gate remains; overall, financial and personal/digital figures retain their own existing source rules.
+
+The approved existing private harness was extended behind `X396=1`: **13 focused browser assertions passed**, without repeating X390's matrix. With two directives and no executor contact, all eleven audit sources can load while the profile remains held/503: the UI displays an unknown legal figure, no missing-executor conclusion and no finalized profile topics. Retry with an actual successful empty profile gives the correct 67%. A confirmed executor contact retains 100% through held/failed profile reads, with an explicit source notice; successful-empty profile retry preserves that same contact membership. Unaffected scores/source IDs agree throughout. Zero runtime errors or mutation requests.
+
+Evidence: `/private/tmp/continuum-x396/proof.json`, four inspected 1440px captures and `/private/tmp/continuum-x396-proof.log`. Final check: **0 errors, 0 warnings**; build and diff check passed. Browser/server on port 36396 stopped. No shared helper, API/model, production setting, private-access flag, database, provider, mail or deployment changed. As with X390, intercepted synthetic APIs prove UI/store behavior, not API persistence or recipient access. The separate admin-matrix source limitation remains deferred.

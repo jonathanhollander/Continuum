@@ -1,6 +1,8 @@
 <script lang="ts">
     import { fly, fade, slide } from "svelte/transition";
-    import { estateAnalytics } from "$lib/stores/analyticsStore";
+    import { estateAnalytics, findExecutorName } from "$lib/stores/analyticsStore";
+    import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { contactSync } from "$lib/stores/familyStore.svelte";
     import { auditReadiness } from "$lib/utils/auditReadiness.svelte";
     import AuditSourceStatus from "$lib/components/AuditSourceStatus.svelte";
     let auditSources = $derived(auditReadiness());
@@ -20,6 +22,19 @@
     let health = $derived($estateAnalytics.overallHealth);
     let pillars = $derived($estateAnalytics.pillars);
     let gaps = $derived($estateAnalytics.gaps.filter((g) => !!g));
+    let profileConfirmed = $derived(estateProfile.status === "synced");
+    // A confirmed executor contact proves the positive presence check even while
+    // the profile is unavailable. An absent contact cannot prove an empty profile.
+    let executorContactConfirmed = $derived(
+        auditSources.sources.find((source) => source.id === "family_members")?.state === "ready" &&
+        !!findExecutorName({}, contactSync.items),
+    );
+    let legalSourcesKnown = $derived(profileConfirmed || executorContactConfirmed);
+    let retryingProfile = $state(false);
+    async function retryProfile() {
+        retryingProfile = true;
+        try { await estateProfile.sync(); } finally { retryingProfile = false; }
+    }
 
     let showFireDrill = $state(false);
 
@@ -110,9 +125,10 @@
                         <Shield size={24} />
                     </div>
                     <span
-                        class={`text-2xl font-bold ${getHealthColor(pillars.legal.score)}`}
+                        class={`text-2xl font-bold ${legalSourcesKnown ? getHealthColor(pillars.legal.score) : "text-muted-foreground"}`}
+                        data-testid="analytics-legal-coverage"
                     >
-                        {pillars.legal.score}%
+                        {legalSourcesKnown ? `${pillars.legal.score}%` : "—"}
                     </span>
                 </div>
                 <h3 class="text-xl font-bold text-foreground mb-2">
@@ -122,6 +138,22 @@
                     Three presence checks: an executor name, a healthcare proxy
                     record and a living-will record. Each contributes one third.
                 </p>
+                {#if !profileConfirmed}
+                    <div class="mb-6 space-y-3 text-sm text-muted-foreground" role="status" data-testid="analytics-profile-status">
+                        <p>{estateProfile.status === "error"
+                            ? "Your estate profile could not be confirmed. Try Again before treating a missing executor name as an empty record."
+                            : "Gathering your estate profile before checking the recorded executor name."}</p>
+                        {#if executorContactConfirmed}
+                            <p>The executor check uses a confirmed contact record. Profile-dependent review topics are still waiting.</p>
+                        {/if}
+                        {#if estateProfile.status === "error"}
+                            <button class="rounded-lg border border-border px-3 py-2 font-medium text-foreground disabled:opacity-60" disabled={retryingProfile} onclick={retryProfile}>
+                                {retryingProfile ? "Gathering your estate profile..." : "Try Again"}
+                            </button>
+                        {/if}
+                    </div>
+                {/if}
+                {#if legalSourcesKnown}
                 <div class="space-y-3">
                     {#each Object.entries(pillars.legal.metrics).filter(([, v]) => typeof v === "boolean") as [key, active]}
                         <div class="flex items-center gap-3 text-sm">
@@ -150,6 +182,7 @@
                         </div>
                     {/each}
                 </div>
+                {/if}
             </div>
 
             <!-- Financial Pillar -->
@@ -260,7 +293,9 @@
 
         {/if}
         <!-- Next steps, written as invitations -->
-        {#if gaps.length > 0}
+        {#if !profileConfirmed}
+            <p class="text-muted-foreground" role="status" data-testid="analytics-topics-loading">Review topics will appear once your estate profile has been confirmed.</p>
+        {:else if gaps.length > 0}
             <div in:slide={{ duration: 400 }}>
                 <h2
                     class="text-xl font-bold text-foreground mb-6 flex items-center gap-2"
