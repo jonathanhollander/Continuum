@@ -22,7 +22,8 @@ const mapper = (data: Record<string, unknown>): ActivityLogEntry => data as unkn
 
 // --- Sync Manager ---
 
-const manager = registerSync<ActivityLogEntry>('activity_log', 'activity_log', mapper, '/api/data');
+// The log grows with every save; this device keeps the newest 200 entries.
+const manager = registerSync<ActivityLogEntry>('activity_log', 'activity_log', mapper, '/api/data').keepNewest(200, 'timestamp');
 
 // --- Store Exports ---
 
@@ -113,22 +114,26 @@ export const activityLog = {
      */
     async clear(): Promise<{ removed: number; remaining: number }> {
         const PER_MINUTE = 500;
-        const ids = manager.items.map((e) => e.id);
         let removed = 0;
         let windowStart = Date.now();
         let inWindow = 0;
-        for (const id of ids) {
-            if (inWindow >= PER_MINUTE) {
-                const wait = 60_000 - (Date.now() - windowStart);
-                if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-                windowStart = Date.now();
-                inWindow = 0;
+        // The device holds the newest 200; after each batch a fresh read brings the next ones.
+        for (let ids = manager.items.map((e) => e.id); ids.length; ) {
+            for (const id of ids) {
+                if (inWindow >= PER_MINUTE) {
+                    const wait = 60_000 - (Date.now() - windowStart);
+                    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+                    windowStart = Date.now();
+                    inWindow = 0;
+                }
+                inWindow++;
+                await manager.delete(id);
+                // manager.delete catches its own failure: rolled back, status "error", message shown.
+                if (manager.items.some((e) => String(e.id) === String(id))) return { removed, remaining: manager.items.length };
+                removed++;
             }
-            inWindow++;
-            await manager.delete(id);
-            // manager.delete catches its own failure: rolled back, status "error", message shown.
-            if (manager.items.some((e) => String(e.id) === String(id))) break;
-            removed++;
+            await manager.sync().catch(() => {});
+            ids = manager.items.map((e) => e.id);
         }
         return { removed, remaining: manager.items.length };
     },
