@@ -282,7 +282,7 @@
 {#if module}
     <LivingBlueprintHeader
         title="Final Wishes"
-        subtitle={module.title}
+        subtitle="Funeral and memorial preferences"
         detailedDescription={funeralIntro}
     />
 {/if}
