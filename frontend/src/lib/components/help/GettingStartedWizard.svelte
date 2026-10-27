@@ -165,8 +165,8 @@
                     Choose your next record
                 </h2>
                 <p class="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-                    This introduction has not saved or checked your records. Open your dashboard
-                    to add details, write a letter or review what you have already saved.
+                    Open your dashboard to add details, write a letter
+                    or review what you have already saved.
                 </p>
                 <a
                     href="/dashboard"

@@ -50,7 +50,7 @@
 
     let statusMessage = $derived.by(() => {
         if (progress.done === 0) {
-            return "No guide steps are marked finished yet.";
+            return "Mark guide steps as finished to track your work here.";
         } else if (completion < 30) {
             return "These are the guide steps you have marked finished.";
         } else if (completion < 60) {
