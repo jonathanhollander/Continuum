@@ -137,9 +137,10 @@
                     class="bg-card hover:bg-muted text-primary-deep dark:text-primary-hover border border-border px-4 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all disabled:opacity-60"
                 >
                     {#if busy === "zip"}<Loader2 size={18} class="animate-spin" />{:else}<Archive size={18} />{/if}
-                    Download copy
+                    Download full record and files
                 </button>
             </div>
+            <p class="mt-3 text-sm text-muted-foreground">The ZIP includes the readable record and available original files. Extract it, open <code>packet.html</code> and keep the <code>files</code> folder beside it. Use <code>packet.pdf</code> for a printable copy; review the file list for anything missing.</p>
         {/if}
     </div>
 

@@ -165,6 +165,10 @@
                 >
                     {$dict.labelPerspective}
                 </span>
+                <p class="text-sm text-muted-foreground">
+                    Choose how you view the records in this account. Use recipient links
+                    and their previews to manage what you share with someone else.
+                </p>
                 <div
                     role="group"
                     aria-labelledby="cs-perspective-label"

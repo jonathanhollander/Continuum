@@ -375,11 +375,13 @@
 {#if module}
     <LivingBlueprintHeader
         title={module.title}
-        subtitle={module.description}
+        subtitle="Photos, videos, their stories, and where other collections are kept"
     />
 {/if}
 
 <div class="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
+
+    <p class="mb-6 max-w-3xl text-muted-foreground leading-relaxed">Add photos or videos to the Curated Gallery. Open an item and choose Name and describe this memory to record the people, place, date, and story. Use External Archives for collections kept on another service or device, with directions for finding them.</p>
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">

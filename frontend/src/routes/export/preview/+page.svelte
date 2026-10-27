@@ -109,7 +109,7 @@
             <div>
                 <h1 class="font-serif text-xl text-foreground">Packet preview</h1>
                 <p class="text-xs text-muted-foreground">
-                    {SCOPE_LABELS[scope]}{includeImages ? " · with photos" : ""}
+                    PDF: {SCOPE_LABELS[scope]}{includeImages ? " · with photos" : ""}
                 </p>
             </div>
         </div>
@@ -127,7 +127,7 @@
                     class="flex items-center gap-2 bg-card border border-border text-foreground px-4 py-2 rounded-lg font-medium hover:bg-muted transition-colors disabled:opacity-60"
                 >
                     {#if packing}<Loader2 size={18} class="animate-spin" />{:else}<Archive size={18} />{/if}
-                    {copyCoverage?.issues.length ? "Try files and save copy" : "Download copy"}
+                    {copyCoverage?.issues.length ? "Retry files and download full record" : "Download full record and files"}
                 </button>
                 <button
                     onclick={downloadPDF}
@@ -139,6 +139,8 @@
             {/if}
         </div>
     </header>
+
+    <p class="bg-card border-b border-border px-6 py-3 text-sm text-muted-foreground">The PDF uses the scope shown above. The ZIP always includes the full record and available original files. Extract it, open <code>packet.html</code> and keep the <code>files</code> folder beside it. It also includes <code>packet.pdf</code> and a file list.</p>
 
     {#if copyNote}
         <section class="bg-card border-b border-border px-6 py-4 max-h-64 overflow-y-auto text-sm space-y-2" data-testid="preview-download-status" aria-label="Download status">

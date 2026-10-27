@@ -46,18 +46,18 @@
     type Step = { label: string; href: string };
     const STEPS: Record<string, Step[]> = {
         owner: [
-            { label: "Your Circle of Trust", href: "/modules/contacts" },
-            { label: "Document Vault", href: "/modules/legal-documents" },
-            { label: "Financial Accounts", href: "/modules/financial-accounts" },
-            { label: "Final Wishes", href: "/modules/funeral" },
-            { label: "Letters to Loved Ones", href: "/modules/letters" },
+            { label: "Record people and how to reach them", href: "/modules/contacts" },
+            { label: "Record documents and where originals are kept", href: "/modules/legal-documents" },
+            { label: "Explain accounts, ownership and contacts", href: "/modules/financial-accounts" },
+            { label: "Write funeral and memorial wishes", href: "/modules/funeral" },
+            { label: "Write a letter and choose its recipient", href: "/modules/letters" },
         ],
         executor: [
-            { label: "Executor Guide", href: "/modules/executor-toolkit" },
-            { label: "Document Vault", href: "/modules/legal-documents" },
-            { label: "Accounts to Close or Transfer", href: "/modules/subscriptions" },
-            { label: "Your Circle of Trust", href: "/modules/contacts" },
-            { label: "Final Wishes", href: "/modules/funeral" },
+            { label: "Review the executor guide and next steps", href: "/modules/executor-toolkit" },
+            { label: "Find documents and their originals", href: "/modules/legal-documents" },
+            { label: "Review recurring services and billing notes", href: "/modules/subscriptions" },
+            { label: "Find people to contact", href: "/modules/contacts" },
+            { label: "Read funeral wishes and arrangements", href: "/modules/funeral" },
         ],
     };
     $: steps = STEPS[module.role] || STEPS.owner;
@@ -142,7 +142,7 @@
                 <div class="mb-4 flex items-center justify-between gap-4">
                     <h3 class="text-xl font-serif flex items-center gap-2">
                         <BookOpen class="text-primary size-5" />
-                        Module Overview
+                        How to use this checklist
                     </h3>
                     <div
                         aria-hidden="true"
@@ -152,42 +152,31 @@
                     </div>
                 </div>
 
-                {#if module.description && module.description.length > 50}
-                    <div
-                        class="p-6 bg-muted/30 rounded-lg border border-border/50 text-foreground whitespace-pre-wrap font-serif leading-relaxed shadow-inner"
-                    >
-                        {module.description}
-                    </div>
-                {:else}
-                    <p class="text-muted-foreground leading-relaxed text-lg">
-                        {module.description ||
-                            `This section is part of your ${module.role} journey.`}
-                    </p>
-                    <p class="text-muted-foreground mt-2">
-                        This is a place to gather what matters about
-                        <em>{module.title}</em>, so it's easy for others to
-                        find.
-                    </p>
-                {/if}
+                <p class="text-muted-foreground leading-relaxed text-lg">
+                    Use this checklist to review the related records for {module.title}.
+                    Open a page, add or revise the details you know, then tick the check yourself.
+                </p>
                 <div
                     class="mt-6 flex items-center gap-4 text-sm text-muted-foreground"
                 >
                     <span
                         class="flex items-center gap-1.5 bg-muted border border-border px-3 py-1 rounded-full"
                     >
-                        A short while, at your pace
+                        Review one section at a time
                     </span>
                 </div>
             </div>
 
-            <!-- Action Items -->
+            <!-- Your review checks -->
             <div class="space-y-4">
                 <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-lg font-serif">Action Items</h3>
+                    <h3 class="text-lg font-serif">Your review checks</h3>
                     <span class="text-sm font-mono text-primary"
-                        >{progress}% Complete</span
+                        >{progress}% checked</span
                     >
                 </div>
+
+                <p class="text-sm text-muted-foreground">These are manual review checks. They count what you have ticked, not whether your estate arrangements are complete.</p>
 
                 <!-- Progress Bar -->
                 <div
@@ -257,10 +246,10 @@
             <section
                 class="bg-primary/5 border border-primary/10 rounded-xl p-6"
             >
-                <h3 class="font-bold text-sm text-primary-hover mb-2">Need Help?</h3>
+                <h3 class="font-bold text-sm text-primary-hover mb-2">Continue in the related page</h3>
                 <p class="text-xs text-muted-foreground mb-4">
-                    Whenever you'd like more guidance, your estate attorney is
-                    a good place to start.
+                    Each Open link takes you to the page where those records live.
+                    Start with the details you know and return when you have more to add.
                 </p>
             </section>
         </div>

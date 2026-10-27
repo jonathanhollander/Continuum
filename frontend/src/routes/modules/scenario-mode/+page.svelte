@@ -28,7 +28,7 @@
             id: "sudden_disability",
             title: "Scenario: Sudden Disability",
             description:
-                "You are in hospital and someone you trust decides for you. Who takes over and what can they find?",
+                "Review who is named for care decisions and which instructions are recorded.",
             icon: Activity,
             color: "text-info",
             bg: "bg-info/10",
@@ -37,7 +37,7 @@
             id: "passing",
             title: "Scenario: Final Passing",
             description:
-                "The estate transition begins. Are the keys, wills, and guardians ready for the executor?",
+                "Review the recorded executor name, account list, heirlooms and healthcare proxy.",
             icon: Dna,
             color: "text-primary-hover",
             bg: "bg-primary-soft",
@@ -147,7 +147,8 @@
                 Future Scenarios
             </h1>
             <p class="text-muted-foreground mt-2 text-lg">
-                Review the records your loved ones may need in each scenario.
+                Find selected records for a practice discussion. Presence does not
+                verify authority, document validity, access or a complete handover.
             </p>
         </div>
         <div
@@ -156,7 +157,7 @@
             <div
                 class="text-xs font-black uppercase tracking-widest text-muted-foreground"
             >
-                Record Audit
+                Record coverage score
             </div>
             {#if auditSources.canScore}<div class="text-2xl font-black">{readiness.score}%</div>{/if}
         </div>
@@ -229,7 +230,7 @@
                         <h3
                             class="text-xs font-black uppercase tracking-widest text-muted-foreground mb-6 flex items-center gap-2"
                         >
-                            <Users size={14} /> Who Steps In
+                            <Users size={14} /> People Named in Records
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div
@@ -263,7 +264,7 @@
                                         <p
                                             class="text-xs text-warning font-medium"
                                         >
-                                            An executor carries out your wishes.
+                                            Record the intended executor's name, then confirm the arrangement and authority separately.
                                         </p>
                                     </div>
                                 {/if}
@@ -300,7 +301,7 @@
                                         <p
                                             class="text-xs text-warning font-medium"
                                         >
-                                            A proxy lets someone you trust decide.
+                                            Record the healthcare proxy and where the relevant original is kept.
                                         </p>
                                     </div>
                                 {/if}
@@ -313,7 +314,7 @@
                         <h3
                             class="text-xs font-black uppercase tracking-widest text-muted-foreground mb-6 flex items-center gap-2"
                         >
-                            <Wallet size={14} /> Asset Pathfinding
+                            <Wallet size={14} /> Recorded Account & Heirloom Lists
                         </h3>
                         <div class="space-y-4">
                             <div
@@ -335,7 +336,7 @@
                                         >
                                             {readiness.hasDigital
                                                 ? countRecords(sources.hasDigital.length, "digital account")
-                                                : "Listing your digital accounts lets your family find each one."}
+                                                : "No digital account records found. Record the accounts and where approved recovery instructions are kept."}
                                         </p>
                                         {@render recordedSources("hasDigital")}
                                     </div>
@@ -372,7 +373,7 @@
                                         >
                                             {readiness.hasHeirlooms
                                                 ? countRecords(sources.hasHeirlooms.length, "heirloom")
-                                                : "Listing your heirlooms lets your family care for each one."}
+                                                : "No heirloom records found. Record the items, their stories and intended recipients."}
                                         </p>
                                         {@render recordedSources("hasHeirlooms")}
                                     </div>
@@ -397,16 +398,15 @@
                     >
                         <div class="flex-1">
                             <h3 class="text-2xl font-black mb-2 text-white">
-                                Drill Recommendations
+                                One Record to Review Next
                             </h3>
                             <p
                                 class="text-white/80 leading-relaxed font-medium"
                             >
                                 {#if nextCheck}
-                                    Based on the <strong
-                                        >{activeScenario.title}</strong
-                                    >, your highest priority is the
-                                    <strong>{nextCheck.label}</strong>, so that {nextCheck.goal}.
+                                    The first missing check in this walkthrough's fixed list is
+                                    <strong>{nextCheck.label}</strong>. Review it so that {nextCheck.goal}.
+                                    This list does not rank legal or emergency priorities.
                                 {:else}
                                     The records used in <strong>{activeScenario.title}</strong>
                                     are present. Review their details and access instructions.

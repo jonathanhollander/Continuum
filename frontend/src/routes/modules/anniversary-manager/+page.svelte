@@ -210,9 +210,9 @@
 <!-- Header -->
     <LivingBlueprintHeader
         title="Important Dates"
-        subtitle="Transforming sensitive dates into intentional moments of connection"
-        detailedDescription="Create meaningful rituals for birthdays, anniversaries, and remembrance days. Guide your family on how to observe these dates with intention, healing, and legacy."
-        whyMatters="With your guidance, your family has gentle rituals for the dates that carry emotion. Creating rituals transforms grief into intentional remembrance."
+        subtitle="Dates and wishes for your family to refer to"
+        detailedDescription="Record birthdays, anniversaries and remembrance days, with a note about how you would like them observed. Save a date, a description and any optional ritual guidance."
+        whyMatters="A written note gives your family a place to find what you wanted for a meaningful day."
     >
         <button
             onclick={() => (showAddModal = true)}
@@ -227,7 +227,7 @@
     <p class="text-sm text-muted-foreground">
         These dates also appear in your
         <a href="/modules/calendar" class="font-bold text-primary-hover hover:underline">Event Calendar</a>,
-        where you can add a wish and a future message for each day.
+        where you can save a wish and an email draft for a person to review and send.
     </p>
 
     <!-- AI Concierge Drafting Assistant -->
@@ -255,8 +255,8 @@
 
             {#if $upcomingEvents.length === 0}
                 <EmptyState
-                    title="Honor the moments that matter"
-                    whyMatters="<strong>Birthdays, anniversaries, and remembrance days carry deep emotional weight.</strong> With your guidance, your family has gentle rituals for the dates that carry emotion.<br/><br/>Creating rituals for these moments transforms grief into intentional remembrance. Your family will have a ritual to follow, making hard days feel purposeful."
+                    title="Record an important date"
+                    whyMatters="Save a birthday, anniversary or remembrance day with a short note about what it means. You can add an optional wish, such as visiting a favorite place or sharing a meal."
                     encouragement="Start with one meaningful date. Add a simple ritual that feels true to your spirit."
                     icon={Heart}
                     iconClass="text-primary"
@@ -371,7 +371,7 @@
                                             <div class="space-y-1">
                                                 <span
                                                     class="text-[10px] font-black uppercase text-success tracking-widest"
-                                                    >Recommended Ritual</span
+                                                    >Your wish for this date</span
                                                 >
                                                 <p
                                                     class="text-sm text-muted-foreground italic leading-relaxed"
@@ -457,7 +457,7 @@
             >
                 <div class="flex items-center gap-3 text-primary-hover">
                     <Info size={24} />
-                    <h3 class="font-bold text-lg">Grief-Aware Design</h3>
+                    <h3 class="font-bold text-lg">Using your date notes</h3>
                 </div>
                 <div class="space-y-4">
                     <div class="flex gap-4">
@@ -465,8 +465,8 @@
                             class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"
                         ></div>
                         <p class="text-sm text-foreground leading-relaxed">
-                            <strong>Gentle Pacing:</strong> Reminders arrive only
-                            when they matter.
+                            <strong>Saved date notes:</strong> Return here to review
+                            the dates and wishes you have recorded.
                         </p>
                     </div>
                     <div class="flex gap-4">
@@ -481,18 +481,18 @@
                 </div>
                 <div class="pt-4 border-t border-primary/20 mt-4">
                     <p class="text-xs text-muted-foreground text-center">
-                        Your Emotional Registry
+                        Dates and wishes saved for reference
                     </p>
                 </div>
             </div>
 
-            <!-- Ritual Library Preview -->
+            <!-- Ideas for a ritual Preview -->
             <div
                 class="bg-card rounded-[2rem] border border-border p-8 space-y-6 shadow-sm"
             >
                 <div class="flex items-center gap-3 text-foreground">
                     <Flame size={24} class="text-muted-foreground" />
-                    <h3 class="font-bold text-lg">Ritual Library</h3>
+                    <h3 class="font-bold text-lg">Ideas for a ritual</h3>
                 </div>
                 <ul class="space-y-4">
                     {#each ["Sound & Silence", "Elemental Release", "Physical Memorial"] as ritual}
@@ -660,7 +660,7 @@
                         aria-busy={saving}
                         class="flex-2 px-10 py-3.5 bg-primary text-primary-foreground rounded-2xl font-bold shadow-lg hover:opacity-90 transition-all font-sans disabled:opacity-50"
                     >
-                        {saving ? "Saving..." : "Save Memory"}
+                        {saving ? "Saving..." : "Save date"}
                     </button>
                 </div>
             </div>

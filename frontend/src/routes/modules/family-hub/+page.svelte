@@ -428,7 +428,7 @@
                                 <textarea
                                     bind:value={newMemory.desc}
                                     class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none h-24 resize-none mt-1"
-                                    placeholder="Secret ingredients..."
+                                    placeholder="Ingredients and quantities, preparation steps, cooking time, and who taught you this recipe..."
                                 ></textarea>
                             </label>
                         </div>
@@ -492,7 +492,7 @@
                         Family Network
                     </h2>
                     <p class="text-muted-foreground text-sm">
-                        Interactive map of your estate hierarchy and key roles.
+                        People recorded in Family &amp; Contacts. Open a person to read or update their details.
                     </p>
                 </div>
             </div>
@@ -523,20 +523,21 @@
         </div>
     {:else}
         <div class="max-w-6xl mx-auto px-8 pb-20 relative z-30" in:fade>
+            <p class="mb-6 max-w-3xl text-muted-foreground leading-relaxed">Keep family photos, recipes, quotations, and their stories together. Family &amp; Contacts holds contact details and recipient choices; the Life Timeline holds dated events.</p>
             <!-- BLUEPRINT HEADER -->
             <div class="mb-12">
                 <BlueprintCard
-                    title="Establish Your Family Network"
-                    description="Your plan is held by trusted people. Add them here whenever you feel ready."
+                    title="Family records to gather"
+                    description="Record the people connected to your plan, name your executor, and add a family memory. These checks describe the records gathered here."
                     timeEstimate="At your own pace"
                     steps={[
                         {
-                            label: "Welcome 3 family members",
+                            label: "At least 3 contacts recorded",
                             completed: familyStore.members.length >= 3,
                         },
-                        { label: "Name your executor", completed: !!$estateExecutorName },
+                        { label: "Executor name recorded", completed: !!$estateExecutorName },
                         {
-                            label: "Share a memory",
+                            label: "Family memory recorded",
                             completed: memories.length > 0,
                         },
                     ]}

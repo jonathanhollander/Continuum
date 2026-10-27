@@ -362,12 +362,12 @@
                     <ShieldCheck size={32} />
                 </div>
                 <h1 class="font-bold text-3xl text-foreground">
-                    Your records, kept safe
+                    Your record copies
                 </h1>
             </div>
             <p class="text-muted-foreground max-w-xl text-lg">
-                See what is saved on this device and in your Continuum
-                space.
+                Review the working copy on this device and the saved copy in your account.
+                Sync records to refresh them; review any errors before continuing.
             </p>
         </div>
 
@@ -388,7 +388,7 @@
                 <div class={isAuditing ? "animate-spin" : ""}>
                     <RefreshCw size={18} />
                 </div>
-                {isAuditing ? "Checking..." : "Take a look"}
+                {isAuditing ? "Checking..." : "Compare saved copies"}
             </button>
             {/if}
 
@@ -398,7 +398,7 @@
                 class="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl flex items-center gap-2 font-bold hover:bg-primary-hover disabled:opacity-50 transition-all shadow-lg shadow-primary/10"
             >
                 <RefreshCw class={syncingAll ? "animate-spin" : ""} size={18} />
-                {syncingAll ? "Syncing..." : "Sync All"}
+                {syncingAll ? "Syncing..." : "Sync records"}
             </button>
         </div>
     </div>
@@ -549,7 +549,7 @@
                                         <div
                                             class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
                                         >
-                                            Local
+                                            On this device
                                         </div>
                                         <div
                                             class="text-2xl font-mono text-foreground font-bold"
@@ -562,7 +562,7 @@
                                         <div
                                             class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
                                         >
-                                            Cloud DB
+                                            In your account
                                         </div>
                                         {#if audit}
                                             <div
@@ -637,7 +637,7 @@
                     {card.label} Records
                 </h3>
                 <div class="text-sm text-muted-foreground">
-                    Showing merged view of Local & Cloud State
+                    Device records, plus account records from the latest comparison
                 </div>
             </div>
             <div class="max-h-[500px] overflow-y-auto">
@@ -676,13 +676,13 @@
                                         <div
                                             class="flex items-center gap-2 text-success font-bold"
                                         >
-                                            <CheckCircle size={16} /> Synced
+                                            <CheckCircle size={16} /> In account copy
                                         </div>
                                     {:else}
                                         <div
                                             class="flex items-center gap-2 text-warning font-bold"
                                         >
-                                            <RefreshCw size={16} /> Pending
+                                            <RefreshCw size={16} /> Device only at last check
                                         </div>
                                     {/if}
                                 </td>
@@ -700,11 +700,11 @@
                                     {#if isTest}
                                         <span
                                             class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold bg-primary-soft text-primary-hover border border-primary/20"
-                                            ><TestTube size={12} /> Validation</span
+                                            ><TestTube size={12} /> Sample entry</span
                                         >
                                     {:else}
                                         <span class="text-muted-foreground"
-                                            >User Input</span
+                                            >Your record</span
                                         >
                                     {/if}
                                 </td>
@@ -718,7 +718,7 @@
                             {#each audit.details.onlyRemote as item}
                                 <tr class="bg-muted/50">
                                     <td class="p-4 text-muted-foreground italic"
-                                        >Saved online</td
+                                        >In account copy</td
                                     >
                                     <td class="p-4 text-muted-foreground"
                                         >{rowType(item)}</td

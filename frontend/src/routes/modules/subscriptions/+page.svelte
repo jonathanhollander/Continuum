@@ -18,7 +18,7 @@
     import SubscriptionRow from "$lib/components/modules/subscriptions/SubscriptionRow.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
-    import { onMount, tick } from "svelte";
+    import { onMount, onDestroy, tick } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { auth } from "$lib/stores/auth";
     import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
@@ -94,6 +94,15 @@
     let letterSigner = $state("");
     let letterCapacity = $state("");
     let letterOwner = captureSession();
+    let letterGeneration = 0;
+    let pdfJob: symbol | null = null;
+    let pdfBusy = $state(false);
+    function retireLetterPDF() {
+        letterGeneration += 1;
+        pdfJob = null;
+        pdfBusy = false;
+    }
+    onDestroy(retireLetterPDF);
     $effect(() => {
         $auth;
         if (showLetterModal && !isCurrentSession(letterOwner)) closeLetterModal();
@@ -216,6 +225,7 @@
     }
 
     function openLetterModal(sub: Subscription) {
+        retireLetterPDF();
         selectedSubForLetter = sub;
         letterOwner = captureSession();
         letterSigner = letterCapacity = "";
@@ -235,12 +245,14 @@
 
     function resetLetter() {
         if (selectedSubForLetter) {
+            retireLetterPDF();
             letterSigner = letterCapacity = "";
             customLetterContent = generateDefaultLetter(selectedSubForLetter);
         }
     }
 
     function closeLetterModal() {
+        retireLetterPDF();
         showLetterModal = false;
         selectedSubForLetter = null;
         customLetterContent = letterSigner = letterCapacity = "";
@@ -291,18 +303,28 @@
     }
 
     // Download PDF: the same letter as a PDF file, written with the jsPDF library the export packet uses.
-    let pdfBusy = $state(false);
     async function downloadLetterPDF() {
         const sub = selectedSubForLetter;
-        if (!sub || pdfBusy) return;
+        if (!sub || !showLetterModal || pdfBusy || !isCurrentSession(letterOwner)) return;
+        const owner = captureSession();
+        const generation = letterGeneration;
+        const job = Symbol();
+        // Capture the requested draft before loading modules/fonts. New typing stays on screen.
+        const l = letterParts(sub);
+        const body = (letterBody?.innerText ?? "").split(/\n+/).map((t) => t.trim()).filter(Boolean);
+        const file = `${sub.name || "Subscription"} closure enquiry`.replace(/[\\/:*?"<>|]+/g, " ").trim();
+        pdfJob = job;
         pdfBusy = true;
+        const current = () => pdfJob === job && generation === letterGeneration
+            && showLetterModal && selectedSubForLetter === sub && isCurrentSession(owner);
         try {
             const [{ createUnicodePDF, PDF_FONT, splitPDFText, writePDFLine }, { saveBlob }] = await Promise.all([
                 import("$lib/services/unicodePDF"),
                 import("$lib/services/exportService"),
             ]);
-            const l = letterParts(sub);
+            if (!current()) return;
             const doc = await createUnicodePDF();
+            if (!current()) return;
             const W = doc.internal.pageSize.getWidth();
             const H = doc.internal.pageSize.getHeight();
             const M = 72;
@@ -322,7 +344,6 @@
             write(l.date, { bold: true });
             write(l.to, { gap: 20 });
             write(l.subject, { bold: true, gap: 10 });
-            const body = (letterBody?.innerText ?? "").split(/\n+/).map((t) => t.trim()).filter(Boolean);
             for (const para of body) write(para, { gap: 6 });
             y += 18;
             write("Sincerely,", { gap: 30 });
@@ -331,10 +352,13 @@
             y += 6;
             write(l.signer, { bold: true });
             write(l.role, { italic: true, size: 9 });
-            const file = `${sub.name || "Subscription"} closure enquiry`.replace(/[\\/:*?"<>|]+/g, " ").trim();
+            if (!current()) return;
             saveBlob(doc.output("blob"), `${file}.pdf`);
         } finally {
-            pdfBusy = false;
+            if (pdfJob === job) {
+                pdfJob = null;
+                pdfBusy = false;
+            }
         }
     }
 

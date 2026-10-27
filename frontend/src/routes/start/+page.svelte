@@ -106,14 +106,14 @@
             <h1
                 class="text-4xl md:text-6xl font-serif font-bold text-foreground leading-tight"
             >
-                Your plan, <br />
-                <span class="text-primary">one conversation at a time.</span>
+                Choose where <br />
+                <span class="text-primary">to begin.</span>
             </h1>
             <p
                 class="{fontSizeClass} text-muted-foreground max-w-lg mx-auto leading-relaxed"
             >
-                Welcome to Continuum. I am your AI Concierge, here to guide you
-                through caring for your family's future.
+                Record personal messages and practical information for your family.
+                Choose guidance or open your records to start writing.
             </p>
         </div>
 
@@ -157,17 +157,17 @@
                         </div>
                         <div>
                             <h3 class="text-xl font-bold text-foreground">
-                                AI Guided Journey
+                                Help me decide what to record
                             </h3>
                             <p class="text-sm text-muted-foreground mt-2">
-                                Talk with the AI Concierge to build your estate
-                                plan through conversation.
+                                Ask the AI Concierge for a starting point, a writing
+                                prompt, or help organizing the details you know.
                             </p>
                         </div>
                         <div
                             class="mt-auto flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest pt-4"
                         >
-                            <span>Begin Intro</span>
+                            <span>Open AI Concierge</span>
                             <ArrowRight
                                 size={14}
                                 class="group-hover:translate-x-1 transition-transform"
@@ -189,11 +189,11 @@
                         </div>
                         <div>
                             <h3 class="text-xl font-bold text-foreground">
-                                Expert Control
+                                Open my records
                             </h3>
                             <p class="text-sm text-muted-foreground mt-2">
-                                Go straight to your dashboard, if you know
-                                your way around.
+                                Open your dashboard to write a letter, explain an
+                                account, or add another record at your own pace.
                             </p>
                         </div>
                         <div

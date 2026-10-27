@@ -447,7 +447,7 @@
             <h2 class="font-serif text-3xl text-primary-deep">The full record</h2>
             <p class="text-slate-600 leading-relaxed">
                 The records shared with you, in one place: accounts, property, insurance, documents, financial history, wishes and more.
-                The copy holds the recorded details and the files gathered for it, with a file list.
+                The ZIP copy holds these shared records and available original files, with a file list.
             </p>
             <div class="flex flex-wrap gap-3">
                 <button
@@ -465,9 +465,10 @@
                     data-testid="recipient-download"
                 >
                     {#if busy}<Loader2 class="w-4 h-4 animate-spin" />{:else}<Archive class="w-4 h-4" />{/if}
-                    Save a copy to keep
+                    Download shared record and files
                 </button>
             </div>
+            <p class="text-sm text-slate-600">To read the copy later, extract the ZIP and open <code>packet.html</code>. Keep the <code>files</code> folder beside it. Use <code>packet.pdf</code> for a printable copy, and review the file list for anything missing.</p>
             {#if downloadNote}<p class="text-sm text-slate-600" role="status" data-testid="recipient-download-note">{downloadNote}</p>{/if}
             {#if fileIssues.length}
                 <div class="rounded-xl border border-slate-200 p-4 space-y-3 text-sm text-slate-600" data-testid="recipient-file-issues">

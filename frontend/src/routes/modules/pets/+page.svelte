@@ -494,8 +494,8 @@
         bind:open={() => showAddForm, setFormOpen}
         title={newPet.id ? "Update Their Care Plan" : "Record a pet care plan"}
         description={newPet.id
-            ? "Keep their information current so their next caregiver has everything they need."
-            : "Your pet will be cared for by someone who truly understands them—their routines, their quirks, and their needs."}
+            ? "Keep the recorded care details current and review them with the person who will help."
+            : "Record your pet's routines, care details and the arrangements you have discussed with their intended carer."}
         maxWidth="max-w-lg"
     >
         <div class="space-y-4">

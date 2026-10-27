@@ -2,6 +2,17 @@
 
 Last Updated: 2026-10-26 EDT. Reviewed primary source `b3a52541c59800230139c56c38733b4210d2ef16`; implementation base `66b308f2b7177432e4c8a4ee4b9e9082e67f524c`.
 
+## Current UI-to-answer correction
+
+The original X378 inventory below is retained at its stated source cutoff. The owner's actual response example exposed an additional UI contract gap, corrected by X382/X383/X384 in application cut `c378b416bdb8f513e8410f205ea517bd695bd6fa`:
+
+- Eighteen named input slots now include the visible field label, exact current question and ordered labeled prior answers. All are controlled by existing Admin inclusion/templates and shown in the prepared request. Letter bullet answers keep their question pairing when an intermediate answer is blank. The three bullet questions and fourteen funeral reflection questions are registered assets: **35 groups,79 direct consumer bindings**.
+- Module responses contain raw editable text; the fabricated `[Draft based on: …]` content prefix is removed. Prompt provenance is separate. Letters offer an explicit reviewed handoff to the existing editor, with cancel, current-recipient, job/session and late-response guards. Accepted prose/recipient/type survives explicit Save/reload; no raw interview archive is added to shareable records.
+- Final Wishes now uses its own `funeral` module context and current shown form/stage/question, including choices whose save is still pending. Recorded facts remain distinct. The same funeral conversation survives step changes; old-stage replies cannot replace the new state. General wishes, arrangements, atmosphere/music/readings and optional obituary work have appropriate instructions/chips.
+- The current registry is **42 combinations**: four non-variant purposes,20 module selectors and18 writer selectors. Forty have mounted UI consumers; executor and obituary remain compatibility selectors. Final Wishes uses funeral instead of obituary. The shared and shipped default is Fireworks DeepSeek V4.1 Flash; Continuum attribution remains unchanged.
+
+Focused evidence: X382 actual resolver/API/privacy checks at `/private/tmp/continuum-x382-*.log`; X383's22 composed checks plus two context/reset boundary checks at `/private/tmp/continuum-x383/`; X384 API and combined-page checks plus one held-save/stale-stage phase at `/private/tmp/continuum-x384-*`. Root reviewed all changed code/callers and actual1440px screenshots. Final combined check0/0 and build passed. No inference was sent: these proofs establish request/context/UI contracts rather than model prose quality. The old motivational paragraph and mojibake have no literal match in active source; their original request/response bytes were not retained, so their exact origin is not claimed.
+
 The finite defaults now support personal words and practical handover equally. They use the supplied recipient and author; no person's name is embedded. Every change uses the existing shared → purpose → variant settings and the existing 33 asset entries. Model selection, API shapes, privacy restoration, suggestion acceptance and sharing choices are unchanged. The owner's saved Shared Fireworks DeepSeek V4.1 Flash selection remains authoritative. Root's separate production metadata review found empty request-config overrides, so shipped prompt defaults can take effect without a database write. Explicit future Admin overrides still take precedence.
 
 ## Source findings and implementation
@@ -12,7 +23,7 @@ The finite defaults now support personal words and practical handover equally. T
 - Two QR cover-letter bodies promised scoped family-only access or master keys/password access. They now explain signed-in owner shortcuts and the separate existing recipient link. Other institutional bodies remove invented appointments/enclosures/completed transfers/refund entitlement; requests with supplied identities remain requests. SSN examples use an identifying reference rather than a nested/full-SSN placeholder.
 - All model-bound input/context/history instructions remain Admin-visible. Full available relevant user/model history is enabled, with no message-count truncation; existing overflow refusal and application bounds remain. Current job/brief/recipient/notes/facts and edited-versus-proposed draft slots remain explicit. Rewrites place the original in the task once.
 
-## All 41 registered call combinations
+## Original X378 inventory: 41 registered call combinations
 
 `M` below means `concierge.module_prompt/<variant>` through `AIPromptBar.svelte` → `aiConciergeService.modulePrompt`. All M requests retain relevant module conversation/current job; pages without an engaged writing job supply their request and module context, not an automatic estate collection. Each M override supplies the named task and uses JSON `message` with the existing optional response fields. Token settings are maximum output budgets, not a promise of output length or empirical quality.
 

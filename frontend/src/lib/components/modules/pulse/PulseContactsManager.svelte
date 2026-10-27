@@ -427,8 +427,8 @@
                                                     : 'bg-card border-border text-muted-foreground'}"
                                             >
                                                 {contact.notify_on_safety_timer
-                                                    ? "Told when I start a timer"
-                                                    : "Told only if I'm quiet"}
+                                                    ? "Alert if a timer expires"
+                                                    : "Safety timer alerts off"}
                                             </button>
                                         </div>
                                     </div>

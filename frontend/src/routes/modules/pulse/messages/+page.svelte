@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount, onDestroy, tick } from "svelte";
     import { apiGet, apiPost } from "$lib/api/client";
-    import { MessageSquare, Send, User, Reply, Inbox } from "lucide-svelte";
+    import { MessageSquare, Save, User, Reply, Inbox } from "lucide-svelte";
     import { slide, fade } from "svelte/transition";
     import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
 
@@ -218,7 +218,7 @@
                 Message Hub
             </h1>
             <p class="text-muted-foreground text-sm mt-1">
-                Notes between you and the people you trust.
+                Saved notes for your guardians, their replies, and recorded alert attempts.
             </p>
         </div>
         <a
@@ -410,8 +410,14 @@
 
                 <!-- Composer Input -->
                 <div class="p-4 border-t border-slate-800 bg-slate-950/50">
+                    <p id="portal-note-help" class="text-xs text-muted-foreground mb-3 leading-relaxed">
+                        Save a note for {activeContact?.name ?? "this person"} to read in their guardian portal when
+                        their link and account access allow it. These notes appear alongside check-in status.
+                        For example: “The blue folder is in the desk drawer.”
+                        <a href="/modules/pulse/transparency" class="text-primary hover:underline">Preview their view</a>.
+                    </p>
                     <form
-                        class="flex gap-2"
+                        class="flex flex-col sm:flex-row gap-2"
                         onsubmit={(e) => {
                             e.preventDefault();
                             sendMessage();
@@ -419,7 +425,8 @@
                     >
                         <input
                             type="text"
-                            aria-label="Note for this person"
+                            aria-label={`Note for ${activeContact?.name ?? "this person"}`}
+                            aria-describedby="portal-note-help"
                             bind:value={newMessage.text}
                             disabled={sending}
                             oninput={(event) => {
@@ -429,14 +436,14 @@
                                 saveNotice = "";
                             }}
                             placeholder="Write a note for them..."
-                            class="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                            class="w-full min-w-0 sm:flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
                         />
-                        <button aria-label={sending ? "Saving note" : "Send"}
+                        <button aria-label={sending ? "Saving note" : `Save note for ${activeContact?.name ?? "this person"}`}
                             type="submit"
                             disabled={sending || !newMessage.text.trim()}
-                            class="bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground p-3 rounded-xl transition-all"
+                            class="bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground p-3 rounded-xl transition-all flex items-center justify-center gap-2"
                         >
-                            <Send class="w-5 h-5" />
+                            <Save class="w-5 h-5" /> <span>Save note</span>
                         </button>
                     </form>
                 </div>
@@ -445,7 +452,7 @@
                     class="flex-1 flex flex-col items-center justify-center text-muted-foreground"
                 >
                     <MessageSquare class="w-16 h-16 opacity-20 mb-4" />
-                    <p>Choose a person to read your notes together.</p>
+                    <p>Choose a person to review or save a note for their guardian portal.</p>
                 </div>
             {/if}
         </div>

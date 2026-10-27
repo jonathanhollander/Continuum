@@ -77,14 +77,14 @@
           "Help me distinguish the history I know from family recollection."
         ],
         "legal_explainer": [
-          "Explain what a Living Will is...",
-          "Summarize the role of a Healthcare Proxy...",
-          "What is a Power of Attorney?"
+          "Explain the document type I name in plain language.",
+          "Help me record where the original of this document is kept.",
+          "Help me prepare questions for my lawyer about the documents I describe."
         ],
         "contacts": [
-          "Help me organize my emergency contact list...",
-          "Draft a message to notify loved ones...",
-          "Who should be in my inner circle?"
+          "Help me explain how this named person can help my family.",
+          "Help me write practical notes about contacting this person.",
+          "Help me record which documents or keys this person holds."
         ],
         "medical": [
           "Explain advance healthcare directives...",
@@ -92,34 +92,34 @@
           "What should my healthcare proxy know?"
         ],
         "pets": [
-          "Help me write care instructions for my pet...",
-          "Draft a letter to my pet's future guardian...",
-          "What details should I include about my pet?"
+          "Help me organize the care instructions I provide for my pet.",
+          "Help me identify missing routine and supply details.",
+          "Help me write a note to the carer I have discussed arrangements with."
         ],
         "property": [
-          "Help me document property ownership details...",
-          "What information do executors need about real estate?",
-          "Draft a property description for my records..."
+          "Help me organize the ownership details and document locations I provide.",
+          "Help me turn my property instructions into clear notes.",
+          "Help me record the date and source of a valuation."
         ],
         "insurance": [
-          "Help me organize my insurance policies...",
-          "What insurance information should I document?",
-          "Explain how beneficiaries claim insurance..."
+          "Help me organize the policy details and insurer contacts I provide.",
+          "Help me prepare questions about the insurer’s current claims process.",
+          "Help me identify information still missing from this policy record."
         ],
         "digital-guardian": [
-          "Help me document my digital accounts...",
-          "What happens to online accounts when I pass?",
-          "How do I set up a digital legacy contact?"
+          "Help me explain where recovery instructions are kept, using placeholders for secrets.",
+          "Help me write my wish for one online account.",
+          "Help me prepare questions about a provider’s official legacy-access options."
         ],
         "visual-memories": [
-          "Help me organize my photo archives...",
-          "How should I document my memory locations?",
-          "Draft notes about my photo collection..."
+          "Help me write a caption from the people, place, date, and story I provide.",
+          "Ask me what my son should know about the memory I describe.",
+          "Help me record where the rest of this collection is kept and how to find it."
         ],
         "financial": [
-          "What should my family know about my accounts?",
-          "How do beneficiary designations work on bank accounts?",
-          "Help me write a note about where my accounts are held..."
+          "Help me turn the account details I provide into a note for my son.",
+          "Help me identify details still missing from this account record.",
+          "Help me explain where the statements and original documents are kept."
         ],
         "activity-log": [
           "How can a record of changes help my executor?",
@@ -169,15 +169,15 @@
           "How did you feel?"
         ],
         "contact": [
-          "Best time to reach them",
-          "How they would like to hear it",
-          "Someone to have with them",
-          "Words that would comfort them"
+          "This person can help my family with: ",
+          "Records or keys this person holds: ",
+          "How and when to contact them: ",
+          "Personal context and communication preferences: "
         ],
         "pet": [
-          "How did they join the family?",
-          "Funny quirks?",
-          "What did you love most?"
+          "Food, medication, daily routine and agreed care arrangements: ",
+          "Supplies, veterinary records and important contacts: ",
+          "Familiar comforts, quirks and favorite memories: "
         ],
         "funeral": [
           "Music requests",
@@ -481,7 +481,7 @@
         "Help me organize the purchase details and documents I provide.",
         "Help me write a maintenance note using my actual instructions.",
         "Help me prepare questions about an insurance claim.",
-        "Help me explain where the records for this item are kept."
+        "Help me write my wish for one online account and explain where the provider instructions are kept."
       ],
       "routes/modules/anniversary-manager/+page.svelte:prompts": [
         "Help me explain the significance of a date I describe.",

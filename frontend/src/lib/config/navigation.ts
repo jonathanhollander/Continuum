@@ -136,7 +136,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/time-capsule",
                 icon: Box,
                 allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Messages that open on a date or a milestone"
+                tooltip: "Messages with your wishes about when they should be read"
             },
             {
                 label: "The Life Timeline",
@@ -197,7 +197,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/digital-guardian",
                 icon: Shield,
                 allowedRoles: ["Owner", "Executor"],
-                tooltip: "Online accounts, passwords, and digital life"
+                tooltip: "Online account wishes and recovery-instruction locations"
             },
         ],
     },
@@ -339,12 +339,12 @@ export const navGroups: NavGroup[] = [
                 tooltip: "Step-by-step help for the person settling the estate"
             },
             {
-                label: "Your Full Record",
+                label: "Additional Records",
                 key: "advanced-registry",
                 href: "/modules/advanced-registry",
                 icon: Database,
                 allowedRoles: ["Owner", "Executor"],
-                tooltip: "Everything you have recorded, in one place"
+                tooltip: "Purchase history, maintenance, claims, and account wishes"
             },
             {
                 label: "Builder Tools",
@@ -510,7 +510,7 @@ export const catalogCategories: CatalogCategory[] = [
             { label: "Important Dates", key: "anniversary", href: "/modules/anniversary-manager", icon: Sparkles, allowedRoles: ["Owner", "Executor", "Family"] },
             { label: "Future Scenarios", key: "scenario", href: "/modules/scenario-mode", icon: Compass, allowedRoles: ["Owner"], isPreview: true },
             { label: "Event Calendar", key: "calendar", href: "/modules/calendar", icon: Calendar, allowedRoles: ["Owner", "Executor", "Family"] },
-            { label: "Your Full Record", key: "advanced-registry", href: "/modules/advanced-registry", icon: Database, allowedRoles: ["Owner", "Executor"] },
+            { label: "Additional Records", key: "advanced-registry", href: "/modules/advanced-registry", icon: Database, allowedRoles: ["Owner", "Executor"], tooltip: "Purchase history, maintenance, claims, and account wishes" },
             { label: "Treasure Hunt", key: "treasurehunt", href: "/modules/treasure-hunt", icon: MapPin, allowedRoles: ["Owner", "Executor", "Family"], isPreview: true },
             { label: "Builder Tools", key: "builders", href: "/modules/builders-console", icon: Hammer, allowedRoles: ["Owner"], isPreview: true },
         ]

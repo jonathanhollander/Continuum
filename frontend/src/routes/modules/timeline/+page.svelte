@@ -62,11 +62,11 @@
     // Use store directly
     let lifeEvents = $derived(timelineStore.items);
 
-    // The track starts at the earliest event (1990 until the first event exists)
+    // A schematic timeline of recorded years, with current-year planning space.
     let eventYears = $derived(
-        lifeEvents.map((e) => Number(e.year)).filter((y) => Number.isFinite(y)),
+        lifeEvents.map((e) => Number(e.year)).filter((y) => Number.isInteger(y) && y > 0),
     );
-    let birthYear = $derived(eventYears.length > 0 ? Math.min(...eventYears) : 1990);
+    let startYear = $derived(Math.min(currentYear, ...eventYears));
 
     let showAddModal = $state(false);
     let newEvent: Partial<LifeEvent> = $state({
@@ -148,24 +148,24 @@
         timelineStore.removeEvent(id);
     }
 
-    // Memento Mori Calculation
-    let weeksLived = $derived(Math.max(0, (currentYear - birthYear) * 52));
+    // The weekly overview uses 52 schematic squares per year, rather than calendar dates.
+    let earlierCells = $derived(Math.max(0, (currentYear - startYear) * 52));
 
-    // Dynamic Grid Sizing: Furthest event OR Current Year + 3
+    // Exclusive upper boundary includes the entire latest recorded year.
     let maxEventYear = $derived(
         eventYears.length > 0 ? Math.max(...eventYears) : currentYear,
     );
-    let endYear = $derived(Math.max(maxEventYear, currentYear + 3));
-    let totalWeeks = $derived((endYear - birthYear) * 52);
+    let endYear = $derived(Math.max(maxEventYear + 1, currentYear + 3));
+    let totalCells = $derived((endYear - startYear) * 52);
 
     // Zoom State
     let pixelsPerYear = $state(20);
     // Room either side so the first and last labels sit fully on the track
     const TRACK_PAD = 80;
-    let trackWidth = $derived(TRACK_PAD * 2 + (endYear - birthYear) * pixelsPerYear);
+    let trackWidth = $derived(TRACK_PAD * 2 + (endYear - startYear) * pixelsPerYear);
 
     function getPosition(year: number) {
-        return TRACK_PAD + (year - birthYear) * pixelsPerYear;
+        return TRACK_PAD + (year - startYear) * pixelsPerYear;
     }
 
     // One colour per event type, shared by the dots and the legend
@@ -181,7 +181,7 @@
         return TYPE_STYLES.find((t) => t.type === type)?.dot ?? "bg-purple-500";
     }
 
-    // Reactively calculate Memento Mori Grid Data
+    // Events are grouped in their recorded year's first square.
     let hoveredWeek: any = $state(null);
     let tooltipX = $state(0);
     let tooltipY = $state(0);
@@ -205,21 +205,19 @@
         }
     }
 
-    let weeksData = $derived(
-        Array.from({ length: totalWeeks }, (_, i) => {
-            const isLived = i < weeksLived;
+    let weeklyCells = $derived(
+        Array.from({ length: totalCells }, (_, i) => {
+            const isEarlier = i < earlierCells;
 
-            // Find events that happened in this week (approximate)
-            // We broadly map events to the specific week index corresponding to the start of their year
+            // Preserve every record in its year's group; no week or birth date is inferred.
             const weekEvents = lifeEvents.filter((e) => {
-                const eventWeekStart = (e.year - birthYear) * 52;
-                // Match if the current week index 'i' is the one we calculated for this event's year
-                return Math.floor(eventWeekStart) === i;
+                const year = Number(e.year);
+                return Number.isInteger(year) && year > 0 && (year - startYear) * 52 === i;
             });
 
             return {
                 index: i,
-                isLived,
+                isEarlier,
                 events: weekEvents,
                 hasEvent: weekEvents.length > 0,
             };
@@ -246,9 +244,9 @@
 
 <LivingBlueprintHeader
         title="The Life Timeline"
-        subtitle="Your story is a series of moments."
-        detailedDescription="Document the milestones, accomplishments, and meaningful moments that shaped your life. Create a visual narrative that helps your family understand who you were and what mattered to you."
-        whyMatters="Your life story deserves to be told. Your timeline becomes a gift of understanding for future generations."
+        subtitle="Events, accomplishments, and the stories behind them"
+        detailedDescription="Add a recognizable title, a year or date, and what happened. Explain who was involved and why the event matters to you. Mark an event as Accomplishment to include it in the Journal's accomplishments gallery."
+        whyMatters="Putting events in order gives your family the context around a memory, a relationship, or a turning point in your life."
     >
         <div class="flex items-center gap-3">
             <DataViewToggle module="timeline" />
@@ -307,7 +305,7 @@
                             job={{job_id:aiJobId("timeline", newEvent, newEvent.id)+":description",document_title:newEvent.label,source_facts:aiSourceFacts({label:newEvent.label,type:newEvent.type,year:newEvent.year,date:newEvent.date,assignedContactId:newEvent.assignedContactId})}}
                             bind:value={newEvent.description}
                             context="timeline"
-                            placeholder="Share the memory..."
+                            placeholder="What happened, who was involved, and why does this moment matter to you?"
                             label="Details"
                             minHeight="80px"
                         />
@@ -460,7 +458,7 @@
                             : 'text-muted-foreground hover:bg-muted'}"
                         onclick={() => (showMemento = true)}
                     >
-                        Memento Mori
+                        Weekly overview
                     </button>
                 </div>
             </div>
@@ -656,7 +654,7 @@
     {/if}
 
     {#if showMemento}
-        <!-- Memento Mori Grid -->
+        <!-- Schematic weekly overview of the displayed timeline range -->
         <div
             class="bg-card rounded-2xl border border-border shadow-sm p-8"
             in:fade
@@ -666,17 +664,22 @@
             >
                 <Hourglass class="shrink-0 mt-1" />
                 <div>
-                    <h3 class="font-bold">Weeks of Your Life</h3>
+                    <h3 class="font-bold">Timeline in weekly squares</h3>
                     <p class="text-sm opacity-90">
-                        Each square represents one week. Filled squares are the
-                        past. Empty squares are the future.
+                        This view uses 52 squares for each year from {startYear}
+                        through {endYear - 1}. Filled squares mark years before
+                        {currentYear}; unfilled squares provide space for the current
+                        year and future plans. Events appear in their year's first square.
                     </p>
+                    {#if eventYears.length === 0}
+                        <p class="mt-2 text-sm">Add an event with a year to place your story here. This empty planning range begins with {currentYear}.</p>
+                    {/if}
                 </div>
                 <div class="ml-auto text-right hidden md:block">
                     <div class="text-2xl font-bold">
-                        {Math.floor(weeksLived)}
+                        {Math.floor(earlierCells)}
                     </div>
-                    <div class="text-xs uppercase opacity-75">Weeks Lived</div>
+                    <div class="text-xs uppercase opacity-75">Earlier-year squares</div>
                 </div>
             </div>
 
@@ -684,21 +687,29 @@
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 class="flex flex-wrap gap-1 justify-center max-h-[600px] overflow-y-auto p-4 custom-scrollbar relative"
+                data-testid="weekly-timeline"
+                data-start-year={startYear}
+                data-end-year-exclusive={endYear}
+                data-total-cells={totalCells}
+                data-earlier-cells={earlierCells}
                 onmouseleave={() => (hoveredWeek = null)}
                 onmousemove={handleMouseMove}
             >
-                {#each weeksData as week (week.index)}
+                {#each weeklyCells as week (week.index)}
                     <!-- Hover reveals the week details; the Life Events list holds the same entries for keyboard use. -->
                     <!-- svelte-ignore a11y_no_static_element_interactions -->
                     <div
+                        data-week-index={week.index}
+                        data-year={startYear + Math.floor(week.index / 52)}
+                        data-event-ids={week.events.map((event) => String(event.id)).join(",")}
                         class="w-2 h-2 rounded-[1px] transition-colors cursor-pointer relative group
                         {week.hasEvent
                             ? 'bg-gold hover:bg-gold-muted ring-2 ring-gold/40 z-10'
                             : ''}
-                        {!week.hasEvent && week.isLived
+                        {!week.hasEvent && week.isEarlier
                             ? 'bg-primary-deep/80 hover:bg-primary-deep'
                             : ''}
-                        {!week.hasEvent && !week.isLived
+                        {!week.hasEvent && !week.isEarlier
                             ? 'bg-muted hover:bg-primary/30'
                             : ''}"
                         onmouseenter={() => (hoveredWeek = week)}
@@ -711,17 +722,17 @@
             <div class="mt-8 flex justify-center gap-8 text-sm opacity-60">
                 <div class="flex items-center gap-2">
                     <div class="w-3 h-3 bg-primary-deep/80 rounded-[1px]"></div>
-                    <span class="text-muted-foreground">Lived</span>
+                    <span class="text-muted-foreground">Earlier years</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <div class="w-3 h-3 bg-gold rounded-[1px]"></div>
-                    <span class="text-muted-foreground">Event</span>
+                    <span class="text-muted-foreground">Recorded events</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <div
                         class="w-2 h-2 rounded-[1px] bg-muted rounded-[1px]"
                     ></div>
-                    <span class="text-muted-foreground">Remaining</span>
+                    <span class="text-muted-foreground">Current &amp; future years</span>
                 </div>
             </div>
 
@@ -734,7 +745,7 @@
                     <div
                         class="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-2 pb-2 border-b border-border"
                     >
-                        Week {hoveredWeek.index + 1} | {birthYear +
+                        Square {hoveredWeek.index + 1} | {startYear +
                             Math.floor(hoveredWeek.index / 52)}
                     </div>
 

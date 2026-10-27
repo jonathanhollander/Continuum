@@ -2,7 +2,7 @@
   import { page } from "$app/stores";
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
-  import { API_BASE_URL } from "$lib/config";
+  import { apiFetch } from "$lib/api/client";
   import LivingMesh from "$lib/components/pulse/LivingMesh.svelte";
   import { Shield } from "lucide-svelte";
 
@@ -34,7 +34,7 @@
     vaultLoading = true;
     vaultError = null;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/pulse/portal/${token}/vault`);
+      const res = await apiFetch(`/api/pulse/portal/${token}/vault`);
       if (!res.ok) throw new Error("Shared notes need another read.");
       const items = await res.json();
       if (!Array.isArray(items) || items.some((item) =>
@@ -50,7 +50,7 @@
 
   onMount(async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/pulse/portal/${token}`);
+      const res = await apiFetch(`/api/pulse/portal/${token}`);
       if (res.ok) {
         data = await res.json();
         // The portal is useful as soon as its status/messages arrive. A separate notes
@@ -72,7 +72,7 @@
     if (!data) return;
     actionLoading = true;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/pulse/nudge/${token}`, {
+      const res = await apiFetch(`/api/pulse/nudge/${token}`, {
         method: "POST",
       });
       if (res.ok) {
@@ -94,7 +94,7 @@
     if (!token) return;
     actionLoading = true;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/pulse/confirm/${token}`, {
+      const res = await apiFetch(`/api/pulse/confirm/${token}`, {
         method: "POST",
       });
       if (res.ok) {
@@ -142,12 +142,12 @@
       <div class="bg-background p-6 text-center border-b border-border">
         <h1 class="text-xl font-medium text-foreground">
           {data.user_status === "active"
-            ? `${capitalise(data.user_name)} checked in recently`
+            ? `A recent check-in is recorded for ${data.user_name}`
             : `We're waiting to hear from ${data.user_name}`}
         </h1>
         <p class="text-sm text-muted-foreground mt-1">
           {data.user_status === "active"
-            ? "All is well for now."
+            ? "The recorded check-in time is shown below."
             : "A gentle note from you may help."}
         </p>
       </div>
@@ -175,7 +175,7 @@
 
         {#if data.last_checkin}
           <div>
-            <p class="text-muted-foreground text-sm mb-1">LAST CONFIRMED CHECK-IN</p>
+            <p class="text-muted-foreground text-sm mb-1">LAST RECORDED OWNER CHECK-IN</p>
             <p class="text-2xl font-mono text-foreground">
               {parseUtc(data.last_checkin).toLocaleString()}
             </p>
@@ -252,7 +252,7 @@
           {/if}
           {#if vaultItems.length === 0 && !vaultLoading && !vaultError}
             <p class="text-sm text-slate-300">
-              Notes from {data.user_name} will appear here when they are needed. You are welcome to simply be present for now.
+              Available vault instructions appear here under {data.user_name}'s Automatic Release and tier choices.
             </p>
           {/if}
         </div>

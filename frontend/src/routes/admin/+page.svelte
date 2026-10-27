@@ -13,10 +13,11 @@
         </div>
         <div class="max-w-7xl mx-auto px-6 relative z-10">
             <h1 class="text-5xl font-serif font-bold mb-4">
-                Estate Readiness Hub
+                Recorded Information Overview
             </h1>
             <p class="text-white/80 text-lg max-w-2xl">
-                Estate readiness overview
+                Review recorded items and practice settings. Record presence and
+                manual checkmarks do not verify a complete or legally effective plan.
             </p>
         </div>
     </div>

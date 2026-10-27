@@ -23,9 +23,9 @@
     const steps = [
         {
             id: 1,
-            title: "Complexity",
+            title: "Start small",
             icon: Settings,
-            desc: "Tailor the estate plan to your needs",
+            desc: "Choose a useful first record",
         },
         {
             id: 2,
@@ -35,11 +35,11 @@
         },
         {
             id: 3,
-            title: "Core Assets",
+            title: "Documents",
             icon: Shield,
-            desc: "Secure your financial foundation",
+            desc: "Record copies and original locations",
         },
-        { id: 4, title: "Complete", icon: Check, desc: "You're ready to go!" },
+        { id: 4, title: "Next action", icon: Check, desc: "Open your records" },
     ];
 
     // Each document opens the module where it is saved.
@@ -90,63 +90,46 @@
     <div class="min-h-[300px] max-w-2xl mx-auto text-center">
         {#if currentStep === 1}
             <h2 class="text-3xl font-serif text-primary-deep dark:text-primary-hover mb-4">
-                How complex is your estate?
+                What would help your family first?
             </h2>
             <p class="text-muted-foreground mb-8">
-                This helps us show the tools that fit you.
+                Open one record to begin, or continue to review people and documents.
             </p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="p-6 rounded-xl border-2 border-border text-left">
-                    <div
-                        class="w-12 h-12 rounded-full bg-info/10 text-info flex items-center justify-center mb-4"
-                    >
-                        <span class="text-xl font-bold">1</span>
-                    </div>
-                    <h3 class="font-bold text-foreground mb-2">Simple</h3>
-                    <p class="text-xs text-muted-foreground">
-                        Single home, simple accounts, straightforward trusts.
-                    </p>
-                </div>
-                <div class="p-6 rounded-xl border-2 border-border text-left">
-                    <div
-                        class="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center mb-4"
-                    >
-                        <span class="text-xl font-bold">2</span>
-                    </div>
-                    <h3 class="font-bold text-foreground mb-2">Standard</h3>
-                    <p class="text-xs text-muted-foreground">
-                        Home + investments, life insurance, retirement accounts.
-                    </p>
-                </div>
-                <div class="p-6 rounded-xl border-2 border-border text-left">
-                    <div
-                        class="w-12 h-12 rounded-full bg-gold/15 text-gold-text flex items-center justify-center mb-4"
-                    >
-                        <span class="text-xl font-bold">3</span>
-                    </div>
-                    <h3 class="font-bold text-foreground mb-2">Complex</h3>
-                    <p class="text-xs text-muted-foreground">
-                        Business interests, multiple properties, advanced tax
-                        planning.
-                    </p>
-                </div>
+                <a href="/modules/contacts" data-testid="wizard-link" class="p-6 rounded-xl border-2 border-border text-left hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary">
+                    <h3 class="font-bold text-foreground mb-2">A person</h3>
+                    <p class="text-sm text-muted-foreground">Record who to contact, their number and how they can help.</p>
+                    <span class="inline-flex items-center gap-2 text-sm text-primary-deep dark:text-primary-hover mt-4">Open Contacts <ArrowRight size={16} /></span>
+                </a>
+                <a href="/modules/financial-accounts" data-testid="wizard-link" class="p-6 rounded-xl border-2 border-border text-left hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary">
+                    <h3 class="font-bold text-foreground mb-2">An account</h3>
+                    <p class="text-sm text-muted-foreground">Record the institution, identifying details and who to ask for help.</p>
+                    <span class="inline-flex items-center gap-2 text-sm text-primary-deep dark:text-primary-hover mt-4">Open Accounts <ArrowRight size={16} /></span>
+                </a>
+                <a href="/modules/letters" data-testid="wizard-link" class="p-6 rounded-xl border-2 border-border text-left hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary">
+                    <h3 class="font-bold text-foreground mb-2">Your words</h3>
+                    <p class="text-sm text-muted-foreground">Write a letter, a memory or something you want your son to know.</p>
+                    <span class="inline-flex items-center gap-2 text-sm text-primary-deep dark:text-primary-hover mt-4">Open Letters <ArrowRight size={16} /></span>
+                </a>
             </div>
             {#if canOpenBuilderTools}
                 <a href={builderToolsHref} data-testid="wizard-link" class="inline-flex items-center gap-2 mt-8 px-6 py-3 rounded-xl border-2 border-primary text-primary-deep dark:text-primary-hover font-bold hover:bg-primary/5 transition-colors">
-                    Choose your level in Builder Tools
+                    Review optional checklists in Builder Tools
                     <ArrowRight size={16} />
                 </a>
             {/if}
         {:else if currentStep === 2}
             <h2 class="text-3xl font-serif text-primary-deep dark:text-primary-hover mb-4">
-                Who is your Executor?
+                Who should your family contact?
             </h2>
             <p class="text-muted-foreground mb-8">
-                We'll set up a special dashboard just for them.
+                Record the people who can help, including your chosen executor.
             </p>
             <p class="text-foreground max-w-md mx-auto">
                 In Family &amp; Contacts, add them and mark them as your
-                <strong>Designated Executor</strong>.
+                <strong>Designated Executor</strong>, if that is their role. This records
+                the designation; it does not share your records. Create their
+                recipient link and preview it before sharing the link yourself.
             </p>
             <a href="/modules/contacts" data-testid="wizard-link" class="inline-flex items-center gap-2 mt-8 px-6 py-3 rounded-xl border-2 border-primary text-primary-deep dark:text-primary-hover font-bold hover:bg-primary/5 transition-colors">
                 Open Family &amp; Contacts
@@ -157,7 +140,7 @@
                 Where are your documents?
             </h2>
             <p class="text-muted-foreground mb-8">
-                Do you know where these documents are kept?
+                Add copies you have and note where the originals are kept. For example: “Signed will, blue folder in the study; ask Alex for the key.”
             </p>
             <div class="space-y-3 max-w-md mx-auto text-left">
                 {#each documents as doc (doc.name)}
@@ -179,18 +162,18 @@
                     <Check size={40} />
                 </div>
                 <h2 class="text-3xl font-serif text-primary-deep dark:text-primary-hover mb-4">
-                    You're ready to go!
+                    Choose your next record
                 </h2>
                 <p class="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-                    Your dashboard brings every part of your plan together in
-                    one place.
+                    Open your dashboard to add details, write a letter
+                    or review what you have already saved.
                 </p>
                 <a
                     href="/dashboard"
                     data-testid="wizard-finish"
                     class="inline-block px-8 py-3 bg-primary-deep text-white rounded-xl font-bold hover:bg-primary-deep/90 transition-colors shadow-lg shadow-primary-deep/20"
                 >
-                    Go to Dashboard
+                    Open my records
                 </a>
             </div>
         {/if}
@@ -203,7 +186,7 @@
                 onclick={nextStep}
                 class="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-1px]"
             >
-                Next Step
+                Continue
                 <ArrowRight size={18} />
             </button>
         </div>

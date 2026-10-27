@@ -16,15 +16,16 @@
     <div class="flex items-center justify-between mb-8">
         <div>
             <h2 class="text-2xl font-bold text-foreground">
-                Estate Readiness Matrix
+                Recorded Items by Area
             </h2>
             <p class="text-muted-foreground">
-                System functionality and data population status.
+                Areas with recorded items or checked setup steps. This does not
+                verify the records, test functionality or measure a complete plan.
             </p>
         </div>
         <div class="text-right">
             <div class="text-xs uppercase font-bold text-muted-foreground">
-                Total Completion
+                Areas with entries
             </div>
             <div class="text-3xl font-mono font-bold text-primary">
                 {overallHealth}%
@@ -57,9 +58,9 @@
                         </div>
                         <div class="text-xs text-muted-foreground">
                             {#if mod.hasData}
-                                {plural(mod.itemCount, "item")} saved
+                                {plural(mod.itemCount, "entry", "entries")}
                             {:else}
-                                Ready when you are
+                                No recorded items or checks found
                             {/if}
                         </div>
                     </div>

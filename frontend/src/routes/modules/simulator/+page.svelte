@@ -1,5 +1,6 @@
 <script lang="ts">
     import { fade, slide } from "svelte/transition";
+    import { onMount, onDestroy } from "svelte";
     import {
         Compass,
         CreditCard,
@@ -9,14 +10,39 @@
         CirclePlus,
         ArrowRight,
     } from "lucide-svelte";
-    import { documentStore } from "$lib/stores/documentStore.svelte";
+    import { documentSync } from "$lib/stores/documentStore.svelte";
     import { financialAssetsSync, isDebt } from "$lib/stores/financialAssetsStore.svelte";
-    import { medicalStore } from "$lib/stores/medicalStore.svelte";
+    import { directiveSync } from "$lib/stores/medicalStore.svelte";
+    import { auth } from "$lib/stores/auth";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
 
-    let activeScenario: "none" | "wallet" | "medical" | "passing" = "none";
-    let simulationState: "idle" | "running" | "complete" = "idle";
+    type Scenario = "wallet" | "medical" | "passing";
+    let activeScenario: "none" | Scenario = "none";
+    let simulationState: "idle" | "running" | "paused" | "complete" = "idle";
     let report: any[] = [];
     let overallStatus: "pass" | "fail" | "warn" = "pass";
+    let runVersion = 0;
+    let runOwner = captureSession();
+    let pausedSources: { name: string; path: string }[] = [];
+    let pauseMessage = "";
+
+    onMount(() => auth.subscribe(() => {
+        if (activeScenario !== "none" && !isCurrentSession(runOwner)) {
+            runVersion++;
+            report = [];
+            pausedSources = [];
+            pauseMessage = "The signed-in account changed. Try Again to read this scenario's records for the current account.";
+            simulationState = "paused";
+        }
+    }));
+    onDestroy(() => { runVersion++; });
+
+    const scenarioSources = (id: Scenario) => [
+        { manager: documentSync, name: "Document Vault", path: "/modules/legal-documents" },
+        id === "medical"
+            ? { manager: directiveSync, name: "Medical directives", path: "/modules/medical" }
+            : { manager: financialAssetsSync, name: "Financial Accounts", path: "/modules/financial-accounts" },
+    ];
 
     const named = (d: any, pattern: RegExp) =>
         pattern.test(`${d?.name ?? ""} ${d?.title ?? ""}`.toLowerCase());
@@ -36,7 +62,7 @@
             icon: Stethoscope,
             color: "text-primary-hover",
             bg: "bg-primary-soft",
-            desc: "You are in hospital and someone you trust decides for you.",
+            desc: "Which care wishes and decision-maker records could someone look for?",
         },
         {
             id: "passing",
@@ -44,25 +70,35 @@
             icon: HeartHandshake,
             color: "text-muted-foreground",
             bg: "bg-muted",
-            desc: "Your family steps in today to carry out your wishes.",
+            desc: "Which documents and beneficiary notes could your family review?",
         },
     ];
 
-    async function runSimulation(id: "wallet" | "medical" | "passing") {
+    async function runSimulation(id: Scenario) {
+        const version = ++runVersion;
+        const owner = captureSession();
+        runOwner = owner;
         activeScenario = id;
         simulationState = "running";
         report = [];
+        pausedSources = [];
+        pauseMessage = "";
 
-        // The records saved in the Document Vault, Financial Accounts and Medical pages
-        await Promise.allSettled([
-            documentStore.sync(),
-            financialAssetsSync.sync(),
-            medicalStore.sync(),
-        ]);
-        if (activeScenario !== id) return; // went back while the records loaded
-        const docs: any[] = documentStore.items;
-        const assets: any[] = financialAssetsSync.items.filter((a: any) => !a.is_closed);
-        const directives: any[] = medicalStore.directives;
+        const sources = scenarioSources(id);
+        await Promise.allSettled(sources.map(({ manager }) => manager.sync()));
+        if (version !== runVersion || activeScenario !== id || !isCurrentSession(owner)) return;
+        // SyncManager catches read failures. A settled promise or a populated cache
+        // alone does not establish that this scenario's required sources answered.
+        pausedSources = sources.filter(({ manager }) => !manager.lastSync || manager.status !== "synced")
+            .map(({ name, path }) => ({ name, path }));
+        if (pausedSources.length > 0) {
+            pauseMessage = "These sources have not been confirmed, so this walkthrough has no result yet. Existing device records are kept. Try Again to refresh the selected scenario.";
+            simulationState = "paused";
+            return;
+        }
+        const docs: any[] = documentSync.items;
+        const assets: any[] = id === "medical" ? [] : financialAssetsSync.items.filter((a: any) => !a.is_closed);
+        const directives: any[] = id === "medical" ? directiveSync.items : [];
         const checks: any[] = [];
 
         if (id === "wallet") {
@@ -72,18 +108,18 @@
             );
 
             checks.push({
-                check: "Digital ID Backup",
+                check: "ID Record",
                 status: hasIDs,
                 msg: hasIDs
-                    ? "A copy of your passport or ID saved in your Vault."
-                    : "A copy of your passport or ID in the Vault keeps you covered.",
+                    ? "A Document Vault record is categorized as ID. Open it to check the attachment or original's location."
+                    : "No Document Vault record categorized as ID was found. Record where a copy or original can be found.",
             });
             checks.push({
-                check: "Card List",
+                check: "Financial or Debt Record",
                 status: hasCards,
                 msg: hasCards
-                    ? "Your accounts and cards saved in Financial Accounts."
-                    : "Listing your cards in Financial Accounts makes them quick to replace.",
+                    ? "An open Financial or debt record was found. Check that the actual cards and institution contact details are listed."
+                    : "No open Financial or debt record was found. Record the actual accounts or cards and institution contacts.",
             });
             overallStatus = hasIDs && hasCards ? "pass" : "fail";
         }
@@ -109,18 +145,18 @@
                 status: hasHealth,
                 msg: hasHealth
                     ? hasDirective
-                        ? "Healthcare directive saved in Health & Medical."
-                        : "Healthcare directive saved in your Vault."
-                    : "A healthcare directive lets your doctors follow your wishes.",
+                        ? "A living-will, DNR, palliative-care or other directive record was found in Health & Medical."
+                        : "A Document Vault title matches a healthcare-directive term. Review the actual document and original."
+                    : "No matching directive record or document title was found. Record your wishes and where the relevant originals are kept.",
             });
             checks.push({
-                check: "Power of Attorney",
+                check: "Proxy / Power-of-Attorney Record",
                 status: hasPOA,
                 msg: hasPOA
                     ? hasProxy
-                        ? "Healthcare proxy saved in Health & Medical."
-                        : "Power of attorney saved in your Vault."
-                    : "A power of attorney or healthcare proxy lets someone you trust decide for you.",
+                        ? "A healthcare-proxy record was found in Health & Medical. Confirm the person, document and applicable authority."
+                        : "A Document Vault title matches power of attorney or POA. Check its actual purpose and authority."
+                    : "No healthcare-proxy record or matching power-of-attorney title was found. Record the person and location of the relevant document.",
             });
             overallStatus = hasHealth && hasPOA ? "pass" : "fail";
         }
@@ -139,18 +175,18 @@
                 status: hasWill || hasTrust,
                 msg:
                     hasWill || hasTrust
-                        ? "Will or trust saved in your Vault."
-                        : "A will or trust lets you decide where your estate goes.",
+                        ? "A Document Vault record is categorized as Will or Trust. Review the document and original's location."
+                        : "No Document Vault record categorized as Will or Trust was found. Record where the relevant documents or originals are kept.",
             });
             checks.push({
-                check: "Beneficiaries",
+                check: "Beneficiary Fields",
                 status: benCov > 0.8,
                 msg:
                     withBen === 0
-                        ? "Naming a beneficiary on each asset lets it pass straight to the people you choose."
+                        ? `Beneficiary text is recorded on 0 of ${owned.length} open non-debt assets. This check requires more than 80%; confirm designations with each institution.`
                         : withBen === owned.length
-                          ? `Beneficiaries named on ${withBen} of ${owned.length} assets.`
-                          : `Beneficiaries named on ${withBen} of ${owned.length} assets. Naming one on each of the rest lets it pass straight to the people you choose.`,
+                          ? `Beneficiary text is recorded on ${withBen} of ${owned.length} open non-debt assets. Confirm the actual designations with each institution.`
+                          : `Beneficiary text is recorded on ${withBen} of ${owned.length} open non-debt assets. This check requires more than 80%; confirm designations with each institution.`,
             });
             overallStatus =
                 (hasWill || hasTrust) && benCov > 0.8 ? "pass" : "fail";
@@ -161,8 +197,12 @@
     }
 
     function reset() {
+        runVersion++;
         activeScenario = "none";
         simulationState = "idle";
+        report = [];
+        pausedSources = [];
+        pauseMessage = "";
     }
 </script>
 
@@ -174,7 +214,8 @@
                 Practice Run
             </h1>
             <p class="text-lg text-muted-foreground">
-                See how your saved plan answers real-life moments.
+                Look for selected record categories and fields in a practice scenario.
+                This does not test document validity, attachments, access or a complete response to an emergency.
             </p>
         </div>
         <div
@@ -262,10 +303,25 @@
                                 Looking over your plan
                             </p>
                             <p class="text-muted-foreground">
-                                Reading your Document Vault, Financial Accounts
-                                and Medical records…
+                                Reading your Document Vault and {activeScenario === "medical" ? "medical directives" : "Financial Accounts"}…
                             </p>
                         </div>
+                    </div>
+                {:else if simulationState === "paused"}
+                    <div class="max-w-2xl mx-auto space-y-6" role="status" data-testid="simulation-paused">
+                        <h2 class="font-serif font-bold text-3xl text-foreground">Records Not Confirmed</h2>
+                        <p class="text-muted-foreground">{pauseMessage}</p>
+                        {#if pausedSources.length > 0}
+                            <ul class="space-y-2">
+                                {#each pausedSources as source}
+                                    <li><a class="text-primary underline underline-offset-2" href={source.path}>{source.name}</a></li>
+                                {/each}
+                            </ul>
+                        {/if}
+                        <button
+                            on:click={() => activeScenario !== "none" && runSimulation(activeScenario)}
+                            class="px-5 py-3 rounded-lg bg-primary text-primary-foreground font-bold hover:bg-primary-hover"
+                        >Try Again</button>
                     </div>
                 {:else if simulationState === "complete"}
                     <div class="max-w-2xl mx-auto" in:slide>
@@ -280,19 +336,19 @@
                                 <h1
                                     class="font-serif font-bold text-3xl text-success"
                                 >
-                                    Ready for This Moment
+                                    Records Found for This Walkthrough
                                 </h1>
                                 <p class="text-muted-foreground mt-2">
-                                    Each record below is saved in your plan.
+                                    The selected record checks passed. Open the actual records and confirm their details and availability.
                                 </p>
                             {:else}
                                 <h1
                                     class="font-serif font-bold text-3xl text-foreground"
                                 >
-                                    Room to Strengthen
+                                    Questions to Review
                                 </h1>
                                 <p class="text-muted-foreground mt-2">
-                                    A few additions below will round out your plan for this moment.
+                                    One or more selected record checks did not pass. Use the findings below to review the source records.
                                 </p>
                             {/if}
                         </div>
