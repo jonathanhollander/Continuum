@@ -6,6 +6,7 @@
     import { cubicOut } from "svelte/easing";
     import {
         ArrowRight,
+        ArrowDown,
         Shield,
         Heart,
         Infinity as InfinityIcon,
@@ -34,11 +35,6 @@
     let canvas: HTMLCanvasElement;
     let mouseX = $state(0);
     let mouseY = $state(0);
-
-    // --- Kinetic Progress (Apple-style) ---
-    const heroProgress = $derived(
-        Math.max(0, Math.min(scrollY / (innerHeight || 1), 1)),
-    );
 
     // Smooth Velocity Tracking
     let scrollVelocity = $state(0);
@@ -88,7 +84,7 @@
 
     // --- Hero Animation: Interactive Digital Dust ---
     onMount(() => {
-        if (!canvas) return;
+        if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.body.classList.contains("accessibility-reduced-motion")) return;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
@@ -481,140 +477,34 @@
         />
     </svg>
 
-    <!-- Hero Section (Extended Track for Persistence) -->
-    <section class="relative h-[130vh] overflow-visible">
-        <!-- Sticky Portal for Animations -->
-        <div
-            class="sticky top-0 h-screen w-full flex flex-col items-center justify-start pt-[22vh] overflow-hidden"
-        >
-            <!-- Background Dust (Speed up with scroll) -->
-            <canvas
-                bind:this={canvas}
-                class="absolute inset-0 z-0 opacity-40"
-                style="transform: translateY({scrollY * 0.2}px)"
-            ></canvas>
-
-            <!-- The Morphing Landscape -->
-            <div
-                class="relative z-10 w-full max-w-7xl mx-auto px-6 flex flex-col items-center transition-all duration-300"
-                style="
-                opacity: {1 - heroProgress * 1.5};
-                transform: translateY({-scrollY * 0.1}px);
-            "
-            >
-                <!-- Text Suite (Staggered Clip-Reveal) -->
-                <div class="text-center mb-8 md:mb-12 z-20">
-                    <div class="overflow-visible mb-1 py-1">
-                        <h1
-                            class="text-4xl md:text-[5rem] lg:text-[5.5rem] font-serif font-medium text-white leading-tight tracking-[0.2em] drop-shadow-2xl hero-clip-reveal uppercase"
-                            style="--delay: 0.1s"
-                        >
-                            {$mt.heroTitle}
-                        </h1>
-                    </div>
-                    <div class="overflow-visible mb-2 py-1">
-                        <h1
-                            class="text-4xl md:text-[5rem] lg:text-[5.5rem] font-serif font-medium leading-tight tracking-[0.2em] hero-clip-reveal uppercase"
-                            style="--delay: 0.3s"
-                        >
-                            <span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-gold-text via-gold to-gold-muted italic relative"
-                            >
-                                {$mt.heroSubtitle}
-                            </span>
-                        </h1>
-                    </div>
-                    <div class="overflow-visible py-1">
-                        <p
-                            class="text-base md:text-xl text-slate-300 max-w-xl mx-auto font-light leading-relaxed tracking-wide px-4 hero-clip-reveal"
-                            style="--delay: 0.5s"
-                        >
-                            {$mt.heroDesc}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- The Anchor: The Device (Apple-esque Display Frame) -->
-                <!-- Decorative tilt that follows the pointer. -->
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <div
-                    class="relative group perspective-container w-full transition-all duration-300 px-4 md:px-0"
-                    style="
-                    max-width: min(800px, 85vw);
-                    transform: 
-                        scale({1.05 - heroProgress * 0.1}) 
-                        translateY({heroProgress * 60}px)
-                        rotateX({heroProgress * 3}deg);
-                "
-                    onmousemove={handleTilt}
-                    onmouseleave={resetTilt}
-                >
-                    <!-- Device Frame -->
-                    <div
-                        class="relative rounded-[2.5rem] md:rounded-[4rem] p-2 md:p-3 bg-gradient-to-br from-slate-400 via-slate-700 to-slate-900 border border-white/20 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] transition-all duration-700 overflow-hidden"
-                    >
-                        <!-- Bezel -->
-                        <div
-                            class="relative rounded-[2rem] md:rounded-[3.5rem] bg-black overflow-hidden aspect-[16/10] shadow-inner border border-black/40"
-                        >
-                            <img
-                                src="/images/premium_hero_shoebox_under_bed_cinematic.png"
-                                alt="The Hidden Shoebox Discovery"
-                                class="w-full h-full object-cover opacity-90 transition-all duration-1000 group-hover:scale-[1.02]"
-                                style="filter: brightness({1 -
-                                    (1 - heroProgress) * 0.5})"
-                            />
-
-                            <!-- Glossy Glass Overlay -->
-                            <div
-                                class="absolute inset-0 pointer-events-none z-20 opacity-40 bg-gradient-to-tr from-white/10 via-transparent to-white/5"
-                                style="transform: translate(calc(var(--mx, 50%) * 0.05px), calc(var(--my, 50%) * 0.05px)) scale(1.5);"
-                            ></div>
-
-                            <!-- Internal Shine (Tracking) -->
-                            <div class="shine opacity-40"></div>
-
-                            <!-- Screen Overlay Gradient -->
-                            <div
-                                class="absolute inset-0 bg-gradient-to-tr from-gold/10 via-transparent to-transparent pointer-events-none"
-                            ></div>
-                        </div>
-
-                        <!-- Camera Dot -->
-                        <div
-                            class="absolute top-4 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-slate-800 shadow-inner"
-                        ></div>
-                    </div>
-
-                    <!-- Ground Reflection (Parallax) -->
-                    <div
-                        class="absolute -bottom-16 left-1/2 -translate-x-1/2 w-[95%] bg-gold/10 blur-[100px] rounded-full -z-10 transition-all duration-500"
-                        style="
-                        height: {60 + heroProgress * 60}px;
-                        opacity: {heroProgress * 0.8};
-                    "
-                    ></div>
-                </div>
+    <!-- A compact introduction keeps the message, image and next step together. -->
+    <section class="homepage-hero relative" aria-labelledby="homepage-title">
+        <canvas bind:this={canvas} class="absolute inset-0 w-full h-full z-0 opacity-20 pointer-events-none" aria-hidden="true"></canvas>
+        <div class="hero-inner relative z-10">
+            <div class="hero-copy">
+                <h1 id="homepage-title" class="hero-title font-serif text-white">
+                    {$mt.heroTitle}
+                    <span class="block text-gold-text italic">{$mt.heroSubtitle}</span>
+                </h1>
+                <p class="hero-description">{$mt.heroDesc}</p>
+                <a href="#overview" class="hero-explore inline-flex items-center gap-3 rounded-full border border-white/25 px-6 py-3 text-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold">
+                    {$mt.scrollIndicator}
+                    <ArrowDown size={18} aria-hidden="true" />
+                </a>
             </div>
-
-            <!-- Scroll Indicator (Fades out quickly) -->
-            <div
-                class="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 transition-opacity duration-500 z-0"
-                style="opacity: {1 - heroProgress * 4}"
-            >
-                <span
-                    class="text-white/70 text-[10px] font-bold uppercase tracking-[0.4em]"
-                    >{$mt.scrollIndicator}</span
-                >
-                <div
-                    class="w-px h-8 bg-gradient-to-b from-white/30 to-transparent"
-                ></div>
+            <div class="hero-image overflow-hidden rounded-3xl border border-white/15 shadow-2xl">
+                <img
+                    src="/images/premium_hero_shoebox_under_bed_cinematic.png"
+                    alt="The Hidden Shoebox Discovery"
+                    class="w-full h-full object-cover"
+                    fetchpriority="high"
+                />
             </div>
         </div>
     </section>
 
     <!-- The Gap (Emotional Core) -->
-    <section class="py-8 md:py-16 px-4 md:px-6 relative overflow-hidden">
+    <section id="overview" aria-labelledby="overview-title" class="py-8 md:py-16 px-4 md:px-6 relative overflow-hidden">
         <!-- Visible Background Texture -->
         <div
             class="absolute inset-0 z-0 opacity-30"
@@ -635,6 +525,7 @@
                 </div>
 
                 <h2
+                    id="overview-title"
                     class="text-4xl md:text-6xl font-serif font-bold text-white mb-8"
                 >
                     {$mt.giftTitle}
@@ -1304,24 +1195,58 @@
 </MarketingLayout>
 
 <style>
-    /* Hero Clip Reveal */
-    .hero-clip-reveal {
-        animation: clip-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-        animation-delay: var(--delay, 0s);
-        will-change: transform, opacity;
+    .homepage-hero {
+        padding: clamp(7rem, 14vh, 9rem) 1.5rem 4rem;
     }
 
-    @keyframes clip-up {
-        from {
-            transform: translateY(120%);
-            opacity: 0;
-            clip-path: inset(100% 0 0 0);
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-            clip-path: inset(0 0 0 0);
-        }
+    .hero-inner {
+        max-width: 72rem;
+        margin-inline: auto;
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        align-items: center;
+        gap: clamp(2rem, 5vw, 5rem);
+    }
+
+    .hero-copy { min-width: 0; }
+
+    .hero-title {
+        margin: 0;
+        font-size: 3em;
+        font-weight: 500;
+        line-height: 1.08;
+        letter-spacing: -0.025em;
+        text-wrap: balance;
+    }
+
+    .hero-description {
+        max-width: 34em;
+        margin-top: 1.5rem;
+        color: #cbd5e1;
+        font-size: 1em;
+        line-height: 1.65;
+    }
+
+    .hero-explore {
+        margin-top: 1.75rem;
+        font-size: 0.9em;
+        font-weight: 600;
+    }
+
+    .hero-image { aspect-ratio: 4 / 3; }
+    #overview { scroll-margin-top: 6rem; }
+
+    @media (min-width: 768px) and (max-width: 1023px) {
+        .hero-title { font-size: 2.5em; }
+    }
+
+    @media (max-width: 767px) {
+        .homepage-hero { padding: 7rem 1.5rem 2.5rem; }
+        .hero-inner { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
+        .hero-title { font-size: 2em; line-height: 1.12; }
+        .hero-description { margin-top: 1.25rem; }
+        .hero-explore { margin-top: 1.25rem; }
+        .hero-image { aspect-ratio: 16 / 9; }
     }
 
     /* Scroll Reveal Animation System */
