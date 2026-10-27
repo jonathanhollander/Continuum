@@ -37,11 +37,24 @@ const preservedVariables = [
 ];
 
 export default defineRailway(() => {
+  // Retain the existing application volume and its current settings.
+  const dataVolume = volume("continuum-volume", {
+    "alerts": {
+      "usage": {
+        "100": {},
+        "80": {},
+        "95": {}
+      }
+    },
+    "allowOnlineResize": true,
+    "region": "us-east4-eqdc4a",
+    "sizeMB": 50000
+  });
   const Continuum = service("Continuum", {
     source: github("jonathanhollander/Continuum", { checkSuites: true }),
     build: { builder: "NIXPACKS" },
     deploy: { healthcheckPath: "/api/health", sleepApplication: true },
-    volumeMounts: { "/data": volume("continuum-volume") },
+    volumeMounts: { "/data": dataVolume },
     variables: Object.fromEntries(preservedVariables.map((name) => [name, preserve()])),
   });
   return project("continuum-saas", {
