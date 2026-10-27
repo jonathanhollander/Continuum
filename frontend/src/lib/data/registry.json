@@ -2,63 +2,63 @@
     {
         "id": "preparation-hub",
         "title": "Preparation Hub",
-        "description": "A peaceful beginning to your legacy, designed to comfort and guide you.",
+        "description": "Choose a starting task, record what you know, and return to details you still need to gather.",
         "icon": "🚀",
         "role": "owner"
     },
     {
         "id": "family-hub",
         "title": "Family Hub",
-        "description": "Your shared history, preserved for the people who matter most.",
+        "description": "Record family relationships, shared memories, photographs, and context for the people reading your account.",
         "icon": "👨‍👩‍👧‍👦",
         "role": "owner"
     },
     {
         "id": "timeline",
         "title": "Life Timeline",
-        "description": "The beautiful arc of your journey, captured in the moments that count.",
+        "description": "Record dated milestones, the people involved, and why each event matters to you.",
         "icon": "📅",
         "role": "owner"
     },
     {
         "id": "executor-hub",
         "title": "Executor Hub",
-        "description": "A supportive guide to help you honor their wishes with grace and clarity.",
+        "description": "Work through practical handover steps, find recorded instructions, and identify questions for the relevant professionals.",
         "icon": "⚖️",
         "role": "executor"
     },
     {
         "id": "visual-memories",
         "title": "Visual Memories",
-        "description": "Preserving the smiles, the places, and the moments that defined your journey.",
+        "description": "Save photographs and recordings with captions, and explain where larger collections and originals are kept.",
         "icon": "📸",
         "role": "owner"
     },
     {
         "id": "subscriptions",
-        "title": "Accounts to Close or Transfer",
-        "description": "Every subscription you document keeps money with your family. A short list can save them a great deal in the months ahead.",
+        "title": "Subscriptions & Services",
+        "description": "Record recurring charges, renewal dates, provider contacts, and wishes to close or transfer each service.",
         "icon": "💳",
         "role": "executor"
     },
     {
         "id": "legal-documents",
-        "title": "Legal Documents",
-        "description": "Safe storage for your promises, protecting what you've built for them.",
+        "title": "Document Vault",
+        "description": "Upload document copies, record where signed originals are kept, and note who to contact about them.",
         "icon": "📜",
         "role": "owner"
     },
     {
         "id": "contacts",
-        "title": "Your Circle of Trust",
-        "description": "The people who matter most—who should be notified first, who can help when things are hard, and who will carry out your wishes. Building this list is an act of care for those you love.",
+        "title": "Family & Contacts",
+        "description": "Record family, advisers, and other contacts, how each person can help, and their notification preferences.",
         "icon": "🤝",
         "role": "owner"
     },
     {
         "id": "funeral",
-        "title": "Honoring Your Life",
-        "description": "These choices reflect who you are and how you want to be remembered. Take your time with each one—this is your final gift to the people who love you.",
+        "title": "Final Wishes",
+        "description": "Record funeral and memorial wishes, arrangements already made, and details still to discuss with family or a provider.",
         "icon": "🕊️",
         "role": "owner"
     }

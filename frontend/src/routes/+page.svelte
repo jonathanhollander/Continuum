@@ -980,9 +980,7 @@
                                         style="background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png')"
                                     ></div>
                                     <div class="space-y-4">
-                                        <div
-                                            class="h-px w-12 bg-primary-deep/30 mb-8"
-                                        ></div>
+                                        <p class="text-xs font-bold uppercase tracking-wider text-slate-600">Example letter</p>
                                         <h4
                                             class="font-serif text-slate-900 text-xl font-bold leading-tight"
                                             dir="auto"
