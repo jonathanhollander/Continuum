@@ -408,9 +408,9 @@
 
 <LivingBlueprintHeader
     title="Time Capsule Vault"
-    subtitle="Preserving wisdom, voice, and presence across time"
-    detailedDescription="Messages safely locked until the perfect milestone. Record video messages, write letters, or preserve your voice for graduations, weddings, and life's meaningful moments."
-    whyMatters="The messages you write here will comfort your loved ones for years to come, in your own words. Imagine your daughter graduating, getting married, or having her first child—and finding your voice waiting for her at each milestone."
+    subtitle="Messages for a person and a future reading occasion"
+    detailedDescription="Write or record a message, choose the person in your contacts, and set a date or milestone. The release condition controls when it becomes available in their shared recipient view."
+    whyMatters="A title, the intended occasion, and your own memories give the recipient the context for reading or watching your message later."
 >
     <div class="flex items-center gap-3">
         <DataViewToggle module="time-capsule" />
@@ -622,8 +622,8 @@
             <div class="md:col-span-2 lg:col-span-3">
                 <EmptyState
                     title="Words waiting to be written"
-                    whyMatters="<strong>The messages you write here will comfort your loved ones for years to come, in your own words.</strong> Imagine your daughter graduating, getting married, or having her first child—and finding your voice waiting for her at each milestone.<br/><br/>Each one is your presence at a moment that matters, and proof that you thought about their future and cared enough to speak across time."
-                    encouragement="Start with one person and one moment. The rest will come when you're ready."
+                    whyMatters="Record a message for an occasion you choose: a graduation, birthday, wedding, or another moment that matters to you. Include the memory, advice, or encouragement you want that person to have in your own words."
+                    encouragement="Start with one person and one occasion. Choose their contact entry so the capsule is connected to their shared view."
                     icon={MessageSquare}
                     iconClass="text-primary"
                     ctaLabel="Write your first message"
@@ -747,7 +747,7 @@
                             </h2>
                         </div>
                         <p class="text-muted-foreground text-sm leading-relaxed pl-16">
-                            These words will find their way to someone you love at exactly the right moment—a graduation, a wedding, a milestone worth celebrating. This is your presence, preserved.
+                            Choose who this is for, write or record your message, and choose a release condition. Include why this occasion matters to you.
                         </p>
                     </div>
                     <button
@@ -929,6 +929,9 @@
                         ></textarea>
                     </div>
                 </div>
+
+                <p class="text-sm text-muted-foreground leading-relaxed">Date capsules become available when their date arrives. For a milestone, choose Release this capsule when you are ready to make it available.</p>
+                <p class="text-sm text-muted-foreground leading-relaxed">Save Draft keeps this draft on this device. Seal Capsule saves it in your account. Choose a contact to connect the message with their shared recipient view.</p>
 
                 <!-- Custom Fields -->
                 <div class="pt-4 mt-4 border-t border-border">

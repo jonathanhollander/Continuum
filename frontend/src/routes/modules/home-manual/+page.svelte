@@ -443,7 +443,7 @@
                 id="utility-location"
                 type="text"
                 bind:value={utilityForm.location}
-                placeholder="e.g. Front yard, by the meter"
+                placeholder="e.g. Beside the front-yard meter; instructions in the household folder"
                 class={inputClass}
             />
         </div>
@@ -466,9 +466,9 @@
     <!-- Header -->
     <LivingBlueprintHeader
         title="The Home Operating Manual"
-        subtitle="The instruction manual for your physical house"
-        detailedDescription="Document your trusted vendors, access codes, and utility shutoff locations. Give your family a clear guide to turning off the water and who to call when something breaks."
-        whyMatters="These details make everyday tasks gentler for your family during a difficult time."
+        subtitle="People to call, ways in, and equipment locations"
+        detailedDescription="Use Trusted Vendors for the people who know your home, Access Codes for entry details, and Utilities &amp; Shutoffs for equipment locations and provider contacts. Include landmarks and where the actual equipment instructions are kept."
+        whyMatters="Specific locations, working contact details, and familiar routines help the person looking after your home find the right information."
     />
 
     <!-- AI Concierge Drafting Assistant -->
@@ -815,8 +815,8 @@
                 {#if utilitySync.items.length === 0}
                     <EmptyState
                         title="Where to find the shutoffs"
-                        whyMatters="Knowing where the water main, gas valve, and electrical panel are keeps your family calm and safe.<br/><br/>They'll know exactly where to go and what to do."
-                        encouragement="Start with your water main shutoff—it's the most common emergency need."
+                        whyMatters="Record where the equipment is, which provider to contact, and where to find the manufacturer's or professional's instructions. A recognizable landmark helps another person locate the right place."
+                        encouragement="Start with one utility. Add its location, provider, account reference, and support number when you have them."
                         icon={Droplets}
                         iconClass="text-primary"
                         ctaLabel="Share your first shutoff"

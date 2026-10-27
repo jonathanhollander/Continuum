@@ -325,9 +325,9 @@
 
 <LivingBlueprintHeader
     title="Heirlooms & Treasures"
-    subtitle="Objects carry stories that deserve to be told"
-    detailedDescription="When you document the history and meaning behind your treasured possessions, you're ensuring these stories survive—transforming objects into heirlooms that connect generations."
-    whyMatters="Every object holds a story. That watch your grandfather wore every day, your wedding dress, the painting your mother loved. When you record their stories, you keep the emotional value that makes them irreplaceable, and your family will carry those stories forward."
+    subtitle="The item, its story, where to find it, and who it is for"
+    detailedDescription="Add a photo, describe how the item came to you, and record where it is kept. Choose an intended recipient and explain why the object matters to you. Separate the history you know from family recollection."
+    whyMatters="These details help your family recognize the right object and understand the meaning you want to pass on with it."
 >
     <div class="flex items-center gap-3">
         <DataViewToggle module="heirlooms" />
@@ -385,7 +385,7 @@
     {#if items.length === 0}
         <EmptyState
             title="Your treasures deserve their stories"
-            whyMatters="Every object holds a story. That watch your grandfather wore every day, your wedding dress, the painting your mother loved. When you record their stories, you keep the emotional value that makes them irreplaceable, and your family will carry those stories forward."
+            whyMatters="A photo and a few specific details help your family recognize the object. Record who it came from, where it is kept, and why you want its story remembered."
             encouragement="Start with one meaningful object. Take a photo, write why it matters. The rest will follow naturally."
             icon={Gift}
             iconClass="text-primary"
@@ -578,7 +578,7 @@
                         </div>
 
                         <p class="text-xs text-muted-foreground font-mono">
-                            ID: {String(qrTarget.id).split("-")[0]} // Scan to view story
+                            ID: {String(qrTarget.id).split("-")[0]} // Sign in to open this heirloom
                         </p>
                     </div>
 
@@ -606,7 +606,7 @@
     <Modal
         bind:open={() => showAddForm, setFormOpen}
         title={isEditing ? "Edit these details" : "Preserve a Treasure"}
-        description="This object holds a story that only you can tell. By documenting it here, you're ensuring that story survives—transforming an object into an heirloom that connects generations."
+        description="Describe the object, where it is kept, and the story behind it. Add a photo and the person you intend it for."
         maxWidth="max-w-lg"
     >
         <div class="space-y-4">
@@ -672,7 +672,7 @@
                     id="heirloom-story"
                     bind:value={newHeirloom.story}
                     class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all h-32"
-                    placeholder="Why is this meaningful? Where did it come from?"
+                    placeholder="Who gave it to you? What do you know about its history? Where is it kept, and why does it matter?"
                 ></textarea>
             </div>
 

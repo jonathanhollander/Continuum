@@ -184,9 +184,9 @@
 <!-- Page Header -->
 <LivingBlueprintHeader
     title="Legacy Journal"
-    subtitle="Your Story, Your Legacy"
-    detailedDescription="Your life is filled with stories worth telling - moments of joy, lessons learned, values discovered. This journal is your space to preserve those treasures for the people who matter most."
-    whyMatters="The stories we carry shape generations. A place to write them down keeps precious memories close and shares your wisdom. Your words here become a lasting gift - a window into your heart that your loved ones can return to again and again."
+    subtitle="Memories, values, lessons, and accomplishments"
+    detailedDescription="Use Reflections for stories and memories, Ethical Will for the values you want to explain, and Life Lessons for what experience has taught you. Accomplishments gathers the events marked as accomplishments on your Life Timeline."
+    whyMatters="Names, places, moments, and your own explanation give your family more than a list of events: they help another person understand what those experiences meant to you."
 >
     {#if activeTab === "accomplishments"}
         <a
@@ -263,6 +263,17 @@
         </div>
 
         <!-- Content Area -->
+        <p class="mb-6 max-w-3xl text-muted-foreground leading-relaxed" data-testid="journal-section-guidance">
+            {#if activeTab === "reflections"}
+                Write what happened, who was there, and when or where it took place. Include why you want the memory remembered. A few sentences are a useful start.
+            {:else if activeTab === "will"}
+                Use Core Values for individual ideas and the experiences behind them. Choose The Letter to bring your values and hopes together in your own words.
+            {:else if activeTab === "lessons"}
+                Describe an experience, what you learned from it, and how that lesson might help someone you love. Choose a category to make it easier to find later.
+            {:else}
+                Accomplishments saved on your Life Timeline appear here. Choose Add on your Timeline, create or edit an event, and select Accomplishment as its type.
+            {/if}
+        </p>
         <div class="min-h-[400px]">
             {#if activeTab === "reflections"}
                 <div in:fade={{ duration: 300 }}>
@@ -517,7 +528,7 @@
                 id="entry-content"
                 bind:value={newEntry.content}
                 class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none min-h-[200px]"
-                placeholder="Write freely. Tell the story as you remember it..."
+                placeholder="What happened? Who was there? When or where was it? Why do you want this memory remembered?"
             ></textarea>
             <p class="text-xs text-muted-foreground mt-1.5">
                 Share as much or as little as you'd like. Your words are a gift.
