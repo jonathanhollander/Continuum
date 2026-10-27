@@ -53,7 +53,18 @@ export default defineRailway(() => {
   const Continuum = service("Continuum", {
     source: github("jonathanhollander/Continuum", { checkSuites: true }),
     build: { builder: "NIXPACKS" },
-    deploy: { healthcheckPath: "/api/health", sleepApplication: true },
+    deploy: {
+      "ipv6EgressEnabled": false,
+      "multiRegionConfig": {
+        "us-east4-eqdc4a": {
+          "numReplicas": 1
+        }
+      },
+      "runtime": "V2",
+      "sleepApplication": true,
+      "useLegacyStacker": false,
+      "healthcheckPath": "/api/health"
+    },
     volumeMounts: { "/data": dataVolume },
     variables: Object.fromEntries(preservedVariables.map((name) => [name, preserve()])),
   });
