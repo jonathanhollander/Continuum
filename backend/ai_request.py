@@ -22,7 +22,8 @@ INPUT_SLOTS = [
     for key, label, kind, description in (
         ("user_text", "Current user message", "text", "The current question or follow-up."),
         ("notes", "Writing notes", "text_list", "Notes represented as a JSON list, in supplied order."),
-        ("current_draft", "Current draft", "text", "The complete current document, before applying a suggestion."),
+        ("current_draft", "Current working draft", "text", "Edited text for a one-shot writing action, or the latest proposed conversation draft pending review; not proof saved or applied."),
+        ("current_draft_source", "Current draft source", "text", "Whether this working draft is edited text or a proposal pending review. Omitted means no source was supplied."),
         ("job_brief", "Job brief", "text", "The retained purpose and instructions for this writing job."),
         ("document_title", "Document title", "text", "The current document's title."),
         ("document_type", "Document type", "text", "The current document's type."),
@@ -166,6 +167,7 @@ class DynamicInputs(BaseModel):
     user_text: str = Field(default="", max_length=2000000)
     notes: list[str] = Field(default_factory=list, max_length=1000)
     current_draft: str = Field(default="", max_length=2000000)
+    current_draft_source: Literal["edited", "proposed"] | None = None
     job_brief: str = Field(default="", max_length=2000000)
     document_title: str = Field(default="", max_length=20000)
     document_type: str = Field(default="", max_length=1000)
@@ -212,6 +214,8 @@ for _slot in INPUT_SLOTS:
                              ("minimum", "min"), ("maximum", "max")):
         if _source in _bounds:
             _slot[_target] = _bounds[_source]
+    if _slot["key"] == "current_draft_source":
+        _slot.update(options=["edited", "proposed"], nullable=True)
     if _slot["key"] == "warmth":
         _slot.update(min=0, max=100, nullable=True)
 
