@@ -76,10 +76,8 @@ def capsule_released(row: Dict[str, Any], today: str) -> bool:
 
 
 def executor_notes_shared(session: Session, contact: PulseContact, profile: Optional[Dict[str, Any]] = None) -> bool:
-    if contact.is_executor:
-        return True
     profile = profile if profile is not None else snapshot_profile(session, contact.user_id)
-    return profile.get("executor_note_sharing") == "all_recipients"
+    return is_executor(contact, profile) or profile.get("executor_note_sharing") == "all_recipients"
 
 
 def recipient_snapshot(session: Session, contact: PulseContact) -> Dict[str, Any]:
@@ -222,7 +220,7 @@ class RecipientUpdate(SQLModel):
 def view(token: str, session: Session = Depends(get_session)):
     contact = contact_for_token(session, token)
     out = _view(session, contact, preview=False)
-    share_notes = contact.is_executor or out["snapshot"]["owner"].get("executor_note_sharing") == "all_recipients"
+    share_notes = out["recipient"]["is_executor"] or out["snapshot"]["owner"].get("executor_note_sharing") == "all_recipients"
     _remember_shown(token, contact, _media_ids(out["snapshot"]), bool(share_notes))  # the page's files ask next
     return JSONResponse(content=out)
 
