@@ -50,7 +50,7 @@
 
     <div class="max-w-6xl mx-auto relative z-10">
         <!-- Header -->
-        <header class="flex justify-between items-start mb-12">
+        <header class="flex flex-col gap-6 sm:flex-row justify-between items-start mb-12">
             <div in:fly={{ y: -20, duration: 800 }}>
                 <div class="flex items-center gap-3 mb-2 opacity-60">
                     <Activity size={20} class="text-primary" />
@@ -59,11 +59,12 @@
                     >
                 </div>
                 <h1 class="text-5xl font-serif font-bold text-foreground mb-2">
-                    Insights
+                    Recorded Information
                 </h1>
                 <p class="text-muted-foreground text-lg max-w-2xl mb-6">
-                    A gentle look at how your plans are coming together across
-                    three pillars: Legal, Financial, and Legacy.
+                    See which record checks are filled across legal, financial
+                    and personal information, then open the source records to review them.
+                    These percentages do not verify legal authority, current values or a complete handover.
                 </p>
                 <button
                     class="flex items-center gap-2 bg-card border border-border text-foreground px-6 py-3 rounded-2xl transition-all shadow-xl shadow-black/40 hover:scale-105 active:scale-95 font-bold"
@@ -75,13 +76,13 @@
             </div>
 
             <div
-                class="text-right"
+                class="text-left sm:text-right"
                 in:fly={{ x: 20, duration: 800, delay: 200 }}
             >
                 <div class="text-xs font-bold uppercase text-muted-foreground mb-1">
-                    The Pulse
+                    Record coverage score
                 </div>
-                {#if auditSources.canScore}<div class="flex items-baseline justify-end gap-2">
+                {#if auditSources.canScore}<div class="flex items-baseline justify-start sm:justify-end gap-2">
                     <span
                         class={`text-6xl font-sans font-bold ${getHealthColor(health)}`}
                         data-testid="analytics-readiness"
@@ -115,11 +116,11 @@
                     </span>
                 </div>
                 <h3 class="text-xl font-bold text-foreground mb-2">
-                    Legal Readiness
+                    Legal Records
                 </h3>
-                <p class="text-muted-foreground text-sm mb-6 h-10">
-                    Authority & medical proxies to ensure seamless decision
-                    making.
+                <p class="text-muted-foreground text-sm mb-6 min-h-10">
+                    Three presence checks: an executor name, a healthcare proxy
+                    record and a living-will record. Each contributes one third.
                 </p>
                 <div class="space-y-3">
                     {#each Object.entries(pillars.legal.metrics).filter(([, v]) => typeof v === "boolean") as [key, active]}
@@ -169,17 +170,17 @@
                     </span>
                 </div>
                 <h3 class="text-xl font-bold text-foreground mb-2">
-                    Financial Clarity
+                    Financial Records
                 </h3>
-                <p class="text-muted-foreground text-sm mb-6 h-10">
-                    Asset organization and beneficiary designations for swift
-                    transfer.
+                <p class="text-muted-foreground text-sm mb-6 min-h-10">
+                    Points for open account fields and any insurance record.
+                    Recorded beneficiaries still need checking with the institution.
                 </p>
                 <div class="space-y-3">
                     <div class="flex items-center gap-3 text-sm">
                         <div class="w-full">
                             <div class="flex justify-between mb-1">
-                                <span class="text-muted-foreground">Total Value</span>
+                                <span class="text-muted-foreground">Recorded net value</span>
                                 <span class="text-foreground"
                                     >{(
                                         pillars.financial.metrics.totalValue ||
@@ -209,7 +210,7 @@
                         {#if pillars.financial.metrics.hasBeneficiary}
                             <CircleCheck size={16} class="text-success" />
                             <span class="text-foreground"
-                                >Beneficiary Designated</span
+                                >Beneficiary name recorded</span
                             >
                         {/if}
                     </div>
@@ -234,11 +235,11 @@
                     </span>
                 </div>
                 <h3 class="text-xl font-bold text-foreground mb-2">
-                    Legacy Vitality
+                    Personal & Digital Records
                 </h3>
-                <p class="text-muted-foreground text-sm mb-6 h-10">
-                    Emotional wealth, heirlooms, and wishes preserved for the
-                    future.
+                <p class="text-muted-foreground text-sm mb-6 min-h-10">
+                    Points for heirlooms, letters, funeral wishes, a memory
+                    and digital account records. Review their words and attachments.
                 </p>
                 <div class="space-y-3">
                     <div class="flex items-center gap-3 text-sm">
@@ -250,7 +251,7 @@
                     <div class="flex items-center gap-3 text-sm">
                         {#if pillars.legacy.metrics.wishesDefined}
                             <CircleCheck size={16} class="text-success" />
-                            <span class="text-foreground">Wishes Defined</span>
+                            <span class="text-foreground">Funeral wishes recorded</span>
                         {/if}
                     </div>
                 </div>
@@ -265,7 +266,7 @@
                     class="text-xl font-bold text-foreground mb-6 flex items-center gap-2"
                 >
                     <Heart size={20} class="text-primary" />
-                    When you're ready
+                    Questions to review
                 </h2>
                 <div class="space-y-4">
                     {#each gaps as gap}
@@ -311,12 +312,12 @@
                     </div>
                 </div>
                 <h2 class="text-2xl font-bold text-foreground mb-2">
-                    All in order
+                    No gaps in this topic list
                 </h2>
                 <p class="text-muted-foreground max-w-lg mx-auto">
-                    Each pillar is in good shape. A yearly look at your
-                    beneficiaries, and a new story now and then, keeps your
-                    legacy current.
+                    The topics listed here have recorded information or setup choices.
+                    This list is separate from the score checks above. Review details,
+                    originals, sharing choices and the handover preview with the people involved.
                 </p>
             </div>
         {:else}

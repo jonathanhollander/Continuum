@@ -39,10 +39,11 @@
         class="flex items-center justify-between border-b border-slate-800 pb-8"
     >
         <div>
-            <h1 class="text-3xl font-bold text-white mb-2">UI Quality Audit</h1>
+            <h1 class="text-3xl font-bold text-white mb-2">Manual Interface Checklist</h1>
             <p class="text-slate-400">
-                Manual visual verification to ensure the "Stunning" standard is
-                met.
+                Mark the visual checks you have personally reviewed. Checkmarks are
+                saved with your account; they are not automated test results or proof
+                that every page has been checked.
             </p>
         </div>
     </div>
@@ -55,7 +56,7 @@
                     class="text-lg font-bold text-white mb-6 flex items-center gap-2"
                 >
                     <Palette size={18} class="text-primary" />
-                    Visual Integrity Checklist
+                    Your Visual Review Checks
                 </h3>
 
                 <div class="space-y-3">

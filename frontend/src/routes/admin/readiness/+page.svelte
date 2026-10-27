@@ -27,14 +27,29 @@
     };
     const share = (id: string, score: number) =>
         Math.min(1, score / (AuditStore.maxScores[id] || 50));
+    const checkRule: Record<string, string> = {
+        financial: "Open non-debt accounts: 20 points for any record, up to 40 for filled beneficiary fields and up to 40 for numeric values, including zero. This does not verify institution records.",
+        insurance: "Any insurance policy record earns 50 points. Coverage, beneficiaries and claim requirements still need review.",
+        family: "Any saved contact earns 50 points. This does not confirm that the person knows their role or can access your records.",
+        medical: "Any medical directive record earns 50 points. Its content, original and applicable authority still need review.",
+        digital: "Any digital account record earns 50 points. This does not test credentials, recovery instructions or recipient access.",
+        legacy: "25 points each for any heirloom, any letter, a filled funeral wish, and any journal entry, visual memory or time-capsule message. This does not check their completeness or delivery.",
+    };
+    const sectionSources: Record<string, string[]> = {
+        financial: ["financial_assets"], insurance: ["insurance_policies"],
+        family: ["family_members"], medical: ["medical_directives"],
+        digital: ["digital_assets"],
+        legacy: ["heirlooms", "letters", "funeral_data", "journal_entries", "visual_memories", "time_capsule"],
+    };
 </script>
 
 <!-- Header Section -->
-<div class="flex items-center justify-between mb-12">
+<div class="flex flex-col items-start gap-6 sm:flex-row sm:items-center justify-between mb-12">
     <div>
-        <h1 class="text-3xl font-bold text-white mb-2">Estate Readiness Hub</h1>
+        <h1 class="text-3xl font-bold text-white mb-2">Record Coverage</h1>
         <p class="text-slate-400 max-w-2xl">
-            See how complete each section is.
+            Points for recorded information in six areas. A filled check does not
+            establish legal validity, current values, access or a complete handover.
         </p>
     </div>
 
@@ -74,7 +89,7 @@
                     >{audit.percentage}%</span
                 >
                 <span class="text-[10px] uppercase tracking-widest text-muted-foreground"
-                    >{auditSources.confirmed ? "Ready" : "Provisional"}</span
+                    >{auditSources.confirmed ? "Record checks" : "Provisional"}</span
                 >
             {/if}
         </div>
@@ -108,13 +123,33 @@
 
             <p class="text-sm text-slate-400 mb-4">
                 {#if score === 0}
-                    Ready when you are.
+                    No points from these record checks yet.
                 {:else if share(id, score) < 1}
-                    A good start.
+                    Some checked fields are filled.
                 {:else}
-                    Well covered.
+                    These record checks are filled.
                 {/if}
             </p>
+            <p class="text-xs text-slate-400 mb-4">{checkRule[id]}</p>
+            <details class="mb-4 text-xs text-slate-300" data-coverage-sources={id}>
+                <summary class="cursor-pointer font-semibold">Source records for these checks</summary>
+                <p class="mt-2 text-slate-400">Loaded source IDs before the scoring rules above are applied. A listed row does not necessarily add points.</p>
+                {#each auditSources.sources.filter((source) => sectionSources[id]?.includes(source.id)) as source (source.id)}
+                    <div class="mt-3" data-coverage-source={source.id}>
+                        <a class="underline underline-offset-2" href={source.path}>{source.name}</a>
+                        <span class="text-slate-400"> · {source.state === "ready" ? "Loaded" : source.state === "error" ? "Refresh failed" : "Device copy"}</span>
+                        {#if source.recordIds.length > 0}
+                            <ul class="mt-1 space-y-1 break-all">
+                                {#each source.recordIds as recordId}
+                                    <li data-coverage-record-id={recordId}>Source ID: {recordId}</li>
+                                {/each}
+                            </ul>
+                        {:else}
+                            <p class="mt-1 text-slate-400">No source IDs returned.</p>
+                        {/if}
+                    </div>
+                {/each}
+            </details>
 
             {#if id === "family"}
                 <div class="mb-4 text-sm text-slate-300" data-testid="contact-readiness-evidence">
@@ -149,7 +184,7 @@
 <!-- Action Cards -->
 {#if audit.issues.length > 0}
     <div class="mt-12">
-        <h3 class="text-xl font-bold text-white mb-6">Priority Actions</h3>
+        <h3 class="text-xl font-bold text-white mb-6">Questions to Review</h3>
         <div class="space-y-3">
             {#each audit.issues.slice(0, 5) as issue}
                 <div

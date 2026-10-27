@@ -36,7 +36,7 @@
             icon: Stethoscope,
             color: "text-primary-hover",
             bg: "bg-primary-soft",
-            desc: "You are in hospital and someone you trust decides for you.",
+            desc: "Which care wishes and decision-maker records could someone look for?",
         },
         {
             id: "passing",
@@ -44,7 +44,7 @@
             icon: HeartHandshake,
             color: "text-muted-foreground",
             bg: "bg-muted",
-            desc: "Your family steps in today to carry out your wishes.",
+            desc: "Which documents and beneficiary notes could your family review?",
         },
     ];
 
@@ -72,18 +72,18 @@
             );
 
             checks.push({
-                check: "Digital ID Backup",
+                check: "ID Record",
                 status: hasIDs,
                 msg: hasIDs
-                    ? "A copy of your passport or ID saved in your Vault."
-                    : "A copy of your passport or ID in the Vault keeps you covered.",
+                    ? "A Document Vault record is categorized as ID. Open it to check the attachment or original's location."
+                    : "No Document Vault record categorized as ID was found. Record where a copy or original can be found.",
             });
             checks.push({
-                check: "Card List",
+                check: "Financial or Debt Record",
                 status: hasCards,
                 msg: hasCards
-                    ? "Your accounts and cards saved in Financial Accounts."
-                    : "Listing your cards in Financial Accounts makes them quick to replace.",
+                    ? "An open Financial or debt record was found. Check that the actual cards and institution contact details are listed."
+                    : "No open Financial or debt record was found. Record the actual accounts or cards and institution contacts.",
             });
             overallStatus = hasIDs && hasCards ? "pass" : "fail";
         }
@@ -109,18 +109,18 @@
                 status: hasHealth,
                 msg: hasHealth
                     ? hasDirective
-                        ? "Healthcare directive saved in Health & Medical."
-                        : "Healthcare directive saved in your Vault."
-                    : "A healthcare directive lets your doctors follow your wishes.",
+                        ? "A living-will, DNR, palliative-care or other directive record was found in Health & Medical."
+                        : "A Document Vault title matches a healthcare-directive term. Review the actual document and original."
+                    : "No matching directive record or document title was found. Record your wishes and where the relevant originals are kept.",
             });
             checks.push({
-                check: "Power of Attorney",
+                check: "Proxy / Power-of-Attorney Record",
                 status: hasPOA,
                 msg: hasPOA
                     ? hasProxy
-                        ? "Healthcare proxy saved in Health & Medical."
-                        : "Power of attorney saved in your Vault."
-                    : "A power of attorney or healthcare proxy lets someone you trust decide for you.",
+                        ? "A healthcare-proxy record was found in Health & Medical. Confirm the person, document and applicable authority."
+                        : "A Document Vault title matches power of attorney or POA. Check its actual purpose and authority."
+                    : "No healthcare-proxy record or matching power-of-attorney title was found. Record the person and location of the relevant document.",
             });
             overallStatus = hasHealth && hasPOA ? "pass" : "fail";
         }
@@ -139,18 +139,18 @@
                 status: hasWill || hasTrust,
                 msg:
                     hasWill || hasTrust
-                        ? "Will or trust saved in your Vault."
-                        : "A will or trust lets you decide where your estate goes.",
+                        ? "A Document Vault record is categorized as Will or Trust. Review the document and original's location."
+                        : "No Document Vault record categorized as Will or Trust was found. Record where the relevant documents or originals are kept.",
             });
             checks.push({
-                check: "Beneficiaries",
+                check: "Beneficiary Fields",
                 status: benCov > 0.8,
                 msg:
                     withBen === 0
-                        ? "Naming a beneficiary on each asset lets it pass straight to the people you choose."
+                        ? `Beneficiary text is recorded on 0 of ${owned.length} open non-debt assets. This check requires more than 80%; confirm designations with each institution.`
                         : withBen === owned.length
-                          ? `Beneficiaries named on ${withBen} of ${owned.length} assets.`
-                          : `Beneficiaries named on ${withBen} of ${owned.length} assets. Naming one on each of the rest lets it pass straight to the people you choose.`,
+                          ? `Beneficiary text is recorded on ${withBen} of ${owned.length} open non-debt assets. Confirm the actual designations with each institution.`
+                          : `Beneficiary text is recorded on ${withBen} of ${owned.length} open non-debt assets. This check requires more than 80%; confirm designations with each institution.`,
             });
             overallStatus =
                 (hasWill || hasTrust) && benCov > 0.8 ? "pass" : "fail";
@@ -174,7 +174,8 @@
                 Practice Run
             </h1>
             <p class="text-lg text-muted-foreground">
-                See how your saved plan answers real-life moments.
+                Look for selected record categories and fields in a practice scenario.
+                This does not test document validity, attachments, access or a complete response to an emergency.
             </p>
         </div>
         <div
@@ -280,19 +281,19 @@
                                 <h1
                                     class="font-serif font-bold text-3xl text-success"
                                 >
-                                    Ready for This Moment
+                                    Records Found for This Walkthrough
                                 </h1>
                                 <p class="text-muted-foreground mt-2">
-                                    Each record below is saved in your plan.
+                                    The selected record checks passed. Open the actual records and confirm their details and availability.
                                 </p>
                             {:else}
                                 <h1
                                     class="font-serif font-bold text-3xl text-foreground"
                                 >
-                                    Room to Strengthen
+                                    Questions to Review
                                 </h1>
                                 <p class="text-muted-foreground mt-2">
-                                    A few additions below will round out your plan for this moment.
+                                    One or more selected record checks did not pass. Use the findings below to review the source records.
                                 </p>
                             {/if}
                         </div>
