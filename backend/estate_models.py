@@ -261,7 +261,7 @@ class InsurancePolicy(SQLModel, table=True):
     insurance_type: str  # Life, Health, Auto, Home, Disability, Other
     insurer: str
     policy_number: Optional[str] = None
-    premium_amount: Optional[float] = 0.0
+    premium_amount: Optional[float] = None
     premium_frequency: Optional[str] = "Monthly" # Monthly, Quarterly, Annually
     beneficiaries: Optional[str] = None
     agent_name: Optional[str] = None

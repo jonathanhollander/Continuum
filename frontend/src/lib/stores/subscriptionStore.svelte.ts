@@ -6,7 +6,7 @@ export interface Subscription {
     id: number;
     user_id?: number;
     name: string;
-    cost?: number;
+    cost?: number | null;
     frequency: string;
     cycle?: string;
     difficulty?: string;
