@@ -8,7 +8,7 @@ export const AI_MODULE_VARIANTS = [
     'obituary', 'letters', 'executor', 'heirlooms', 'legal_explainer', 'contacts',
     'medical', 'pets', 'property', 'insurance', 'digital-guardian', 'visual-memories',
     'financial', 'activity-log', 'subscriptions', 'advanced-registry', 'qr-codes',
-    'home-manual', 'calendar'
+    'home-manual', 'calendar', 'funeral'
 ] as const;
 
 export const AI_WRITER_VARIANTS = [
