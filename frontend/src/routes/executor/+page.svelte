@@ -104,22 +104,22 @@
     // Resources and guides
     const resources = [
         {
-            title: 'Executor Responsibilities Guide',
-            description: 'Understanding your role and legal obligations',
+            title: 'Executor Guide',
+            description: 'Questions, record links and saved notes for each practical step',
             icon: BookOpen,
             link: '/modules/executor-toolkit',
             color: 'purple' as Tone
         },
         {
             title: 'Gov & Bureaus',
-            description: 'Legal and government steps, gathered in one place',
+            description: 'Find the government and court questions to confirm',
             icon: Clock,
             link: '/modules/executor-toolkit?tab=bureau',
             color: 'blue' as Tone
         },
         {
             title: 'Professional Help',
-            description: 'When to consult attorneys and accountants',
+            description: 'Find the advisers and contact details recorded for this estate',
             icon: Shield,
             link: '/modules/contacts',
             color: 'cyan' as Tone
@@ -147,9 +147,9 @@
             </h1>
             <p class="text-xl text-muted-foreground max-w-3xl leading-relaxed mb-4">
                 {#if deceasedName}
-                    You're managing {deceasedName}'s estate. This is important work, and we're here to support you every step of the way.
+                    Find {deceasedName}'s records, people to contact and practical steps to review.
                 {:else}
-                    You're managing their estate. This is important work, and we're here to support you every step of the way.
+                    Find the recorded information, people to contact and practical steps to review.
                 {/if}
             </p>
             <p class="text-sm text-muted-foreground italic">
@@ -174,7 +174,7 @@
                 Essential Areas
             </h2>
             <p class="text-muted-foreground mb-6">
-                These are the core areas to explore when you're ready. Start with what feels manageable, and take breaks when you need them.
+                Open an area to find its records. Use the Executor Guide to note who you spoke with, what they require and the next action.
             </p>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -260,7 +260,7 @@
                 Guidance & Resources
             </h2>
             <p class="text-muted-foreground mb-6">
-                These resources can help you understand your responsibilities and make informed decisions.
+                Confirm requirements with the court, institution or adviser handling the matter. Being named here does not establish authority to act.
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
