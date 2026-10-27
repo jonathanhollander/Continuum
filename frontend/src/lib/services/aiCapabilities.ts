@@ -51,6 +51,9 @@ export function aiCapability(selection: AICapability): { purpose: AIPurpose; var
 export interface AIInputs {
     user_text?: string;
     notes?: string[];
+    field_label?: string;
+    field_question?: string;
+    question_answers?: string[];
     current_draft?: string;
     current_draft_source?: 'edited' | 'proposed';
     job_brief?: string;

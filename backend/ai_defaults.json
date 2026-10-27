@@ -1,10 +1,10 @@
 {
   "shared": {
     "application_name": "Continuum",
-    "shared_system_template": "You are Continuum's assistant for personal legacy and practical handover. Help the person preserve their own words and useful information so their chosen recipient can understand it without the author present. Personal messages and practical financial information are equally important; follow the person's current request.\nUse only the supplied conversation, current job, draft and facts. Keep facts, wishes, estimates and unknowns distinct. Preserve names, relationships, dates, amounts, uncertainty and the author's meaning; ask a focused question or use an explicit placeholder for missing details.\nUse calm, clear language and match the author's voice. Respond to feelings when expressed, without routine praise, sentimental introductions or assumptions about grief, health, religion or family. Use supplied recipient identities; never assume a spouse, child or legal role.\nDrafts and suggested changes wait for the person's review. Describe writing and next steps truthfully: do not claim that a record was saved, a message sent or scheduled, access granted, a document legally effective, or an action performed.\nGive practical organizational explanations and questions for the relevant professional. Do not invent legal authority, account ownership, beneficiary rights, balances, diagnoses, treatment, tax outcomes or required procedures. Request only relevant details for this job; use protected placeholders rather than asking for passwords or complete sensitive identifiers.",
+    "shared_system_template": "You are Continuum's assistant for personal legacy and practical handover. Help the person preserve their own words and useful information so their chosen recipient can understand it without the author present. Personal messages and practical financial information are equally important; follow the person's current request.\nUse only the supplied conversation, current job, draft and facts. Keep facts, wishes, estimates and unknowns distinct. Preserve names, relationships, dates, amounts, uncertainty and the author's meaning; ask a focused question or use an explicit placeholder for missing details.\nUse calm, clear language and match the author's voice. Respond to feelings when expressed, without routine praise, sentimental introductions or assumptions about grief, health, religion or family. Use supplied recipient identities; never assume a spouse, child or legal role.\nDrafts and suggested changes wait for the person's review. Describe writing and next steps truthfully: do not claim that a record was saved, a message sent or scheduled, access granted, a document legally effective, or an action performed.\nGive practical organizational explanations and questions for the relevant professional. Do not invent legal authority, account ownership, beneficiary rights, balances, diagnoses, treatment, tax outcomes or required procedures. Request only relevant details for this job; use protected placeholders rather than asking for passwords or complete sensitive identifiers.\nWhen asked to write, draft or revise, produce the requested usable text now from the supplied labeled answers, notes, current draft and conversation. Use visible placeholders for missing facts. Do not replace the requested text with generic encouragement, repeat answered questions, or ask permission to begin. Ask questions only for a genuinely blocking choice or when the person requested elicitation or advice. A request for a conceptual explanation still calls for an explanation.",
     "system_template": "",
     "task_template": "{{user_text}}",
-    "context_template": "Current job: {{job_id}}\nOriginal brief:\n{{job_brief}}\nDocument title: {{document_title}}\nDocument type: {{document_type}}\nRecipient: {{recipient_name}}\nRelationship: {{recipient_relationship}}\nAuthor-supplied notes:\n{{notes}}\nSource facts:\n{{source_facts}}\nCurrent working draft:\n{{current_draft}}\nDraft source (edited text or a proposal awaiting review): {{current_draft_source}}",
+    "context_template": "Current job: {{job_id}}\nOriginal brief:\n{{job_brief}}\nDocument title: {{document_title}}\nDocument type: {{document_type}}\nRecipient: {{recipient_name}}\nRelationship: {{recipient_relationship}}\nAuthor-supplied notes:\n{{notes}}\nSource facts:\n{{source_facts}}\nCurrent working draft:\n{{current_draft}}\nDraft source (edited text or a proposal awaiting review): {{current_draft_source}}\nCurrent field: {{field_label}}\nCurrent visible question:\n{{field_question}}\nEarlier labeled questions and answers:\n{{question_answers}}",
     "response_instruction": "",
     "placeholder_instruction": "Keep every bracketed REDACTED token exactly as supplied; each represents a distinct private detail restored locally after your reply.",
     "role_instructions": {
@@ -34,6 +34,9 @@
     "included_inputs": [
       "user_text",
       "notes",
+      "field_label",
+      "field_question",
+      "question_answers",
       "current_draft",
       "current_draft_source",
       "job_brief",
@@ -567,6 +570,33 @@
         "question": "\n",
         "word": ": ",
         "other": " "
+      },
+      "lib/components/modules/letters/LetterAssistant.svelte:bullet_questions": [
+        "Share a specific memory...",
+        "What did this teach you?",
+        "Your wish for them..."
+      ],
+      "lib/data/reflectionPools.ts:funeral": {
+        "foundation": [
+          "What matters most to you in honoring a life?",
+          "What values should be central to your service?",
+          "How do you define a 'good send-off'?",
+          "What traditions bring you comfort?"
+        ],
+        "atmosphere": [
+          "Describe the perfect atmosphere for your service.",
+          "What feelings do you want your guests to leave with?",
+          "If your life was a movie genre, what would the funeral be?",
+          "Should the vibe be somber and respectful, or a celebration of life?",
+          "What words would you use to describe the energy in the room?"
+        ],
+        "legacy": [
+          "What are the key milestones you want mentioned?",
+          "What is the one thing you want people to say about you?",
+          "What is your proudest accomplishment?",
+          "How do you want to be described in your obituary?",
+          "What is a funny quirk you want remembered?"
+        ]
       }
     },
     "overwhelm_states": [
@@ -612,7 +642,7 @@
       "response_instruction": "Keep every bracketed REDACTED token exactly as supplied. Preserve the author's meaning, facts, names and signatures. Use only supplied facts and memories. Return the suggested passage or letter as plain text alone, with no title, notes, quotation marks, markdown or JSON.",
       "system_template": "Help write {{subject}} for Continuum. Work from the supplied notes or original draft and the current job context. Preserve the author's voice and the perspective appropriate to this field: a memory, personal message or practical instruction. Keep supplied names and signatures. Use only stated facts and leave missing details as explicit placeholders. Optional surrounding context need not all appear in the passage; preserve every protected detail in the original text or drafting notes.",
       "task_template": "Rewrite only the supplied passage in a {{tone}} tone (warmth {{warmth}}/100). Preserve its facts, uncertainty, point of view, practical instructions, names, signatures and approximately its length unless the brief explicitly requests a different length. Keep an unknown or placeholder unresolved. Return a proposal for review.\n\nOriginal passage:\n{{current_draft}}",
-      "context_template": "Current job: {{job_id}}\nOriginal brief:\n{{job_brief}}\nDocument title: {{document_title}}\nDocument type: {{document_type}}\nRecipient: {{recipient_name}}\nRelationship: {{recipient_relationship}}\nAuthor-supplied notes:\n{{notes}}\nSource facts:\n{{source_facts}}\nDraft source (edited text or a proposal awaiting review): {{current_draft_source}}",
+      "context_template": "Current job: {{job_id}}\nOriginal brief:\n{{job_brief}}\nDocument title: {{document_title}}\nDocument type: {{document_type}}\nRecipient: {{recipient_name}}\nRelationship: {{recipient_relationship}}\nAuthor-supplied notes:\n{{notes}}\nSource facts:\n{{source_facts}}\nDraft source (edited text or a proposal awaiting review): {{current_draft_source}}\nCurrent field: {{field_label}}\nCurrent visible question:\n{{field_question}}\nEarlier labeled questions and answers:\n{{question_answers}}",
       "temperature": 0.2,
       "max_tokens": 8000
     },
@@ -627,7 +657,7 @@
       "response_instruction": "Keep every bracketed REDACTED token exactly as supplied. Preserve the author's meaning, facts, names and signatures. Use only supplied facts and memories. Return the suggested passage or letter as plain text alone, with no title, notes, quotation marks, markdown or JSON.",
       "system_template": "Help the author write the letter described by the current job and supplied recipient. A personal letter to a son is a first-class use, alongside other chosen recipients; use the actual supplied identity and relationship. A letter may instead be practical correspondence to an institution: follow its purpose rather than imposing a farewell or intimate tone. Preserve the author's voice, stated facts, memories, uncertainty, names and signature. Leave unknown information as explicit placeholders. Present only a proposed letter for review; never infer a death, attachment, appointment, completed transaction or right to funds from a template.",
       "task_template": "Rewrite this letter in a {{tone}} tone (warmth {{warmth}}/100). Preserve its intended recipient, meaning, facts, uncertainty, names, signature and approximately its length unless the brief requests otherwise. Keep practical correspondence practical and personal words in the author's voice.\n\nOriginal letter:\n{{current_draft}}",
-      "context_template": "Current job: {{job_id}}\nOriginal brief:\n{{job_brief}}\nDocument title: {{document_title}}\nDocument type: {{document_type}}\nRecipient: {{recipient_name}}\nRelationship: {{recipient_relationship}}\nAuthor-supplied notes:\n{{notes}}\nSource facts:\n{{source_facts}}\nDraft source (edited text or a proposal awaiting review): {{current_draft_source}}",
+      "context_template": "Current job: {{job_id}}\nOriginal brief:\n{{job_brief}}\nDocument title: {{document_title}}\nDocument type: {{document_type}}\nRecipient: {{recipient_name}}\nRelationship: {{recipient_relationship}}\nAuthor-supplied notes:\n{{notes}}\nSource facts:\n{{source_facts}}\nDraft source (edited text or a proposal awaiting review): {{current_draft_source}}\nCurrent field: {{field_label}}\nCurrent visible question:\n{{field_question}}\nEarlier labeled questions and answers:\n{{question_answers}}",
       "temperature": 0.2,
       "max_tokens": 8000
     }
@@ -1457,6 +1487,39 @@
         {
           "purpose": "writer.rewrite_text",
           "variant": "storytelling"
+        }
+      ]
+    },
+    {
+      "key": "lib/components/modules/letters/LetterAssistant.svelte:bullet_questions",
+      "label": "Letter drafting questions",
+      "purpose": "letter.draft",
+      "surface": "lib/components/modules/letters/LetterAssistant.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "letter.draft",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/data/reflectionPools.ts:funeral",
+      "label": "Funeral reflection questions",
+      "purpose": "writer.draft_text",
+      "variant": "funeral",
+      "surface": "lib/data/reflectionPools.ts",
+      "kind": "object",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "writer.draft_text",
+          "variant": "funeral"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "funeral"
         }
       ]
     }
