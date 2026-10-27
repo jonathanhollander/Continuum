@@ -96,7 +96,7 @@ if (typeof window !== 'undefined' && !(window.fetch as { __csrfWrapped?: boolean
 		const owner = captureSession();
 		// Credential challenges and /me are handled by their initiating auth flow. Other
 		// authenticated auth APIs (preferences/onboarding) refresh like ordinary records.
-		const allowTransition = (url.pathname === '/api/auth/me' && !owner.ready)
+		const allowTransition = url.pathname === '/api/auth/access-status' || (url.pathname === '/api/auth/me' && !owner.ready)
 			|| /^\/api\/auth\/(?:token|signup|refresh|passkey|magic-link)(?:\/|$)/.test(url.pathname);
 		assertCurrentSession(owner, allowTransition);
 		if (!ownsSessionToken(owner, sent.slice(7), allowTransition)) throw new SessionChangedError();
