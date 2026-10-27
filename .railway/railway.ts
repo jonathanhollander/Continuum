@@ -1,4 +1,4 @@
-import { defineRailway, github, preserve, project, service } from "railway/iac";
+import { defineRailway, github, preserve, project, service, volume } from "railway/iac";
 
 // Equivalent of the root railway.toml (builder nixpacks, healthcheck /api/health),
 // plus the live service's existing source and variables so `railway config plan`
@@ -41,7 +41,7 @@ export default defineRailway(() => {
     source: github("jonathanhollander/Continuum", { checkSuites: true }),
     build: { builder: "NIXPACKS" },
     deploy: { healthcheckPath: "/api/health", sleepApplication: true },
-    volumeMounts: { "continuum-volume": { mountPath: "/data" } },
+    volumeMounts: { "/data": volume("continuum-volume") },
     variables: Object.fromEntries(preservedVariables.map((name) => [name, preserve()])),
   });
   return project("continuum-saas", {
