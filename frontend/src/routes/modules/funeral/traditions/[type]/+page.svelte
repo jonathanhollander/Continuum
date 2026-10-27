@@ -21,17 +21,28 @@
         if (!t) return undefined;
         return {
             title: `${t.name} Traditions`,
-            description: `The ${t.terminology.service} is usually led by the ${t.terminology.officiant}.`,
+            description: type === "other"
+                ? "Plan the personal traditions, gathering, and people you want involved."
+                : `Questions to discuss with your chosen ${t.terminology.officiant} or funeral provider.`,
             icon: "🕊️",
             sections: [
                 {
-                    title: "Common rituals",
-                    content: [`Many families include these in a ${t.terminology.service}.`],
+                    title: "The traditions that matter to you",
+                    content: [`Which of these would you like included in your ${t.terminology.service}? Note any family customs, readings, music, or gatherings you want to discuss.`],
                     checklist: t.commonRituals,
                 },
                 {
-                    title: "Preparation",
-                    content: [`Preparation is often called ${t.terminology.bodyPreparation}.`],
+                    title: "People and practical arrangements",
+                    content: [
+                        `Who would you like to lead the ${t.terminology.service}, and how can your family contact them? Ask that person and your chosen funeral provider about timing and preparation${t.terminology.bodyPreparation !== "Preparation" ? ` (${t.terminology.bodyPreparation})` : ""}.`,
+                        "Where are any existing arrangements or prepaid-plan details kept? Record the names and locations your family will need.",
+                    ],
+                },
+                {
+                    title: "Record your own choices",
+                    content: [
+                        "Which details matter most to you, and which would you like your family to choose? Return to Final Wishes to record your preferences for the venue, person leading, atmosphere, music, and costs.",
+                    ],
                 },
             ],
         };
@@ -67,6 +78,7 @@
             </div>
 
             <!-- Sections -->
+            <p class="mb-8 text-sm text-muted-foreground leading-relaxed">Use this guide to prepare questions for the people helping you. Discuss the customs that matter to you with your chosen community contact or funeral provider, then record your own choices in Final Wishes.</p>
             <div class="space-y-12">
                 {#each tradition.sections as section}
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">

@@ -268,16 +268,16 @@
     <!-- Header -->
     <LivingBlueprintHeader
         title="Health & Medical"
-        subtitle="Your Voice at the End of Life"
-        detailedDescription="Your voice in healthcare decisions matters, even when you can't speak for yourself. Document your directives and medical history to guide your advocates."
-        whyMatters="Clear directives give your family certainty and ease, and guide your care by your values."
+        subtitle="Directives, care preferences, and people to contact"
+        detailedDescription="Record the directives you have prepared, who to contact, and where the signed originals are kept. Add a readable summary of the wishes your proxy and care team should know."
+        whyMatters="Keeping the document, its location, and the contact details together helps your family find the information you intended them to use."
     >
         <button
             onclick={() => (showAddForm = true)}
             class="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-2xl font-bold hover:scale-105 transition-all shadow-lg shadow-primary/20"
         >
             <Plus size={20} />
-            Save my medical wishes
+            Add a healthcare directive
         </button>
     </LivingBlueprintHeader>
 
@@ -376,7 +376,7 @@
                                         size={20}
                                     />
                                     <p class="text-sm font-bold text-foreground">
-                                        Organ Donor Enrollment Active
+                                        Organ donor enrollment recorded
                                     </p>
                                 {:else}
                                     <CircleAlert
@@ -439,7 +439,7 @@
                                 <label
                                     for="donor-check"
                                     class="text-sm font-medium text-foreground"
-                                    >Enrolled Organ Donor</label
+                                    >I have registered as an organ donor</label
                                 >
                             </div>
                             <div class="flex gap-2">
@@ -470,13 +470,12 @@
                 <Shield class="text-primary mt-1 shrink-0" size={24} />
                 <div>
                     <h3 class="font-bold text-primary-hover text-lg">
-                        Your End-of-Life Voice
+                        Your recorded healthcare directives
                     </h3>
                     <p class="text-sm text-primary-hover mt-1 leading-relaxed">
-                        Providing clear guidance for your medical care is a gift
-                        to your family. Doctors and family know what you
-                        would want, and your loved ones feel the ease of
-                        honoring your choices.
+                        Keep each directive with a short summary, the person to
+                        contact, and the location of the original. Review these
+                        details with your chosen proxy and care team.
                     </p>
                 </div>
             </div>
@@ -582,11 +581,11 @@
             {#if medicalStore.directives.length === 0}
                 <EmptyState
                     title="Your healthcare wishes matter"
-                    whyMatters="<strong>With advance directives, doctors and family know what you would want, and your loved ones feel the ease of honoring your choices.</strong><br/><br/>Documenting your healthcare wishes—whether it's a healthcare proxy, living will, or DNR—gives them clarity, legal authority, and peace of mind."
-                    encouragement="When you're ready, start with one directive. You can always add more later."
+                    whyMatters="Record the directive you have prepared, the key wishes it expresses, and who should be contacted. A copy and the original's location help your family and care team find it."
+                    encouragement="Start with one document, such as your healthcare proxy or living will. Use its title and signed date to distinguish it from older versions."
                     icon={Shield}
                     iconClass="text-primary"
-                    ctaLabel="Share my wishes"
+                    ctaLabel="Add a healthcare directive"
                     onAction={() => (showAddForm = true)}
                 />
                 <!-- GHOST ROWS (Hidden, keeping for reference) -->
@@ -626,8 +625,8 @@
 <!-- Add/Edit Modal -->
 <Modal
     bind:open={() => showAddForm, setFormOpen}
-    title={newDirective.id ? "Share Your Voice" : "Who should hear your voice?"}
-    description="These choices reflect your values and ensure you're cared for exactly as you wish. It's okay to take your time."
+    title={newDirective.id ? "Edit healthcare directive" : "Add a healthcare directive"}
+    description="Keep a readable summary alongside the original document and the contact details of the person who can help your care team find it."
     maxWidth="max-w-lg"
 >
     <form
@@ -675,7 +674,7 @@
             >
             <textarea id="medical-summary"
                 bind:value={newDirective.summary}
-                placeholder="Key points of this directive..."
+                placeholder="The key wishes this document records, in your own words..."
                 class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 rows="3"
             ></textarea>
@@ -692,7 +691,7 @@
                     list="medical-contact-options"
                     bind:value={newDirective.primaryContact}
                     onchange={fillProxyPhone}
-                    placeholder="e.g. Dr. Sarah Chen"
+                    placeholder="e.g. Sam — my chosen healthcare proxy"
                     class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
                 <!-- People from Family & Contacts; any other name can still be typed. -->
@@ -724,7 +723,7 @@
             <input id="medical-location-of-original"
                 type="text"
                 bind:value={newDirective.locationOfOriginal}
-                placeholder="e.g. Safe deposit box at First National Bank"
+                placeholder="e.g. Signed original in the blue folder; copy with my proxy"
                 class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             />
         </div>

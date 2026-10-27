@@ -33,12 +33,10 @@ Sincerely,
 [Your Name]
 [Executor/Administrator]`,
         requiredDocs: [
-            "Certified Death Certificate",
-            "Letters Testamentary",
-            "Executor ID",
-            "Latest Account Statement"
+            "Which proof of death and estate authority do you require?",
+            "How should account references and supporting documents be provided?",
         ],
-        followUp: "After 5 business days, a call to the bank's estate services department can help."
+        followUp: "What are the next steps for this account, and when should the estate contact follow up?"
     },
     {
         id: "credit-card-cancel",
@@ -59,10 +57,10 @@ Sincerely,
 [Your Name]
 [Executor/Administrator]`,
         requiredDocs: [
-            "Certified Death Certificate",
-            "Executor status proof"
+            "Which account reference and proof of authority do you require?",
+            "What documents are needed for closure and the final statement?",
         ],
-        followUp: "When you're ready, pause automatic payments and let merchants with recurring charges know."
+        followUp: "Which recurring payments or pending charges need attention through your process?"
     },
     {
         id: "mortgage-notice",
@@ -83,10 +81,10 @@ Sincerely,
 [Your Name]
 [Executor/Administrator]`,
         requiredDocs: [
-            "Death Certificate",
-            "Executor Appointment"
+            "Which loan reference and proof of authority do you require?",
+            "What documents apply to the proposed next step for this property?",
         ],
-        followUp: "Maintain homeowners insurance payments during probate to keep the policy in place."
+        followUp: "Who should confirm the ongoing payment, insurance, and servicing arrangements for this loan?"
     },
     {
         id: "brokerage-transfer",
@@ -105,12 +103,10 @@ Please provide the necessary distribution forms or a Medallion Signature Guarant
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Death Certificate",
-            "Letters Testamentary",
-            "Beneficiary Designation Forms",
-            "W-9 Forms"
+            "Which ownership and beneficiary records should be reviewed?",
+            "What authority and forms are needed before a transfer?",
         ],
-        followUp: "Brokerage transfers typically take 4-8 weeks. Ask for an account freeze to protect the account during probate."
+        followUp: "What steps, timing, and account-protection options apply to this particular account?"
     },
 
     // --- Government ---
@@ -133,11 +129,10 @@ Survivors who may be eligible for benefits include:
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Certified Death Certificate",
-            "Proof of Executor Status",
-            "Marriage Certificate (if survivor benefits)"
+            "Which details and proof are needed to report the death?",
+            "How should any survivor-benefit questions be raised through the official process?",
         ],
-        followUp: "SSA is often notified by funeral home, but confirm. Any benefits received after the date of passing will need to be returned when you can."
+        followUp: "Which payments need review, and what instructions apply to any payment that must be returned?"
     },
     {
         id: "irs-ein",
@@ -154,11 +149,10 @@ We are also applying for an Employer Identification Number (EIN) for the estate 
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Death Certificate",
-            "Letters Testamentary",
-            "Last filed tax return"
+            "Which fiduciary notices or estate identifiers apply to these circumstances?",
+            "Which records should the estate tax professional review?",
         ],
-        followUp: "Final 1040 is due April 15 of the year after. Form 706 is due 9 months after, where it applies. Your CPA can help with the dates."
+        followUp: "Which filing dates and forms should the estate tax professional confirm for this estate?"
     },
     {
         id: "dmv-transfer",
@@ -179,11 +173,10 @@ Enclosed are the Death Certificate, Executor Appointment, and the current Title.
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Death Certificate",
-            "Executor Appointment",
-            "Current Vehicle Title"
+            "Which title, vehicle reference, and proof of authority are required?",
+            "Which transfer forms apply in the relevant jurisdiction?",
         ],
-        followUp: "Notify auto insurance provider of the transfer to ensure coverage remains valid."
+        followUp: "What title-transfer and insurance steps should the responsible parties confirm for this vehicle?"
     },
 
     // --- Identity & Services ---
@@ -206,9 +199,10 @@ Enclosed is the Death Certificate.
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Certified Death Certificate"
+            "Which proof of death and authority does this bureau require?",
+            "How should identifying information be supplied securely?",
         ],
-        followUp: "Send to all three bureaus (Equifax, Experian, TransUnion) separately."
+        followUp: "Does each relevant bureau require a separate request or supporting documentation?"
     },
     {
         id: "utility-cancel",
@@ -229,10 +223,10 @@ Final Bill Address: [Address]
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Death Certificate",
-            "Executor Status proof"
+            "Which service and account references do you require?",
+            "What authority and documents are needed for the requested change?",
         ],
-        followUp: "Keep utilities on while the property is being shown or maintained."
+        followUp: "What service dates and ongoing property needs should be confirmed before making the change?"
     },
     {
         id: "subscription-cancel",
@@ -249,10 +243,10 @@ Please refund any prepaid amounts to the original payment method.
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Death Certificate (copy)",
-            "Executor proof"
+            "Which subscriber reference or account email is needed?",
+            "What authority and supporting documents does the provider require?",
         ],
-        followUp: "Check bank/credit card statements for last 3 months to identify all recurring subscriptions."
+        followUp: "What cancellation date, final charges, and possible refunds apply to this subscription?"
     },
     {
         id: "usps-forwarding",
@@ -272,10 +266,10 @@ Enclosed is the Executor Appointment.
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Executor Appointment",
-            "Form 3575 (Official Forwarding Mail Order)"
+            "Which addresses and proof of authority are required?",
+            "What is the current official forwarding procedure for this situation?",
         ],
-        followUp: "Mail forwarding for deceased individuals is arranged in person at a post office."
+        followUp: "Which forwarding and mailing-preference steps apply, and how should each be requested?"
     },
 
     // --- Employment ---
@@ -298,10 +292,10 @@ Please provide information regarding:
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Death Certificate",
-            "Letters Testamentary"
+            "Which employee reference and proof of authority are required?",
+            "Which employment and benefit-plan documents should the family obtain?",
         ],
-        followUp: "HR can walk you through the 30 and 60 day windows for COBRA."
+        followUp: "Which benefit options, forms, and response dates apply to the people concerned?"
     },
 
     // --- Assets ---
@@ -320,10 +314,10 @@ Enclosed is the Death Certificate. Please send the necessary claim forms and lis
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Certified Death Certificate",
-            "Original Policy (if available)"
+            "Which policy reference and claimant details are needed?",
+            "Which proof and claim forms does the insurer require?",
         ],
-        followUp: "Check if the policy has an 'Accelerated Death Benefit' or 'Waiver of Premium' that applies."
+        followUp: "Which benefits, conditions, and supporting documents apply to this particular policy?"
     },
     {
         id: "pension-claim",
@@ -340,11 +334,10 @@ Please confirm the listed beneficiaries and provide the necessary forms to claim
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Death Certificate",
-            "Beneficiary Designation Proof",
-            "Executor Authorization"
+            "Which participant and beneficiary details should be confirmed?",
+            "What authority, forms, and supporting documents does the plan require?",
         ],
-        followUp: "IRA/401(k) beneficiaries have distribution timelines to follow. Consult CPA about tax implications."
+        followUp: "Which distribution options and dates should the beneficiary review with the plan and their tax professional?"
     },
     {
         id: "social-media",
@@ -368,11 +361,10 @@ Please let me know if you require any further information.
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Death Certificate",
-            "ID of requestor",
-            "Proof of relationship"
+            "What is the platform's current memorialization or removal process?",
+            "Which authority and supporting documents does that process require?",
         ],
-        followUp: "Facebook offers memorialization, Twitter allows deletion by verified family, LinkedIn removes profiles."
+        followUp: "Which official request route applies to the account and the action the family has chosen?"
     },
     {
         id: "landlord-hoa",
@@ -394,10 +386,10 @@ Please confirm the procedure for:
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Death Certificate",
-            "Letters Testamentary"
+            "Which lease, property, or membership reference is needed?",
+            "What authority is required to discuss access, keys, and outstanding charges?",
         ],
-        followUp: "When you can, secure the property and, where appropriate, change the locks."
+        followUp: "Who should confirm access arrangements and any property or payment obligations before changes are made?"
     },
     {
         id: "cover-letter-family-qr",
@@ -415,8 +407,11 @@ Please scan the codes with your phone camera to access the digital copies.
 
 With love,
 [Your Name]`,
-        requiredDocs: [],
-        followUp: "It helps when family members know how to use the QR codes and who has the physical pack."
+        requiredDocs: [
+            "Where is the chosen recipient link or printed copy kept?",
+            "Who can help the family find the recorded handover instructions?",
+        ],
+        followUp: "Has the intended recipient been shown how to find the chosen link or printed copy?"
     },
     {
         id: "cover-letter-executor-qr",
@@ -434,8 +429,11 @@ Thank you for keeping this document somewhere safe, as it opens the whole estate
 
 Sincerely,
 [Your Name]`,
-        requiredDocs: [],
-        followUp: "Store this letter and the QR codes in a fireproof safe or safety deposit box."
+        requiredDocs: [
+            "Where are the separate access and handover instructions kept?",
+            "Who should the executor contact about the records and originals?",
+        ],
+        followUp: "Can the executor find the supplied recipient link, printed copy, and original-document locations?"
     },
     // --- New Expanded Templates ---
     {
@@ -459,11 +457,10 @@ Sincerely,
 [Your Name]
 [Relationship/Executor]`,
         requiredDocs: [
-            "DD Form 214 (Discharge Papers)",
-            "Certified Death Certificate",
-            "Proof of Relationship (for survivors)"
+            "Which service or benefit references are needed?",
+            "Which proof and authority does the relevant program require?",
         ],
-        followUp: "The VA may provide a burial flag, a headstone/marker, and burial in a national cemetery."
+        followUp: "Which burial or survivor benefits, forms, and response dates apply to the stated circumstances?"
     },
     {
         id: "professional-team-notice",
@@ -486,10 +483,10 @@ Sincerely,
 [Your Name]
 [Executor/Administrator]`,
         requiredDocs: [
-            "Letters Testamentary",
-            "Death Certificate"
+            "Which proof of authority is needed to discuss the records?",
+            "Which account, matter, or client references should be provided?",
         ],
-        followUp: "Ask for a complete list of assets they managed and any outstanding invoices."
+        followUp: "Which active matters, outstanding records, invoices, and dates should the estate contact confirm?"
     },
     {
         id: "medical-provider-notice",
@@ -511,9 +508,10 @@ Sincerely,
 [Your Name]
 [Executor/Administrator]`,
         requiredDocs: [
-            "Death Certificate (copy)"
+            "Which patient reference and proof of authority are needed?",
+            "What is the provider's process for appointments, billing, and record requests?",
         ],
-        followUp: "When an insurance claim or legal matter calls for them, request the medical records."
+        followUp: "Which outstanding appointments, statements, insurance matters, or records need follow-up through the provider?"
     },
     {
         id: "club-resignation",
@@ -530,9 +528,10 @@ Please stop all future dues and assessments. We would appreciate a refund of any
 Sincerely,
 [Your Name]`,
         requiredDocs: [
-            "Notice of Death"
+            "Which membership reference and authority are required?",
+            "What notice and supporting documents apply to the requested change?",
         ],
-        followUp: "Check if there's an 'equity' membership that needs to be sold or transferred."
+        followUp: "Which final charges, deposits, refunds, or transfer options apply to this membership?"
     },
     {
         id: "charity-alumni-notice",
@@ -550,8 +549,11 @@ In lieu of flowers, the family has designated [Optional Charity] for donations i
 
 Sincerely,
 [Your Name]`,
-        requiredDocs: [],
-        followUp: "Keep a list of charities the deceased supported to include in the obituary."
+        requiredDocs: [
+            "Which supporter or alumni reference will identify the record?",
+            "Who should confirm the estate's chosen mailing and contact preferences?",
+        ],
+        followUp: "What record updates and optional family instructions should the organization confirm?"
     },
     {
         id: "pet-registry-update",
@@ -574,10 +576,10 @@ Sincerely,
 [Your Name]
 [Executor]`,
         requiredDocs: [
-            "Microchip Number",
-            "Copy of Will or Guardian Agreement"
+            "Which microchip or registration reference is needed?",
+            "What authority and documents are required to update the registered owner?",
         ],
-        followUp: "Update the vet's records as well to ensure the new guardian has medical authority."
+        followUp: "Which registry and veterinary records should the proposed guardian confirm through the relevant processes?"
     }
 ];
 
