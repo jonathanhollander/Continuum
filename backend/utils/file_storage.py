@@ -2,6 +2,7 @@
 File Storage Utilities
 Handles local filesystem storage with S3-compatible interface for future migration
 """
+import io
 import os
 import shutil
 import logging
@@ -173,16 +174,18 @@ class HybridStorage:
         """
         # Try S3 first
         if self.s3:
+            # boto closes the stream it uploads, so S3 gets its own copy and the fallback keeps the bytes
+            if file_data.seekable():
+                file_data.seek(0)
+            payload = file_data.read()
             try:
                 storage_path = self.s3.save_file(
-                    file_data, user_id, original_filename, module, category
+                    io.BytesIO(payload), user_id, original_filename, module, category
                 )
                 return storage_path, "s3"
             except (ClientError, BotoCoreError, Exception) as e:
                 logger.warning(f"S3 upload failed, falling back to local: {e}")
-                # Reset stream position for fallback
-                if file_data.seekable():
-                    file_data.seek(0)
+            file_data = io.BytesIO(payload)
 
         # Fallback to Local
         storage_path = self.local.save_file(

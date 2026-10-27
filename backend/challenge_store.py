@@ -169,6 +169,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
     def set(self, key: str, value: Any, expire_seconds: int = 300) -> None:
         """Store a challenge with expiration"""
         self._ensure_table()
+        self._cleanup_expired()
         from backend.database import engine
         from sqlmodel import text
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from backend.limiter import limiter
 from sqlmodel import Session, select, func, and_, or_
-from sqlalchemy import Integer, DateTime, String, update
+from sqlalchemy import Boolean, Date, DateTime, Float, Integer, Numeric, update
 from datetime import datetime
 from typing import List, Any, Dict, Optional
 from pydantic import BaseModel, ValidationError, field_validator, model_validator
@@ -441,7 +441,7 @@ def update_item(
             if col is not None and isinstance(col.type, DateTime) and isinstance(value, str):
                 # setattr skips validation; SQLite's DateTime column refuses ISO text ("2027-03-10").
                 value = datetime.fromisoformat(value) if value else None
-            if value == "" and col is not None and not isinstance(col.type, String):
+            if value == "" and col is not None and isinstance(col.type, (Integer, Float, Numeric, Boolean, Date)):
                 value = None  # a cleared number or date field
             if key in model.model_fields:
                 changes[key] = value

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { subscribeTemporaryStorage } from "$lib/services/browserStorage";
-	import favicon from "$lib/assets/favicon.svg";
 	import logo from "$lib/assets/logo.png";
 	import "../app.css";
 	import { page } from "$app/stores";
@@ -330,7 +329,7 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href="/favicon.ico" />
 	<title>Continuum</title>
 </svelte:head>
 
