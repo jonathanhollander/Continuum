@@ -60,13 +60,13 @@
 
     <!-- Panel -->
     <div
-        class="relative bg-white rounded-2xl shadow-2xl ring-1 ring-slate-900/5 w-full max-w-4xl h-[80vh] flex overflow-hidden"
+        class="relative bg-card rounded-2xl shadow-2xl ring-1 ring-slate-900/5 w-full max-w-4xl h-[80vh] flex overflow-hidden"
         transition:scale={{ duration: 250, start: 0.95, easing: cubicOut }}
     >
         <!-- Header Close Button -->
         <button
             onclick={onclose}
-            class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full z-10 transition-colors"
+            class="absolute top-4 right-4 p-2 text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-full z-10 transition-colors"
             aria-label="Close"
         >
             <X class="w-5 h-5" />
@@ -75,17 +75,17 @@
             <!-- Viewer -->
             <div class="flex-1 flex flex-col h-full">
                 <div
-                    class="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50"
+                    class="p-8 border-b border-border flex items-center justify-between bg-background/50"
                 >
                     <div>
                         <div
-                            class="flex items-center gap-2 text-[#4A7C74] font-black text-xs uppercase tracking-widest mb-1"
+                            class="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest mb-1"
                         >
                             <BookOpenText size={14} /> Example
                         </div>
                         <h3
                             id="jargon-dialog-title"
-                            class="text-2xl font-bold font-serif text-slate-900"
+                            class="text-2xl font-bold font-serif text-foreground"
                         >
                             An example will, explained
                         </h3>
@@ -93,11 +93,11 @@
                 </div>
 
                 <div
-                    class="flex-1 overflow-y-auto p-12 bg-[#FDFBF7] relative paper-texture"
+                    class="flex-1 overflow-y-auto p-12 bg-muted relative paper-texture"
                 >
                     <div
                         role="presentation"
-                        class="w-full text-left prose prose-lg max-w-none font-serif text-slate-800 leading-loose whitespace-pre-wrap appearance-none block bg-transparent border-none p-0"
+                        class="w-full text-left prose prose-lg max-w-none font-serif text-foreground leading-loose whitespace-pre-wrap appearance-none block bg-transparent border-none p-0"
                         onclick={handleTextClick}
                     >
                         {@html highlightText(analysis.fullText, analysis.terms)}
@@ -107,24 +107,24 @@
 
             <!-- Sidebar -->
             <div
-                class="w-80 bg-white border-l border-slate-200 p-6 flex flex-col"
+                class="w-80 bg-card border-l border-border p-6 flex flex-col"
             >
                 <div class="mb-6">
                     <h4
-                        class="font-bold text-slate-900 text-sm uppercase tracking-wider mb-4"
+                        class="font-bold text-foreground text-sm uppercase tracking-wider mb-4"
                     >
                         Terms explained
                     </h4>
                     <div class="space-y-3">
                         <div
-                            class="p-3 bg-blue-50 rounded-xl flex items-center gap-3"
+                            class="p-3 bg-info/10 rounded-xl flex items-center gap-3"
                         >
-                            <Info size={18} class="text-blue-600" />
+                            <Info size={18} class="text-info" />
                             <div>
-                                <p class="text-xs font-bold text-blue-900">
+                                <p class="text-xs font-bold text-foreground">
                                     {analysis.terms.length} terms highlighted
                                 </p>
-                                <p class="text-[10px] text-blue-700">
+                                <p class="text-[10px] text-muted-foreground">
                                     Tap highlighted text to explain
                                 </p>
                             </div>
@@ -170,7 +170,7 @@
                     </div>
                 {:else}
                     <div
-                        class="flex-1 flex flex-col items-center justify-center text-center text-slate-400 p-4 border-2 border-dashed border-slate-100 rounded-2xl"
+                        class="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground p-4 border-2 border-dashed border-border rounded-2xl"
                     >
                         <BookOpenText size={32} class="mb-3 opacity-50" />
                         <p class="text-sm font-medium">
@@ -195,20 +195,20 @@
     }
 
     :global(.term-highlight.info) {
-        border-color: #3b82f6;
-        color: #1e40af;
+        border-color: var(--color-info);
+        color: var(--color-info);
     }
 
     :global(.term-highlight.info:hover) {
-        background-color: #eff6ff;
+        background-color: color-mix(in srgb, var(--color-info) 10%, transparent);
     }
 
     :global(.term-highlight.warning) {
-        border-color: #f59e0b;
-        color: #92400e;
+        border-color: var(--color-warning);
+        color: var(--color-warning);
     }
 
     :global(.term-highlight.warning:hover) {
-        background-color: #fef3c7;
+        background-color: var(--color-warning-soft);
     }
 </style>

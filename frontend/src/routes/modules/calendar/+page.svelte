@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, slide } from "svelte/transition";
     import { focusTrap } from "$lib/actions/focusTrap";
@@ -12,6 +13,7 @@
         Pencil,
         Sparkles,
         Gift,
+        Flower2,
         Clock,
         X,
         ChevronRight,
@@ -27,14 +29,14 @@
     import { getSmartSamples } from "$lib/data/smartSamples";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('calendar'));
 
     // --- Types ---
     type CalendarEvent = {
         id: string;
         title: string;
         date: string; // MMDD for recurring (e.g. "1225"), YYYYMMDD for one-time
-        type: "birthday" | "holiday" | "anniversary" | "other";
+        type: EventType;
         isRecurring: boolean;
         wish: string;
         emailTemplate?: {
@@ -76,7 +78,7 @@
 
     // --- Logic ---
 
-    import { calendarSync as calendarStoreSync } from "$lib/stores/calendarStore.svelte";
+    import { calendarSync as calendarStoreSync, EVENT_TYPES, type EventType } from "$lib/stores/calendarStore.svelte";
     import type { SyncManager } from "$lib/services/sync.svelte";
 
     // Stored dates are "MMDD" / "YYYYMMDD" (older rows may be "MM-DD" / "YYYY-MM-DD").
@@ -99,7 +101,19 @@
     // onMount removed
     // saveEvents removed
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function handleSave() {
+        if (saving) return;
+        saving = true;
+        try {
+            await handleSaveOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function handleSaveOnce() {
         if (!newEvent.title || !formDate) return;
 
         // Parse date for storage
@@ -185,8 +199,8 @@
         showAddForm = true;
     }
 
-    function removeEvent(id: string) {
-        if (!confirm("Remove this event? You can create it again if needed.")) return;
+    async function removeEvent(id: string) {
+        if (!(await askConfirm("Remove this event? You can create it again if needed."))) return;
         calendarSync.delete(id);
     }
 
@@ -249,14 +263,20 @@
         birthday: Gift,
         holiday: Sparkles,
         anniversary: Heart,
+        passing: Flower2,
+        ritual: Heart,
         other: CalendarIcon,
     };
+    const typeLabel = (type: string) => EVENT_TYPES.find((t) => t.value === type)?.label ?? type;
 
-    const eventTypeColors = {
-        birthday: "text-rose-500 bg-rose-50",
-        holiday: "text-amber-500 bg-amber-50",
-        anniversary: "text-purple-500 bg-purple-50",
-        other: "text-blue-500 bg-blue-50",
+    const eventTypeColors: Record<string, string> = {
+        // Same type colours as Important Dates (anniversary manager)
+        birthday: "text-warning bg-warning-soft",
+        holiday: "text-info bg-info/10",
+        anniversary: "text-primary-hover bg-primary-soft",
+        ritual: "text-success bg-success/10",
+        passing: "text-foreground bg-muted",
+        other: "text-muted-foreground bg-muted",
     };
 </script>
 
@@ -265,19 +285,17 @@
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
 {:else}
-<div class="max-w-4xl mx-auto p-8 animate-in fade-in duration-500">
-    <!-- Header -->
+    <!-- Header sits outside the content wrapper so its title lines up with sibling module pages -->
     <LivingBlueprintHeader
         title="Event Calendar"
-        subtitle="Afterlife Calendar"
-        tier="legacy"
-        detailedDescription="Ensure your birthday, holidays, and anniversaries are celebrated exactly how you want them to be. Create meaningful rituals and messages for the dates that matter most."
-        whyMatters="Without your guidance, special dates become painful reminders instead of opportunities for connection. By documenting your wishes, you transform grief into intentional remembrance."
+        subtitle="Meaningful dates, wishes and message drafts"
+        detailedDescription="Save a meaningful date with your wishes and an optional email draft. A person can open the draft in their email app, review it and send it."
+        whyMatters="Your family can refer to your own words when deciding how to observe a meaningful date."
     >
         <div class="flex items-center gap-3">
-            <DataViewToggle module="calendar" onchange={(mode) => viewMode = mode} />
+            <DataViewToggle module="calendar" />
             <button
-                class="bg-[#304743] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2"
+                class="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold hover:bg-primary-hover transition-colors flex items-center gap-2"
                 onclick={() => (showAddForm = true)}
             >
                 <Plus size={20} /> Add Significant Date
@@ -285,22 +303,28 @@
         </div>
     </LivingBlueprintHeader>
 
+<div class="p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500">
+    <p class="text-sm text-muted-foreground mb-6">
+        These dates also appear in
+        <a href="/modules/anniversary-manager" class="font-bold text-primary-hover hover:underline">Important Dates</a>,
+        where you can write ritual guidance for your family.
+    </p>
 
     {#if events.length === 0}
         <EmptyState
-            title="Create meaningful moments for the future"
-            whyMatters="<strong>Birthdays, anniversaries, and holidays will still arrive after you're gone.</strong> Without your guidance, these dates may become painful reminders instead of opportunities for connection.<br/><br/>By documenting your wishes for these special days, you transform difficult dates into moments of joy. Your family will know exactly how to honor you, celebrate together, and feel your presence even in your absence."
+            title="Add a date and what it means"
+            whyMatters="Record a birthday, anniversary or other meaningful date. Add a wish for how it could be observed, and an optional email draft for someone to review and send."
             encouragement="Start with your birthday or a holiday you love. Add others as they come to mind."
             icon={Clock}
-            iconClass="text-[#304743]"
+            iconClass="text-primary"
             ctaLabel="Add your first significant date"
             onAction={() => (showAddForm = true)}
         />
 
         <!-- Sample Data GhostRows -->
         <div class="mt-8">
-            <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+            <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {#each getSmartSamples($language).calendar || [] as sample}
                     <GhostRow
                         name={sample.title}
@@ -319,7 +343,7 @@
                     >
                         {#snippet icon()}
                             {@const Icon = eventTypeIcons[sample.type] || CalendarIcon}
-                            <Icon size={20} class="text-slate-400" />
+                            <Icon size={20} class="text-muted-foreground" />
                         {/snippet}
                     </GhostRow>
                 {/each}
@@ -328,13 +352,13 @@
     {:else if viewMode === 'card'}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {#each events as evt}
+                {@const Icon = eventTypeIcons[evt.type] ?? CalendarIcon}
                 <div
-                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all group relative overflow-hidden"
+                    class="bg-card rounded-2xl border border-border shadow-sm p-6 hover:shadow-md transition-all group relative overflow-hidden"
                 >
                     <!-- Type Badge -->
-                    <div class="absolute top-0 right-0 p-4 opacity-10">
-                        <svelte:component
-                            this={eventTypeIcons[evt.type]}
+                    <div class="absolute top-14 right-0 p-4 opacity-10 pointer-events-none" aria-hidden="true">
+                        <Icon
                             size={120}
                         />
                     </div>
@@ -342,10 +366,9 @@
                     <div class="relative z-10">
                         <div class="flex justify-between items-start mb-4">
                             <div
-                                class={`p-3 rounded-2xl ${eventTypeColors[evt.type]} inline-flex`}
+                                class={`p-3 rounded-2xl ${eventTypeColors[evt.type] ?? eventTypeColors.other} inline-flex`}
                             >
-                                <svelte:component
-                                    this={eventTypeIcons[evt.type]}
+                                <Icon
                                     size={24}
                                 />
                             </div>
@@ -355,14 +378,14 @@
                                 <button
                                     onclick={() => editEvent(evt)}
                                     aria-label="Edit these details"
-                                    class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-blue-500"
+                                    class="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-primary-hover"
                                 >
                                     <Pencil size={16} />
                                 </button>
                                 <button
                                     onclick={() => removeEvent(evt.id)}
                                     aria-label="Remove this item"
-                                    class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-red-500"
+                                    class="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-danger"
                                 >
                                     <Trash2 size={16} />
                                 </button>
@@ -371,17 +394,17 @@
 
                         <div class="mb-6">
                             <span
-                                class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1 block"
+                                class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block"
                             >
                                 {evt.isRecurring ? "Every Year" : "One Time Event"}
                             </span>
                             <h3
-                                class="font-serif font-bold text-2xl text-gray-900 leading-tight mb-1"
+                                class="font-serif font-bold text-2xl text-foreground leading-tight mb-1"
                             >
                                 {evt.title}
                             </h3>
                             <div
-                                class="text-[#304743] font-medium flex items-center gap-2"
+                                class="text-primary-hover font-medium flex items-center gap-2"
                             >
                                 <CalendarIcon size={14} />
                                 {formatDisplayDate(evt.date, evt.isRecurring)}
@@ -390,14 +413,14 @@
 
                         {#if evt.wish}
                             <div
-                                class="bg-gray-50 p-4 rounded-xl mb-4 border border-gray-100"
+                                class="bg-muted p-4 rounded-xl mb-4 border border-border"
                             >
                                 <div class="flex items-start gap-2">
                                     <Sparkles
-                                        class="text-amber-400 shrink-0 mt-0.5"
+                                        class="text-gold-text shrink-0 mt-0.5"
                                         size={16}
                                     />
-                                    <p class="text-gray-600 text-sm italic">
+                                    <p class="text-muted-foreground text-sm italic">
                                         "{evt.wish}"
                                     </p>
                                 </div>
@@ -408,10 +431,10 @@
                             <a
                                 href={getMailtoLink(evt)}
                                 target="_blank"
-                                class="w-full flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl text-gray-600 font-bold text-sm hover:border-[#304743] hover:text-[#304743] transition-colors bg-white"
+                                class="w-full flex items-center justify-center gap-2 py-3 border border-border rounded-xl text-muted-foreground font-bold text-sm hover:border-primary hover:text-primary-hover transition-colors bg-card"
                             >
                                 <Mail size={16} />
-                                Prepare "Future Email"
+                                Open email draft
                             </a>
                         {/if}
                     </div>
@@ -420,66 +443,67 @@
 
             <!-- AI Suggestion Card (Mock) -->
             <button
-                class="w-full border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center text-gray-400 gap-4 min-h-[300px] hover:border-[#304743]/50 hover:bg-gray-50/50 transition-all cursor-pointer"
+                class="w-full border-2 border-dashed border-border rounded-2xl p-6 flex flex-col items-center justify-center text-center text-muted-foreground gap-4 min-h-[300px] hover:border-primary/50 hover:bg-muted/50 transition-all cursor-pointer"
                 onclick={() => (showAddForm = true)}
             >
-                <div class="p-4 bg-gray-100 rounded-full">
+                <div class="p-4 bg-muted rounded-full">
                     <Plus size={32} />
                 </div>
                 <div>
-                    <h3 class="font-bold text-gray-600 mb-1">Add Another Date</h3>
+                    <h3 class="font-bold text-muted-foreground mb-1">Add Another Date</h3>
                     <p class="text-sm">
-                        Birthdays, anniversaries, or just a Tuesday.
+                        Birthdays, anniversaries, or an ordinary Tuesday.
                     </p>
                 </div>
             </button>
         </div>
     {:else}
         <!-- Table View -->
-        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="bg-card rounded-xl border border-border overflow-hidden">
             <table class="w-full">
-                <thead class="bg-slate-50 border-b border-slate-200">
+                <thead class="bg-muted border-b border-border">
                     <tr>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Event</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Date</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Recurring</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Wish</th>
-                        <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Event</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Date</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Type</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Recurring</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Wish</th>
+                        <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border">
                     {#each events as evt}
-                        <tr class="hover:bg-slate-50 transition-colors group">
+                        {@const Icon = eventTypeIcons[evt.type] ?? CalendarIcon}
+                        <tr class="hover:bg-muted transition-colors group">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
-                                    <div class={`p-1.5 rounded-lg ${eventTypeColors[evt.type]}`}>
-                                        <svelte:component this={eventTypeIcons[evt.type]} size={14} />
+                                    <div class={`p-1.5 rounded-lg ${eventTypeColors[evt.type] ?? eventTypeColors.other}`}>
+                                        <Icon size={14} />
                                     </div>
-                                    <span class="font-medium text-slate-800">{evt.title}</span>
+                                    <span class="font-medium text-foreground">{evt.title}</span>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-slate-600">{formatDisplayDate(evt.date, evt.isRecurring)}</td>
+                            <td class="px-4 py-3 text-muted-foreground">{formatDisplayDate(evt.date, evt.isRecurring)}</td>
                             <td class="px-4 py-3">
-                                <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium capitalize">
-                                    {evt.type}
+                                <span class="px-2 py-1 bg-muted text-muted-foreground rounded text-xs font-medium capitalize">
+                                    {typeLabel(evt.type)}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-slate-500 text-sm">{evt.isRecurring ? 'Yes' : 'No'}</td>
-                            <td class="px-4 py-3 text-slate-500 text-sm max-w-[200px] truncate">{evt.wish || '-'}</td>
+                            <td class="px-4 py-3 text-muted-foreground text-sm">{evt.isRecurring ? 'Yes' : 'No'}</td>
+                            <td class="px-4 py-3 text-muted-foreground text-sm max-w-[200px] truncate">{evt.wish || '-'}</td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-1 transition-opacity">
                                     <button
                                         onclick={() => editEvent(evt)}
                                         aria-label="Edit these details"
-                                        class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-500"
+                                        class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-primary-hover"
                                     >
                                         <Pencil size={14} />
                                     </button>
                                     <button
                                         onclick={() => removeEvent(evt.id)}
                                         aria-label="Remove this item"
-                                        class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-red-500"
+                                        class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-danger"
                                     >
                                         <Trash2 size={14} />
                                     </button>
@@ -496,11 +520,7 @@
     <div class="mt-12">
         <AIPromptBar
             context="calendar"
-            prompts={[
-                "Suggest 3 meaningful things my family could do on my birthday",
-                "Draft a funny anniversary email to my spouse",
-                "What are some unique ways to be remembered on Christmas?",
-            ]}
+            promptSource="routes/modules/calendar/+page.svelte:prompts"
         />
     </div>
 
@@ -515,13 +535,13 @@
             transition:fade
         >
             <div
-                class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+                class="bg-card rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
                 transition:slide
             >
                 <div
-                    class="p-6 border-b border-gray-100 flex justify-between items-center bg-[#304743] text-white"
+                    class="p-6 border-b border-border flex justify-between items-center bg-primary-deep text-white"
                 >
-                    <h3 id="calendar-dialog-title" class="font-serif font-bold text-2xl">
+                    <h3 id="calendar-dialog-title" class="font-serif font-bold text-2xl text-white!">
                         {editingId ? "Edit Event" : "Add Significant Date"}
                     </h3>
                     <button
@@ -539,7 +559,7 @@
                         <div>
                             <label
                                 for="event-title"
-                                class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                                 >Event Title</label
                             >
                             <input
@@ -547,7 +567,7 @@
                                 type="text"
                                 bind:value={newEvent.title}
                                 placeholder="e.g. My Birthday, Wedding Anniversary"
-                                class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#304743]/20"
+                                class="w-full px-4 py-2 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/30"
                             />
                         </div>
 
@@ -555,33 +575,30 @@
                             <div>
                                 <label
                                     for="event-date"
-                                    class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                                     >Date</label
                                 >
                                 <input
                                     id="event-date"
                                     type="date"
                                     bind:value={formDate}
-                                    class="w-full px-4 py-2 rounded-xl border border-gray-200"
+                                    class="w-full px-4 py-2 rounded-xl border border-border"
                                 />
                             </div>
                             <div>
                                 <label
                                     for="event-type"
-                                    class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                                     >Type</label
                                 >
                                 <select
                                     id="event-type"
                                     bind:value={newEvent.type}
-                                    class="w-full px-4 py-2 rounded-xl border border-gray-200 bg-white"
+                                    class="w-full px-4 py-2 rounded-xl border border-border bg-card"
                                 >
-                                    <option value="birthday">Birthday</option>
-                                    <option value="anniversary"
-                                        >Anniversary</option
-                                    >
-                                    <option value="holiday">Holiday</option>
-                                    <option value="other">Other</option>
+                                    {#each EVENT_TYPES as t}
+                                        <option value={t.value}>{t.label}</option>
+                                    {/each}
                                 </select>
                             </div>
                         </div>
@@ -591,11 +608,11 @@
                                 type="checkbox"
                                 id="recurring"
                                 bind:checked={newEvent.isRecurring}
-                                class="rounded border-gray-300 text-[#304743] focus:ring-[#304743]"
+                                class="rounded border-muted-foreground accent-primary focus:ring-primary"
                             />
                             <label
                                 for="recurring"
-                                class="text-sm font-medium text-gray-700"
+                                class="text-sm font-medium text-foreground"
                                 >Recur every year (e.g. Birthday)</label
                             >
                         </div>
@@ -603,62 +620,78 @@
 
                     <!-- The Wish -->
                     <div
-                        class="bg-amber-50 p-4 rounded-xl border border-amber-100"
+                        class="bg-warning-soft p-4 rounded-xl border border-warning/20"
                     >
                         <label
-                            class="block text-xs font-bold uppercase text-amber-600 mb-2 flex items-center gap-2"
+                            for="event-wish"
+                            class="block text-xs font-bold uppercase text-warning mb-2 flex items-center gap-2"
                         >
                             <Sparkles size={14} /> My Wish for this Day
                         </label>
                         <textarea
+                            id="event-wish"
                             bind:value={newEvent.wish}
                             rows="2"
                             placeholder="e.g. Go to our favorite diner and order the pancakes."
-                            class="w-full px-4 py-2 rounded-xl border border-amber-200 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                            class="w-full px-4 py-2 rounded-xl border border-warning/30 bg-card focus:outline-none focus:ring-2 focus:ring-warning/30"
                         ></textarea>
-                        <p class="text-xs text-amber-600/70 mt-2">
-                            A simple instruction creates connection.
+                        <p class="text-xs text-warning mt-2">
+                            Write the wish you want your family to be able to find.
                         </p>
                     </div>
 
                     <!-- Future Email -->
-                    <div class="border-t border-gray-100 pt-4">
+                    <div class="border-t border-border pt-4">
                         <div class="flex items-center gap-2 mb-4">
-                            <Mail class="text-[#304743]" size={18} />
-                            <h4 class="font-bold text-gray-900">
-                                Future Message
+                            <Mail class="text-primary" size={18} />
+                            <h4 id="event-message-heading" class="font-bold text-foreground">
+                                Email draft
                             </h4>
                         </div>
-                        <p class="text-sm text-gray-500 mb-4">
-                            Draft a message for this day. Your executor can
-                            click a button to open this in their email client to
-                            send it on your behalf.
+                        <p class="text-sm text-muted-foreground mb-4">
+                            Save a draft for this day. Open email draft launches an email app
+                            for review and sending; saving the date does not schedule delivery.
                         </p>
 
                         <div class="space-y-3">
-                            <input
-                                type="text"
-                                bind:value={formRecipient}
-                                placeholder="Recipient (Email)"
-                                class="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm"
-                            />
-                            <input
-                                type="text"
-                                bind:value={formSubject}
-                                placeholder="Subject Line"
-                                class="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm"
-                            />
+                            <div>
+                                <label
+                                    for="event-recipient"
+                                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
+                                    >Recipient (Email)</label
+                                >
+                                <input
+                                    id="event-recipient"
+                                    type="text"
+                                    bind:value={formRecipient}
+                                    class="w-full px-4 py-2 rounded-xl border border-border text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    for="event-subject"
+                                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
+                                    >Subject Line</label
+                                >
+                                <input
+                                    id="event-subject"
+                                    type="text"
+                                    bind:value={formSubject}
+                                    class="w-full px-4 py-2 rounded-xl border border-border text-sm"
+                                />
+                            </div>
                             <textarea
+                                aria-labelledby="event-message-heading"
                                 bind:value={formBody}
                                 rows="4"
                                 placeholder="Dear..."
-                                class="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm"
+                                class="w-full px-4 py-2 rounded-xl border border-border text-sm"
                             ></textarea>
                         </div>
                     </div>
 
                     <!-- Custom Fields -->
-                    <div class="pt-4 mt-4 border-t border-gray-100">
+                    <div class="pt-4 mt-4 border-t border-border">
                         <CustomFieldsManager
                             entityType="calendar"
                             bind:data={parsedCustomAttributes}
@@ -667,18 +700,19 @@
                 </div>
 
                 <div
-                    class="p-6 bg-gray-50 flex justify-end gap-3 sticky bottom-0 border-t border-gray-100"
+                    class="p-6 bg-muted flex justify-end gap-3 sticky bottom-0 border-t border-border"
                 >
                     <button
                         onclick={resetForm}
-                        class="px-6 py-2 rounded-xl font-bold text-gray-500 hover:bg-gray-200 transition-colors"
-                        >Not right now</button
+                        class="px-6 py-2 rounded-xl font-bold text-muted-foreground hover:bg-muted transition-colors"
+                        >Maybe later</button
                     >
                     <button
                         onclick={handleSave}
-                        disabled={!newEvent.title || !formDate}
-                        class="px-6 py-2 rounded-xl font-bold bg-[#304743] text-white hover:bg-[#20302d] transition-colors disabled:opacity-50"
-                        >Save Event</button
+                        disabled={!newEvent.title || !formDate || saving}
+                        aria-busy={saving}
+                        class="px-6 py-2 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50"
+                        >{saving ? "Saving..." : "Save date"}</button
                     >
                 </div>
             </div>

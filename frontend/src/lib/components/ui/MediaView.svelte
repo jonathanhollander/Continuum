@@ -3,32 +3,46 @@
     import { fetchMediaBlob } from "$lib/services/mediaService";
     import { auth } from "$lib/stores/auth";
     import { activeAccountId } from "$lib/stores/keyringStore";
+    import { assertCurrentSession, captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
 
     /**
      * One object URL per media id for the page's life, shared by every MediaView,
      * so the same file shown twice is fetched once. Emptied (and revoked) when the
      * signed-in account changes or signs out, so one account never sees another's file.
      */
-    const blobUrls = new Map<number, Promise<string>>();
+    const blobUrls = new Map<number, { owner: SessionOwnership; url: Promise<string> }>();
 
     export function blobUrlFor(id: number): Promise<string> {
-        let url = blobUrls.get(id);
-        if (!url) {
-            url = fetchMediaBlob(id).then((blob) => URL.createObjectURL(blob));
-            url.catch(() => blobUrls.delete(id));
-            blobUrls.set(id, url);
-        }
+        const owner = captureSession();
+        assertCurrentSession(owner);
+        const existing = blobUrls.get(id);
+        if (existing && isCurrentSession(existing.owner)) return existing.url.then((u) => {
+            assertCurrentSession(existing.owner);
+            return u;
+        });
+        if (existing) existing.url.then((u) => URL.revokeObjectURL(u), () => undefined);
+        const url = fetchMediaBlob(id, owner).then((blob) => {
+            assertCurrentSession(owner);
+            return URL.createObjectURL(blob);
+        });
+        const entry = { owner, url };
+        url.catch(() => { if (blobUrls.get(id) === entry) blobUrls.delete(id); });
+        blobUrls.set(id, entry);
         return url;
     }
 
     /** The object URL already made (or being made) for this id, if any. */
     export function cachedBlobUrl(id: number): Promise<string> | undefined {
-        return blobUrls.get(id);
+        const entry = blobUrls.get(id);
+        return entry && isCurrentSession(entry.owner) ? entry.url.then((u) => {
+            assertCurrentSession(entry.owner);
+            return u;
+        }) : undefined;
     }
 
     function forgetBlobUrls() {
-        for (const url of blobUrls.values()) {
-            url.then((u) => URL.revokeObjectURL(u), () => undefined);
+        for (const entry of blobUrls.values()) {
+            entry.url.then((u) => URL.revokeObjectURL(u), () => undefined);
         }
         blobUrls.clear();
     }
@@ -121,7 +135,7 @@
                     objectUrl = url;
                 }
             } catch (e: any) {
-                if (!cancelled) message = e?.message || "This file is taking a moment to open.";
+                if (!cancelled) message = e?.message || "This file is safe in your account. You can open it again whenever you're ready.";
             } finally {
                 if (!cancelled) loading = false;
             }
@@ -136,7 +150,7 @@
         try {
             await downloadMedia(mediaId, filename || undefined, cachedBlobUrl(mediaId));
         } catch (e: any) {
-            message = e?.message || "This file is taking a moment to open.";
+            message = e?.message || "This file is safe in your account. You can open it again whenever you're ready.";
         }
     }
 </script>
@@ -147,7 +161,7 @@
             <img src={src} alt="Saved file" class="w-full h-full object-cover" />
         {/if}
     {:else if loading}
-        <div class="p-4 text-sm text-gray-500">Opening your file…</div>
+        <div class="p-4 text-sm text-muted-foreground">Opening your file…</div>
     {:else}
         {#if objectUrl && mime.startsWith("image/")}
             <img src={objectUrl} alt={filename} class="w-full h-full object-cover" />
@@ -159,26 +173,26 @@
         {/if}
         <div class="flex items-center gap-3 p-3">
             {#if !objectUrl}
-                <div class="bg-indigo-50 text-indigo-600 p-2 rounded-lg">
+                <div class="bg-primary-soft text-primary-hover p-2 rounded-lg">
                     <FileText size={24} />
                 </div>
             {/if}
             <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate">{filename || "Your file"}</p>
+                <p class="text-sm font-medium text-foreground truncate">{filename || "Your file"}</p>
                 {#if size}
-                    <p class="text-xs text-gray-500">{formatFileSize(size)}</p>
+                    <p class="text-xs text-muted-foreground">{formatFileSize(size)}</p>
                 {/if}
             </div>
             <button
                 type="button"
                 onclick={save}
-                class="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1 px-2 py-1 rounded hover:bg-indigo-50"
+                class="text-xs text-primary-hover hover:text-foreground flex items-center gap-1 px-2 py-1 rounded hover:bg-primary-soft"
             >
                 <Download size={14} /> Save a copy
             </button>
         </div>
     {/if}
     {#if message}
-        <p class="px-3 pb-2 text-xs text-gray-600">{message}</p>
+        <p class="px-3 pb-2 text-xs text-muted-foreground">{message}</p>
     {/if}
 </div>

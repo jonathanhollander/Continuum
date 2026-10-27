@@ -1,9 +1,12 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import {
         calendarStore,
         upcomingEvents,
+        EVENT_TYPES,
         type AnniversaryEvent,
     } from "$lib/stores/calendarStore.svelte";
+    import { readCustom } from "$lib/utils/customFields";
     import {
         Calendar,
         Heart,
@@ -14,7 +17,7 @@
         Music,
         Wind,
         Info,
-        ChevronRight,
+        Pencil,
         Tag,
         Clock,
         Loader2,
@@ -33,7 +36,7 @@
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
 
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('anniversary-manager'));
     let customAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
 
@@ -43,6 +46,7 @@
     });
 
     let showAddModal = $state(false);
+    let editingId = $state<string | number | null>(null);
     let newEvent = $state<Partial<AnniversaryEvent>>({
         title: "",
         date: "",
@@ -58,22 +62,110 @@
         anniversary: Heart,
         passing: Wind,
         ritual: Flame,
+        holiday: Music,
+        other: Calendar,
     };
 
-    const typeColors = {
-        birthday: "bg-amber-100 text-amber-700 border-amber-200",
-        anniversary: "bg-rose-100 text-rose-700 border-rose-200",
-        passing: "bg-indigo-100 text-indigo-700 border-indigo-200",
-        ritual: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    const typeColors: Record<string, string> = {
+        birthday: "bg-warning-soft text-warning border-warning/20",
+        anniversary: "bg-primary-soft text-primary-hover border-primary/20",
+        passing: "bg-muted text-foreground border-border",
+        ritual: "bg-success/10 text-success border-success/20",
+        holiday: "bg-info/10 text-info border-info/20",
     };
+    // Same type colours as the calendar page; "other" takes the neutral badge.
+    const typeClass = (type: string) => typeColors[type] ?? "bg-muted text-foreground border-border";
+    const typeLabel = (type: string) => EVENT_TYPES.find((t) => t.value === type)?.label ?? type;
 
-    function handleAdd() {
-        if (!newEvent.title || !newEvent.date) return;
-        calendarStore.addEvent({
-            ...newEvent,
-            custom_attributes: JSON.stringify(customAttributes),
-        } as Omit<AnniversaryEvent, "id">);
+    // The date is chosen as a month and a day. Stored as "MM-DD"; a one-time date from the calendar
+    // page ("YYYYMMDD") keeps its year as "YYYY-MM-DD".
+    const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    let formMonth = $state("");
+    let formDay = $state("");
+    let formYear = $state("");
+    let dayCount = $derived(formMonth ? DAYS_IN_MONTH[Number(formMonth) - 1] : 31);
+    $effect(() => {
+        if (formDay && Number(formDay) > dayCount) formDay = String(dayCount).padStart(2, "0");
+    });
+
+    function setFormDate(dateStr: string | undefined) {
+        const digits = (dateStr || "").replace(/-/g, "");
+        if (digits.length < 4) {
+            formMonth = formDay = formYear = "";
+            return;
+        }
+        formMonth = digits.slice(-4, -2);
+        formDay = digits.slice(-2);
+        formYear = digits.length >= 8 ? digits.slice(0, 4) : "";
+    }
+
+    // A yearly date keeps month and day; a one-time date keeps its year (this year when none was set).
+    function formDateValue() {
+        if (!formMonth || !formDay) return "";
+        if (newEvent.recurring) return `${formMonth}-${formDay}`;
+        return `${formYear || new Date().getFullYear()}-${formMonth}-${formDay}`;
+    }
+
+    function openEdit(id: string | number) {
+        const ev = calendarStore.items.find((i) => String(i.id) === String(id));
+        if (!ev) return;
+        editingId = ev.id;
+        setFormDate(ev.date);
+        newEvent = {
+            title: ev.title,
+            date: ev.date,
+            type: ev.type,
+            description: ev.description ?? "",
+            ritualInstructions: ev.emailTemplate ? "" : (ev.ritualInstructions ?? ""),
+            recurring: ev.recurring,
+            tags: ev.tags ?? [],
+        };
+        // Server rows arrive as customAttributes, form-saved ones as custom_attributes.
+        customAttributes = readCustom(ev);
+        showAddModal = true;
+    }
+
+    function closeModal() {
+        showAddModal = false;
+        if (editingId !== null) {
+            editingId = null;
+            customAttributes = {};
+            setFormDate("");
+            newEvent = {
+                title: "",
+                date: "",
+                type: "birthday",
+                description: "",
+                ritualInstructions: "",
+                recurring: true,
+                tags: [],
+            };
+        }
+    }
+
+    async function removeEvent(id: string | number) {
+        if (!(await askConfirm("Remove this remembrance?"))) return;
+        calendarStore.removeEvent(id);
+    }
+
+    // One save at a time; the form closes only once the save has gone through (the store shows
+    // the gentle error and the form stays open with what was typed).
+    let saving = $state(false);
+    async function handleAdd() {
+        const date = formDateValue();
+        if (!newEvent.title || !date || saving) return;
+        saving = true;
+        try {
+            await saveEvent(date);
+        } catch {
+            return;
+        } finally {
+            saving = false;
+        }
+        editingId = null;
         customAttributes = {};
+        setFormDate("");
         newEvent = {
             title: "",
             date: "",
@@ -86,14 +178,27 @@
         showAddModal = false;
     }
 
-    function formatDate(dateStr: string) {
-        if (!dateStr.includes("-")) return dateStr;
-        const [month, day] = dateStr.split("-");
-        const date = new Date(2000, parseInt(month) - 1, parseInt(day));
-        return date.toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-        });
+    async function saveEvent(date: string) {
+        if (editingId !== null) {
+            const ev = calendarStore.items.find((i) => String(i.id) === String(editingId));
+            const updates: Partial<AnniversaryEvent> = {
+                title: newEvent.title,
+                date,
+                type: newEvent.type,
+                description: newEvent.description,
+                recurring: !!newEvent.recurring,
+                custom_attributes: JSON.stringify(customAttributes),
+            };
+            // Events made on the calendar page keep their email template in ritual instructions.
+            if (!ev?.emailTemplate) updates.ritualInstructions = newEvent.ritualInstructions;
+            await calendarStore.updateEvent(editingId, updates);
+        } else {
+            await calendarStore.addEvent({
+                ...newEvent,
+                date,
+                custom_attributes: JSON.stringify(customAttributes),
+            } as Omit<AnniversaryEvent, "id">);
+        }
     }
 </script>
 
@@ -102,76 +207,74 @@
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
 {:else}
-<div
-    class="max-w-5xl mx-auto p-6 md:p-8 space-y-10 animate-in fade-in duration-1000"
->
-    <!-- Header -->
+<!-- Header -->
     <LivingBlueprintHeader
         title="Important Dates"
-        subtitle="Transforming sensitive dates into intentional moments of connection"
-        tier="legacy"
-        detailedDescription="Create meaningful rituals for birthdays, anniversaries, and remembrance days. Guide your family on how to observe these dates with intention, healing, and legacy."
-        whyMatters="Without guidance on how to observe significant dates, your family may struggle with overwhelming emotions and uncertain rituals. Creating rituals transforms grief into intentional remembrance."
+        subtitle="Dates and wishes for your family to refer to"
+        detailedDescription="Record birthdays, anniversaries and remembrance days, with a note about how you would like them observed. Save a date, a description and any optional ritual guidance."
+        whyMatters="A written note gives your family a place to find what you wanted for a meaningful day."
     >
         <button
             onclick={() => (showAddModal = true)}
-            class="px-8 py-3.5 bg-indigo-600 text-white rounded-full font-bold shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+            class="px-8 py-3.5 bg-primary text-primary-foreground rounded-full font-bold shadow-xl hover:opacity-90 transition-all flex items-center gap-2"
         >
             <Plus size={20} />
             Add New Remembrance
         </button>
     </LivingBlueprintHeader>
 
+<div class="max-w-7xl mx-auto p-8 space-y-10 animate-in fade-in duration-500">
+    <p class="text-sm text-muted-foreground">
+        These dates also appear in your
+        <a href="/modules/calendar" class="font-bold text-primary-hover hover:underline">Event Calendar</a>,
+        where you can save a wish and an email draft for a person to review and send.
+    </p>
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
-        context="heirlooms"
-        prompts={[
-            "Suggest a meaningful ritual for this anniversary...",
-            "Help me write about the significance of this date...",
-            "Draft instructions for commemorating this day...",
-            "Create a remembrance message for my family..."
-        ]}
+        context="calendar"
+        promptSource="routes/modules/anniversary-manager/+page.svelte:prompts"
     />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <!-- Upcoming Timeline -->
         <div class="lg:col-span-2 space-y-8">
             <div class="flex items-center justify-between">
-                <h2 class="font-serif text-2xl font-bold text-slate-900">
+                <h2 class="font-serif text-2xl font-bold text-foreground">
                     Upcoming Moments
                 </h2>
                 <div class="flex items-center gap-3">
-                    <DataViewToggle module="anniversary-manager" onchange={(mode) => viewMode = mode} />
+                    <DataViewToggle module="anniversary-manager" />
                     <div
-                        class="px-3 py-1 bg-slate-100 rounded-full text-xs font-bold text-slate-500 uppercase tracking-wider"
+                        class="px-3 py-1 bg-muted rounded-full text-xs font-bold text-muted-foreground uppercase tracking-wider"
                     >
-                        Next 365 Days
+                        The year ahead
                     </div>
                 </div>
             </div>
 
             {#if $upcomingEvents.length === 0}
                 <EmptyState
-                    title="Honor the moments that matter"
-                    whyMatters="<strong>Birthdays, anniversaries, and remembrance days carry deep emotional weight.</strong> Without guidance on how to observe these dates, your family may struggle with overwhelming emotions and uncertain rituals.<br/><br/>Creating rituals for these moments transforms grief into intentional remembrance. Your family will have specific actions to take, making difficult days feel purposeful rather than aimless."
+                    title="Record an important date"
+                    whyMatters="Save a birthday, anniversary or remembrance day with a short note about what it means. You can add an optional wish, such as visiting a favorite place or sharing a meal."
                     encouragement="Start with one meaningful date. Add a simple ritual that feels true to your spirit."
                     icon={Heart}
-                    iconClass="text-rose-500"
+                    iconClass="text-primary"
                     ctaLabel="Add your first remembrance"
                     onAction={() => (showAddModal = true)}
                 />
 
                 <!-- Sample Data GhostRows -->
                 <div class="mt-8">
-                    <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                    <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {#each getSmartSamples($language).anniversary || [] as sample}
                             <GhostRow
                                 name={sample.title}
                                 subtitle={sample.ritualInstructions}
                                 type={sample.type}
                                 onClick={() => {
+                                    setFormDate(sample.date);
                                     newEvent = {
                                         ...newEvent,
                                         title: sample.title,
@@ -185,7 +288,7 @@
                             >
                                 {#snippet icon()}
                                     {@const Icon = typeIcons[sample.type] || Heart}
-                                    <Icon size={20} class="text-slate-400" />
+                                    <Icon size={20} class="text-muted-foreground" />
                                 {/snippet}
                             </GhostRow>
                         {/each}
@@ -195,76 +298,83 @@
                 <div class="space-y-6">
                     {#each $upcomingEvents as event (event.id)}
                         <div
-                            class="group relative bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-500 overflow-hidden"
+                            class="group relative bg-card rounded-2xl p-6 border border-border shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-500 overflow-hidden"
                             transition:slide
                         >
                             <div class="flex items-start gap-6">
                                 <div
-                                    class="flex flex-col items-center shrink-0 w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden group-hover:bg-indigo-50 transition-colors"
+                                    class="flex flex-col items-center shrink-0 w-16 h-16 rounded-2xl bg-muted border border-border overflow-hidden group-hover:bg-primary-soft transition-colors"
                                 >
                                     <span
-                                        class="bg-indigo-600 w-full text-center text-[10px] font-black text-white py-1"
+                                        class="bg-primary w-full text-center text-[10px] font-black text-primary-foreground py-1"
                                     >
                                         {event.nextDate
                                             .toLocaleDateString("en-US", {
                                                 month: "short",
+                                                year: event.recurring ? undefined : "numeric",
                                             })
                                             .toUpperCase()}
                                     </span>
                                     <span
-                                        class="text-2xl font-serif font-black text-slate-900 mt-1"
+                                        class="text-2xl font-serif font-black text-foreground mt-1"
                                     >
                                         {event.nextDate.getDate()}
                                     </span>
                                 </div>
 
-                                <div class="flex-1 space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
+                                <div class="flex-1 min-w-0 space-y-3">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
                                             <h3
-                                                class="font-bold text-xl text-slate-900 uppercase tracking-tight"
+                                                class="font-bold text-xl text-foreground uppercase tracking-tight break-words min-w-0"
                                             >
                                                 {event.title}
                                             </h3>
                                             <span
-                                                class="text-xs font-bold px-3 py-0.5 rounded-full border {typeColors[
-                                                    event.type
-                                                ]}"
+                                                class="text-xs font-bold px-3 py-0.5 rounded-full border {typeClass(event.type)}"
                                             >
-                                                {event.type}
+                                                {typeLabel(event.type)}
                                             </span>
                                         </div>
-                                        <button
-                                            onclick={() =>
-                                                calendarStore.removeEvent(event.id)}
-                                            aria-label="Remove this item"
-                                            class="p-2 text-slate-300 hover:text-rose-500 transition-all"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        <div class="flex items-center gap-1 shrink-0">
+                                            <button
+                                                onclick={() => openEdit(event.id)}
+                                                aria-label="Edit this item"
+                                                class="p-2 text-muted-foreground hover:text-foreground transition-all"
+                                            >
+                                                <Pencil size={18} />
+                                            </button>
+                                            <button
+                                                onclick={() => removeEvent(event.id)}
+                                                aria-label="Remove this item"
+                                                class="p-2 text-muted-foreground hover:text-danger transition-all"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
                                     </div>
                                     <p
-                                        class="text-slate-500 leading-relaxed font-medium"
+                                        class="text-muted-foreground leading-relaxed font-medium"
                                     >
                                         {event.description}
                                     </p>
 
                                     {#if event.ritualInstructions}
                                         <div
-                                            class="mt-4 p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 flex gap-4"
+                                            class="mt-4 p-4 bg-success/10 rounded-2xl border border-success/20 flex gap-4"
                                         >
                                             <div
-                                                class="shrink-0 p-2 bg-emerald-100 rounded-lg text-emerald-600 h-fit mt-1"
+                                                class="shrink-0 p-2 bg-success/10 rounded-lg text-success h-fit mt-1"
                                             >
                                                 <Sparkles size={16} />
                                             </div>
                                             <div class="space-y-1">
                                                 <span
-                                                    class="text-[10px] font-black uppercase text-emerald-600 tracking-widest"
-                                                    >Recommended Ritual</span
+                                                    class="text-[10px] font-black uppercase text-success tracking-widest"
+                                                    >Your wish for this date</span
                                                 >
                                                 <p
-                                                    class="text-sm text-slate-600 italic leading-relaxed"
+                                                    class="text-sm text-muted-foreground italic leading-relaxed"
                                                 >
                                                     "{event.ritualInstructions}"
                                                 </p>
@@ -275,7 +385,7 @@
                                     <div class="flex items-center gap-4 pt-2">
                                         {#each event.tags as tag}
                                             <div
-                                                class="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                                                class="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground uppercase tracking-widest"
                                             >
                                                 <Tag size={12} />
                                                 {tag}
@@ -289,37 +399,44 @@
                 </div>
             {:else}
                 <!-- Table View -->
-                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div class="bg-card rounded-xl border border-border overflow-hidden">
                     <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
+                        <thead class="bg-muted border-b border-border">
                             <tr>
-                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Date</th>
-                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Title</th>
-                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
-                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Description</th>
-                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Ritual</th>
-                                <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Date</th>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Title</th>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Type</th>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Description</th>
+                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Ritual</th>
+                                <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-border">
                             {#each $upcomingEvents as event (event.id)}
-                                <tr class="hover:bg-slate-50 transition-colors group">
-                                    <td class="px-4 py-3 font-mono text-sm text-slate-600">
-                                        {event.nextDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                <tr class="hover:bg-muted transition-colors group">
+                                    <td class="px-4 py-3 font-mono text-sm text-muted-foreground">
+                                        {event.nextDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: event.recurring ? undefined : "numeric" })}
                                     </td>
-                                    <td class="px-4 py-3 font-medium text-slate-800">{event.title}</td>
+                                    <td class="px-4 py-3 font-medium text-foreground">{event.title}</td>
                                     <td class="px-4 py-3">
-                                        <span class="text-xs font-bold px-2 py-1 rounded-full border {typeColors[event.type]}">
-                                            {event.type}
+                                        <span class="text-xs font-bold px-2 py-1 rounded-full border {typeClass(event.type)}">
+                                            {typeLabel(event.type)}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-slate-500 text-sm max-w-[200px] truncate">{event.description || '-'}</td>
-                                    <td class="px-4 py-3 text-slate-500 text-sm max-w-[150px] truncate">{event.ritualInstructions || '-'}</td>
+                                    <td class="px-4 py-3 text-muted-foreground text-sm max-w-[200px] truncate">{event.description || '-'}</td>
+                                    <td class="px-4 py-3 text-muted-foreground text-sm max-w-[150px] truncate">{event.ritualInstructions || '-'}</td>
                                     <td class="px-4 py-3 text-right">
                                         <button
-                                            onclick={() => calendarStore.removeEvent(event.id)}
+                                            onclick={() => openEdit(event.id)}
+                                            aria-label="Edit this item"
+                                            class="p-1 text-muted-foreground hover:text-foreground transition-all"
+                                        >
+                                            <Pencil size={16} />
+                                        </button>
+                                        <button
+                                            onclick={() => removeEvent(event.id)}
                                             aria-label="Remove this item"
-                                            class="p-1 text-slate-300 hover:text-rose-500 transition-all"
+                                            class="p-1 text-muted-foreground hover:text-danger transition-all"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -336,70 +453,56 @@
         <div class="space-y-8">
             <!-- Grief Insights -->
             <div
-                class="bg-indigo-50/50 rounded-[2rem] border border-indigo-100 p-8 space-y-6"
+                class="bg-primary-soft rounded-[2rem] border border-primary/20 p-8 space-y-6"
             >
-                <div class="flex items-center gap-3 text-indigo-900">
+                <div class="flex items-center gap-3 text-primary-hover">
                     <Info size={24} />
-                    <h3 class="font-bold text-lg">Grief-Aware Design</h3>
+                    <h3 class="font-bold text-lg">Using your date notes</h3>
                 </div>
                 <div class="space-y-4">
                     <div class="flex gap-4">
                         <div
-                            class="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-2 shrink-0"
+                            class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"
                         ></div>
-                        <p class="text-sm text-indigo-800/80 leading-relaxed">
-                            <strong>Gentle Pacing:</strong> We don't flood you with
-                            notifications. Only intentional reminders.
+                        <p class="text-sm text-foreground leading-relaxed">
+                            <strong>Saved date notes:</strong> Return here to review
+                            the dates and wishes you have recorded.
                         </p>
                     </div>
                     <div class="flex gap-4">
                         <div
-                            class="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-2 shrink-0"
+                            class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"
                         ></div>
-                        <p class="text-sm text-indigo-800/80 leading-relaxed">
-                            <strong>Ritual focus:</strong> Dates aren't just deadlines;
-                            they are opportunities for rituals.
+                        <p class="text-sm text-foreground leading-relaxed">
+                            <strong>Ritual focus:</strong> Each date is an
+                            opportunity for remembrance.
                         </p>
                     </div>
                 </div>
-                <div class="pt-4 border-t border-indigo-100 mt-4">
-                    <p
-                        class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest text-center"
-                    >
-                        Your Emotional Registry
+                <div class="pt-4 border-t border-primary/20 mt-4">
+                    <p class="text-xs text-muted-foreground text-center">
+                        Dates and wishes saved for reference
                     </p>
                 </div>
             </div>
 
-            <!-- Ritual Library Preview -->
+            <!-- Ideas for a ritual Preview -->
             <div
-                class="bg-white rounded-[2rem] border border-slate-200 p-8 space-y-6 shadow-sm overflow-hidden relative"
+                class="bg-card rounded-[2rem] border border-border p-8 space-y-6 shadow-sm"
             >
-                <div
-                    class="absolute -bottom-4 -right-4 opacity-5 pointer-events-none"
-                >
-                    <Flame size={120} />
+                <div class="flex items-center gap-3 text-foreground">
+                    <Flame size={24} class="text-muted-foreground" />
+                    <h3 class="font-bold text-lg">Ideas for a ritual</h3>
                 </div>
-
-                <h3 class="font-bold text-lg text-slate-900">Ritual Library</h3>
-                <div class="space-y-4">
+                <ul class="space-y-4">
                     {#each ["Sound & Silence", "Elemental Release", "Physical Memorial"] as ritual}
-                        <button
-                            class="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-indigo-300 hover:bg-slate-50 transition-all group"
+                        <li
+                            class="p-4 rounded-xl border border-border font-medium text-foreground"
                         >
-                            <span class="font-medium text-slate-700"
-                                >{ritual}</span
-                            >
-                            <ChevronRight
-                                size={16}
-                                class="text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all"
-                            />
-                        </button>
+                            {ritual}
+                        </li>
                     {/each}
-                </div>
-                <p class="text-xs text-slate-400 text-center italic">
-                    Curated by Estate Concierge Psychology experts.
-                </p>
+                </ul>
             </div>
         </div>
     </div>
@@ -410,22 +513,22 @@
             role="dialog"
             aria-modal="true"
             aria-labelledby="remembrance-dialog-title"
-            use:focusTrap={{ onEscape: () => (showAddModal = false) }}
+            use:focusTrap={{ onEscape: closeModal }}
             class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
             <div
-                class="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl space-y-6"
+                class="bg-card w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl space-y-6"
                 transition:scale={{ start: 0.95, easing: quintOut }}
             >
                 <div class="flex items-center justify-between">
-                    <h2 id="remembrance-dialog-title" class="font-serif text-2xl font-bold text-slate-900">
-                        Add Remembrance
+                    <h2 id="remembrance-dialog-title" class="font-serif text-2xl font-bold text-foreground">
+                        {editingId !== null ? "Edit Remembrance" : "Add Remembrance"}
                     </h2>
                     <button
-                        onclick={() => (showAddModal = false)}
+                        onclick={closeModal}
                         aria-label="Close"
-                        class="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
+                        class="p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground"
                     >
                         <Plus class="rotate-45" />
                     </button>
@@ -435,80 +538,108 @@
                     <div class="space-y-1">
                         <label
                             for="remembrance-title"
-                            class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1"
+                            class="text-xs font-black uppercase text-muted-foreground tracking-widest pl-1"
                             >Title</label
                         >
                         <input
                             id="remembrance-title"
                             bind:value={newEvent.title}
                             placeholder="e.g., Mom's Birthday"
-                            class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                            class="w-full px-5 py-3 bg-muted border border-border rounded-2xl focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all"
                         />
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-1">
-                            <label
-                                for="remembrance-date"
-                                class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1"
-                                >Date (MM-DD)</label
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="col-span-2 space-y-1">
+                            <span
+                                id="remembrance-date-label"
+                                class="text-xs font-black uppercase text-muted-foreground tracking-widest pl-1"
+                                >Date</span
                             >
-                            <input
-                                id="remembrance-date"
-                                bind:value={newEvent.date}
-                                placeholder="10-24"
-                                class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                            />
+                            <div class="grid grid-cols-2 gap-4" role="group" aria-labelledby="remembrance-date-label">
+                                <select
+                                    id="remembrance-month"
+                                    aria-label="Month"
+                                    bind:value={formMonth}
+                                    class="w-full px-5 py-3 bg-muted border border-border rounded-2xl focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all appearance-none"
+                                >
+                                    <option value="" disabled>Month</option>
+                                    {#each MONTHS as name, i}
+                                        <option value={String(i + 1).padStart(2, "0")}>{name}</option>
+                                    {/each}
+                                </select>
+                                <select
+                                    id="remembrance-day"
+                                    aria-label="Day"
+                                    bind:value={formDay}
+                                    class="w-full px-5 py-3 bg-muted border border-border rounded-2xl focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all appearance-none"
+                                >
+                                    <option value="" disabled>Day</option>
+                                    {#each Array.from({ length: dayCount }, (_, i) => String(i + 1).padStart(2, "0")) as d}
+                                        <option value={d}>{Number(d)}</option>
+                                    {/each}
+                                </select>
+                            </div>
                         </div>
+
                         <div class="space-y-1">
                             <label
                                 for="remembrance-type"
-                                class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1"
+                                class="text-xs font-black uppercase text-muted-foreground tracking-widest pl-1"
                                 >Type</label
                             >
                             <select
                                 id="remembrance-type"
                                 bind:value={newEvent.type}
-                                class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none"
+                                class="w-full px-5 py-3 bg-muted border border-border rounded-2xl focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all appearance-none"
                             >
-                                <option value="birthday">Birthday</option>
-                                <option value="anniversary">Anniversary</option>
-                                <option value="passing">Passing</option>
-                                <option value="ritual">Ritual</option>
+                                {#each EVENT_TYPES as t}
+                                    <option value={t.value}>{t.label}</option>
+                                {/each}
                             </select>
                         </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 pl-1">
+                        <input
+                            id="remembrance-recurring"
+                            type="checkbox"
+                            bind:checked={newEvent.recurring}
+                            class="rounded border-muted-foreground accent-primary focus:ring-primary"
+                        />
+                        <label for="remembrance-recurring" class="text-sm font-medium text-foreground">Every year</label>
                     </div>
 
                     <div class="space-y-1">
                         <label
                             for="remembrance-description"
-                            class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1"
+                            class="text-xs font-black uppercase text-muted-foreground tracking-widest pl-1"
                             >Description</label
                         >
                         <textarea
                             id="remembrance-description"
                             bind:value={newEvent.description}
                             placeholder="Share a short summary of this day..."
-                            class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none h-24"
+                            class="w-full px-5 py-3 bg-muted border border-border rounded-2xl focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all resize-none h-24"
                         ></textarea>
                     </div>
 
                     <div class="space-y-1">
                         <label
                             for="remembrance-instructions"
-                            class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1"
-                            >Ritual Instructions (Optional)</label
+                            class="text-xs font-black uppercase text-muted-foreground tracking-widest pl-1"
+                            >Ritual guidance, if you wish</label
                         >
                         <textarea
                             id="remembrance-instructions"
                             bind:value={newEvent.ritualInstructions}
                             placeholder="Step-by-step guidance for remembrance..."
-                            class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none h-24 text-sm italic"
+                            class="w-full px-5 py-3 bg-muted border border-border rounded-2xl focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all resize-none h-24 text-sm italic"
                         ></textarea>
                     </div>
 
                     <!-- Custom Fields -->
-                    <div class="pt-2 border-t border-slate-100">
+                    <div class="pt-2 border-t border-border">
                         <CustomFieldsManager
                             entityType="calendar"
                             bind:data={customAttributes}
@@ -518,16 +649,18 @@
 
                 <div class="flex gap-4 pt-4">
                     <button
-                        onclick={() => (showAddModal = false)}
-                        class="flex-1 px-6 py-3.5 border border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-50 transition-all font-sans"
+                        onclick={closeModal}
+                        class="flex-1 px-6 py-3.5 border border-border rounded-2xl font-bold text-muted-foreground hover:bg-muted transition-all font-sans whitespace-nowrap"
                     >
-                        Cancel
+                        Maybe later
                     </button>
                     <button
                         onclick={handleAdd}
-                        class="flex-2 px-10 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all font-sans"
+                        disabled={!newEvent.title || !formMonth || !formDay || saving}
+                        aria-busy={saving}
+                        class="flex-2 px-10 py-3.5 bg-primary text-primary-foreground rounded-2xl font-bold shadow-lg hover:opacity-90 transition-all font-sans disabled:opacity-50"
                     >
-                        Save Memory
+                        {saving ? "Saving..." : "Save date"}
                     </button>
                 </div>
             </div>
@@ -535,10 +668,3 @@
     {/if}
 </div>
 {/if}
-
-<style>
-    /* Premium Typography */
-    :global(h1, h2, .font-serif) {
-        font-family: "Outfit", "Inter", serif;
-    }
-</style>

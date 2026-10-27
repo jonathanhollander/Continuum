@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import {
@@ -55,13 +57,20 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { plural } from "$lib/utils/plural";
+    import { formatMoney } from "$lib/utils/money";
     import { downloadMedia, mediaIdFromRef } from "$lib/services/mediaService";
 
     let showAddModal = $state(false);
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('insurance'));
     let isEditing = $state(false);
+    let exampleDraft = $state(false);
     let searchQuery = $state("");
     let filterType = $state("All");
+    let openClaims = $state<Record<string, boolean>>({});
+    const cap = (v: unknown) => {
+        const t = String(v ?? "").trim();
+        return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+    };
     let showWizard = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
@@ -76,7 +85,7 @@
         insuranceType: "Life",
         insurer: "",
         policyNumber: "",
-        premiumAmount: 0,
+        premiumAmount: undefined,
         premiumFrequency: "Monthly",
         beneficiaries: "",
         agentName: "",
@@ -120,11 +129,10 @@
             return;
         }
 
-        const wanted: [string, any, string][] = [];
-        if (answers.life) wanted.push(["Life Insurance", "Life", "Term Life"]);
-        if (answers.auto) wanted.push(["Auto Insurance", "Auto", "Comprehensive"]);
-        if (answers.home)
-            wanted.push(["Home/Renters Insurance", "Home", "Standard Fire & Theft"]);
+        const wanted: [string, any][] = [];
+        if (answers.life) wanted.push(["Life Insurance", "Life"]);
+        if (answers.auto) wanted.push(["Auto Insurance", "Auto"]);
+        if (answers.home) wanted.push(["Home/Renters Insurance", "Home"]);
 
         showWizard = false;
         if (wanted.length > 0) saveWizardPolicies(wanted);
@@ -132,13 +140,13 @@
 
     // One wizard run is one save: the creates run quietly, then one affirmation when all land,
     // or one gentle message whose Try Again re-sends only the policies still waiting.
-    async function saveWizardPolicies(wanted: [string, any, string][]) {
+    async function saveWizardPolicies(wanted: [string, any][]) {
         const results = await Promise.allSettled(
-            wanted.map(([name, type, insurer]) => addWizardPolicy(name, type, insurer)),
+            wanted.map(([name, type]) => addWizardPolicy(name, type)),
         );
         const waiting = wanted.filter((_, i) => results[i].status === "rejected");
         if (waiting.length === 0) {
-            notifications.showAffirmation("general");
+            notifications.showAffirmation("general", "create");
             return;
         }
         const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
@@ -153,22 +161,23 @@
         );
     }
 
-    async function addWizardPolicy(name: string, type: any, insurer = "TBD") {
+    // The wizard knows only the kind of cover; the carrier, beneficiaries and notes stay blank for the person to fill in.
+    async function addWizardPolicy(name: string, type: any) {
         const created = await insuranceSync.create({
             id: crypto.randomUUID(),
             policyName: name,
             insuranceType: type,
-            insurer: insurer,
+            insurer: "",
             policyNumber: "",
-            premiumAmount: 0,
+            premiumAmount: undefined,
             premiumFrequency: "Monthly",
-            beneficiaries: estateProfile.current.primaryBeneficiary || "",
+            beneficiaries: "",
             agentName: "",
             agentContact: "",
             claimsProcedure: "",
             status: "Pending",
             policyDocuments: "",
-            notes: "Added via Concierge Wizard",
+            notes: "",
         }, false, true);
 
         activityLog.logEvent({
@@ -184,11 +193,10 @@
     const policies = $derived(insuranceStore.policies);
     const filteredPolicies = $derived(
         policies.filter((p) => {
+            const q = searchQuery.toLowerCase();
             const matchesSearch =
-                p.policyName
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase()) ||
-                p.insurer.toLowerCase().includes(searchQuery.toLowerCase());
+                String(p.policyName ?? "").toLowerCase().includes(q) ||
+                String(p.insurer ?? "").toLowerCase().includes(q);
             const matchesFilter =
                 filterType === "All" || p.insuranceType === filterType;
             return matchesSearch && matchesFilter;
@@ -212,6 +220,37 @@
         } finally {
             downloadingDocuments = false;
         }
+    }
+
+    // One policy's stored document, opened from its card or row.
+    let openingDocument = $state<string | null>(null);
+    async function openPolicyDocument(policy: InsurancePolicy) {
+        const id = mediaIdFromRef(policy.policyDocuments);
+        if (id === null || openingDocument) return;
+        openingDocument = String(policy.id);
+        try {
+            await downloadMedia(id);
+        } catch (e) {
+            console.warn("[insurance] policy document open paused", id, e);
+        } finally {
+            openingDocument = null;
+        }
+    }
+
+    // "2031-05-01" reads as a local calendar date.
+    function dateLabel(v: string | null | undefined): string {
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v ?? ""));
+        if (!m) return "";
+        return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    }
+
+    function showAllPolicies() {
+        filterType = "All";
+        searchQuery = "";
     }
 
     const stats = $derived(insuranceStore.getTotalPremiums());
@@ -240,12 +279,13 @@
     ];
 
     function resetForm() {
+        exampleDraft = false;
         newPolicy = {
             policyName: "",
             insuranceType: "Life",
             insurer: "",
             policyNumber: "",
-            premiumAmount: 0,
+            premiumAmount: undefined,
             premiumFrequency: "Monthly",
             beneficiaries: "",
             agentName: "",
@@ -261,75 +301,48 @@
         parsedCustomAttributes = {};
     }
 
+    const saveAttempt = formSaveAttempt(insuranceSync);
+
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function handleAddPolicy() {
-        if (!newPolicy.policyName || !newPolicy.insurer) return;
-
-        // Serialize custom attributes
-        const policyData = {
-            ...newPolicy,
-            custom_attributes: JSON.stringify(parsedCustomAttributes)
-        };
-
+        if (saving) return;
+        saving = true;
         try {
-        if (isEditing && newPolicy.id) {
-            const oldPolicy = insuranceStore.getPolicy(newPolicy.id);
-            const changes = [];
-
-            if (oldPolicy) {
-                if (oldPolicy.policyName !== newPolicy.policyName)
-                    changes.push({
-                        field: "policyName",
-                        oldValue: oldPolicy.policyName,
-                        newValue: newPolicy.policyName,
-                    });
-                if (oldPolicy.premiumAmount !== newPolicy.premiumAmount)
-                    changes.push({
-                        field: "premiumAmount",
-                        oldValue: oldPolicy.premiumAmount,
-                        newValue: newPolicy.premiumAmount,
-                    });
-                if (oldPolicy.status !== newPolicy.status)
-                    changes.push({
-                        field: "status",
-                        oldValue: oldPolicy.status,
-                        newValue: newPolicy.status,
-                    });
-            }
-
-            await insuranceStore.updatePolicy(newPolicy.id, policyData);
-
-            activityLog.logEvent({
-                module: "Insurance",
-                action: "UPDATE",
-                entityType: "Policy",
-                entityId: String(newPolicy.id),
-                entityName: newPolicy.policyName!,
-                changes,
-                userContext: estateProfile.current.ownerName || "User",
-            });
-        } else {
-            const created = await insuranceStore.addPolicy(
-                policyData as Omit<InsurancePolicy, "id">,
-                handleAddPolicy,
-            );
-
-            activityLog.logEvent({
-                module: "Insurance",
-                action: "CREATE",
-                entityType: "Policy",
-                entityId: String(created!.id!),
-                entityName: created!.policyName,
-                userContext: estateProfile.current.ownerName || "User",
-            });
+            await handleAddPolicyOnce();
+        } finally {
+            saving = false;
         }
+    }
 
-        resetForm();
+    async function handleAddPolicyOnce() {
+        if (!newPolicy.policyName || !newPolicy.insurer) return;
+        const form = newPolicy;
+        const fields = JSON.stringify([form, parsedCustomAttributes]);
+        const id = isEditing ? form.id : undefined;
+        const ownerName = estateProfile.current.ownerName || "User";
+        const policyData = { ...form, premiumAmount: form.premiumAmount ?? null, custom_attributes: JSON.stringify(parsedCustomAttributes) };
+        const oldPolicy = id ? insuranceStore.getPolicy(id) : undefined;
+        const changes = oldPolicy ? (["policyName", "premiumAmount", "status"] as const)
+            .filter((field) => oldPolicy[field] !== form[field])
+            .map((field) => ({ field, oldValue: oldPolicy[field], newValue: form[field] })) : [];
+        try {
+            await saveAttempt(form, policyData, (saved) => {
+                activityLog.logEvent({
+                    module: "Insurance", action: id ? "UPDATE" : "CREATE", entityType: "Policy",
+                    entityId: String(saved.id), entityName: saved.policyName, changes, userContext: ownerName,
+                });
+                if (newPolicy !== form) return;
+                if (JSON.stringify([form, parsedCustomAttributes]) === fields) resetForm();
+                else { newPolicy.id = saved.id; isEditing = true; }
+            }, id);
         } catch {
-            // The manager already showed the one gentle message; the form stays open with the draft.
+            // The captured attempt stays available through Try Again.
         }
     }
 
     function editPolicy(policy: InsurancePolicy) {
+        exampleDraft = false;
         newPolicy = { ...policy };
         // Parse custom attributes for editing
         parsedCustomAttributes = readCustom(policy);
@@ -339,7 +352,7 @@
 
     async function deletePolicy(id: string | number, name: string) {
         if (
-            confirm(
+            await askConfirm(
                 `Remove the policy "${name}"? You can add it back later if needed.`,
             )
         ) {
@@ -371,30 +384,29 @@
     };
 
     const statusColors = {
-        Active: "bg-emerald-100 text-emerald-700 border-emerald-200",
-        Inactive: "bg-slate-100 text-slate-600 border-slate-200",
-        Pending: "bg-amber-100 text-amber-700 border-amber-200",
+        Active: "bg-success/10 text-success border-success/20",
+        Inactive: "bg-muted text-muted-foreground border-border",
+        Pending: "bg-warning-soft text-warning border-warning/30",
     };
 
     const typeColors = {
-        Life: "text-rose-600 bg-rose-50 border-rose-100",
-        Health: "text-blue-600 bg-blue-50 border-blue-100",
-        Auto: "text-indigo-600 bg-indigo-50 border-indigo-100",
-        Home: "text-emerald-600 bg-emerald-50 border-emerald-100",
-        Disability: "text-amber-600 bg-amber-50 border-amber-100",
-        Other: "text-slate-600 bg-slate-50 border-slate-100",
+        Life: "text-primary-hover bg-primary-soft border-primary/20",
+        Health: "text-success bg-success/10 border-success/20",
+        Auto: "text-info bg-info/10 border-info/20",
+        Home: "text-primary-hover bg-primary/10 border-primary/20",
+        Disability: "text-foreground bg-muted border-border",
+        Other: "text-muted-foreground bg-background border-border",
     };
 </script>
 
 <LivingBlueprintHeader
     title="Insurance Portfolio"
-    subtitle="Protecting your loved ones with financial security"
-    tier="protection"
-    detailedDescription="Life insurance and protection policies are acts of love. They ensure your family has financial security when you're no longer here to provide it, bridging the gap when they need it most."
-    whyMatters="Billions in insurance benefits go unclaimed every year simply because beneficiaries didn't know policies existed. Cataloging them here guarantees your foresight protects those you love."
+    subtitle="Policy details, insurer contacts and claims information"
+    detailedDescription="Keep each policy's identifiers, insurer contacts, renewal information and claims instructions together so your family knows where to start. Use the current policy and any insurer confirmation as your sources."
+    whyMatters="A clear record helps your family find the policy and ask the insurer about current cover, beneficiaries and any next steps."
 >
     <div class="flex flex-wrap items-center gap-3">
-        <DataViewToggle module="insurance" onchange={(mode) => viewMode = mode} />
+        <DataViewToggle module="insurance" />
         <button
             onclick={() => (showWizard = true)}
             class="flex items-center gap-2 px-5 py-3 border border-primary/10 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
@@ -404,10 +416,10 @@
         </button>
         <button
             onclick={() => (showAddModal = true)}
-            class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-2xl transition-all shadow-xl shadow-slate-900/10 font-bold"
+            class="flex items-center gap-2 bg-primary hover:bg-primary-hover text-primary-foreground px-6 py-3 rounded-2xl transition-all shadow-xl shadow-primary/20 font-bold"
         >
             <Plus size={20} />
-            Share Protection
+            Record a policy
         </button>
     </div>
 </LivingBlueprintHeader>
@@ -430,9 +442,10 @@
         >
             <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
                 <button
-                    class="absolute -top-12 right-0 text-white/50 hover:text-white"
+                    class="absolute -top-12 right-0 text-white hover:text-white/80"
                     onclick={() => (showWizard = false)}>Go back</button
                 >
+                <p class="mb-3 rounded-xl bg-card p-4 text-sm text-muted-foreground">Guided Setup starts a list of common policy types. Open each new record to add the insurer, policy number and details from your own documents.</p>
                 <ConciergeFlow
                     steps={wizardSteps}
                     oncomplete={handleWizardComplete}
@@ -441,10 +454,134 @@
         </div>
     {/if}
 
-    <!-- Filter Controls -->
-    <div class="flex flex-wrap items-center gap-3">
+    <!-- AI Prompt Bar -->
+    <div class="max-w-3xl mx-auto mb-8">
+        <p class="text-sm text-muted-foreground">Describe one policy for help organizing a contact note or questions for the insurer. Review the wording, then add it to the policy record you save.</p>
+        <AIPromptBar context="insurance" />
+    </div>
+
+    <!-- Stats Dashboard -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div
-            class="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm"
+            class="bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow group"
+        >
+            <div class="flex items-start justify-between mb-4">
+                <div
+                    class="p-3 bg-success/10 rounded-2xl text-success group-hover:scale-110 transition-transform"
+                >
+                    <DollarSign size={24} />
+                </div>
+                <div
+                    class="text-[10px] bg-success/10 text-success px-2 py-1 rounded-lg font-bold"
+                >
+                    ANNUAL
+                </div>
+            </div>
+            <p
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
+            >
+                Recorded annual premiums
+            </p>
+            <p class="text-3xl font-black text-foreground tracking-tight">
+                {stats.annual == null ? "Not recorded" : formatMoney(stats.annual)}
+            </p>
+            <p class="mt-2 text-xs text-muted-foreground">{stats.recorded} of {stats.eligible} amounts recorded</p>
+        </div>
+
+        <div
+            class="bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow group"
+        >
+            <div class="flex items-start justify-between mb-4">
+                <div
+                    class="p-3 bg-primary/10 rounded-2xl text-primary-hover group-hover:scale-110 transition-transform"
+                >
+                    <Activity size={24} />
+                </div>
+                <div
+                    class="text-[10px] bg-primary/20 text-primary-hover px-2 py-1 rounded-lg font-bold"
+                >
+                    MONTHLY
+                </div>
+            </div>
+            <p
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
+            >
+                Recorded monthly equivalent
+            </p>
+            <p class="text-3xl font-black text-foreground tracking-tight">
+                {stats.monthly == null ? "Not recorded" : formatMoney(stats.monthly)}
+            </p>
+            <p class="mt-2 text-xs text-muted-foreground">{stats.recorded} of {stats.eligible} amounts recorded</p>
+        </div>
+
+        <div
+            class="bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow group"
+        >
+            <div class="flex items-start justify-between mb-4">
+                <div
+                    class="p-3 bg-primary-soft rounded-2xl text-primary-hover group-hover:scale-110 transition-transform"
+                >
+                    <Heart size={24} />
+                </div>
+                <div
+                    class="text-[10px] bg-primary-soft text-primary-hover px-2 py-1 rounded-lg font-bold"
+                >
+                    STATUS
+                </div>
+            </div>
+            <p
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
+            >
+                Active Policies
+            </p>
+            <p class="text-3xl font-black text-foreground tracking-tight">
+                {policies.filter((p) => p.status === "Active").length}
+            </p>
+        </div>
+
+        <div
+            class="bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow group"
+        >
+            <div class="flex items-start justify-between mb-4">
+                <div
+                    class="p-3 bg-background rounded-2xl text-muted-foreground group-hover:scale-110 transition-transform"
+                >
+                    <CircleCheck size={24} />
+                </div>
+                <div
+                    class="text-[10px] bg-muted text-foreground px-2 py-1 rounded-lg font-bold"
+                >
+                    DETAILS
+                </div>
+            </div>
+            <p
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
+            >
+                Key details recorded
+            </p>
+            <p class="text-3xl font-black text-foreground tracking-tight">
+                {completionRate}%
+            </p>
+            <p class="mt-2 text-xs text-muted-foreground" data-testid="insurance-detail-rule">Five checks per policy: insurer, policy number, recorded beneficiary, a premium above zero, and an agent name or contact. This measures details recorded.</p>
+        </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div
+        class="flex flex-col md:flex-row gap-4 items-center justify-between bg-background/50 p-4 rounded-2xl border border-border"
+    >
+        <div class="relative w-full md:w-96">
+            <Search class="absolute left-4 top-3.5 text-muted-foreground" size={18} />
+            <input
+                type="text"
+                bind:value={searchQuery}
+                aria-label="Search by policy, carrier, or type"
+                placeholder="Search by policy, carrier, or type"
+                class="w-full px-4 py-3 pl-12 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
+            />
+        </div>
+        <div
+            class="flex bg-card p-1 rounded-2xl border border-border shadow-sm"
         >
             {#each types as type}
                 <button
@@ -452,143 +589,19 @@
                     class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
                     type
                         ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                        : 'text-slate-500 hover:text-primary hover:bg-slate-50'}"
+                        : 'text-muted-foreground hover:text-primary hover:bg-background'}"
                 >
                     {type}
                 </button>
             {/each}
         </div>
-    </div>
-
-
-    <!-- AI Prompt Bar -->
-    <div class="max-w-3xl mx-auto mb-8">
-        <AIPromptBar context="insurance" />
-    </div>
-
-    <!-- Stats Dashboard -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-        >
-            <div class="flex items-start justify-between mb-4">
-                <div
-                    class="p-3 bg-emerald-50 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform"
-                >
-                    <DollarSign size={24} />
-                </div>
-                <div
-                    class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg font-bold"
-                >
-                    ANNUAL
-                </div>
-            </div>
-            <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
-            >
-                Total Premiums
-            </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
-                ${stats.annual.toLocaleString()}
-            </p>
-        </div>
-
-        <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-        >
-            <div class="flex items-start justify-between mb-4">
-                <div
-                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
-                >
-                    <Activity size={24} />
-                </div>
-                <div
-                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
-                >
-                    MONTHLY
-                </div>
-            </div>
-            <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
-            >
-                Monthly Average
-            </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
-                ${Math.round(stats.monthly).toLocaleString()}
-            </p>
-        </div>
-
-        <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-        >
-            <div class="flex items-start justify-between mb-4">
-                <div
-                    class="p-3 bg-rose-50 rounded-2xl text-rose-600 group-hover:scale-110 transition-transform"
-                >
-                    <Heart size={24} />
-                </div>
-                <div
-                    class="text-[10px] bg-rose-100 text-rose-700 px-2 py-1 rounded-lg font-bold"
-                >
-                    STATUS
-                </div>
-            </div>
-            <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
-            >
-                Active Policies
-            </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
-                {policies.filter((p) => p.status === "Active").length}
-            </p>
-        </div>
-
-        <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-        >
-            <div class="flex items-start justify-between mb-4">
-                <div
-                    class="p-3 bg-slate-50 rounded-2xl text-slate-600 group-hover:scale-110 transition-transform"
-                >
-                    <CircleCheck size={24} />
-                </div>
-                <div
-                    class="text-[10px] bg-slate-100 text-slate-700 px-2 py-1 rounded-lg font-bold"
-                >
-                    AUDIT
-                </div>
-            </div>
-            <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
-            >
-                Completion Rate
-            </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
-                {completionRate}%
-            </p>
-        </div>
-    </div>
-
-    <!-- Search & Filters -->
-    <div
-        class="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/50 p-4 rounded-2xl border border-slate-100"
-    >
-        <div class="relative w-full md:w-96">
-            <Search class="absolute left-4 top-3.5 text-slate-400" size={18} />
-            <input
-                type="text"
-                bind:value={searchQuery}
-                placeholder="Search policy name, carrier, or type..."
-                class="w-full px-4 py-3 pl-12 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
-            />
-        </div>
         <div class="flex items-center gap-2">
             <span
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest"
                 >Showing {plural(filteredPolicies.length, "Policy", "Policies")}</span
             >
             <button
-                class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm disabled:opacity-40 disabled:hover:text-slate-500"
+                class="p-3 bg-card border border-border rounded-xl text-muted-foreground hover:text-primary transition-colors shadow-sm disabled:opacity-40 disabled:hover:text-muted-foreground"
                 aria-label="Download"
                 disabled={shownDocumentIds.length === 0 || downloadingDocuments}
                 onclick={downloadShownDocuments}
@@ -605,7 +618,7 @@
         {#each filteredPolicies as policy (policy.id)}
             {@const Icon = typeIcons[policy.insuranceType] || Shield}
             <div
-                class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col ring-1 ring-slate-900/5"
+                class="bg-card rounded-2xl border border-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col ring-1 ring-slate-900/5"
                 transition:scale={{
                     duration: 400,
                     delay: 0,
@@ -627,15 +640,15 @@
                             </div>
                             <div>
                                 <h3
-                                    class="text-lg font-semibold text-slate-900 leading-tight group-hover:text-primary transition-colors"
+                                    class="text-lg font-semibold text-foreground leading-tight group-hover:text-primary transition-colors"
                                 >
                                     {policy.policyName}
                                 </h3>
-                                <p
-                                    class="text-slate-500 text-sm"
-                                >
-                                    {policy.insurer}
-                                </p>
+                                {#if policy.insurer}
+                                    <p class="text-muted-foreground text-sm">
+                                        {policy.insurer}
+                                    </p>
+                                {/if}
                             </div>
                         </div>
                         <div
@@ -644,7 +657,7 @@
                             <button
                                 onclick={() => editPolicy(policy)}
                                 aria-label="Edit these details"
-                                class="p-2 bg-slate-50 hover:bg-primary/5 text-slate-400 hover:text-primary rounded-xl transition-all"
+                                class="p-2 bg-background hover:bg-primary/5 text-muted-foreground hover:text-primary rounded-xl transition-all"
                             >
                                 <Pencil size={16} />
                             </button>
@@ -655,7 +668,7 @@
                                         policy.policyName,
                                     )}
                                 aria-label="Remove this item"
-                                class="p-2 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all"
+                                class="p-2 bg-background hover:bg-danger-soft text-muted-foreground hover:text-danger rounded-xl transition-all"
                             >
                                 <Trash2 size={16} />
                             </button>
@@ -665,38 +678,38 @@
                     <!-- Mini Stats Grid -->
                     <div class="grid grid-cols-3 gap-3 mb-6">
                         <div
-                            class="bg-slate-50 rounded-xl p-3 border border-slate-100/50"
+                            class="bg-background rounded-xl p-3 border border-border/50"
                         >
                             <p
-                                class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1"
+                                class="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mb-1"
                             >
                                 Premium
                             </p>
                             <p
-                                class="text-sm font-semibold text-slate-700"
+                                class="text-sm font-semibold text-foreground"
                             >
-                                ${policy.premiumAmount}
+                                {policy.premiumAmount == null ? "Not recorded" : formatMoney(policy.premiumAmount)}
                             </p>
                         </div>
                         <div
-                            class="bg-slate-50 rounded-xl p-3 border border-slate-100/50"
+                            class="bg-background rounded-xl p-3 border border-border/50"
                         >
                             <p
-                                class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1"
+                                class="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mb-1"
                             >
                                 Interval
                             </p>
                             <p
-                                class="text-sm font-semibold text-slate-700"
+                                class="text-sm font-semibold text-foreground"
                             >
-                                {policy.premiumFrequency}
+                                {cap(policy.premiumFrequency)}
                             </p>
                         </div>
                         <div
-                            class="bg-slate-50 rounded-xl p-3 border border-slate-100/50"
+                            class="bg-background rounded-xl p-3 border border-border/50"
                         >
                             <p
-                                class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1"
+                                class="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mb-1"
                             >
                                 Status
                             </p>
@@ -704,11 +717,11 @@
                                 <div
                                     class="w-2 h-2 rounded-full {policy.status ===
                                     'Active'
-                                        ? 'bg-emerald-500 animate-pulse'
-                                        : 'bg-slate-300'}"
+                                        ? 'bg-success'
+                                        : 'bg-muted-foreground/40'}"
                                 ></div>
                                 <span
-                                    class="text-xs font-semibold text-slate-800"
+                                    class="text-xs font-semibold text-foreground"
                                     >{policy.status}</span
                                 >
                             </div>
@@ -718,20 +731,20 @@
                     <!-- Details Section -->
                     <div class="space-y-4 mb-6">
                         {#if policy.beneficiaries}
-                        <div class="flex items-center gap-4 text-slate-600">
+                        <div class="flex items-center gap-4 text-muted-foreground">
                             <div
-                                class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"
+                                class="w-8 h-8 rounded-xl bg-background flex items-center justify-center text-muted-foreground"
                             >
                                 <User size={14} />
                             </div>
                             <div>
                                 <p
-                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                                    class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
                                 >
                                     Key Beneficiary
                                 </p>
                                 <p
-                                    class="text-sm font-bold text-slate-700 truncate max-w-[180px]"
+                                    class="text-sm font-bold text-foreground truncate max-w-[180px]"
                                 >
                                     {policy.beneficiaries}
                                 </p>
@@ -739,62 +752,152 @@
                         </div>
                         {/if}
                         {#if policy.policyNumber}
-                        <div class="flex items-center gap-4 text-slate-600">
+                        <div class="flex items-center gap-4 text-muted-foreground">
                             <div
-                                class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"
+                                class="w-8 h-8 rounded-xl bg-background flex items-center justify-center text-muted-foreground"
                             >
                                 <FileText size={14} />
                             </div>
                             <div>
                                 <p
-                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                                    class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
                                 >
                                     Policy Number
                                 </p>
                                 <p
-                                    class="text-sm font-bold text-slate-700 tracking-wider font-mono uppercase"
+                                    class="text-sm font-bold text-foreground tracking-wider font-mono uppercase"
                                 >
                                     {policy.policyNumber}
                                 </p>
                             </div>
                         </div>
                         {/if}
+                        {#if policy.agentName || policy.agentContact}
+                        <div class="flex items-center gap-4 text-muted-foreground">
+                            <div
+                                class="w-8 h-8 rounded-xl bg-background flex items-center justify-center text-muted-foreground"
+                            >
+                                <User size={14} />
+                            </div>
+                            <div class="min-w-0">
+                                <p
+                                    class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
+                                >
+                                    Agent / Point of Contact
+                                </p>
+                                {#if policy.agentName}
+                                    <p class="text-sm font-bold text-foreground truncate">{policy.agentName}</p>
+                                {/if}
+                                {#if policy.agentContact}
+                                    <p class="text-sm text-muted-foreground truncate">{policy.agentContact}</p>
+                                {/if}
+                            </div>
+                        </div>
+                        {/if}
+                        {#if dateLabel(policy.expirationDate)}
+                        <div class="flex items-center gap-4 text-muted-foreground">
+                            <div
+                                class="w-8 h-8 rounded-xl bg-background flex items-center justify-center text-muted-foreground"
+                            >
+                                <Calendar size={14} />
+                            </div>
+                            <div>
+                                <p
+                                    class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
+                                >
+                                    Expiration Date
+                                </p>
+                                <p class="text-sm font-bold text-foreground">
+                                    {dateLabel(policy.expirationDate)}
+                                </p>
+                            </div>
+                        </div>
+                        {/if}
+                        {#if policy.notes}
+                        <div class="flex items-start gap-4 text-muted-foreground">
+                            <div
+                                class="w-8 h-8 rounded-xl bg-background flex items-center justify-center text-muted-foreground shrink-0"
+                            >
+                                <Info size={14} />
+                            </div>
+                            <div class="min-w-0">
+                                <p
+                                    class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
+                                >
+                                    Notes
+                                </p>
+                                <p class="text-sm text-muted-foreground whitespace-pre-line line-clamp-3">
+                                    {policy.notes}
+                                </p>
+                            </div>
+                        </div>
+                        {/if}
+                        {#if mediaIdFromRef(policy.policyDocuments) !== null}
+                        <button
+                            type="button"
+                            onclick={() => openPolicyDocument(policy)}
+                            aria-busy={openingDocument === String(policy.id)}
+                            class="flex items-center gap-4 text-muted-foreground hover:text-primary transition-colors text-left"
+                        >
+                            <span
+                                class="w-8 h-8 rounded-xl bg-background flex items-center justify-center text-muted-foreground"
+                            >
+                                <Download size={14} />
+                            </span>
+                            <span>
+                                <span
+                                    class="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
+                                >
+                                    Policy Documentation
+                                </span>
+                                <span class="block text-sm font-bold">Policy Document</span>
+                            </span>
+                        </button>
+                        {/if}
                     </div>
                 </div>
 
-                <!-- Card Footer / Claims Procedure CTA -->
+                <!-- Card Footer / Claims Procedure -->
+                {#if policy.claimsProcedure}
                 <div class="mt-auto p-3">
-                    <div
-                        class="bg-primary rounded-xl p-4 text-white flex items-center justify-between group/footer hover:bg-slate-900 transition-colors duration-300 cursor-pointer"
+                    <button
+                        type="button"
+                        onclick={() => (openClaims[String(policy.id)] = !openClaims[String(policy.id)])}
+                        aria-expanded={!!openClaims[String(policy.id)]}
+                        class="w-full text-left bg-muted rounded-xl p-4 text-foreground flex items-center justify-between group/footer hover:bg-border transition-colors duration-300"
                     >
-                        <div>
-                            <p
-                                class="text-[10px] font-semibold uppercase tracking-wide opacity-70 mb-1"
-                            >
-                                Claims Procedure
-                            </p>
-                            <h4 class="font-semibold text-sm">
-                                Access Support Guides
-                            </h4>
-                        </div>
-                        <div
-                            class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover/footer:translate-x-1 transition-transform"
-                        >
+                        <span class="font-semibold text-sm">Claims Procedure</span>
+                        <span class="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center group-hover/footer:translate-x-1 transition-transform">
                             <ArrowRight size={18} />
-                        </div>
-                    </div>
+                        </span>
+                    </button>
+                    {#if openClaims[String(policy.id)]}
+                        <p class="mt-3 px-2 text-sm text-foreground whitespace-pre-line">{policy.claimsProcedure}</p>
+                    {/if}
                 </div>
+                {/if}
             </div>
         {:else}
-            <!-- Empty State for Insurance -->
-            {#if filteredPolicies.length === 0 && searchQuery === ""}
+            <!-- First run: the welcome and examples. With policies saved, a search or filter
+                 that shows none offers the way back to all of them. -->
+            {#if policies.length > 0}
+                <div class="col-span-full flex justify-center py-12">
+                    <button
+                        type="button"
+                        onclick={showAllPolicies}
+                        class="px-6 py-3 rounded-2xl font-bold border border-primary/20 text-primary hover:bg-primary/5 transition-colors"
+                    >
+                        Show all policies
+                    </button>
+                </div>
+            {:else}
                 <div class="col-span-full">
                     <EmptyState
-                        title="Protect your family's financial future"
-                        whyMatters="<strong>Life insurance ensures your family has financial security when you're no longer here to provide it.</strong> Without documentation, they may never find these benefits—policies sit unclaimed, beneficiaries go unpaid, and the protection you worked for goes to waste.<br/><br/>Cataloging your policies here means your family will know exactly what coverage exists, who to contact, and how to file claims. It turns a confusing maze of paperwork into a clear roadmap during their darkest time."
-                        encouragement="Start with just your life insurance. Add health, auto, and home policies as you have time."
+                        title="Start with one policy"
+                        whyMatters="Record the policy name, insurer and identifying number from your documents. Add who to contact, where the policy is kept, and any claims instructions the insurer has provided."
+                        encouragement="Choose a policy you can find today. Add other policies as you gather their documents."
                         icon={Shield}
-                        iconClass="text-indigo-500"
+                        iconClass="text-primary"
                         ctaLabel="Share my first policy"
                         onAction={() => (showAddModal = true)}
                     />
@@ -802,8 +905,8 @@
 
                 <!-- Sample Data GhostRows -->
                 <div class="col-span-full mt-8">
-                    <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 opacity-60">
+                    <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Examples open a blank policy for your own details</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
                         {#each getSmartSamples($language).insurance || [] as sample}
                             <GhostRow
                                 name={sample.policyName}
@@ -811,24 +914,14 @@
                                 type="Policy"
                                 value={sample.premiumAmount}
                                 onClick={() => {
-                                    newPolicy = {
-                                        ...newPolicy,
-                                        policyName: sample.policyName,
-                                        insuranceType: sample.insuranceType,
-                                        insurer: sample.insurer,
-                                        policyNumber: sample.policyNumber,
-                                        premiumAmount: sample.premiumAmount,
-                                        premiumFrequency: sample.premiumFrequency,
-                                        beneficiaries: sample.beneficiaries,
-                                        status: sample.status,
-                                        notes: sample.notes
-                                    };
+                                    exampleDraft = true;
+                                    newPolicy = { ...newPolicy, insuranceType: newPolicy.policyName ? newPolicy.insuranceType : sample.insuranceType };
                                     showAddModal = true;
                                 }}
                             >
                                 {#snippet icon()}
                                     {@const Icon = typeIcons[sample.insuranceType] || Shield}
-                                    <Icon size={20} class="text-slate-400" />
+                                    <Icon size={20} class="text-muted-foreground" />
                                 {/snippet}
                             </GhostRow>
                         {/each}
@@ -839,70 +932,101 @@
     </div>
     {:else}
         <!-- Table View -->
-        {#if filteredPolicies.length === 0 && searchQuery === ""}
+        {#if policies.length > 0 && filteredPolicies.length === 0}
+            <div class="flex justify-center py-12">
+                <button
+                    type="button"
+                    onclick={showAllPolicies}
+                    class="px-6 py-3 rounded-2xl font-bold border border-primary/20 text-primary hover:bg-primary/5 transition-colors"
+                >
+                    Show all policies
+                </button>
+            </div>
+        {:else if policies.length === 0}
             <EmptyState
-                title="Protect your family's financial future"
-                whyMatters="<strong>Life insurance ensures your family has financial security when you're no longer here to provide it.</strong> Without documentation, they may never find these benefits—policies sit unclaimed, beneficiaries go unpaid, and the protection you worked for goes to waste.<br/><br/>Cataloging your policies here means your family will know exactly what coverage exists, who to contact, and how to file claims. It turns a confusing maze of paperwork into a clear roadmap during their darkest time."
-                encouragement="Start with just your life insurance. Add health, auto, and home policies as you have time."
+                title="Start with one policy"
+                whyMatters="Record the policy name, insurer and identifying number from your documents. Add who to contact, where the policy is kept, and any claims instructions the insurer has provided."
+                encouragement="Choose a policy you can find today. Add other policies as you gather their documents."
                 icon={Shield}
-                iconClass="text-indigo-500"
+                iconClass="text-primary"
                 ctaLabel="Share my first policy"
                 onAction={() => (showAddModal = true)}
             />
         {:else}
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                 <table class="w-full">
-                    <thead class="bg-slate-50 border-b border-slate-200">
+                    <thead class="bg-background border-b border-border">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Policy</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Type</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Carrier</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Premium</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Beneficiary</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Status</th>
-                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Policy</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Carrier</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Premium</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Beneficiary</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Agent</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Expiration</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Status</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-border">
                         {#each filteredPolicies as policy (policy.id)}
                             {@const Icon = typeIcons[policy.insuranceType] || Shield}
-                            <tr class="hover:bg-slate-50 transition-colors group">
+                            <tr class="hover:bg-background transition-colors group">
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-lg flex items-center justify-center {typeColors[policy.insuranceType]}">
                                             <Icon size={16} />
                                         </div>
                                         <div>
-                                            <span class="font-medium text-slate-800">{policy.policyName}</span>
-                                            <div class="text-xs text-slate-400">{policy.policyNumber || '-'}</div>
+                                            <span class="font-medium text-foreground">{policy.policyName}</span>
+                                            <div class="text-xs text-muted-foreground">{policy.policyNumber || '-'}</div>
+                                            {#if policy.notes}
+                                                <div class="text-xs text-muted-foreground truncate max-w-[220px]" title={policy.notes}>{policy.notes}</div>
+                                            {/if}
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-slate-600">{policy.insuranceType}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600">{policy.insurer}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600">
-                                    ${policy.premiumAmount}/{policy.premiumFrequency?.slice(0, 3) || 'mo'}
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{cap(policy.insuranceType)}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{policy.insurer}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">
+                                    {policy.premiumAmount == null ? "Not recorded" : formatMoney(policy.premiumAmount)} {cap(policy.premiumFrequency || "Monthly")}
                                 </td>
-                                <td class="px-4 py-3 text-sm text-slate-600 max-w-[150px] truncate">
+                                <td class="px-4 py-3 text-sm text-muted-foreground max-w-[150px] truncate">
                                     {policy.beneficiaries || '-'}
                                 </td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground max-w-[180px]">
+                                    <div class="truncate">{policy.agentName}</div>
+                                    {#if policy.agentContact}
+                                        <div class="text-xs text-muted-foreground truncate">{policy.agentContact}</div>
+                                    {/if}
+                                </td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{dateLabel(policy.expirationDate)}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-1.5">
-                                        <div class="w-2 h-2 rounded-full {policy.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-300'}"></div>
-                                        <span class="text-xs font-medium text-slate-600">{policy.status}</span>
+                                        <div class="w-2 h-2 rounded-full {policy.status === 'Active' ? 'bg-success' : 'bg-muted-foreground/40'}"></div>
+                                        <span class="text-xs font-medium text-muted-foreground">{policy.status}</span>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2 transition-opacity">
+                                        {#if mediaIdFromRef(policy.policyDocuments) !== null}
+                                            <button aria-label="Policy Document"
+                                                onclick={() => openPolicyDocument(policy)}
+                                                aria-busy={openingDocument === String(policy.id)}
+                                                class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
+                                            >
+                                                <Download size={14} />
+                                            </button>
+                                        {/if}
                                         <button aria-label="Edit these details"
                                             onclick={() => editPolicy(policy)}
-                                            class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                            class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                         >
                                             <Pencil size={14} />
                                         </button>
                                         <button aria-label="Remove this item"
                                             onclick={() => deletePolicy(String(policy.id), policy.policyName)}
-                                            class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                            class="p-1.5 text-muted-foreground hover:text-danger transition-colors"
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -938,28 +1062,29 @@
 
         <!-- Panel -->
         <div
-            class="relative bg-white rounded-2xl shadow-2xl ring-1 ring-slate-900/5 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            class="relative bg-card rounded-2xl shadow-2xl ring-1 ring-slate-900/5 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
             transition:scale={{ duration: 250, start: 0.95, easing: cubicOut }}
         >
             <!-- Modal Header -->
-            <div class="flex items-start justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-10">
+            <div class="flex items-start justify-between px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
                 <div class="flex-1 pr-4">
                     <nav
                         class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2"
                     >
                         <Heart size={12} />
-                        <span>Acts of Love</span>
+                        <span>POLICY RECORD</span>
                     </nav>
-                    <h2 class="font-serif font-bold text-xl text-slate-800">
-                        {isEditing ? "Update" : "Share"} Protection Details
+                    <h2 class="font-serif font-bold text-xl text-foreground">
+                        {isEditing ? "Update" : "Record"} policy details
                     </h2>
-                    <p class="text-slate-500 text-sm mt-2 leading-relaxed">
-                        Document your insurance coverage so your family knows what protection exists when they need it most.
+                    <p class="text-muted-foreground text-sm mt-2 leading-relaxed">
+                        Identify the policy, the source documents and the insurer contact your family should use.
+                            {#if exampleDraft}<span class="block mt-2 text-primary-hover" role="status">Example starting point: enter your own policy name, insurer and details. Your entered words stay in the form.</span>{/if}
                     </p>
                 </div>
                 <button
                     onclick={resetForm}
-                    class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
+                    class="p-2 -mr-2 text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-full transition-colors flex-shrink-0"
                     aria-label="Close"
                 >
                     <X class="w-5 h-5" />
@@ -970,7 +1095,7 @@
                 <!-- Group 1: Identity -->
                 <section>
                     <h3
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wide mb-4 flex items-center gap-3"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wide mb-4 flex items-center gap-3"
                     >
                         <span class="w-6 h-[2px] bg-primary rounded-full"
                         ></span>
@@ -980,25 +1105,25 @@
                         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                     >
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="insurance-policy-name"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Policy Title</label
                             >
-                            <input
+                            <input id="insurance-policy-name"
                                 type="text"
                                 bind:value={newPolicy.policyName}
-                                placeholder="e.g. Master Life Policy"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                placeholder="Your own policy name or short description"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="insurance-insurance-type"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Insurance Classification</label
                             >
-                            <select
+                            <select id="insurance-insurance-type"
                                 bind:value={newPolicy.insuranceType}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none cursor-pointer"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground appearance-none cursor-pointer"
                             >
                                 {#each types.filter((t) => t !== "All") as type}
                                     <option value={type}>{type}</option>
@@ -1006,21 +1131,21 @@
                             </select>
                         </div>
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="insurance-insurer"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Insurance Carrier</label
                             >
-                            <input
+                            <input id="insurance-insurer"
                                 type="text"
                                 bind:value={newPolicy.insurer}
                                 placeholder="e.g. Prudential Financial"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <label
                                 for="insurance-policy-number"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Policy Number</label
                             >
                             <input
@@ -1028,20 +1153,20 @@
                                 type="text"
                                 bind:value={newPolicy.policyNumber}
                                 placeholder="As printed on the policy"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <label
                                 for="insurance-expiration-date"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Expiration Date</label
                             >
                             <input
                                 id="insurance-expiration-date"
                                 type="date"
                                 bind:value={newPolicy.expirationDate}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                     </div>
@@ -1049,14 +1174,14 @@
                     <!-- Policy Document Upload -->
                     <div class="mt-6">
                         <h3
-                            class="text-xs font-bold uppercase text-slate-500 tracking-wide mb-4 flex items-center gap-3"
+                            class="text-xs font-bold uppercase text-muted-foreground tracking-wide mb-4 flex items-center gap-3"
                         >
                             <span class="w-6 h-[2px] bg-primary rounded-full"
                             ></span>
                             Policy Documentation
                         </h3>
                         <div
-                            class="bg-slate-50 rounded-xl p-4 border border-slate-200"
+                            class="bg-background rounded-xl p-4 border border-border"
                         >
                             <UniversalUploader
                                 label="Upload Policy Document (PDF/Text/Image)"
@@ -1067,13 +1192,13 @@
                             />
                             {#if newPolicy.policyDocuments}
                                 <div
-                                    class="mt-2 text-xs text-slate-500 font-medium flex items-center gap-1"
+                                    class="mt-2 text-xs text-muted-foreground font-medium flex items-center gap-1"
                                 >
                                     <CircleCheck
                                         size={12}
-                                        class="text-green-500"
+                                        class="text-success"
                                     />
-                                    Document secured in vault
+                                    Document attached to this record
                                 </div>
                             {/if}
                         </div>
@@ -1082,7 +1207,7 @@
 
                 <!-- Group 2: Financial -->
                 <section
-                    class="bg-slate-50 rounded-2xl p-6 border border-slate-200"
+                    class="bg-background rounded-2xl p-6 border border-border"
                 >
                     <h3
                         class="text-xs font-bold uppercase text-primary tracking-wide mb-4 flex items-center gap-3"
@@ -1093,8 +1218,8 @@
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="insurance-premium-amount"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Premium Amount ($)</label
                             >
                             <div class="relative">
@@ -1102,21 +1227,21 @@
                                     size={16}
                                     class="absolute left-4 top-3.5 text-primary"
                                 />
-                                <input
+                                <input id="insurance-premium-amount"
                                     type="number"
                                     bind:value={newPolicy.premiumAmount}
-                                    class="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                    class="w-full px-4 py-3 pl-10 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                                 />
                             </div>
                         </div>
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="insurance-premium-frequency"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Billing Interval</label
                             >
-                            <select
+                            <select id="insurance-premium-frequency"
                                 bind:value={newPolicy.premiumFrequency}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none cursor-pointer"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground appearance-none cursor-pointer"
                             >
                                 <option>Monthly</option>
                                 <option>Quarterly</option>
@@ -1124,22 +1249,25 @@
                             </select>
                         </div>
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
-                                >Status Tracking</label
+                            <span id="insurance-status-label"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
+                                >Status Tracking</span
                             >
                             <div
-                                class="flex bg-white rounded-xl p-1 border border-slate-200"
+                                role="group"
+                                aria-labelledby="insurance-status-label"
+                                class="flex bg-card rounded-xl p-1 border border-border"
                             >
                                 {#each ["Active", "Pending", "Inactive"] as status}
                                     <button
                                         type="button"
+                                        aria-pressed={newPolicy.status === status}
                                         onclick={() =>
                                             (newPolicy.status = status as any)}
                                         class="flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all {newPolicy.status ===
                                         status
                                             ? 'bg-primary text-primary-foreground'
-                                            : 'text-slate-400 hover:bg-slate-50'}"
+                                            : 'text-muted-foreground hover:bg-background'}"
                                     >
                                         {status}
                                     </button>
@@ -1152,41 +1280,41 @@
                 <!-- Group 3: Legacy Details -->
                 <section>
                     <h3
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wide mb-4 flex items-center gap-3"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wide mb-4 flex items-center gap-3"
                     >
-                        <span class="w-6 h-[2px] bg-rose-500 rounded-full"
+                        <span class="w-6 h-[2px] bg-primary rounded-full"
                         ></span>
                         Legacy Information
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="insurance-beneficiaries"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Designated Beneficiaries</label
                             >
-                            <input
+                            <input id="insurance-beneficiaries"
                                 type="text"
                                 bind:value={newPolicy.beneficiaries}
-                                placeholder="Split 50/50 between children..."
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                placeholder="As shown on the policy or latest beneficiary confirmation"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="insurance-agent-name"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Agent / Point of Contact</label
                             >
-                            <input
+                            <input id="insurance-agent-name"
                                 type="text"
                                 bind:value={newPolicy.agentName}
                                 placeholder="Full name and company name"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <label
                                 for="insurance-agent-contact"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Agent Phone or Email</label
                             >
                             <input
@@ -1194,30 +1322,30 @@
                                 type="text"
                                 bind:value={newPolicy.agentContact}
                                 placeholder="How to reach them"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                         <div class="space-y-1.5 md:col-span-2">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1 flex items-center gap-2"
+                            <label for="insurance-claims-procedure"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 flex items-center gap-2"
                             >
                                 Claims Filing Instructions
                                 <span
-                                    class="bg-rose-100 text-rose-600 px-2 py-0.5 rounded-lg text-[8px] font-bold tracking-wide"
-                                    >CRITICAL</span
+                                    class="bg-primary-soft text-primary-hover px-2 py-0.5 rounded-lg text-[10px] font-bold tracking-wide"
+                                    >IMPORTANT</span
                                 >
                             </label>
-                            <textarea
+                            <textarea id="insurance-claims-procedure"
                                 bind:value={newPolicy.claimsProcedure}
                                 rows="4"
-                                placeholder="Detailed step-by-step for the family..."
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 resize-none"
+                                placeholder="Who should your family contact first? What instructions has the insurer provided, and where are the current documents?"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground resize-none"
                             ></textarea>
                         </div>
                         <div class="space-y-1.5 md:col-span-2">
                             <label
                                 for="insurance-notes"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Notes</label
                             >
                             <textarea
@@ -1225,7 +1353,7 @@
                                 bind:value={newPolicy.notes}
                                 rows="3"
                                 placeholder="Anything else your family may find helpful"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 resize-none"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground resize-none"
                             ></textarea>
                         </div>
                     </div>
@@ -1234,7 +1362,7 @@
                 <!-- Custom Fields Section -->
                 <section>
                     <h3
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wide mb-4 flex items-center gap-3"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wide mb-4 flex items-center gap-3"
                     >
                         <span class="w-6 h-[2px] bg-primary rounded-full"></span>
                         Additional Details
@@ -1248,20 +1376,21 @@
 
             <!-- Modal Footer -->
             <div
-                class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3"
+                class="px-6 py-4 bg-background border-t border-border flex justify-end gap-3"
             >
                 <button
                     onclick={resetForm}
-                    class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+                    class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-border transition-colors"
                 >
-                    Not right now
+                    Maybe later
                 </button>
                 <button
                     onclick={handleAddPolicy}
-                    disabled={!newPolicy.policyName || !newPolicy.insurer}
+                    disabled={!newPolicy.policyName || !newPolicy.insurer || saving}
+                    aria-busy={saving}
                     class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isEditing ? "Save my updates" : "Save my thoughts"}
+                    {saving ? "Saving..." : isEditing ? "Save my updates" : "Save policy details"}
                 </button>
             </div>
         </div>
@@ -1271,6 +1400,7 @@
 <style>
     select {
         -webkit-appearance: none;
+        appearance: none;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
         background-repeat: no-repeat;
         background-position: right 1.25rem center;

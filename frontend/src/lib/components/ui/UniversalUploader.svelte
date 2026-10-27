@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import {
         Upload,
         X,
@@ -28,6 +29,9 @@
         category = "uncategorized",
         referenceId = undefined,
         onchange,
+        onabandoned,
+        uploadState = $bindable("idle"),
+        disabled = false,
     } = $props<{
         value?: string;
         mediaId?: number | null;
@@ -36,6 +40,10 @@
         module: string;
         category?: string;
         referenceId?: string;
+        uploadState?: "idle" | "uploading" | "failed";
+        disabled?: boolean;
+        /** The initiating form owns a late upload even after its uploader is gone. */
+        onabandoned?: (file: MediaUploadResponse) => void;
         /** `file` comes with a fresh upload: its name, type and size, as the server stored them. */
         onchange?: (
             url: string,
@@ -44,11 +52,16 @@
         ) => void;
     }>();
 
+    const uid = $props.id();
+
     let dragging = $state(false);
     let processing = $state(false);
     let error: string | null = $state(null);
     let fileInput: HTMLInputElement | undefined = $state();
     let uploadProgress = $state(0);
+    let attempt = 0;
+    let destroyed = false;
+    onDestroy(() => { destroyed = true; attempt++; });
     /** The last upload's record, passed to the preview while it is still the file shown. */
     let uploaded = $state<MediaUploadResponse | null>(null);
     let shownId = $derived(mediaIdFromRef(mediaId ?? value));
@@ -76,19 +89,23 @@
 
     function handleFileSelect(e: Event) {
         const target = e.target as HTMLInputElement;
-        if (target.files && target.files[0]) {
-            processFile(target.files[0]);
-        }
+        const file = target.files?.[0];
+        target.value = "";
+        if (file) processFile(file);
     }
 
     async function processFile(file: File) {
+        if (disabled || destroyed) return;
+        const operation = ++attempt;
+        uploadState = "failed";
+        processing = false;
         // Mode Validation
         if (mode === "image" && !file.type.startsWith("image/")) {
-            error = "Please upload an image file.";
+            error = "This space keeps images. An image file will fit here.";
             return;
         }
         if (mode === "document" && file.type.startsWith("image/")) {
-            error = "Please upload a document (PDF, Text).";
+            error = "This space keeps PDF and text documents.";
             return;
         }
 
@@ -107,32 +124,28 @@
 
         error = null;
         processing = true;
+        uploadState = "uploading";
         uploadProgress = 0;
 
         try {
-            // Upload to Backend (S3/Local)
-            // Note: We don't pass 'category' here because mediaService logic (implied by previous plan steps)
-            // calculated it on backend.
-            // WAIT, plan said "Update save_file to accept doc_category (passed from upload endpoint)".
-            // But mediaService.ts uploadMedia function doesn't take category arg in my previous view?
-            // I should check if I updated mediaService.ts to accept category.
-            // Checking previous steps: I updated backend logic to `get_doc_category(mime_type)`.
-            // So I DON'T need to pass it from frontend. Backend derives it. Good.
-
             const response = await uploadMedia(
                 file,
                 module,
                 referenceId,
                 file.name, // Use filename as description initially
                 (progress) => {
-                    uploadProgress = progress.percentage;
+                    if (!destroyed && operation === attempt) uploadProgress = progress.percentage;
                 },
             );
 
-            // Update State
+            if (destroyed || operation !== attempt) {
+                onabandoned?.(response);
+                return;
+            }
             uploaded = response;
             value = response.download_url;
             mediaId = response.id;
+            uploadState = "idle";
 
             if (onchange)
                 onchange(value, mediaId, {
@@ -141,15 +154,24 @@
                     file_size: response.file_size,
                 });
         } catch (err: any) {
+            if (destroyed || operation !== attempt) return;
             console.error("Upload failed", err);
             error = err.message || "Saving this file paused. It is ready to try again.";
+            uploadState = "failed";
         } finally {
-            processing = false;
-            uploadProgress = 0;
+            if (!destroyed && operation === attempt) {
+                processing = false;
+                uploadProgress = 0;
+            }
         }
     }
 
     function clearFile() {
+        if (disabled) return;
+        attempt++;
+        processing = false;
+        uploadState = "idle";
+        error = null;
         value = "";
         mediaId = null;
         uploaded = null;
@@ -160,59 +182,73 @@
 
 <div class="space-y-2">
     {#if label}
-        <label class="block text-xs font-bold uppercase text-gray-500 mb-1"
+        <label id="{uid}-label" for="{uid}-file" class="block text-xs font-bold uppercase text-muted-foreground mb-1"
             >{label}</label
         >
     {/if}
 
     {#if value}
         <div
-            class="relative rounded-xl overflow-hidden bg-white border border-gray-200 group transition-all hover:shadow-md"
+            class="relative rounded-xl overflow-hidden bg-card border border-border group transition-all hover:shadow-md"
         >
             <MediaView src={mediaId ?? value} record={uploaded && uploaded.id === shownId ? uploaded : undefined} />
 
             <!-- Overlay Actions -->
-            <div class="bg-gray-50 p-2 flex justify-end gap-2 border-t border-gray-100">
+            <div class="bg-muted p-2 flex justify-end gap-2 border-t border-border">
                 <button
                     type="button"
+                    {disabled}
                     onclick={() => fileInput?.click()}
-                    class="text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 flex items-center gap-2"
+                    class="text-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-card hover:shadow-sm border border-transparent hover:border-border flex items-center gap-2"
                 >
                     <RefreshCw size={14} /> Replace
                 </button>
                 <button
                     type="button"
+                    {disabled}
                     onclick={clearFile}
-                    class="text-rose-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-rose-100 flex items-center gap-2"
+                    class="text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-card hover:shadow-sm border border-transparent hover:border-border flex items-center gap-2"
                 >
                     <Trash2 size={14} /> Remove
                 </button>
             </div>
             <input
+                id="{uid}-file"
                 type="file"
+                {disabled}
                 bind:this={fileInput}
                 onchange={handleFileSelect}
                 accept={acceptAttr}
                 class="hidden"
             />
         </div>
+        {#if error}
+            <p role="alert" class="text-xs font-bold text-warning">
+                {error}
+            </p>
+        {/if}
     {:else}
         <div
             class="relative border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer
             {dragging
-                ? 'border-[#4A7C74] bg-[#4A7C74]/5'
-                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}
-            {error ? 'border-red-300 bg-red-50' : ''}"
+                ? 'border-primary bg-primary-soft'
+                : error
+                  ? 'border-warning bg-card'
+                  : 'border-border bg-card hover:border-muted-foreground/40 hover:bg-muted'}"
             ondragover={handleDragOver}
             ondragleave={handleDragLeave}
             ondrop={handleDrop}
-            onclick={() => fileInput?.click()}
-            onkeydown={(e) => e.key === "Enter" && fileInput?.click()}
+            onclick={() => !disabled && fileInput?.click()}
+            onkeydown={(e) => !disabled && e.key === "Enter" && fileInput?.click()}
             role="button"
-            tabindex="0"
+            tabindex={disabled ? -1 : 0}
+            aria-disabled={disabled}
+            aria-describedby={label ? `${uid}-label` : undefined}
         >
             <input
+                id="{uid}-file"
                 type="file"
+                {disabled}
                 bind:this={fileInput}
                 onchange={handleFileSelect}
                 accept={acceptAttr}
@@ -220,34 +256,34 @@
             />
 
             <div
-                class="flex flex-col items-center justify-center gap-3 text-gray-400"
+                class="flex flex-col items-center justify-center gap-3 text-muted-foreground"
             >
                 {#if processing}
                     <div
                         class="relative h-12 w-12 flex items-center justify-center"
                     >
                         <Loader2
-                            class="animate-spin text-[#4A7C74]"
+                            class="animate-spin text-primary"
                             size={32}
                         />
                     </div>
                     <div
                         class="flex flex-col gap-1 items-center w-full max-w-[200px]"
                     >
-                        <span class="text-sm font-medium text-gray-700"
+                        <span class="text-sm font-medium text-foreground"
                             >Uploading... {uploadProgress}%</span
                         >
                         <div
-                            class="w-full h-1 bg-gray-200 rounded-full overflow-hidden"
+                            class="w-full h-1 bg-border rounded-full overflow-hidden"
                         >
                             <div
-                                class="h-full bg-[#4A7C74] transition-all duration-300"
+                                class="h-full bg-primary transition-all duration-300"
                                 style="width: {uploadProgress}%"
                             ></div>
                         </div>
                     </div>
                 {:else}
-                    <div class="p-3 bg-white rounded-full shadow-sm">
+                    <div class="p-3 bg-card rounded-full shadow-sm">
                         {#if mode === "document"}
                             <FileText size={24} />
                         {:else if mode === "image"}
@@ -257,14 +293,14 @@
                         {/if}
                     </div>
                     <div>
-                        <p class="text-sm font-bold text-gray-600">
+                        <p class="text-sm font-bold text-foreground">
                             {mode === "image"
                                 ? "Upload Image"
                                 : mode === "document"
                                   ? "Upload Document"
-                                  : "Click to upload"}
+                                  : "Add a file here"}
                         </p>
-                        <p class="text-xs mt-1 text-gray-400">
+                        <p class="text-xs mt-1 text-muted-foreground">
                             {mode === "image"
                                 ? "JPG, PNG"
                                 : mode === "document"
@@ -277,7 +313,8 @@
 
             {#if error}
                 <div
-                    class="mt-3 text-xs font-bold text-red-500 bg-white/50 py-1 px-2 rounded inline-block"
+                    role="alert"
+                    class="mt-3 text-xs font-bold text-warning py-1 px-2 rounded inline-block"
                 >
                     {error}
                 </div>

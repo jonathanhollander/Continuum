@@ -2,9 +2,9 @@
     import { onMount } from "svelte";
 
     // Props using Svelte 5 $props() rune is simpler if we define it as:
-    let { status = "active" } = $props<{
+    let { status = "active" }: {
         status?: "active" | "grace" | "alert" | "disabled";
-    }>();
+    } = $props();
 
     let canvas: HTMLCanvasElement;
     let ctx: CanvasRenderingContext2D | null;
@@ -19,7 +19,7 @@
             speed: 0.002,
         },
         grace: {
-            bg: "#1e1b4b", // Indigo 950
+            bg: "#0f172a", // Slate 900, the calm .surface-dark background (indigo 950 dimmed muted text to 3.36)
             mesh: ["#f59e0b", "#d97706", "#b45309"], // Amber 500/600/700
             speed: 0.004,
         },

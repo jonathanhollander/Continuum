@@ -1,4 +1,9 @@
+<script context="module" lang="ts">
+    let tooltipCount = 0;
+</script>
+
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import { fade } from "svelte/transition";
     import { cn } from "$lib/utils";
     import { portal } from "$lib/actions/portal";
@@ -12,6 +17,27 @@
     let parentNode: HTMLElement;
     let tooltipNode: HTMLElement;
     let coords = { x: 0, y: 0 };
+    const tooltipId = `tooltip-${++tooltipCount}`;
+
+    // The slotted element (e.g. a nav link) is the trigger; link it to the bubble while shown.
+    $: trigger = parentNode?.firstElementChild as HTMLElement | null | undefined;
+    $: if (trigger) {
+        if (isVisible && content) trigger.setAttribute("aria-describedby", tooltipId);
+        else trigger.removeAttribute("aria-describedby");
+    }
+
+    // The bubble is placed once on open; hide it if anything scrolls while it shows.
+    // Capture phase so scrolls inside nested containers count too.
+    $: if (typeof window !== "undefined") {
+        if (isVisible) window.addEventListener("scroll", handleMouseLeave, { capture: true, passive: true });
+        else window.removeEventListener("scroll", handleMouseLeave, { capture: true });
+    }
+
+    onDestroy(() => {
+        clearTimeout(timeoutId);
+        trigger?.removeAttribute("aria-describedby");
+        if (typeof window !== "undefined") window.removeEventListener("scroll", handleMouseLeave, { capture: true });
+    });
 
     function handleMouseEnter(event: MouseEvent) {
         parentNode = event.currentTarget as HTMLElement;
@@ -26,11 +52,27 @@
         isVisible = false;
     }
 
+    function handleFocusIn(event: FocusEvent) {
+        parentNode = event.currentTarget as HTMLElement;
+        clearTimeout(timeoutId);
+        calculatePosition();
+        isVisible = true;
+    }
+
+    function handleFocusOut() {
+        handleMouseLeave();
+    }
+
+    function handleKeydown(event: KeyboardEvent) {
+        if (event.key === "Escape" && isVisible) {
+            handleMouseLeave();
+        }
+    }
+
     function calculatePosition() {
         if (!parentNode) return;
+        // The bubble is position: fixed, so viewport coordinates are used as-is.
         const rect = parentNode.getBoundingClientRect();
-        const scrollX = window.scrollX;
-        const scrollY = window.scrollY;
 
         // Default gap
         const gap = 8;
@@ -38,26 +80,26 @@
         switch (position) {
             case "top":
                 coords = {
-                    x: rect.left + rect.width / 2 + scrollX,
-                    y: rect.top - gap + scrollY,
+                    x: rect.left + rect.width / 2,
+                    y: rect.top - gap,
                 };
                 break;
             case "bottom":
                 coords = {
-                    x: rect.left + rect.width / 2 + scrollX,
-                    y: rect.bottom + gap + scrollY,
+                    x: rect.left + rect.width / 2,
+                    y: rect.bottom + gap,
                 };
                 break;
             case "left":
                 coords = {
-                    x: rect.left - gap + scrollX,
-                    y: rect.top + rect.height / 2 + scrollY,
+                    x: rect.left - gap,
+                    y: rect.top + rect.height / 2,
                 };
                 break;
             case "right":
                 coords = {
-                    x: rect.right + gap + scrollX,
-                    y: rect.top + rect.height / 2 + scrollY,
+                    x: rect.right + gap,
+                    y: rect.top + rect.height / 2,
                 };
                 break;
         }
@@ -84,11 +126,14 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-    class="relative inline-block"
+    class="relative block"
     on:mouseenter={handleMouseEnter}
     on:mouseleave={handleMouseLeave}
-    role="tooltip"
+    on:focusin={handleFocusIn}
+    on:focusout={handleFocusOut}
+    on:keydown={handleKeydown}
 >
     <slot />
 </div>
@@ -96,6 +141,8 @@
 {#if isVisible && content}
     <div
         use:portal
+        id={tooltipId}
+        role="tooltip"
         in:fade={{ duration: 200 }}
         out:fade={{ duration: 150 }}
         class={cn(

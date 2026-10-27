@@ -1,0 +1,1532 @@
+{
+  "shared": {
+    "application_name": "Continuum",
+    "shared_system_template": "You are Continuum's assistant for personal legacy and practical handover. Help the person preserve their own words and useful information so their chosen recipient can understand it without the author present. Personal messages and practical financial information are equally important; follow the person's current request.\nUse only the supplied conversation, current job, draft and facts. Keep facts, wishes, estimates and unknowns distinct. Preserve names, relationships, dates, amounts, uncertainty and the author's meaning; ask a focused question or use an explicit placeholder for missing details.\nUse calm, clear language and match the author's voice. Respond to feelings when expressed, without routine praise, sentimental introductions or assumptions about grief, health, religion or family. Use supplied recipient identities; never assume a spouse, child or legal role.\nDrafts and suggested changes wait for the person's review. Describe writing and next steps truthfully: do not claim that a record was saved, a message sent or scheduled, access granted, a document legally effective, or an action performed.\nGive practical organizational explanations and questions for the relevant professional. Do not invent legal authority, account ownership, beneficiary rights, balances, diagnoses, treatment, tax outcomes or required procedures. Request only relevant details for this job; use protected placeholders rather than asking for passwords or complete sensitive identifiers.\nWhen asked to write, draft or revise, produce the requested usable text now from the supplied labeled answers, notes, current draft and conversation. Use visible placeholders for missing facts. Do not replace the requested text with generic encouragement, repeat answered questions, or ask permission to begin. Ask questions only for a genuinely blocking choice or when the person requested elicitation or advice. A request for a conceptual explanation still calls for an explanation.",
+    "system_template": "",
+    "task_template": "{{user_text}}",
+    "context_template": "Current job: {{job_id}}\nOriginal brief:\n{{job_brief}}\nDocument title: {{document_title}}\nDocument type: {{document_type}}\nRecipient: {{recipient_name}}\nRelationship: {{recipient_relationship}}\nAuthor-supplied notes:\n{{notes}}\nSource facts:\n{{source_facts}}\nCurrent working draft:\n{{current_draft}}\nDraft source (edited text or a proposal awaiting review): {{current_draft_source}}\nCurrent field: {{field_label}}\nCurrent visible question:\n{{field_question}}\nEarlier labeled questions and answers:\n{{question_answers}}",
+    "response_instruction": "",
+    "placeholder_instruction": "Keep every bracketed REDACTED token exactly as supplied; each represents a distinct private detail restored locally after your reply.",
+    "role_instructions": {
+      "owner": "The person is preparing their own information. Help them explain their wishes and records to the recipient they choose; use their present perspective.",
+      "planner": "The person is preparing their own information. Help them explain their wishes and records to the recipient they choose; use their present perspective.",
+      "executor": "Help the person organize estate tasks and questions using the authority, documents and circumstances actually supplied. An executor role label alone does not establish a court appointment.",
+      "family": "Help the family member understand the information and responsibilities actually shared with them, without assuming ownership, appointment or access to other records.",
+      "advisor": "Help the advisor explain supplied information and identify questions for the appropriate professional; distinguish the client's wishes from the advisor's suggestions."
+    },
+    "overwhelm_instruction": "",
+    "subject": "",
+    "tone_direct": "plain, clear and direct",
+    "tone_warm": "warm and gentle",
+    "tone_tender": "more tender and expressive while keeping the author's own sentiment and meaning",
+    "warmth_low_max": 33,
+    "warmth_mid_max": 66,
+    "history_enabled": true,
+    "history_roles": [
+      "user",
+      "assistant"
+    ],
+    "history_sources": [
+      "user",
+      "model"
+    ],
+    "max_history_messages": null,
+    "included_inputs": [
+      "user_text",
+      "notes",
+      "field_label",
+      "field_question",
+      "question_answers",
+      "current_draft",
+      "current_draft_source",
+      "job_brief",
+      "document_title",
+      "document_type",
+      "recipient_name",
+      "recipient_relationship",
+      "source_facts",
+      "context_name",
+      "user_role",
+      "emotional_state",
+      "warmth",
+      "job_id"
+    ],
+    "max_input_chars": 200000,
+    "max_tokens": 4000,
+    "temperature": null,
+    "ui_assets": {
+      "lib/components/concierge/AIPromptBar.svelte:quickPrompts": {
+        "obituary": [
+          "Draft a standard obituary based on these notes...",
+          "Write a warm, humorous eulogy...",
+          "Create a short death notice for the newspaper..."
+        ],
+        "letters": [
+          "Help me start a letter to my son using my notes.",
+          "Help me revise a message for the recipient I name.",
+          "Help me explain my own values in a letter."
+        ],
+        "executor": [
+          "Help me organize the immediate questions and records I provide.",
+          "Help me draft an enquiry to the institution I name.",
+          "Help me list questions about obtaining official documents."
+        ],
+        "heirlooms": [
+          "Help me describe this item from the story I provide.",
+          "Help me draft a note for the person I want to receive it.",
+          "Help me distinguish the history I know from family recollection."
+        ],
+        "legal_explainer": [
+          "Explain the document type I name in plain language.",
+          "Help me record where the original of this document is kept.",
+          "Help me prepare questions for my lawyer about the documents I describe."
+        ],
+        "contacts": [
+          "Help me explain how this named person can help my family.",
+          "Help me write practical notes about contacting this person.",
+          "Help me record which documents or keys this person holds."
+        ],
+        "medical": [
+          "Explain advance healthcare directives...",
+          "Help me document my medical wishes...",
+          "What should my healthcare proxy know?"
+        ],
+        "pets": [
+          "Help me organize the care instructions I provide for my pet.",
+          "Help me identify missing routine and supply details.",
+          "Help me write a note to the carer I have discussed arrangements with."
+        ],
+        "property": [
+          "Help me organize the ownership details and document locations I provide.",
+          "Help me turn my property instructions into clear notes.",
+          "Help me record the date and source of a valuation."
+        ],
+        "insurance": [
+          "Help me organize the policy details and insurer contacts I provide.",
+          "Help me prepare questions about the insurer’s current claims process.",
+          "Help me identify information still missing from this policy record."
+        ],
+        "digital-guardian": [
+          "Help me explain where recovery instructions are kept, using placeholders for secrets.",
+          "Help me write my wish for one online account.",
+          "Help me prepare questions about a provider’s official legacy-access options."
+        ],
+        "visual-memories": [
+          "Help me write a caption from the people, place, date, and story I provide.",
+          "Ask me what my son should know about the memory I describe.",
+          "Help me record where the rest of this collection is kept and how to find it."
+        ],
+        "financial": [
+          "Help me turn the account details I provide into a note for my son.",
+          "Help me identify details still missing from this account record.",
+          "Help me explain where the statements and original documents are kept."
+        ],
+        "activity-log": [
+          "How can a record of changes help my executor?",
+          "How often should I revisit my estate plan?",
+          "Which life events are a good time to update my plan?"
+        ],
+        "subscriptions": [
+          "How can my executor cancel my subscriptions?",
+          "What should I record about each subscription?",
+          "How do automatic renewals work after someone passes away?"
+        ],
+        "advanced-registry": [
+          "What details belong in a record of a home or car purchase?",
+          "Help me plan a yearly home maintenance schedule...",
+          "How does an executor follow up on an open insurance claim?"
+        ],
+        "qr-codes": [
+          "Explain how these shortcuts open the signed-in owner application.",
+          "Help me describe the separate recipient sharing link.",
+          "Help me write accurate printed directions for these shortcuts."
+        ],
+        "home-manual": [
+          "Help me organize the home instructions I provide.",
+          "Help me record where actual equipment and shutoff instructions are kept.",
+          "Help me explain the home details my recipient needs."
+        ],
+        "calendar": [
+          "Help me describe why a date matters to me.",
+          "Help me record an optional remembrance wish.",
+          "Help me draft a future message for the person and occasion I name."
+        ],
+        "funeral": [
+          "Draft clear funeral and memorial wishes from what I have entered.",
+          "Help me describe the atmosphere, music and readings I would like.",
+          "Explain the next arrangement choices, one question at a time."
+        ]
+      },
+      "lib/services/writerService.ts:CONTEXT_SUGGESTIONS": {
+        "heirloom": [
+          "How did you acquire this?",
+          "Who gave it to you?",
+          "What is your favorite memory of it?"
+        ],
+        "timeline": [
+          "What happened?",
+          "Who was there?",
+          "How did you feel?"
+        ],
+        "contact": [
+          "This person can help my family with: ",
+          "Records or keys this person holds: ",
+          "How and when to contact them: ",
+          "Personal context and communication preferences: "
+        ],
+        "pet": [
+          "Food, medication, daily routine and agreed care arrangements: ",
+          "Supplies, veterinary records and important contacts: ",
+          "Familiar comforts, quirks and favorite memories: "
+        ],
+        "funeral": [
+          "Music requests",
+          "Readings or poems",
+          "Tone of the service"
+        ],
+        "letter": [
+          "What do you want them to know?",
+          "Life lessons",
+          "Hopes for their future"
+        ],
+        "ethical_will": [
+          "What are your core values?",
+          "What mistakes did you learn from?",
+          "What tradition appeals to you?"
+        ],
+        "life_lesson": [
+          "What was the hardest choice you made?",
+          "What would you tell your younger self?",
+          "What defines a good life?"
+        ],
+        "storytelling": [
+          "Set the scene...",
+          "Who was the main character?",
+          "What was the turning point?"
+        ]
+      },
+      "lib/data/reflectionPools.ts:letters": {
+        "spouse": {
+          "title": "Letter to Someone You Choose",
+          "steps": [
+            {
+              "category": "Memory",
+              "pool": [
+                "What memory would you like this person to have in your words?",
+                "What time together do you want to describe?",
+                "What did an experience with this person mean to you?",
+                "What ordinary moment would you like to preserve?",
+                "What would you like them to know about your relationship?",
+                "Which detail helps tell this memory accurately?"
+              ],
+              "suggestions": [
+                "A memory together",
+                "An ordinary moment",
+                "A story I want to share"
+              ]
+            },
+            {
+              "category": "Values",
+              "pool": [
+                "What do you appreciate about this person?",
+                "What would you like them to know about themselves?",
+                "What have you learned from each other?",
+                "What quality or action do you want to mention?",
+                "Which words of your own would you like to keep?"
+              ],
+              "suggestions": [
+                "Something I appreciate",
+                "What I learned from you",
+                "Words I want to keep"
+              ]
+            },
+            {
+              "category": "Hopes",
+              "pool": [
+                "What hope would you like to share for their future?",
+                "What lesson would you like to offer in your own words?",
+                "What do you want them to know when life is difficult?",
+                "What would you like to leave open for them to choose?",
+                "What message would you like to end with?"
+              ],
+              "suggestions": [
+                "A hope for your future",
+                "A lesson from my life",
+                "My message to you"
+              ]
+            }
+          ]
+        },
+        "ethical_will": {
+          "title": "Ethical Will",
+          "steps": [
+            {
+              "category": "Values",
+              "pool": [
+                "What are the 3 core values that guided your life?",
+                "What principles did you stand by, even when it was hard?",
+                "What does 'integrity' mean to you in practice?",
+                "What do you believe is the most important virtue?"
+              ],
+              "suggestions": [
+                "Integrity",
+                "Compassion",
+                "Curiosity"
+              ]
+            },
+            {
+              "category": "Lessons",
+              "pool": [
+                "What is the most important lesson you learned the hard way?",
+                "What advice would you give your younger self?",
+                "What mistake taught you the most about life?",
+                "What is a truth you discovered later in life?"
+              ],
+              "suggestions": [
+                "A lesson learned the hard way",
+                "A moment of clarity",
+                "A childhood memory"
+              ]
+            },
+            {
+              "category": "Legacy",
+              "pool": [
+                "What do you want your family to remember when times are tough?",
+                "How do you want to be remembered by your community?",
+                "What tradition do you hope continues after you?",
+                "What message of hope do you want to leave behind?"
+              ],
+              "suggestions": [
+                "To be happy",
+                "To find your passion",
+                "To be kind"
+              ]
+            }
+          ]
+        }
+      },
+      "lib/data/reflectionPools.ts:heirlooms.story": [
+        "Where did you get this item?",
+        "What memory is connected to this object?",
+        "Which story from your life would you like to tell about it?",
+        "What would you like the next owner to know?",
+        "Who gave it to you, and on what occasion?",
+        "Which parts of its history are known or uncertain?",
+        "What does it mean to you?"
+      ],
+      "lib/data/letterTemplates.ts:bodies": {
+        "bank-closure": "To the Estate Unit,\n\nI am contacting you about [Account Holder Name], date of death [Date of Death]. Estate contact: [Executor/Administrator].\n\nAccount type: [Checking/Savings]\nAccount reference: [Last 4 Digits]\n\nPlease explain your process for recording the death, confirming account ownership and beneficiaries, and any documents or authority needed before closing or transferring funds. Please tell me how to provide documents through your official process.\n\nSincerely,\n[Your Name]",
+        "credit-card-cancel": "To Customer Service,\n\nPlease be advised that [Cardholder Name] passed away on [Date of Death].\n\nI am requesting that you close the following credit card account(s) at your earliest convenience to prevent any new charges:\n- Card Ending In: [Last 4 Digits]\n\nPlease send a final statement to the estate address listed below.\n\nSincerely,\n[Your Name]\n[Executor/Administrator]",
+        "mortgage-notice": "To the Mortgage Servicing Department,\n\nI am writing to inform you of the passing of [Borrower Name] on [Date of Death].\n\nPlease update your records to reflect the estate contact information below. We intend to [Keep/Sell] the property located at:\n[Property Address]\n\nPlease provide a current payoff statement and a list of any required documentation to transfer authority.\n\nSincerely,\n[Your Name]\n[Executor/Administrator]",
+        "brokerage-transfer": "To the Transfer Department,\n\nI am contacting you about [Account Holder Name] and account reference [Account Number]. Estate contact: [Your Name].\n\nPlease explain how ownership and beneficiary designations affect the next steps, and which documents, authority and forms you need before any transfer. The proposed receiving institution is [Your Bank]; please confirm whether that is appropriate through your process.\n\nSincerely,\n[Your Name]",
+        "ssa-notification": "To the Social Security Administration,\n\nI am reporting the death of [Deceased Name], identifier reference [Last 4 digits], who died on [Date of Death].\n\nPlease stop any future benefit payments. If any payments were made after [Date of Death], please instruct me on how to return them.\n\nSurvivors who may be eligible for benefits include:\n- [Spouse Name]\n- [Child Name]\n\nSincerely,\n[Your Name]",
+        "irs-ein": "To the Internal Revenue Service,\n\nI am seeking information about tax administration for the Estate of [Deceased Name]. Contact name: [Your Name].\n\nPlease direct me to the official process for confirming any fiduciary notice, estate identification number or filing that applies to the stated circumstances. I will review the requirements with the estate's tax professional.\n\nSincerely,\n[Your Name]",
+        "dmv-transfer": "To the Title Bureau,\n\nI am contacting you about the Estate of [Deceased Name]. \n\nI request to transfer the title of the following vehicle:\n- Make/Model: [Vehicle Year/Make/Model]\n- VIN: [Vehicle VIN]\n\nPlease tell me what documents and authority are needed for your title-transfer process.\n\nSincerely,\n[Your Name]",
+        "credit-bureau-freeze": "To the Fraud Department,\n\nPlease place a \"Deceased - Do Not Issue Credit\" alert on the credit report of:\n- Name: [Deceased Name]\n- Identifier reference: [Last 4 digits]\n- DOB: [Date of Birth]\n- Date of Death: [Date of Death]\n\nPlease tell me which supporting documents you need and how to provide them.\n\nSincerely,\n[Your Name]",
+        "utility-cancel": "To Customer Service,\n\nThe account holder, [Name], has passed away.\n\nPlease [Cancel Service / Transfer Account] effective [Date].\n\nService Address: [Address]\nAccount Number: [Account Number]\nFinal Bill Address: [Address]\n\nSincerely,\n[Your Name]",
+        "subscription-cancel": "To Support Team,\n\nPlease cancel the subscription for account email [Email Address] at your earliest convenience, due to the death of the subscriber.\n\nPlease explain any available refund and final-billing process.\n\nSincerely,\n[Your Name]",
+        "usps-forwarding": "To the Postmaster,\n\nI am seeking information about handling mail for [Deceased Name] at [Old Address]. Proposed estate contact address:\n\n[Estate Address]\n[City, State, Zip]\n\nPlease confirm the separate procedures and authority needed for mail forwarding and any mailing-list preferences.\n\nSincerely,\n[Your Name]",
+        "employer-hr": "To the HR Director,\n\nIt is with sadness that I inform you of the death of [Employee Name] on [Date].\n\nPlease provide information regarding:\n1. Final paycheck and accrued vacation pay.\n2. Life insurance policies provided by the company.\n3. 401(k) or pension plan options for beneficiaries.\n4. Health insurance continuation (COBRA) for survivors.\n\nSincerely,\n[Your Name]",
+        "insurance-claim": "To the Claims Department,\n\nI am writing to file a claim on Policy [Policy Number] for [Insured Name], who passed away on [Date].\n\nPlease tell me which supporting documents you need and how to provide them. Please send the necessary claim forms and lists of requirements to process the benefit.\n\nSincerely,\n[Your Name]",
+        "pension-claim": "To the Plan Administrator,\n\nI am notifying you of the death of the plan participant, [Name], on [Date].\n\nPlease confirm the listed beneficiaries and provide the necessary forms to claim the distribution of assets.\n\nSincerely,\n[Your Name]",
+        "social-media": "To User Support,\n\nI am writing to request the memorialization of the account for [Username], who passed away on [Date].\n\nAccount Details:\n- Platform: [Facebook/Instagram/Twitter]\n- Username/Handle: [Username]\n- Email associated with account: [Email Address]\n\nPlease tell me which supporting documents and authority your official process requires.\n\nPlease let me know if you require any further information.\n\nSincerely,\n[Your Name]",
+        "landlord-hoa": "To the Property Manager,\n\nI am informing you of the passing of [Name], who resided at [Address].\n\nWe will be coordinating the clearing of the property and handling of keys/access.\n\nPlease confirm the procedure for:\n1. Returning keys/fobs.\n2. Settling any outstanding rent or dues.\n3. Access rights for family members trying to retrieve belongings.\n\nSincerely,\n[Your Name]",
+        "cover-letter-family-qr": "Dear Family,\n\nI have gathered notes and records I want you to be able to find.\n\nThe printed QR shortcuts open pages in the signed-in owner application. The separate recipient link I choose to share is the route to the information I have included for you.\n\nWhere to find the recipient link and any printed copy: [Location of Shared Instructions]\nWho to contact for help: [Contact Name]\n\n[Your closing],\n[Your Name]",
+        "cover-letter-executor-qr": "To [Executor Name],\n\nThese printed QR shortcuts identify pages in the signed-in owner application. They are directions to those pages.\n\nPlease follow the separate access and handover instructions I have recorded, and use the recipient link or printed copy supplied for your role.\n\nInstructions and original documents are kept at: [Location of Instructions]\nPerson to contact: [Contact Name]\n\nSincerely,\n[Your Name]",
+        "va-notification": "To the Department of Veterans Affairs,\n\nI am reporting the death of [Deceased Name], who was a veteran of the United States Armed Forces. \n\nVA File Number: [VA File Number]\nService Number: [Service Number]\nBranch of Service: [Branch]\nDate of Death: [Date of Death]\n\nPlease stop any future benefit payments and advise on eligibility for burial benefits or survivor's pension.\n\nSincerely,\n[Your Name]\n[Relationship/Executor]",
+        "professional-team-notice": "Dear [Name of Professional],\n\nI am writing to formally notify you of the passing of [Deceased Name] on [Date of Death]. \n\nPlease explain the authority and documentation needed to discuss records for [Deceased Name]. I would like to ask about:\n1. Previous tax filings and outstanding returns.\n2. Existing legal files and active matters.\n3. Current asset management and transition steps.\n\nPlease provide a summary of any upcoming dates the estate should know about.\n\nSincerely,\n[Your Name]\n[Executor/Administrator]",
+        "medical-provider-notice": "To the Billing Department,\n\nPlease be advised that [Patient Name] passed away on [Date of Death].\n\nPlease cancel all future appointments and close the patient's billing account. Please send any final statements or insurance processing notices to the Estate Address:\n\n[Estate Address]\n\nPlease direct all further correspondence to the Estate Address below.\n\nSincerely,\n[Your Name]\n[Executor/Administrator]",
+        "club-resignation": "To the Membership Committee,\n\nI am writing to resign the membership of [Name] at [Club/Organization Name] effective at your earliest convenience, due to their passing on [Date of Death].\n\nPlease stop all future dues and assessments. Please explain the final-billing process and whether any prepaid fees or deposits may be refundable.\n\nSincerely,\n[Your Name]",
+        "charity-alumni-notice": "To the Development Office,\n\nPlease update your records to reflect the passing of [Name] on [Date]. \n\nRelationship with your organization: [Alumnus/Supporter]. We request that you remove [Name] from your mailing and solicitation lists as requested by the estate contact.\n\nOptional family instruction, to include only if chosen: [Optional Charity].\n\nSincerely,\n[Your Name]",
+        "pet-registry-update": "To whom it may concern,\n\nThe registered owner of [Pet Name], [Deceased Name], passed away on [Date]. \n\nPlease explain the process and authority needed to update the record for [Pet Name] (Microchip #[Microchip Number]). Proposed guardian contact:\nGuardian Name: [New Guardian Name]\nAddress: [New Address]\nPhone: [New Phone]\n\nPlease confirm the steps and supporting documents needed before changing the registered owner.\n\nSincerely,\n[Your Name]\n[Executor]"
+      },
+      "lib/data/funeralTraditions.ts:smartTextareaPrompts": {
+        "secular": {
+          "atmosphere": [
+            "Focus on joyful memories",
+            "Casual and uplifting",
+            "Nature-connected"
+          ],
+          "legacy": [
+            "Life lessons learned",
+            "Favorite stories",
+            "Impact on community"
+          ],
+          "foundation": [
+            "Celebrating a life well lived",
+            "Love and connection",
+            "Simplicity and nature"
+          ]
+        },
+        "christian": {
+          "atmosphere": [
+            "Hopeful and reverent",
+            "Celebration of homecoming",
+            "Traditional hymns"
+          ],
+          "legacy": [
+            "Faith journey",
+            "Biblical values",
+            "Service to the church"
+          ],
+          "foundation": [
+            "Resurrection hope",
+            "Stewardship",
+            "Family and Faith"
+          ]
+        },
+        "jewish": {
+          "atmosphere": [
+            "Solemn and respectful",
+            "Plain pine casket",
+            "Charity gifts in place of flowers"
+          ],
+          "legacy": [
+            "Torah values",
+            "Acts of Chesed (Kindness)",
+            "Family and community memories"
+          ],
+          "foundation": [
+            "Tikkun Olam (Repairing the World)",
+            "Family heritage",
+            "Modesty and dignity"
+          ]
+        },
+        "muslim": {
+          "atmosphere": [
+            "Simple and humble",
+            "Community prayer focus",
+            "My stated burial wishes"
+          ],
+          "legacy": [
+            "Submission to Allah",
+            "Charity (Sadaqah Jariyah)",
+            "Family devotion"
+          ],
+          "foundation": [
+            "Submission to Allah's will",
+            "Simplicity",
+            "Forgiveness"
+          ]
+        },
+        "hindu": {
+          "atmosphere": [
+            "Chanting Mantras",
+            "White flowers/garlands",
+            "Burning incense/ghee"
+          ],
+          "legacy": [
+            "Karma and Dharma",
+            "Liberation (Moksha)",
+            "Ancestral connection"
+          ],
+          "foundation": [
+            "Dharma (Duty)",
+            "Moksha (Liberation)",
+            "Cycle of Life"
+          ]
+        },
+        "buddhist": {
+          "atmosphere": [
+            "Meditative and calm",
+            "Sutra chanting",
+            "Incense offerings"
+          ],
+          "legacy": [
+            "Impermanence (Anicca)",
+            "Compassion (Metta)",
+            "Wisdom"
+          ],
+          "foundation": [
+            "Peace and compassion",
+            "Impermanence",
+            "Mindfulness"
+          ]
+        },
+        "other": {
+          "atmosphere": [
+            "Respectful tribute",
+            "Unique cultural elements",
+            "Personal spirituality"
+          ],
+          "legacy": [
+            "Personal philosophy",
+            "Creative spirit",
+            "Love for family"
+          ],
+          "foundation": [
+            "Personal truth",
+            "Connection to nature",
+            "Love"
+          ]
+        }
+      },
+      "lib/components/modules/legacy-journal/EthicalWill.svelte:EXAMPLE_LETTER": "To [Recipient Name],\n\nThe values I want to share with you are [your values, in your own words].\n\nOne experience that shaped these beliefs was [your own experience]. What I learned was [your reflection].\n\nWhat I want you to know is [your message to this person].\n\n[Your closing],\n[Your Name]",
+      "routes/modules/legacy-journal/+page.svelte:journalPromptPool": [
+        "Help me describe a childhood memory from my own notes.",
+        "Help me explain a value I want my son or chosen recipient to understand.",
+        "Help me record the story of a relationship I describe.",
+        "Help me write about a challenge and what I learned.",
+        "Help me describe someone who influenced my life using the details I provide.",
+        "Help me put a lesson from my life into my own words."
+      ],
+      "routes/modules/letters/+page.svelte:emotional_drafts": {
+        "spouse": "To [Recipient Name],\n\nOne memory I want to share with you:\n{{memory}}\n\nWhat I appreciate about you:\n{{admire}}\n\nMy hopes for you:\n{{hopes}}\n\n[Your closing],\n{{signature}}",
+        "ethical_will": "To [Recipient Name],\n\nThe values I want to share:\n{{values}}\n\nAn experience and lesson from my life:\n{{lesson}}\n\nWhat I want you to carry with you:\n{{legacy}}\n\n[Your closing],\n{{signature}}",
+        "signature_placeholder": "[Your Name]"
+      },
+      "routes/modules/letters/+page.svelte:writing_prompt_append": "{{draft}}{{separator}}{{prompt}}\n",
+      "routes/modules/letters/+page.svelte:writing_prompt_separator": "\n\n",
+      "routes/modules/advanced-registry/+page.svelte:prompts": [
+        "Help me organize the purchase details and documents I provide.",
+        "Help me write a maintenance note using my actual instructions.",
+        "Help me prepare questions about an insurance claim.",
+        "Help me write my wish for one online account and explain where the provider instructions are kept."
+      ],
+      "routes/modules/anniversary-manager/+page.svelte:prompts": [
+        "Help me explain the significance of a date I describe.",
+        "Help me record an optional remembrance wish.",
+        "Help me draft a message for the person and occasion I name.",
+        "Help me put my wishes for this day into my own words."
+      ],
+      "routes/modules/calendar/+page.svelte:prompts": [
+        "Help me explain why a date matters to me.",
+        "Help me write an optional remembrance suggestion for my family.",
+        "Help me draft a message for the anniversary and recipient I describe."
+      ],
+      "routes/modules/family-hub/+page.svelte:prompts": [
+        "Help me capture a family memory from my notes.",
+        "Help me explain a tradition in my own words.",
+        "Help me write a photo caption using the details I provide.",
+        "Help me preserve a family recipe and its story."
+      ],
+      "routes/modules/home-manual/+page.svelte:prompts": [
+        "Help me organize the home maintenance instructions I provide.",
+        "Help me explain where my home's actual shutoff instructions are kept.",
+        "Help me write a note about where to find my home security instructions.",
+        "Help me record the vendors and contacts who care for my home."
+      ],
+      "routes/modules/letters/+page.svelte:prompts": [
+        "Help me write a letter to my son using the memories and message I provide.",
+        "Help me revise a personal letter while keeping my own words and meaning.",
+        "Help me explain a lesson I want my chosen recipient to carry with them.",
+        "Help me start a message for someone I choose. Ask who it is for."
+      ],
+      "routes/modules/qr-codes/+page.svelte:prompts": [
+        "Explain how these QR shortcuts open my signed-in account...",
+        "Draft sign-in instructions for my executor using a printed QR code...",
+        "Help me explain recipient links to my family...",
+        "Where can I keep printed QR codes safe at home?"
+      ],
+      "routes/modules/subscriptions/+page.svelte:prompts": [
+        "Help me record which recurring services should continue or be reviewed.",
+        "Help me draft a subscription cancellation enquiry for review.",
+        "Help me organize the provider and billing details I supply.",
+        "Help me list questions about renewal, cancellation and refunds."
+      ],
+      "routes/modules/time-capsule/+page.svelte:prompts": [
+        "Help me draft a message for my son to read at a future milestone.",
+        "Help me write about the meaning of the occasion I describe.",
+        "Help me preserve a memory for my chosen recipient to read later.",
+        "Help me revise a future message without adding promises or facts."
+      ],
+      "routes/modules/timeline/+page.svelte:prompts": [
+        "Help me capture a milestone from my life...",
+        "Draft a reflection on a major life event...",
+        "Describe the meaning of this accomplishment...",
+        "Write about a turning point in my story..."
+      ],
+      "lib/stores/conciergeEngine.ts:PIVOT_GREETINGS": {
+        "Property & Real Estate": "Which property details or instructions would you like to record?",
+        "Financial Accounts": "Which account, debt or financial instruction would you like to explain?",
+        "Document Vault": "Which document or original-document location would you like to record?",
+        "Health & Medical": "Which care preference, contact or document location would you like to record?",
+        "Family & Contacts": "Who would you like to add, or whose contact details would you like to revise?",
+        "Legacy Correspondence": "Who would you like to write to, and what would you like them to know?",
+        "The Life Timeline": "Which memory or milestone would you like to tell in your own words?",
+        "Insurance Portfolio": "Which policy details or claim questions would you like to record?",
+        "Digital Guardian": "Which account or recovery-instruction location would you like to document?",
+        "Wellness Check-in": "Which trusted responder or check-in preference would you like to review?",
+        "Heirlooms & Treasures": "Which item or family story would you like to describe?"
+      },
+      "lib/stores/conciergeEngine.ts:contextGreetings": {
+        "Property & Real Estate": "Which property details or instructions would you like to record?",
+        "Financial Accounts": "Which account, debt or financial instruction would you like to explain?",
+        "Document Vault": "Which document or original-document location would you like to record?",
+        "Health & Medical": "Which care preference, contact or document location would you like to record?",
+        "Family & Contacts": "Who would you like to add, or whose contact details would you like to revise?",
+        "Legacy Correspondence": "Who would you like to write to, and what would you like them to know?",
+        "The Life Timeline": "Which memory or milestone would you like to tell in your own words?",
+        "Insurance Portfolio": "Which policy details or claim questions would you like to record?",
+        "Digital Guardian": "Which account or recovery-instruction location would you like to document?",
+        "Wellness Check-in": "Which trusted responder or check-in preference would you like to review?",
+        "Heirlooms & Treasures": "Which item or family story would you like to describe?"
+      },
+      "lib/stores/conciergeEngine.ts:greeting_prefix_first": "Welcome to Continuum. I'm here to help you put your plan together. ",
+      "lib/stores/conciergeEngine.ts:greeting_prefix_return": "Ready to continue. ",
+      "lib/stores/conciergeEngine.ts:greeting_home": "Would you like to write a personal message, explain your finances, or prepare your handover?",
+      "lib/stores/conciergeEngine.ts:greeting_other": "What would you like to record or revise in {{context_name}}?",
+      "lib/stores/conciergeEngine.ts:greeting_join": "{{prefix}}{{body}}",
+      "lib/stores/conciergeEngine.ts:pivot_fallback": "What would you like to work on in {{context_name}}?",
+      "lib/stores/conciergeEngine.ts:pivot_join": "We've moved into {{context_name}}. {{lead_question}}",
+      "routes/resources/grief-support/+page.svelte:greeting": "If you would like to talk, remember someone, or put a feeling into words, you can begin wherever you choose.",
+      "lib/services/aiConciergeService.ts:AI_UNAVAILABLE": "AI help is resting right now. Everything else is here for you, and you can come back whenever you're ready.",
+      "lib/components/ui/SmartTextarea.svelte:starter_suffixes": {
+        "question": "\n",
+        "word": ": ",
+        "other": " "
+      },
+      "lib/components/modules/letters/LetterAssistant.svelte:bullet_questions": [
+        "Share a specific memory...",
+        "What did this teach you?",
+        "Your wish for them..."
+      ],
+      "lib/data/reflectionPools.ts:funeral": {
+        "foundation": [
+          "What matters most to you in honoring a life?",
+          "What values should be central to your service?",
+          "How do you define a 'good send-off'?",
+          "What traditions bring you comfort?"
+        ],
+        "atmosphere": [
+          "Describe the perfect atmosphere for your service.",
+          "What feelings do you want your guests to leave with?",
+          "If your life was a movie genre, what would the funeral be?",
+          "Should the vibe be somber and respectful, or a celebration of life?",
+          "What words would you use to describe the energy in the room?"
+        ],
+        "legacy": [
+          "What are the key milestones you want mentioned?",
+          "What is the one thing you want people to say about you?",
+          "What is your proudest accomplishment?",
+          "How do you want to be described in your obituary?",
+          "What is a funny quirk you want remembered?"
+        ]
+      }
+    },
+    "overwhelm_states": [
+      "overwhelmed"
+    ]
+  },
+  "purposes": {
+    "concierge.chat": {
+      "response_instruction": "Keep every bracketed REDACTED token exactly as supplied. Return only a JSON object with a string message. Optional fields are extractedData, resources (title, description, link, type), and intent. Intent, when supplied, is one of add_contact, add_property, add_financial, add_insurance, add_healthcare, add_digital, suggest_break, provide_resource.",
+      "system_template": "Help with the current Continuum task in {{context_name}}. Continue the relevant conversation and the supplied writing job, including earlier facts and requested revisions. Offer one useful next step when asked; do not redirect a writing or finance task to a general intake checklist.\n{{role_instruction}}\n{{overwhelm_instruction}}\nUse extractedData only for details explicitly supplied for review. Use a navigation intent only when the person asks to open or add that kind of record. Resource links must be supplied by the person or use a known Continuum route: /modules/letters, /modules/legacy-journal, /modules/financial-accounts, /modules/contacts, /modules/legal-documents, /modules/medical, /resources/grief-support, /export/preview or /binder. A route is navigation, not proof of saved content or reader access.",
+      "overwhelm_instruction": "An application signal suggests a smaller next step. Keep the response short and offer a pause when it fits the person's words. Do not diagnose distress from application activity. Use suggest_break when the person requests or accepts a pause.",
+      "temperature": 0.3,
+      "max_tokens": 4000
+    },
+    "concierge.module_prompt": {
+      "response_instruction": "Keep every bracketed REDACTED token exactly as supplied. Return only a JSON object with a string message. Optional fields are extractedData, resources (title, description, link, type), and intent. Intent, when supplied, is one of add_contact, add_property, add_financial, add_insurance, add_healthcare, add_digital, suggest_break, provide_resource.",
+      "system_template": "Help draft or explain the requested work in the current Continuum module, {{context_name}}. Follow the supplied brief, relevant conversation and current draft, including revision requests such as shortening text while preserving a named memory. Keep the useful draft or explanation in message; this module presents suggestions for review and copying. Do not imply that it has read other estate records, viewed an image or changed stored data.\n{{role_instruction}}\n{{overwhelm_instruction}}",
+      "overwhelm_instruction": "An application signal suggests a smaller next step. Keep the response short and offer a pause when it fits the person's words. Do not diagnose distress from application activity. Use suggest_break when the person requests or accepts a pause.",
+      "temperature": 0.3,
+      "max_tokens": 3000
+    },
+    "grief.chat": {
+      "response_instruction": "Keep every bracketed REDACTED token exactly as supplied. Return only a JSON object with a string message. Optional fields are suggestedResources (strings) and suggestAction (discovery, hotline, or break).",
+      "system_template": "Offer calm, plain-language support for what the person actually expresses. Listen before suggesting an action; ask at most one gentle question. Follow their preference for talking, remembering, writing or practical help, without assuming a death has occurred or prescribing how grief should feel. Avoid poetic scripts, spiritual assumptions, diagnoses and assurances about how others feel.\n{{role_instruction}}\nPut useful support in message itself. Mention the Grief Support page's guides or local-support sidebar only as available choices, not as resources you have searched or services you have contacted. If the person indicates immediate danger or self-harm, respond directly and compassionately, encourage contacting local emergency help or a trusted person now, and point to the localized support choices; never invent a hotline number. Offer a pause when wanted, without replacing a practical request with a breathing exercise.",
+      "role_instructions": {
+        "owner": "Support the feelings or concern the person expresses about their own life or preparation. Follow their chosen topic without assuming illness or a recent death.",
+        "planner": "Support the feelings or concern the person expresses about their own life or preparation. Follow their chosen topic without assuming illness or a recent death.",
+        "executor": "The person may be carrying responsibilities after a death. Follow their expressed feelings or practical concern; offer a small practical step only when wanted, without turning this conversation into an estate checklist.",
+        "family": "Follow the family member's own account of the relationship and their feelings. Leave room for closeness, distance, mixed feelings and different ways of grieving.",
+        "advisor": "Support the advisor's expressed concern with a respectful, human response. Do not assume that they are personally bereaved or redirect them into client administration."
+      },
+      "temperature": 0.4,
+      "max_tokens": 1500
+    },
+    "writer.draft_text": {
+      "response_instruction": "Keep every bracketed REDACTED token exactly as supplied. Preserve the author's meaning, facts, names and signatures. Use only supplied facts and memories. Return the suggested passage or letter as plain text alone, with no title, notes, quotation marks, markdown or JSON.",
+      "system_template": "Help write {{subject}} for Continuum. Work from the supplied notes or original draft and the current job context. Preserve the author's voice and the perspective appropriate to this field: a memory, personal message or practical instruction. Keep supplied names and signatures. Use only stated facts and leave missing details as explicit placeholders. Optional surrounding context need not all appear in the passage; preserve every protected detail in the original text or drafting notes.",
+      "task_template": "Please write one or two short, warm paragraphs from these notes:\n{{notes}}",
+      "temperature": 0.35,
+      "max_tokens": 2000
+    },
+    "writer.rewrite_text": {
+      "response_instruction": "Keep every bracketed REDACTED token exactly as supplied. Preserve the author's meaning, facts, names and signatures. Use only supplied facts and memories. Return the suggested passage or letter as plain text alone, with no title, notes, quotation marks, markdown or JSON.",
+      "system_template": "Help write {{subject}} for Continuum. Work from the supplied notes or original draft and the current job context. Preserve the author's voice and the perspective appropriate to this field: a memory, personal message or practical instruction. Keep supplied names and signatures. Use only stated facts and leave missing details as explicit placeholders. Optional surrounding context need not all appear in the passage; preserve every protected detail in the original text or drafting notes.",
+      "task_template": "Rewrite only the supplied passage in a {{tone}} tone (warmth {{warmth}}/100). Preserve its facts, uncertainty, point of view, practical instructions, names, signatures and approximately its length unless the brief explicitly requests a different length. Keep an unknown or placeholder unresolved. Return a proposal for review.\n\nOriginal passage:\n{{current_draft}}",
+      "context_template": "Current job: {{job_id}}\nOriginal brief:\n{{job_brief}}\nDocument title: {{document_title}}\nDocument type: {{document_type}}\nRecipient: {{recipient_name}}\nRelationship: {{recipient_relationship}}\nAuthor-supplied notes:\n{{notes}}\nSource facts:\n{{source_facts}}\nDraft source (edited text or a proposal awaiting review): {{current_draft_source}}\nCurrent field: {{field_label}}\nCurrent visible question:\n{{field_question}}\nEarlier labeled questions and answers:\n{{question_answers}}",
+      "temperature": 0.2,
+      "max_tokens": 8000
+    },
+    "letter.draft": {
+      "response_instruction": "Keep every bracketed REDACTED token exactly as supplied. Preserve the author's meaning, facts, names and signatures. Use only supplied facts and memories. Return the suggested passage or letter as plain text alone, with no title, notes, quotation marks, markdown or JSON.",
+      "system_template": "Help the author write the letter described by the current job and supplied recipient. A personal letter to a son is a first-class use, alongside other chosen recipients; use the actual supplied identity and relationship. A letter may instead be practical correspondence to an institution: follow its purpose rather than imposing a farewell or intimate tone. Preserve the author's voice, stated facts, memories, uncertainty, names and signature. Leave unknown information as explicit placeholders. Present only a proposed letter for review; never infer a death, attachment, appointment, completed transaction or right to funds from a template.",
+      "task_template": "Draft the letter requested by the brief and recipient from these notes. Use a few short paragraphs appropriate to the purpose. Keep the author's own meaning rather than adding conventional praise, advice, promises or declarations of love that they did not supply.\n\nNotes:\n{{notes}}",
+      "temperature": 0.35,
+      "max_tokens": 4000
+    },
+    "letter.rewrite": {
+      "response_instruction": "Keep every bracketed REDACTED token exactly as supplied. Preserve the author's meaning, facts, names and signatures. Use only supplied facts and memories. Return the suggested passage or letter as plain text alone, with no title, notes, quotation marks, markdown or JSON.",
+      "system_template": "Help the author write the letter described by the current job and supplied recipient. A personal letter to a son is a first-class use, alongside other chosen recipients; use the actual supplied identity and relationship. A letter may instead be practical correspondence to an institution: follow its purpose rather than imposing a farewell or intimate tone. Preserve the author's voice, stated facts, memories, uncertainty, names and signature. Leave unknown information as explicit placeholders. Present only a proposed letter for review; never infer a death, attachment, appointment, completed transaction or right to funds from a template.",
+      "task_template": "Rewrite this letter in a {{tone}} tone (warmth {{warmth}}/100). Preserve its intended recipient, meaning, facts, uncertainty, names, signature and approximately its length unless the brief requests otherwise. Keep practical correspondence practical and personal words in the author's voice.\n\nOriginal letter:\n{{current_draft}}",
+      "context_template": "Current job: {{job_id}}\nOriginal brief:\n{{job_brief}}\nDocument title: {{document_title}}\nDocument type: {{document_type}}\nRecipient: {{recipient_name}}\nRelationship: {{recipient_relationship}}\nAuthor-supplied notes:\n{{notes}}\nSource facts:\n{{source_facts}}\nDraft source (edited text or a proposal awaiting review): {{current_draft_source}}\nCurrent field: {{field_label}}\nCurrent visible question:\n{{field_question}}\nEarlier labeled questions and answers:\n{{question_answers}}",
+      "temperature": 0.2,
+      "max_tokens": 8000
+    }
+  },
+  "variants": {
+    "writer.draft_text": {
+      "heirloom": {
+        "subject": "an heirloom's recorded story, meaning, ownership and intended recipient",
+        "task_template": "Draft a short provenance or meaning passage from the notes. Keep known history separate from uncertain family recollection and intended ownership.\n\nAuthor's notes:\n{{notes}}"
+      },
+      "timeline": {
+        "subject": "a dated life memory or milestone",
+        "task_template": "Draft a short first-person memory from the notes. Preserve the supplied date or approximate period, people and what the event meant.\n\nAuthor's notes:\n{{notes}}"
+      },
+      "contact": {
+        "subject": "practical notes for the person contacting this named individual",
+        "task_template": "Draft concise instructions for whoever contacts this person: stated timing, method, support person and wording preferences. Use the caller's practical perspective, not a farewell letter.\n\nAuthor's notes:\n{{notes}}",
+        "temperature": 0.2
+      },
+      "pet": {
+        "subject": "the author's pet memories or supplied care instructions",
+        "task_template": "Draft the pet notes requested: a memory, tribute or practical care information. Follow the author's emphasis and exact care details instead of adding generic pet advice.\n\nAuthor's notes:\n{{notes}}",
+        "temperature": 0.2
+      },
+      "funeral": {
+        "subject": "the author's stated funeral or memorial wishes",
+        "task_template": "Draft only the requested wishes: values, ceremony atmosphere or life-story notes. Use the author's selected tradition as context, not an instruction to add unstated beliefs or rituals.\n\nAuthor's notes:\n{{notes}}",
+        "temperature": 0.2
+      },
+      "letter": {
+        "subject": "a letter or reflection for the supplied recipient",
+        "task_template": "Draft the requested letter passage or interview answer for the supplied recipient. Preserve the author's memory, message and desired tone without assuming a romantic relationship.\n\nAuthor's notes:\n{{notes}}"
+      },
+      "ethical_will": {
+        "subject": "the author's own values and beliefs for their chosen recipient",
+        "task_template": "Draft a values passage from the author's stated beliefs and experiences. Preserve ambiguity and mixed feelings instead of supplying conventional virtues or moral advice.\n\nAuthor's notes:\n{{notes}}"
+      },
+      "life_lesson": {
+        "subject": "a lesson grounded in the author's own experience",
+        "task_template": "Draft a short lesson grounded in the supplied experience, choice and reflection. Keep what happened distinct from what the author learned; do not invent an anecdote.\n\nAuthor's notes:\n{{notes}}"
+      },
+      "storytelling": {
+        "subject": "the author's account of a life event",
+        "task_template": "Draft a short account of the supplied scene, people and turning point. Preserve their significance to the author without inventing dialogue, sensory detail or chronology.\n\nAuthor's notes:\n{{notes}}"
+      }
+    },
+    "writer.rewrite_text": {
+      "heirloom": {
+        "subject": "an heirloom's recorded story, meaning, ownership and intended recipient"
+      },
+      "timeline": {
+        "subject": "a dated life memory or milestone"
+      },
+      "contact": {
+        "subject": "practical notes for the person contacting this named individual",
+        "temperature": 0.2
+      },
+      "pet": {
+        "subject": "the author's pet memories or supplied care instructions",
+        "temperature": 0.2
+      },
+      "funeral": {
+        "subject": "the author's stated funeral or memorial wishes",
+        "temperature": 0.2
+      },
+      "letter": {
+        "subject": "a letter or reflection for the supplied recipient"
+      },
+      "ethical_will": {
+        "subject": "the author's own values and beliefs for their chosen recipient"
+      },
+      "life_lesson": {
+        "subject": "a lesson grounded in the author's own experience"
+      },
+      "storytelling": {
+        "subject": "the author's account of a life event"
+      }
+    },
+    "concierge.module_prompt": {
+      "obituary": {
+        "task_template": "Draft an obituary, eulogy or death notice from the facts actually supplied. Ask which form is wanted when unclear. Keep dates, family relationships, life events and publication details exact or visibly unknown; do not invent survivors, cause of death, achievements or religious beliefs.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.4
+      },
+      "letters": {
+        "task_template": "Help with a personal letter, journal entry or future message for the supplied recipient. Preserve the author's memories, values and voice, and carry earlier revision requests forward. Treat a future occasion as an intended reading context, not a promise of scheduled delivery.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.4
+      },
+      "executor": {
+        "task_template": "Help organize immediate estate questions, documents, contacts and next steps from supplied circumstances. Distinguish the designated person from a legally appointed executor. Ask institutions or the relevant professional about requirements rather than inventing authority, deadlines or eligibility.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "heirlooms": {
+        "task_template": "Help describe an heirloom, family memory, recipe, milestone or tradition from the supplied story and current brief. Distinguish ownership, intended recipient and sentimental meaning; do not invent provenance, value, people or events. A photograph supplies no facts unless its details or caption are actually provided.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.4
+      },
+      "legal_explainer": {
+        "task_template": "Explain the requested legal-document concept in plain language and identify questions for a qualified local professional. Keep the explanation general unless the jurisdiction and relevant facts are supplied. Do not assess the validity of unseen documents, draft binding advice or claim to have read the document vault.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "contacts": {
+        "task_template": "Help the author record who a person is, their relationship, how and when to contact them, and any stated communication preferences. Draft notification wording only when requested. Do not choose who should be told, infer consent or change the author's sharing choices.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "medical": {
+        "task_template": "Help express the person's care preferences, contact details, document locations and questions for their healthcare team. Preserve their own wishes and uncertainty. Explain concepts generally; do not diagnose, recommend treatment or treat notes as a valid medical directive.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "pets": {
+        "task_template": "Help record the pet's identity, routines, food, named guardian, veterinary contacts and the author's memories as requested. Preserve exact supplied care details. Leave unknown arrangements for the author or veterinarian; do not invent care doses, medical recommendations or a guardian's agreement.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "property": {
+        "task_template": "Help explain the recorded property, ownership description, location of originals, contacts, access arrangements and practical next steps. Use supplied ownership and debt details exactly; do not infer title, market value, transfer rights or an instruction to sell.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "insurance": {
+        "task_template": "Help organize supplied policies, insurer contacts, policy identifiers, stated beneficiaries, original-document locations and claim questions. Distinguish recorded policy information from verified coverage. Ask the insurer about current requirements; do not determine entitlement, payout amounts or timing.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "digital-guardian": {
+        "task_template": "Help explain digital accounts, recovery instructions, a password manager's location and provider legacy-contact choices from supplied facts. Use placeholders for secrets and suggest official recovery or legacy procedures. Do not request passwords, recovery codes or access tokens, or imply account access has been granted.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "visual-memories": {
+        "task_template": "Help organize photo/archive locations and write captions or memories using supplied names, dates, descriptions and stories. Ask the author to describe the image when needed; do not infer visual content, identities, emotions or events from an image you have not received.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "financial": {
+        "task_template": "Help explain supplied accounts, institutions, identifying references, ownership descriptions, beneficiaries, debts, currencies, contacts and where originals are kept. Distinguish recorded information from verified balances, legal ownership or beneficiary rights. Offer useful questions for the institution or advisor, not investment, tax or distribution decisions.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "activity-log": {
+        "task_template": "Explain how a record of changes can help someone maintain or understand their handover. Use actual log entries only if supplied. Do not claim to inspect the activity log, infer completion or propose invented change history.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "subscriptions": {
+        "task_template": "Help document supplied recurring charges, providers, billing cycles and renewal or cancellation questions. Draft an enquiry or cancellation request for review when asked. Preserve services the author says should continue; do not claim that cancellation, refund or account closure has occurred or is guaranteed.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "advanced-registry": {
+        "task_template": "Help document the supplied purchase, maintenance, warranty or claim record: dates, amounts and currencies, item identifiers, provider contacts, original documents and next questions. Do not invent valuations, maintenance history, coverage or claim approval.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "qr-codes": {
+        "task_template": "Explain the existing QR shortcuts: they open destinations in the signed-in owner application; scanning does not itself grant access or create a family-only package. A recipient uses the separately issued recipient sharing link with the owner's existing sharing choices. Draft accurate printed instructions without claiming encryption, password access, scoped QR permissions or automatic sharing.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "home-manual": {
+        "task_template": "Help write home instructions from the author's supplied equipment, locations, routines, vendors and manufacturer guidance. Identify what a recipient needs to find and whom to contact. Do not invent shutoff locations, alarm codes or technical safety procedures; ask for the actual instructions or relevant professional.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      },
+      "calendar": {
+        "task_template": "Help describe a supplied date, anniversary, milestone or optional remembrance and the author's wishes for it. Use the actual occasion, recipient and beliefs; do not presume a spouse, holiday tradition or obligation to commemorate. A saved date is a note for the plan, not proof of message delivery.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.4
+      },
+      "funeral": {
+        "task_template": "Help with the funeral or memorial wishes and arrangements supplied for this Final Wishes job: what matters most, disposition or venue preferences, ceremony, atmosphere, music, readings, people involved and costs. Use the current field, visible wishes, draft and conversation that are actually provided. When asked to draft or revise, produce usable wishes or instructions for review now, with visible placeholders for missing facts. Offer one-question guidance only when the person asks for guidance or a genuinely blocking choice needs clarification. An obituary, eulogy or death notice is an optional Legacy subtask only when requested; do not redirect general funeral planning to it. Do not claim arrangements are legally binding, saved, booked, paid or communicated.\n\nCurrent request:\n{{user_text}}",
+        "temperature": 0.2
+      }
+    }
+  },
+  "asset_fields": [
+    {
+      "key": "lib/components/concierge/AIPromptBar.svelte:quickPrompts",
+      "label": "quickPrompts",
+      "purpose": "concierge.module_prompt",
+      "surface": "lib/components/concierge/AIPromptBar.svelte",
+      "kind": "object",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "funeral"
+        },
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "legal_explainer"
+        },
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "contacts"
+        },
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "medical"
+        },
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "pets"
+        },
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "property"
+        },
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "insurance"
+        },
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "digital-guardian"
+        },
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "visual-memories"
+        },
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "financial"
+        },
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "activity-log"
+        }
+      ]
+    },
+    {
+      "key": "lib/services/writerService.ts:CONTEXT_SUGGESTIONS",
+      "label": "CONTEXT SUGGESTIONS",
+      "purpose": "writer.draft_text",
+      "surface": "lib/services/writerService.ts",
+      "kind": "object",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "writer.draft_text",
+          "variant": "heirloom"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "timeline"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "contact"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "pet"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "funeral"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "letter"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "ethical_will"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "life_lesson"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "storytelling"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "heirloom"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "timeline"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "contact"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "pet"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "funeral"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "letter"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "ethical_will"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "life_lesson"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "storytelling"
+        }
+      ]
+    },
+    {
+      "key": "lib/data/reflectionPools.ts:letters",
+      "label": "letters",
+      "purpose": "letter.draft",
+      "surface": "lib/data/reflectionPools.ts",
+      "kind": "object",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "letter.draft",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/data/reflectionPools.ts:heirlooms.story",
+      "label": "heirlooms.story",
+      "purpose": "concierge.module_prompt",
+      "variant": "heirlooms",
+      "surface": "lib/data/reflectionPools.ts",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "heirlooms"
+        }
+      ]
+    },
+    {
+      "key": "lib/data/letterTemplates.ts:bodies",
+      "label": "bodies",
+      "purpose": "letter.draft",
+      "surface": "lib/data/letterTemplates.ts",
+      "kind": "object",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "letter.draft",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/data/funeralTraditions.ts:smartTextareaPrompts",
+      "label": "smartTextareaPrompts",
+      "purpose": "writer.rewrite_text",
+      "variant": "funeral",
+      "surface": "lib/data/funeralTraditions.ts",
+      "kind": "object",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "funeral"
+        }
+      ]
+    },
+    {
+      "key": "lib/components/modules/legacy-journal/EthicalWill.svelte:EXAMPLE_LETTER",
+      "label": "EXAMPLE LETTER",
+      "purpose": "writer.rewrite_text",
+      "variant": "ethical_will",
+      "surface": "lib/components/modules/legacy-journal/EthicalWill.svelte",
+      "kind": "text",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "ethical_will"
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/legacy-journal/+page.svelte:journalPromptPool",
+      "label": "journalPromptPool",
+      "purpose": "concierge.module_prompt",
+      "variant": "letters",
+      "surface": "routes/modules/legacy-journal/+page.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "letters"
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/letters/+page.svelte:emotional_drafts",
+      "label": "emotional drafts",
+      "purpose": "letter.draft",
+      "surface": "routes/modules/letters/+page.svelte",
+      "kind": "object",
+      "placeholders": [
+        "admire",
+        "hopes",
+        "legacy",
+        "lesson",
+        "memory",
+        "signature",
+        "values"
+      ],
+      "consumers": [
+        {
+          "purpose": "letter.draft",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/letters/+page.svelte:writing_prompt_append",
+      "label": "writing prompt append",
+      "purpose": "letter.draft",
+      "surface": "routes/modules/letters/+page.svelte",
+      "kind": "template",
+      "placeholders": [
+        "draft",
+        "prompt",
+        "separator"
+      ],
+      "consumers": [
+        {
+          "purpose": "letter.draft",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/letters/+page.svelte:writing_prompt_separator",
+      "label": "writing prompt separator",
+      "purpose": "letter.draft",
+      "surface": "routes/modules/letters/+page.svelte",
+      "kind": "text",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "letter.draft",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/advanced-registry/+page.svelte:prompts",
+      "label": "prompts",
+      "purpose": "concierge.module_prompt",
+      "variant": "advanced-registry",
+      "surface": "routes/modules/advanced-registry/+page.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "advanced-registry"
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/anniversary-manager/+page.svelte:prompts",
+      "label": "prompts",
+      "purpose": "concierge.module_prompt",
+      "variant": "calendar",
+      "surface": "routes/modules/anniversary-manager/+page.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "calendar"
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/calendar/+page.svelte:prompts",
+      "label": "prompts",
+      "purpose": "concierge.module_prompt",
+      "variant": "calendar",
+      "surface": "routes/modules/calendar/+page.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "calendar"
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/family-hub/+page.svelte:prompts",
+      "label": "prompts",
+      "purpose": "concierge.module_prompt",
+      "variant": "heirlooms",
+      "surface": "routes/modules/family-hub/+page.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "heirlooms"
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/home-manual/+page.svelte:prompts",
+      "label": "prompts",
+      "purpose": "concierge.module_prompt",
+      "variant": "home-manual",
+      "surface": "routes/modules/home-manual/+page.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "home-manual"
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/letters/+page.svelte:prompts",
+      "label": "prompts",
+      "purpose": "concierge.module_prompt",
+      "variant": "letters",
+      "surface": "routes/modules/letters/+page.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "letters"
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/qr-codes/+page.svelte:prompts",
+      "label": "prompts",
+      "purpose": "concierge.module_prompt",
+      "variant": "qr-codes",
+      "surface": "routes/modules/qr-codes/+page.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "qr-codes"
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/subscriptions/+page.svelte:prompts",
+      "label": "prompts",
+      "purpose": "concierge.module_prompt",
+      "variant": "subscriptions",
+      "surface": "routes/modules/subscriptions/+page.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "subscriptions"
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/time-capsule/+page.svelte:prompts",
+      "label": "prompts",
+      "purpose": "concierge.module_prompt",
+      "variant": "letters",
+      "surface": "routes/modules/time-capsule/+page.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "letters"
+        }
+      ]
+    },
+    {
+      "key": "routes/modules/timeline/+page.svelte:prompts",
+      "label": "prompts",
+      "purpose": "concierge.module_prompt",
+      "variant": "heirlooms",
+      "surface": "routes/modules/timeline/+page.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.module_prompt",
+          "variant": "heirlooms"
+        }
+      ]
+    },
+    {
+      "key": "lib/stores/conciergeEngine.ts:PIVOT_GREETINGS",
+      "label": "PIVOT GREETINGS",
+      "purpose": "concierge.chat",
+      "surface": "lib/stores/conciergeEngine.ts",
+      "kind": "object",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.chat",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/stores/conciergeEngine.ts:contextGreetings",
+      "label": "contextGreetings",
+      "purpose": "concierge.chat",
+      "surface": "lib/stores/conciergeEngine.ts",
+      "kind": "object",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.chat",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/stores/conciergeEngine.ts:greeting_prefix_first",
+      "label": "greeting prefix first",
+      "purpose": "concierge.chat",
+      "surface": "lib/stores/conciergeEngine.ts",
+      "kind": "text",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.chat",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/stores/conciergeEngine.ts:greeting_prefix_return",
+      "label": "greeting prefix return",
+      "purpose": "concierge.chat",
+      "surface": "lib/stores/conciergeEngine.ts",
+      "kind": "text",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.chat",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/stores/conciergeEngine.ts:greeting_home",
+      "label": "greeting home",
+      "purpose": "concierge.chat",
+      "surface": "lib/stores/conciergeEngine.ts",
+      "kind": "text",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.chat",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/stores/conciergeEngine.ts:greeting_other",
+      "label": "greeting other",
+      "purpose": "concierge.chat",
+      "surface": "lib/stores/conciergeEngine.ts",
+      "kind": "template",
+      "placeholders": [
+        "context_name"
+      ],
+      "consumers": [
+        {
+          "purpose": "concierge.chat",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/stores/conciergeEngine.ts:greeting_join",
+      "label": "greeting join",
+      "purpose": "concierge.chat",
+      "surface": "lib/stores/conciergeEngine.ts",
+      "kind": "template",
+      "placeholders": [
+        "body",
+        "prefix"
+      ],
+      "consumers": [
+        {
+          "purpose": "concierge.chat",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/stores/conciergeEngine.ts:pivot_fallback",
+      "label": "pivot fallback",
+      "purpose": "concierge.chat",
+      "surface": "lib/stores/conciergeEngine.ts",
+      "kind": "template",
+      "placeholders": [
+        "context_name"
+      ],
+      "consumers": [
+        {
+          "purpose": "concierge.chat",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/stores/conciergeEngine.ts:pivot_join",
+      "label": "pivot join",
+      "purpose": "concierge.chat",
+      "surface": "lib/stores/conciergeEngine.ts",
+      "kind": "template",
+      "placeholders": [
+        "context_name",
+        "lead_question"
+      ],
+      "consumers": [
+        {
+          "purpose": "concierge.chat",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "routes/resources/grief-support/+page.svelte:greeting",
+      "label": "greeting",
+      "purpose": "grief.chat",
+      "surface": "routes/resources/grief-support/+page.svelte",
+      "kind": "text",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "grief.chat",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/services/aiConciergeService.ts:AI_UNAVAILABLE",
+      "label": "AI UNAVAILABLE",
+      "purpose": "concierge.chat",
+      "surface": "lib/services/aiConciergeService.ts",
+      "kind": "text",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "concierge.chat",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/components/ui/SmartTextarea.svelte:starter_suffixes",
+      "label": "starter suffixes",
+      "purpose": "writer.rewrite_text",
+      "surface": "lib/components/ui/SmartTextarea.svelte",
+      "kind": "object",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "writer.draft_text",
+          "variant": "heirloom"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "timeline"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "contact"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "pet"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "funeral"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "letter"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "ethical_will"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "life_lesson"
+        },
+        {
+          "purpose": "writer.draft_text",
+          "variant": "storytelling"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "heirloom"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "timeline"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "contact"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "pet"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "funeral"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "letter"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "ethical_will"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "life_lesson"
+        },
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "storytelling"
+        }
+      ]
+    },
+    {
+      "key": "lib/components/modules/letters/LetterAssistant.svelte:bullet_questions",
+      "label": "Letter drafting questions",
+      "purpose": "letter.draft",
+      "surface": "lib/components/modules/letters/LetterAssistant.svelte",
+      "kind": "list",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "letter.draft",
+          "variant": ""
+        }
+      ]
+    },
+    {
+      "key": "lib/data/reflectionPools.ts:funeral",
+      "label": "Funeral reflection questions",
+      "purpose": "writer.rewrite_text",
+      "variant": "funeral",
+      "surface": "lib/data/reflectionPools.ts",
+      "kind": "object",
+      "placeholders": [],
+      "consumers": [
+        {
+          "purpose": "writer.rewrite_text",
+          "variant": "funeral"
+        }
+      ]
+    }
+  ]
+}

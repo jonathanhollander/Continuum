@@ -1,6 +1,6 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { onMount } from "svelte";
-    import { focusTrap } from "$lib/actions/focusTrap";
     import {
         Users,
         Plus,
@@ -9,46 +9,62 @@
         Pencil,
         Settings2,
         BellRing,
-        X,
     } from "lucide-svelte";
-    import { fade, slide } from "svelte/transition";
+    import GuardianPicker from "./GuardianPicker.svelte";
+    import { pulseTierNumber } from "./pulseTiers";
     import { apiGet, apiPut } from "$lib/api/client";
     import { contactSync } from "$lib/stores/familyStore.svelte";
+    import { notifications } from "$lib/stores/notificationStore";
 
     let {
         userId = 1,
         showHeader = true,
-        viewMode = "combined" as "combined" | "contacts" | "escalation",
+        viewMode = "escalation" as "contacts" | "escalation",
     } = $props();
 
     let tiers = $state<any[]>([]);
-    let contacts = $state<any[]>([]);
+    // The people come from the shared contacts store (SyncManager), so a tier set on Family &
+    // Contacts or in the picker shows here at once. Each row in the field names this page reads
+    // (pulseTierNumber takes tier_id / call_tier).
+    const contacts = $derived(
+        contactSync.items.map((c: any) => ({
+            id: c.id,
+            name: c.name ?? "",
+            email: c.email,
+            tier_id: c.tierId ?? null,
+            call_tier: c.callTier ?? null,
+            individual_delay_hours: c.individualDelayHours ?? null,
+            notify_on_safety_timer: !!c.notifyOnSafetyTimer,
+        })),
+    );
     let editingTierId = $state<number | null>(null);
     let loading = $state(true);
     let error = $state<string | null>(null);
 
-    const gentleRetry = "Let's try that once more in a moment.";
+    const gentleRetry = "You can try again whenever you're ready.";
 
     onMount(async () => {
         await loadData();
     });
 
+    // The tiers come from the server; the people are already cached in the contacts store, so
+    // they show as soon as the tiers answer and refresh when the contacts sync lands. With
+    // nothing cached yet, the list waits for that sync. sync() settles on its own status.
     async function loadData() {
         loading = true;
         error = null;
+        const contactsSynced = contactSync.sync();
         try {
-            const [tiersData, contactsData] = await Promise.all([
-                apiGet("/api/pulse/tiers"),
-                apiGet("/api/pulse/contacts"),
-            ]);
-            tiers = tiersData;
-            contacts = contactsData;
+            tiers = await apiGet("/api/pulse/tiers");
+            if (contactSync.items.length === 0) await contactsSynced;
         } catch (e: any) {
             console.error(e);
             error = e?.message || gentleRetry;
         } finally {
             loading = false;
         }
+        await contactsSynced;
+        if (contactSync.status === "error") error = gentleRetry;
     }
 
     async function updateTier(tier: any) {
@@ -57,72 +73,74 @@
             editingTierId = null;
         } catch (e) {
             console.error(e);
-            alert(gentleRetry);
+            notifications.showError(gentleRetry);
         }
     }
 
-    // Send only the fields this page edits, so stored legacy values elsewhere on the row stay untouched.
-    async function updateContact(contact: any) {
+    // Delay and safety-timer edits: saved quietly (no affirmation) through the shared contacts
+    // store, which this list reads; on failure it rolls back and shows its own gentle message.
+    async function updateContact(contactId: number | string, updates: Record<string, unknown>) {
         try {
-            await apiPut(`/api/pulse/contacts/${contact.id}`, {
-                individual_delay_hours:
-                    contact.individual_delay_hours === "" ||
-                    contact.individual_delay_hours == null
-                        ? null
-                        : Number(contact.individual_delay_hours),
-                notify_on_safety_timer: !!contact.notify_on_safety_timer,
-            });
-            contacts = [...contacts];
+            await contactSync.update(contactId, updates, false);
         } catch (e) {
             console.error(e);
-            alert(gentleRetry);
         }
     }
 
+    function delayValue(raw: string) {
+        return raw === "" || raw == null ? null : Number(raw);
+    }
+
+    // Select Guardian dialog; pickerTierId is the tier it opens on.
     let showAddGuardianModal = $state(false);
-    let globalContacts = $state<any[]>([]);
-    let targetTierId = $state<number | null>(null);
-    let selectedContactId = $state<number | null>(null);
+    let pickerTierId = $state<number | null>(null);
 
-    async function openAddGuardianModal(tierId: number) {
-        targetTierId = tierId;
-        try {
-            globalContacts = await apiGet("/api/contacts");
-            showAddGuardianModal = true;
-        } catch (e) {
-            console.error(e);
-            alert(gentleRetry);
-        }
+    function openAddGuardianModal(tierId: number | null) {
+        pickerTierId = tierId;
+        showAddGuardianModal = true;
     }
 
-    async function promoteContact() {
-        if (!selectedContactId || !targetTierId) return;
-        try {
-            await apiPut(`/api/contacts/${selectedContactId}`, {
-                tier_id: targetTierId,
-            });
-            await loadData();
-            showAddGuardianModal = false;
-            selectedContactId = null;
-        } catch (e) {
-            console.error(e);
-            alert(gentleRetry);
-        }
-    }
-
+    // Takes the person off Pulse only: their Family & Contacts entry stays. A Pulse tier comes from
+    // tier_id or, failing that, the call tier 1-3 (pulseTierNumber), so both are cleared; "Kept
+    // private" stays as it is. Saved through the shared contacts SyncManager, so the contacts page
+    // shows it at once; on failure that store rolls back and shows its own gentle message.
     async function deleteContact(contactId: number) {
-        if (!confirm("Remove this contact from your Pulse network? You can add them back later.")) return;
-        // Through the shared contacts SyncManager, so its saved copy drops this person too;
-        // otherwise its next sync would see the server empty and upload them again.
-        // On failure it shows its own gentle message and keeps the person listed.
-        await contactSync.delete(contactId);
-        if (contactSync.status !== "error") {
-            contacts = contacts.filter((c) => c.id !== contactId);
+        if (!(await askConfirm("Remove this contact from your Pulse network? You can add them back later."))) return;
+        const contact = contacts.find((c) => c.id === contactId);
+        const updates: Record<string, unknown> = { tierId: null };
+        if (contact?.call_tier && contact.call_tier !== "4_DNR") updates.tier = null;
+        try {
+            if (!contactSync.items.some((c) => String(c.id) === String(contactId))) await contactSync.sync();
+            await contactSync.update(contactId, updates);
+        } catch (e) {
+            console.error(e);
         }
     }
 
-    function getContactsForTier(tierId: number) {
-        return contacts.filter((c) => c.tier_id === tierId);
+    function getContactsForTier(tierNumber: number) {
+        return contacts.filter((c) => pulseTierNumber(c, tiers) === tierNumber);
+    }
+
+    // Everyone with a Pulse tier, in tier order (Trusted Contacts list).
+    const guardians = $derived(
+        contacts
+            .map((c) => ({ c, n: pulseTierNumber(c, tiers) }))
+            .filter((g) => g.n !== null)
+            .sort((a, b) => (a.n as number) - (b.n as number)),
+    );
+
+    let tierDelayBefore: number | null = null;
+    function startTierEdit(tier: any) {
+        tierDelayBefore = tier.delay_hours;
+        editingTierId = tier.id;
+    }
+    function cancelTierEdit(tier: any) {
+        if (tierDelayBefore !== null) tier.delay_hours = tierDelayBefore;
+        editingTierId = null;
+    }
+    function focusOnMount(node: HTMLInputElement) {
+        node.focus();
+        node.select();
     }
 </script>
 
@@ -130,18 +148,18 @@
     {#if showHeader}
         <div class="flex items-center justify-between">
             <h3
-                class="text-lg font-medium text-slate-200 flex items-center gap-2"
+                class="text-lg font-medium text-foreground flex items-center gap-2"
             >
-                <Users class="w-5 h-5 text-slate-400" />
+                <Users class="w-5 h-5 text-muted-foreground" />
                 {viewMode === "escalation"
-                    ? "Escalation Protocol"
+                    ? "Who we reach out to"
                     : "Trusted Contacts"}
             </h3>
-            {#if viewMode !== "contacts"}
+            {#if viewMode === "escalation"}
                 <div
-                    class="text-[10px] uppercase tracking-widest text-slate-500 font-bold"
+                    class="text-[10px] uppercase tracking-widest text-muted-foreground font-bold"
                 >
-                    Individual Nudge Settings Active
+                    Personal timing set
                 </div>
             {/if}
         </div>
@@ -149,17 +167,17 @@
 
     {#if error}
         <div
-            class="bg-red-500/10 border border-red-500/50 p-4 rounded-xl text-red-200 text-sm flex items-center gap-3"
+            class="bg-warning-soft border border-warning/40 p-4 rounded-xl text-foreground text-sm flex items-center gap-3"
         >
-            <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+            <div class="w-2 h-2 rounded-full bg-warning"></div>
             <div>
-                <strong>Your circle is taking a moment to load.</strong>
+                <strong>Your circle is safe in your account.</strong>
                 <br />
                 <span class="text-xs opacity-75">{gentleRetry}</span>
             </div>
             <button
                 onclick={loadData}
-                class="ml-auto text-xs bg-red-500/20 px-3 py-1 rounded hover:bg-red-500/30 transition-colors"
+                class="ml-auto text-xs text-warning bg-warning-soft border border-warning/40 px-3 py-1 rounded hover:bg-warning/20 transition-colors"
                 >Try again</button
             >
         </div>
@@ -168,130 +186,160 @@
     <div class="space-y-6">
         {#if loading}
             <div
-                class="h-40 bg-slate-900/50 rounded-2xl animate-pulse flex items-center justify-center"
+                class="h-40 bg-background/50 rounded-2xl animate-pulse flex items-center justify-center"
             >
-                <span class="text-slate-500 text-sm font-medium animate-bounce"
-                    >Loading Protocols...</span
+                <span class="text-muted-foreground text-sm font-medium animate-bounce"
+                    >Gathering your circle...</span
                 >
             </div>
         {:else if tiers.length === 0 && !error}
             <div
-                class="text-center py-12 bg-slate-900/30 rounded-2xl border border-slate-800 border-dashed"
+                class="text-center py-12 bg-background/30 rounded-2xl border border-slate-800 border-dashed"
             >
-                <p class="text-slate-500 mb-4 font-medium">
-                    No Escalation Tiers Found
-                </p>
                 <button
                     onclick={loadData}
-                    class="bg-teal-500/10 text-teal-400 hover:text-teal-300 hover:bg-teal-500/20 px-4 py-2 rounded-lg text-sm font-bold transition-all"
-                    >Initialize Protocols</button
+                    class="bg-primary/10 text-primary hover:text-primary-hover hover:bg-primary/20 px-4 py-2 rounded-lg text-sm font-bold transition-all"
+                    >Set up your circle's plan</button
                 >
             </div>
-        {:else if contacts.length === 0 && !loading && !error}
-            <!-- EMPTY STATE: NO CONTACTS -->
+        {:else if (viewMode === "contacts" ? guardians.length : contacts.length) === 0 && !error}
+            <!-- EMPTY STATE -->
             <div
-                class="text-center py-16 bg-slate-900/30 rounded-[2rem] border border-slate-800 border-dashed backdrop-blur-sm"
+                class="text-center py-16 bg-background/30 rounded-[2rem] border border-slate-800 border-dashed backdrop-blur-sm"
             >
                 <div
-                    class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6"
+                    class="w-16 h-16 bg-card rounded-full flex items-center justify-center mx-auto mb-6"
                 >
-                    <Users class="w-8 h-8 text-slate-500" />
+                    <Users class="w-8 h-8 text-muted-foreground" />
                 </div>
-
-                {#if viewMode === "escalation"}
-                    <h3 class="text-xl font-serif text-slate-200 mb-2">
-                        No Guardians Configured
-                    </h3>
-                    <p
-                        class="text-slate-400 max-w-sm mx-auto mb-8 text-sm leading-relaxed"
-                    >
-                        You need to add Trusted Contacts before you can
-                        configure their escalation logic.
-                    </p>
-                    <a
-                        href="/modules/pulse/contacts"
-                        class="inline-flex items-center gap-2 bg-teal-500 text-slate-950 px-6 py-3 rounded-xl font-bold text-sm hover:bg-teal-400 transition-colors"
-                    >
-                        <Users class="w-4 h-4" /> Go to Trusted Contacts
-                    </a>
-                {:else}
-                    <h3 class="text-xl font-serif text-slate-200 mb-2">
-                        Build Your Circle
-                    </h3>
-                    <p
-                        class="text-slate-400 max-w-sm mx-auto mb-8 text-sm leading-relaxed"
-                    >
-                        Add your first Trusted Contact to start protecting your
-                        legacy.
-                    </p>
-                    <button
-                        onclick={() => openAddGuardianModal(tiers[0]?.id || 1)}
-                        class="inline-flex items-center gap-2 bg-teal-500 text-slate-950 px-6 py-3 rounded-xl font-bold text-sm hover:bg-teal-400 transition-colors"
-                    >
-                        <Plus class="w-4 h-4" /> Add First Guardian
-                    </button>
-                {/if}
+                <p
+                    class="text-muted-foreground max-w-sm mx-auto mb-8 text-sm leading-relaxed"
+                >
+                    Choose the first person you trust, whenever you're ready.
+                </p>
+                <button
+                    onclick={() => openAddGuardianModal(tiers[0]?.id ?? null)}
+                    class="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold text-sm hover:bg-primary-hover transition-colors"
+                >
+                    <Plus class="w-4 h-4" /> Add a guardian
+                </button>
             </div>
+        {:else if viewMode === "contacts"}
+            <!-- TRUSTED CONTACTS: the people, each with their tier; the tier boxes live on the Escalation Plan -->
+            <div class="flex items-center justify-between gap-4">
+                <a
+                    href="/modules/pulse/escalation"
+                    class="text-sm text-primary hover:text-primary-hover transition-colors font-bold"
+                    >Escalation Plan</a
+                >
+                <button
+                    onclick={() => openAddGuardianModal(tiers[0]?.id ?? null)}
+                    class="text-xs text-primary hover:text-primary-hover flex items-center gap-1 font-bold"
+                >
+                    <Plus class="w-3 h-3" /> Add Guardian
+                </button>
+            </div>
+            <ul class="space-y-2">
+                {#each guardians as { c: contact, n } (contact.id)}
+                    <li
+                        class="bg-slate-950/30 border border-slate-800/50 rounded-xl p-4 flex items-center gap-3"
+                    >
+                        <div
+                            class="w-8 h-8 rounded-full bg-card flex items-center justify-center text-xs font-bold text-primary border border-primary/20"
+                        >
+                            {contact.name.charAt(0)}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm text-foreground font-medium">
+                                {contact.name}
+                            </div>
+                            <div
+                                class="text-xs text-muted-foreground break-all"
+                            >
+                                {#if contact.email}
+                                {contact.email}
+                            {:else}
+                                <a href="/modules/contacts" class="text-warning hover:underline">Add an email so we can reach {contact.name}</a>
+                            {/if}
+                            </div>
+                        </div>
+                        <span
+                            class="text-xs font-bold text-primary uppercase tracking-wider"
+                            >Tier {n}</span
+                        >
+                        <button
+                            onclick={() => deleteContact(contact.id)}
+                            aria-label="Remove {contact.name}"
+                            class="text-muted-foreground hover:text-danger transition-colors"
+                        >
+                            <Trash2 class="w-4 h-4" />
+                        </button>
+                    </li>
+                {/each}
+            </ul>
         {:else}
             {#each tiers as tier (tier.id)}
+                {@const tierContacts = getContactsForTier(tier.tier_number)}
                 <div
-                    class="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden backdrop-blur-sm"
+                    class="bg-background/50 border border-slate-800 rounded-2xl overflow-hidden backdrop-blur-sm"
                 >
                     <div
-                        class="bg-slate-800/30 px-6 py-3 flex justify-between items-center border-b border-slate-800"
+                        class="bg-card/30 px-6 py-3 flex justify-between items-center {tierContacts.length ? 'border-b border-slate-800' : ''}"
                     >
                         <div class="flex items-center gap-3">
                             <span
-                                class="text-xs font-bold text-teal-500 uppercase tracking-wider"
+                                class="text-xs font-bold text-primary uppercase tracking-wider"
                                 >Tier {tier.tier_number}</span
                             >
                             {#if editingTierId === tier.id}
                                 <div class="flex items-center gap-2">
                                     <input
                                         type="number"
-                                        aria-label="hours"
-                                        class="w-12 bg-slate-900 border border-teal-500/50 rounded px-1 py-0.5 text-xs text-white"
+                                        aria-label={`Tier ${tier.tier_number} hours`}
+                                        class="w-12 bg-background border border-primary/50 rounded px-1 py-0.5 text-xs text-foreground"
                                         bind:value={tier.delay_hours}
+                                        use:focusOnMount
+                                        onkeydown={(e) => {
+                                            if (e.key === "Enter") updateTier(tier);
+                                            if (e.key === "Escape") {
+                                                e.stopPropagation();
+                                                cancelTierEdit(tier);
+                                            }
+                                        }}
                                     />
-                                    <span class="text-[10px] text-slate-500"
+                                    <span class="text-[10px] text-muted-foreground"
                                         >hours</span
                                     >
                                     <button
                                         onclick={() => updateTier(tier)}
                                         aria-label="Save"
-                                        class="text-emerald-400 hover:text-emerald-300"
+                                        class="text-primary hover:text-primary-hover"
                                     >
                                         <Check class="w-3 h-3" />
                                     </button>
                                 </div>
-                            {:else if viewMode !== "contacts"}
+                            {:else}
                                 <button
                                     type="button"
-                                    class="text-[10px] text-slate-500 uppercase tracking-widest bg-slate-900/50 px-2 py-0.5 rounded border border-slate-700 flex items-center gap-2 cursor-pointer hover:border-teal-500/30 transition-colors"
-                                    onclick={() => (editingTierId = tier.id)}
+                                    aria-label={`Tier ${tier.tier_number}: ${tier.delay_hours} hours by default`}
+                                    class="text-[10px] text-muted-foreground uppercase tracking-widest bg-background/50 px-2 py-0.5 rounded border border-border flex items-center gap-2 cursor-pointer hover:border-primary/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary transition-colors"
+                                    onclick={() => startTierEdit(tier)}
                                 >
-                                    +{tier.delay_hours}h default
+                                    {tier.delay_hours} hours by default
                                     <Pencil class="w-2 h-2" />
                                 </button>
-                            {:else}
-                                <span
-                                    class="text-[10px] text-slate-500 uppercase tracking-widest bg-slate-900/50 px-2 py-0.5 rounded border border-slate-700"
-                                >
-                                    +{tier.delay_hours}h delay
-                                </span>
                             {/if}
                         </div>
-                        {#if viewMode !== "escalation"}
-                            <button
-                                onclick={() => openAddGuardianModal(tier.id)}
-                                class="text-xs text-teal-500 hover:text-teal-400 flex items-center gap-1 font-bold"
-                            >
-                                <Plus class="w-3 h-3" /> Add Guardian
-                            </button>
-                        {/if}
+                        <button
+                            onclick={() => openAddGuardianModal(tier.id)}
+                            class="text-xs text-primary hover:text-primary-hover flex items-center gap-1 font-bold"
+                        >
+                            <Plus class="w-3 h-3" /> Add Guardian
+                        </button>
                     </div>
+                    {#if tierContacts.length}
                     <div class="p-2 space-y-2">
-                        {#each getContactsForTier(tier.id) as contact (contact.id)}
+                        {#each tierContacts as contact (contact.id)}
                             <div
                                 class="bg-slate-950/30 border border-slate-800/50 rounded-xl p-4 group"
                             >
@@ -300,20 +348,24 @@
                                 >
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-teal-400 border border-teal-500/20"
+                                            class="w-8 h-8 rounded-full bg-card flex items-center justify-center text-xs font-bold text-primary border border-primary/20"
                                         >
                                             {contact.name.charAt(0)}
                                         </div>
                                         <div>
                                             <div
-                                                class="text-sm text-slate-200 font-medium"
+                                                class="text-sm text-foreground font-medium"
                                             >
                                                 {contact.name}
                                             </div>
                                             <div
-                                                class="text-[10px] text-slate-500 font-mono uppercase tracking-tighter"
+                                                class="text-xs text-muted-foreground break-all"
                                             >
-                                                {contact.email}
+                                                {#if contact.email}
+                                {contact.email}
+                            {:else}
+                                <a href="/modules/contacts" class="text-warning hover:underline">Add an email so we can reach {contact.name}</a>
+                            {/if}
                                             </div>
                                         </div>
                                     </div>
@@ -321,195 +373,81 @@
                                         onclick={() =>
                                             deleteContact(contact.id)}
                                         aria-label="Remove {contact.name}"
-                                        class="text-slate-600 hover:text-rose-400 transition-colors"
+                                        class="text-muted-foreground hover:text-danger transition-colors"
                                     >
                                         <Trash2 class="w-4 h-4" />
                                     </button>
                                 </div>
 
                                 <!-- Individual Controls -->
-                                {#if viewMode !== "escalation"}
-                                    <div
-                                        class="grid grid-cols-2 gap-4 pt-3 border-t border-slate-800/50"
-                                    >
-                                        <div class="space-y-2">
-                                            <label
-                                                class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                                <div
+                                    class="grid grid-cols-2 gap-4 pt-3 border-t border-slate-800/50"
+                                >
+                                    <div class="space-y-2">
+                                        <label
+                                            for="delay-{contact.id}"
+                                            class="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
+                                        >
+                                            <Settings2 class="w-3 h-3" /> Personal
+                                            wait (hours)
+                                        </label>
+                                        <div class="flex items-center gap-2">
+                                            <input
+                                                id="delay-{contact.id}"
+                                                type="number"
+                                                value={contact.individual_delay_hours ?? ""}
+                                                onchange={(e) =>
+                                                    updateContact(contact.id, {
+                                                        individualDelayHours: delayValue(e.currentTarget.value),
+                                                    })}
+                                                placeholder={tier.delay_hours.toString()}
+                                                class="w-16 bg-background border border-border rounded px-2 py-1 text-xs text-primary focus:outline-none focus:border-primary/50"
+                                            />
+                                            <span
+                                                class="text-[10px] text-muted-foreground italic"
+                                                >Used instead of the tier's wait</span
                                             >
-                                                <Settings2 class="w-3 h-3" /> Custom
-                                                Delay (h)
-                                            </label>
-                                            <div
-                                                class="flex items-center gap-2"
-                                            >
-                                                <input
-                                                    type="number"
-                                                    aria-label="Custom Delay (h)"
-                                                    bind:value={
-                                                        contact.individual_delay_hours
-                                                    }
-                                                    onchange={() =>
-                                                        updateContact(contact)}
-                                                    placeholder={tier.delay_hours.toString()}
-                                                    class="w-16 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-teal-400 focus:outline-none focus:border-teal-500/50"
-                                                />
-                                                <span
-                                                    class="text-[10px] text-slate-600 italic"
-                                                    >Overrides Tier</span
-                                                >
-                                            </div>
-                                        </div>
-                                        <div class="space-y-2">
-                                            <label
-                                                class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest"
-                                            >
-                                                <BellRing class="w-3 h-3" /> Safety
-                                                Timer
-                                            </label>
-                                            <div
-                                                class="flex items-center gap-2"
-                                            >
-                                                <button
-                                                    onclick={() => {
-                                                        contact.notify_on_safety_timer =
-                                                            !contact.notify_on_safety_timer;
-                                                        updateContact(contact);
-                                                    }}
-                                                    class="text-[10px] px-2 py-1 rounded border transition-colors {contact.notify_on_safety_timer
-                                                        ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400'
-                                                        : 'bg-slate-800 border-slate-700 text-slate-500'}"
-                                                >
-                                                    {contact.notify_on_safety_timer
-                                                        ? "Active Responder"
-                                                        : "Standard Only"}
-                                                </button>
-                                            </div>
                                         </div>
                                     </div>
-                                {/if}
-                            </div>
-                        {:else}
-                            <div
-                                class="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em] text-center py-6"
-                            >
-                                Tier {tier.tier_number} Empty
+                                    <div class="space-y-2">
+                                        <div
+                                            class="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
+                                        >
+                                            <BellRing class="w-3 h-3" /> Safety
+                                            Timer
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button
+                                                onclick={() =>
+                                                    updateContact(contact.id, {
+                                                        notifyOnSafetyTimer: !contact.notify_on_safety_timer,
+                                                    })}
+                                                class="text-[10px] px-2 py-1 rounded border transition-colors {contact.notify_on_safety_timer
+                                                    ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400'
+                                                    : 'bg-card border-border text-muted-foreground'}"
+                                            >
+                                                {contact.notify_on_safety_timer
+                                                    ? "Alert if a timer expires"
+                                                    : "Safety timer alerts off"}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         {/each}
                     </div>
+                    {/if}
                 </div>
             {/each}
         {/if}
     </div>
-    <!-- ADD GUARDIAN MODAL -->
+
     {#if showAddGuardianModal}
-        <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="guardian-dialog-title"
-            use:focusTrap={{ onEscape: () => (showAddGuardianModal = false) }}
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            transition:fade
-        >
-            <div
-                class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
-            >
-                <div
-                    class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-950/50"
-                >
-                    <h3 id="guardian-dialog-title" class="font-bold text-slate-200">Select Guardian</h3>
-                    <button onclick={() => (showAddGuardianModal = false)} aria-label="Close">
-                        <X class="w-5 h-5 text-slate-500 hover:text-white" />
-                    </button>
-                </div>
-                <div class="p-6">
-                    <p class="text-sm text-slate-400 mb-4">
-                        Choose a trusted contact to add to <strong
-                            >Tier {tiers.find((t) => t.id === targetTierId)
-                                ?.tier_number}</strong
-                        >.
-                    </p>
-
-                    {#if globalContacts.length === 0}
-                        <div
-                            class="text-center py-6 bg-slate-800/50 rounded-xl border border-dashed border-slate-700"
-                        >
-                            <p class="text-slate-500 text-sm mb-3">
-                                You have no contacts yet.
-                            </p>
-                            <a
-                                href="/modules/contacts"
-                                class="text-teal-400 text-sm font-bold hover:underline"
-                                >Go to Family & Contacts</a
-                            >
-                        </div>
-                    {:else}
-                        <div
-                            class="space-y-3 max-h-[300px] overflow-y-auto mb-6"
-                        >
-                            {#each globalContacts as contact}
-                                <label
-                                    class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all {selectedContactId ===
-                                    contact.id
-                                        ? 'bg-teal-500/10 border-teal-500/50'
-                                        : 'bg-slate-800/50 border-slate-700 hover:border-slate-600'}"
-                                >
-                                    <input
-                                        type="radio"
-                                        name="guardian"
-                                        value={contact.id}
-                                        bind:group={selectedContactId}
-                                        class="sr-only"
-                                    />
-                                    <div
-                                        class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300"
-                                    >
-                                        {contact.name.charAt(0)}
-                                    </div>
-                                    <div class="flex-1">
-                                        <div
-                                            class="text-sm font-bold text-slate-200"
-                                        >
-                                            {contact.name}
-                                        </div>
-                                        <div class="text-xs text-slate-500">
-                                            {contact.role}
-                                        </div>
-                                    </div>
-                                    {#if selectedContactId === contact.id}
-                                        <Check class="w-4 h-4 text-teal-400" />
-                                    {/if}
-                                    <!-- Show existing tier badge if any -->
-                                    {#if contact.tier_id && contact.tier_id !== targetTierId}
-                                        <span
-                                            class="text-[9px] uppercase bg-slate-900 text-slate-500 px-1.5 py-0.5 rounded"
-                                        >
-                                            Moved
-                                        </span>
-                                    {/if}
-                                </label>
-                            {/each}
-                        </div>
-
-                        <button
-                            disabled={!selectedContactId}
-                            onclick={promoteContact}
-                            class="w-full py-3 bg-teal-500 text-slate-950 font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-teal-400 transition-colors"
-                        >
-                            Confirm Guardian
-                        </button>
-                    {/if}
-
-                    <div
-                        class="mt-4 pt-4 border-t border-slate-800 text-center"
-                    >
-                        <a
-                            href="/modules/contacts"
-                            class="text-xs text-slate-500 hover:text-slate-300"
-                            >Manage Global Contacts</a
-                        >
-                    </div>
-                </div>
-            </div>
-        </div>
+        <GuardianPicker
+            {tiers}
+            tierId={pickerTierId}
+            onclose={() => (showAddGuardianModal = false)}
+            onsaved={loadData}
+        />
     {/if}
 </div>

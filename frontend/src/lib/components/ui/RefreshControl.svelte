@@ -26,7 +26,7 @@
 
 <button
     onclick={handleClick}
-    class="group inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-stone-400 hover:text-[#4A7C74] transition-colors"
+    class="group inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors"
     title="Get a new question"
 >
     <RefreshCw
@@ -35,7 +35,7 @@
             ? 'rotate-180'
             : 'group-hover:rotate-45'}"
     />
-    <span class="group-hover:underline decoration-stone-200 underline-offset-4"
+    <span class="group-hover:underline decoration-border underline-offset-4"
         >{label}</span
     >
 </button>

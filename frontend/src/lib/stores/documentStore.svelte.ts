@@ -1,36 +1,96 @@
 import { registerSync } from "$lib/services/sync.svelte";
+import { mediaIdFromRef } from "$lib/services/mediaService";
+import { getStored, setStored, removeStored } from "$lib/stores/persistence";
 
+export type DocType = "Will" | "Trust" | "Deed" | "Insurance" | "Tax" | "ID" | "Other";
+
+// UI shape of a Document row (backend/estate_models.py). The Document Vault page, the dashboard,
+// Settings › Data and the test factory all read it from this one store.
 export interface Document {
-    id?: number;
-    user_id?: number;
-    title: string;
-    category: string;
-    file_path?: string;
-    location_physical?: string;
-    is_digitized: boolean;
-    status: string;
+    id: string;
+    name: string;
+    type: DocType;
+    location: string; // where the original is kept
+    witnesses?: string;
+    signedDate?: string;
+    nextReviewDate?: string;
+    status: "verified" | "pending" | "needs_review";
     notes?: string;
-    // Compatibility fields
-    name?: string;
-    location?: string;
+    filePath?: string; // stored copy: "/api/media/12/download" (or an older data URL)
+    mediaId?: number | null;
+    customAttributes?: Record<string, any>;
+    // Column twins, kept in step by the mapper
+    title?: string;
+    category?: string;
+    locationPhysical?: string;
+    isDigitized?: boolean;
 }
 
-const mapper = (data: any): Document => ({
-    ...data,
-    id: typeof data.id === 'string' && data.id.length > 10 ? undefined : Number(data.id) || data.id,
-    is_digitized: data.is_digitized ?? data.isDigitized ?? false,
-    location_physical: data.location_physical ?? data.locationPhysical ?? data.location ?? '',
-});
+/**
+ * Document <-> Document row, used both ways by SyncManager.
+ * UI fields win over their column twins, so an edit to `name` beats a stale `title`.
+ */
+function docMapper(d: any): any {
+    const name = d.name || d.title || "";
+    const type = d.type || d.category || "Other";
+    const location = d.location ?? d.locationPhysical ?? "";
+    const filePath = d.filePath || d.fileData || ""; // fileData: older device-only copies
+    let custom = d.customAttributes;
+    if (typeof custom === "string") {
+        try { custom = JSON.parse(custom); } catch { custom = {}; }
+    }
+    return {
+        id: d.id,
+        name,
+        title: name,
+        type,
+        category: type,
+        location,
+        locationPhysical: location,
+        witnesses: d.witnesses ?? "",
+        signedDate: d.signedDate ?? "",
+        nextReviewDate: d.nextReviewDate ?? "",
+        status: d.status || "verified",
+        notes: d.notes ?? "",
+        filePath,
+        mediaId: d.mediaId ?? mediaIdFromRef(filePath),
+        isDigitized: !!filePath,
+        customAttributes: custom && typeof custom === "object" ? custom : {},
+    };
+}
 
-const manager = registerSync<Document>('documents', 'documents', mapper, '/api/data')
+/**
+ * One-time move: documents saved on this device under the old vault key `docs_legal-vault`
+ * (the account and profile now active) join the `documents` list, and the old key is emptied.
+ * Rows whose id is already in `documents` stay as they are there.
+ */
+function moveOldVaultKey() {
+    const old = getStored<any[]>('docs_legal-vault', []);
+    if (!Array.isArray(old) || old.length === 0) return;
+    const current = getStored<any[]>('documents', []);
+    const have = new Set(current.map((d) => String(d.id)));
+    setStored('documents', [...current, ...old.filter((d) => !have.has(String(d.id)))]);
+    removeStored('docs_legal-vault');
+}
+moveOldVaultKey(); // before the manager reads its saved list
+
+/** The one manager for /api/data/documents. */
+export const documentSync = registerSync<Document>('documents', 'documents', docMapper, '/api/data')
     .setAffirmationContext('documents');
 
+// A later sign-in or account switch reloads the saved list: move that account's old rows first.
+const resetManager = documentSync.reset.bind(documentSync);
+documentSync.reset = (clear = false) => {
+    if (!clear) moveOldVaultKey();
+    resetManager(clear);
+};
+
 export const documentStore = {
-    subscribe: manager.subscribe.bind(manager),
-    get items() { return manager.items; },
-    get status() { return manager.status; },
-    create: (item: Omit<Document, 'id'>) => manager.create(item as Document),
-    update: (id: number, updates: Partial<Document>) => manager.update(id, updates as Document),
-    delete: (id: number) => manager.delete(id),
-    sync: () => manager.sync()
+    subscribe: documentSync.subscribe.bind(documentSync),
+    get items() { return documentSync.items; },
+    get status() { return documentSync.status; },
+    create: (item: Omit<Document, 'id'>) => documentSync.create(item as Document),
+    update: (id: string | number, updates: Partial<Document>) => documentSync.update(id as any, updates as Document),
+    delete: (id: string | number) => documentSync.delete(id as any),
+    sync: () => documentSync.sync()
 };

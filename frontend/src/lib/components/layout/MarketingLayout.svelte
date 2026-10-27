@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import { Globe } from "lucide-svelte";
     import { mLanguage, mt } from "$lib/stores/marketing";
+    import { auth } from "$lib/stores/auth";
 
     let { children } = $props();
 
@@ -18,7 +18,7 @@
 </script>
 
 <div
-    class="min-h-screen bg-[#0F1115] text-slate-200 font-sans antialiased selection:bg-amber-500/30 selection:text-amber-100 overflow-x-hidden {isRTL
+    class="surface-dark min-h-screen bg-[#0F1115] text-slate-200 font-sans antialiased selection:bg-gold/30 selection:text-white overflow-x-hidden {isRTL
         ? 'rtl'
         : ''}"
     dir={isRTL ? "rtl" : "ltr"}
@@ -57,17 +57,17 @@
             </div>
 
             <a
-                href="/login?lang={$mLanguage}"
+                href={$auth.token ? "/dashboard" : `/login?lang=${$mLanguage}`}
                 class="px-6 py-2 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all text-sm font-bold uppercase tracking-widest backdrop-blur-md"
             >
-                {$mt.login}
+                {$auth.token ? $mt.openMyPlan : $mt.login}
             </a>
         </div>
     </header>
 
     {@render children?.()}
 
-    <footer class="py-24 bg-black text-center text-slate-600 text-sm">
+    <footer class="py-24 bg-black text-center text-muted-foreground text-sm">
         <p>
             &copy; {new Date().getFullYear()} Continuum Legacy Systems. Forever.
         </p>

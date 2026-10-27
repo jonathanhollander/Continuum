@@ -12,15 +12,19 @@ export interface Utility {
 
 // Runs on server records (camelCase), local records and outgoing payloads alike: keep the
 // server id, and keep one spelling of each field so an edit is the value that gets sent.
-const mapper = (data: any): Utility => {
+// The page's utility types; API rows can arrive lowercase ("water"), so read them as the page's option.
+const SERVICE_TYPES = ['Water', 'Gas', 'Electric', 'Internet', 'Other'];
+const pageType = (v: unknown) => SERVICE_TYPES.find(t => t.toLowerCase() === String(v ?? '').trim().toLowerCase()) ?? v;
+
+const mapper = (data: Record<string, unknown>): Utility => {
     const { serviceType, accountNumber, supportPhone, type, ...rest } = data;
     return {
         ...rest,
         id: typeof data.id === 'string' && data.id.length > 10 ? undefined : Number(data.id) || data.id,
-        service_type: data.service_type ?? serviceType ?? type,
+        service_type: pageType(data.service_type ?? serviceType ?? type) as string,
         account_number: data.account_number ?? accountNumber,
         support_phone: data.support_phone ?? supportPhone,
-    };
+    } as Utility;
 };
 
 const manager = registerSync<Utility>('utilities', 'utilities', mapper, '/api/data')

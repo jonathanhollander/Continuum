@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { MapPin, ExternalLink, Search, DollarSign, Building2, AlertCircle } from "lucide-svelte";
+    import { MapPin, ExternalLink, Search, DollarSign, Building2, AlertCircle, ArrowRight } from "lucide-svelte";
 
     function openTreasureHunt() {
-        window.open("https://unclaimed.org/", "_blank");
+        window.open("https://unclaimed.org/", "_blank", "noopener,noreferrer");
     }
 </script>
 
@@ -32,7 +32,7 @@
                 What is Unclaimed Property?
             </h2>
             <p class="text-slate-300 leading-relaxed mb-6">
-                Every year, billions of dollars in forgotten assets go unclaimed. These can include:
+                Unclaimed property searches may show records such as:
             </p>
 
             <div class="grid md:grid-cols-2 gap-4 mb-6">
@@ -66,10 +66,9 @@
                 Why This Matters for Estate Planning
             </h2>
             <p class="text-slate-300 leading-relaxed">
-                When organizing your estate, it's worth checking if you or deceased family members
-                have unclaimed assets. These forgotten funds can be significant and are rightfully
-                yours to claim. It's also a thoughtful step to include in your legacy planning,
-                ensuring nothing is left behind for your loved ones to discover later.
+                Search for possible matches under your name or a deceased relative's name.
+                Check the administrator's record and claim requirements before treating a match
+                as an asset. Keep the source and any reference number with your financial notes.
             </p>
         </div>
 
@@ -82,9 +81,16 @@
                 <span>Search for Unclaimed Property</span>
                 <ExternalLink size={20} class="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </button>
-            <p class="text-slate-500 text-sm mt-4">
-                Opens unclaimed.org in a new tab. This is a free government-affiliated service.
+            <p class="text-slate-400 text-sm mt-4">
+                Opens unclaimed.org in a new tab to find the relevant property administrator.
             </p>
+            <a
+                href="/modules/financial-accounts"
+                class="inline-flex items-center gap-2 mt-6 text-amber-400 hover:text-amber-300 font-semibold"
+            >
+                Verified a record? Add it to your Financial Accounts
+                <ArrowRight size={18} />
+            </a>
         </div>
 
         <!-- Tips Section -->
@@ -101,11 +107,11 @@
                 </li>
                 <li class="flex items-start gap-2">
                     <span class="text-amber-400 mt-1">3.</span>
-                    <span>Search for deceased relatives - you may be entitled to claim their assets</span>
+                    <span>Search for deceased relatives, then check who is authorized to make a claim</span>
                 </li>
                 <li class="flex items-start gap-2">
                     <span class="text-amber-400 mt-1">4.</span>
-                    <span>Never pay a fee to search or claim - legitimate services are always free</span>
+                    <span>Use the administrator’s official instructions to check evidence and any claim requirements</span>
                 </li>
             </ul>
         </div>

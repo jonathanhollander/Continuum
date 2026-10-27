@@ -20,7 +20,7 @@ export interface Letter {
 
 // Runs on server rows (already camelCased) and on outgoing items: one spelling per field,
 // so a stale snake_case copy can never overwrite an edit on the wire.
-const mapper = (data: any): Letter => {
+const mapper = (data: Record<string, unknown>): Letter => {
     const {
         recipient_name, recipient_contact_id, release_condition, custom_attributes,
         user_id, userId, ...rest
@@ -33,12 +33,13 @@ const mapper = (data: any): Letter => {
         releaseCondition: data.releaseCondition ?? release_condition ?? 'death',
         customAttributes: data.customAttributes ?? custom_attributes ?? '{}',
         isLocked: !!data.isLocked,
-    };
+    } as Letter;
 };
 
 // The one owner of 'letters' (the letters page uses it too).
 export const lettersSync = registerSync<Letter>('letters', 'letters', mapper, '/api/data')
-    .setAffirmationContext('letters');
+    .setAffirmationContext('letters')
+    .syncOnDemand(); // 400 letters are ~1.3 MB: fetched when a page shows letters (X210)
 const manager = lettersSync;
 
 export const letterStore = {

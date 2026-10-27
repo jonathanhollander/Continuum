@@ -87,6 +87,12 @@ export const affirmations = {
         { primary: "You're transforming things into legacy", secondary: "Heirloom information saved" },
     ],
 
+    memories: [
+        { primary: "You're preserving the moments that matter most", secondary: "Saved with your memories" },
+        { primary: "These smiles will be treasured for generations", secondary: "Kept safe with your memories" },
+        { primary: "Your story, told in pictures", secondary: "Your memories are updated" },
+    ],
+
     timeline: [
         { primary: "You're capturing memories that matter", secondary: "Event saved" },
         { primary: "Your story deserves to be told", secondary: "Timeline updated" },
@@ -120,11 +126,18 @@ export const affirmations = {
     ],
 } as const;
 
+/** What the save did: a new record ("added" lines) or a change to one ("updated" lines). */
+export type AffirmationKind = 'create' | 'update';
+
 /**
- * Get a random affirmation for a specific module
+ * Get a random affirmation for a specific module.
+ * With a kind, a change never says "added" and a new record never says "updated".
  */
-export function getRandomAffirmation(module: keyof typeof affirmations = 'general'): Affirmation {
-    const moduleAffirmations = affirmations[module] || affirmations.general;
+export function getRandomAffirmation(module: keyof typeof affirmations = 'general', kind?: AffirmationKind): Affirmation {
+    const pool: readonly Affirmation[] = affirmations[module] || affirmations.general;
+    const skip = kind === 'update' ? /\badded\b/i : kind === 'create' ? /\bupdated\b/i : null;
+    const fitting = skip ? pool.filter((a) => !skip.test(a.secondary)) : pool;
+    const moduleAffirmations = fitting.length ? fitting : pool;
     const randomIndex = Math.floor(Math.random() * moduleAffirmations.length);
     return moduleAffirmations[randomIndex];
 }

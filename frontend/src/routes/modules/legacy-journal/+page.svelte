@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, fly } from "svelte/transition";
     import {
@@ -34,16 +35,18 @@
     import { journalStore, type JournalEntry } from "$lib/stores/journalStore.svelte";
     import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
     import { language } from "$lib/stores/localization";
-    import type { ViewMode } from "$lib/stores/userPreferencesStore.svelte";
+    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     // State
     let activeTab = $state<"reflections" | "will" | "lessons" | "accomplishments">("reflections");
     let isLoading = $state(true);
     let showAddModal = $state(false);
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('legacy-journal'));
     let searchQuery = $state("");
     let editingEntry = $state<JournalEntry | null>(null);
     let parsedCustomAttributes = $state<Record<string, any>>({});
+    let ethicalWill = $state<ReturnType<typeof EthicalWill>>();
+    let lifeLessons = $state<ReturnType<typeof LifeLessons>>();
 
     // Form state
     let newEntry = $state<Partial<JournalEntry>>({
@@ -75,25 +78,16 @@
         },
         {
             title: "What I Learned from Mom's Kitchen",
-            content: "The most important lessons I learned weren't in school. They were standing beside Mom...",
+            content: "The most important lessons I learned were beside Mom in the kitchen...",
             tags: "mom, wisdom, cooking",
         },
         {
             title: "My Philosophy on Hard Work",
-            content: "I've always believed that hard work isn't just about the outcome...",
+            content: "I've always believed that hard work has always been about more than the outcome...",
             tags: "values, work ethic",
         },
     ];
 
-    // Journal prompt pool for AI Helper
-    const journalPromptPool = [
-        "Help me describe a childhood memory that shaped who I am...",
-        "Write about a value I want my children to carry forward...",
-        "Tell the story of how I met the love of my life...",
-        "Describe a challenge I overcame and what it taught me...",
-        "Write about a person who influenced my life deeply...",
-        "Share wisdom I wish I'd known at 20 years old...",
-    ];
 
     onMount(async () => {
         await journalStore.sync();
@@ -121,7 +115,19 @@
         showAddModal = true;
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveEntry() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveEntryOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveEntryOnce() {
         if (!newEntry.content) return;
 
         const data = {
@@ -146,7 +152,7 @@
     }
 
     async function deleteEntry(id: number) {
-        if (!confirm("Remove this reflection? Your words will be preserved in the activity log.")) return;
+        if (!(await askConfirm("Remove this reflection? You can always start over if you feel like it later."))) return;
         await journalStore.delete(id);
     }
 
@@ -178,18 +184,32 @@
 <!-- Page Header -->
 <LivingBlueprintHeader
     title="Legacy Journal"
-    subtitle="Your Story, Your Legacy"
-    tier="family"
-    detailedDescription="Your life is filled with stories worth telling - moments of joy, lessons learned, values discovered. This journal is your space to preserve those treasures for the people who matter most."
-    whyMatters="The stories we carry shape generations. Without a place to write them down, precious memories fade and wisdom goes unshared. Your words here become a lasting gift - a window into your heart that your loved ones can return to again and again."
+    subtitle="Memories, values, lessons, and accomplishments"
+    detailedDescription="Use Reflections for stories and memories, Ethical Will for the values you want to explain, and Life Lessons for what experience has taught you. Accomplishments gathers the events marked as accomplishments on your Life Timeline."
+    whyMatters="Names, places, moments, and your own explanation give your family more than a list of events: they help another person understand what those experiences meant to you."
 >
-    <button
-        onclick={openAddModal}
-        class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
-    >
-        <Plus size={18} />
-        Share a memory
-    </button>
+    {#if activeTab === "accomplishments"}
+        <a
+            href="/modules/timeline"
+            class="w-fit px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+        >
+            <Plus size={18} />
+            Add on your Timeline
+        </a>
+    {:else}
+        <button
+            onclick={() =>
+                activeTab === "will"
+                    ? ethicalWill?.startNewValue()
+                    : activeTab === "lessons"
+                      ? lifeLessons?.openNew()
+                      : openAddModal()}
+            class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+        >
+            <Plus size={18} />
+            {activeTab === "will" ? "Add a value" : activeTab === "lessons" ? "Add a lesson" : "Share a memory"}
+        </button>
+    {/if}
 </LivingBlueprintHeader>
 
 {#if isLoading}
@@ -206,7 +226,7 @@
                 class="px-5 py-2.5 rounded-full font-bold text-sm transition-all {activeTab ===
                 'reflections'
                     ? 'bg-primary text-primary-foreground shadow-lg transform -translate-y-0.5'
-                    : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}"
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'}"
             >
                 <span class="flex items-center gap-2">
                     <BookOpen size={16} />
@@ -218,7 +238,7 @@
                 class="px-5 py-2.5 rounded-full font-bold text-sm transition-all {activeTab ===
                 'will'
                     ? 'bg-primary text-primary-foreground shadow-lg transform -translate-y-0.5'
-                    : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}"
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'}"
             >
                 Ethical Will
             </button>
@@ -227,7 +247,7 @@
                 class="px-5 py-2.5 rounded-full font-bold text-sm transition-all {activeTab ===
                 'lessons'
                     ? 'bg-primary text-primary-foreground shadow-lg transform -translate-y-0.5'
-                    : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}"
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'}"
             >
                 Life Lessons
             </button>
@@ -235,14 +255,25 @@
                 onclick={() => (activeTab = "accomplishments")}
                 class="px-5 py-2.5 rounded-full font-bold text-sm transition-all {activeTab ===
                 'accomplishments'
-                    ? 'bg-amber-600 text-white shadow-lg transform -translate-y-0.5'
-                    : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}"
+                    ? 'bg-primary text-primary-foreground shadow-lg transform -translate-y-0.5'
+                    : 'bg-card text-muted-foreground hover:bg-muted border border-border'}"
             >
                 Accomplishments
             </button>
         </div>
 
         <!-- Content Area -->
+        <p class="mb-6 max-w-3xl text-muted-foreground leading-relaxed" data-testid="journal-section-guidance">
+            {#if activeTab === "reflections"}
+                Write what happened, who was there, and when or where it took place. Include why you want the memory remembered. A few sentences are a useful start.
+            {:else if activeTab === "will"}
+                Use Core Values for individual ideas and the experiences behind them. Choose The Letter to bring your values and hopes together in your own words.
+            {:else if activeTab === "lessons"}
+                Describe an experience, what you learned from it, and how that lesson might help someone you love. Choose a category to make it easier to find later.
+            {:else}
+                Accomplishments saved on your Life Timeline appear here. Choose Add on your Timeline, create or edit an event, and select Accomplishment as its type.
+            {/if}
+        </p>
         <div class="min-h-[400px]">
             {#if activeTab === "reflections"}
                 <div in:fade={{ duration: 300 }}>
@@ -250,7 +281,7 @@
                     <div class="max-w-3xl mx-auto mb-8">
                         <AIPromptBar
                             context="letters"
-                            promptPool={journalPromptPool}
+                            promptPoolSource="routes/modules/legacy-journal/+page.svelte:journalPromptPool"
                         />
                     </div>
 
@@ -259,17 +290,18 @@
                         <div class="relative w-full md:w-80">
                             <Search
                                 size={18}
-                                class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             />
                             <input
                                 type="text"
                                 bind:value={searchQuery}
                                 placeholder="Search your memories..."
-                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                aria-label="Search your memories"
+                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                             />
                         </div>
                         <div class="flex items-center gap-3">
-                            <DataViewToggle module="legacy-journal" onchange={(mode) => viewMode = mode} />
+                            <DataViewToggle module="legacy-journal" />
                         </div>
                     </div>
 
@@ -278,7 +310,7 @@
                         <!-- Empty State -->
                         <EmptyState
                             title="Your story is waiting to be told"
-                            whyMatters="<strong>Every memory you hold is a gift waiting to be given.</strong> The stories of your life - your triumphs, your lessons, your laughter - deserve to be preserved. Without writing them down, these precious moments may fade with time.<br/><br/>Your reflections become a legacy. When you share your memories here, you're creating something your loved ones will treasure forever."
+                            whyMatters="<strong>Every memory you hold is a gift waiting to be given.</strong> The stories of your life - your triumphs, your lessons, your laughter - deserve to be preserved.<br/><br/>Your reflections become a legacy. When you share your memories here, you're creating something your loved ones will treasure forever."
                             encouragement="Start with one memory. A moment that made you smile. A lesson you learned. Your words matter more than you know."
                             icon={BookOpen}
                             iconClass="text-primary"
@@ -288,8 +320,8 @@
 
                         <!-- Sample Data / Ghost Rows -->
                         <div class="mt-8 space-y-3 max-w-2xl mx-auto">
-                            <p class="text-sm text-slate-500 text-center mb-4">
-                                Need inspiration? Click an example below to get started:
+                            <p class="text-sm text-muted-foreground text-center mb-4">
+                                Here are a few examples to spark an idea:
                             </p>
                             {#each sampleEntries as sample}
                                 <GhostRow
@@ -299,7 +331,7 @@
                                     onClick={() => prefillFromSample(sample)}
                                 >
                                     {#snippet icon()}
-                                        <Quote size={20} class="text-slate-400" />
+                                        <Quote size={20} class="text-muted-foreground" />
                                     {/snippet}
                                 </GhostRow>
                             {/each}
@@ -307,8 +339,8 @@
                     {:else if filteredItems.length === 0 && searchQuery}
                         <!-- No search results -->
                         <div class="text-center py-12">
-                            <Search size={48} class="mx-auto text-slate-300 mb-4" />
-                            <p class="text-slate-500">No reflections match "{searchQuery}"</p>
+                            <Search size={48} class="mx-auto text-muted-foreground mb-4" />
+                            <p class="text-muted-foreground">Try another word to find a reflection.</p>
                             <button
                                 onclick={() => (searchQuery = "")}
                                 class="mt-4 text-primary hover:underline"
@@ -324,25 +356,25 @@
                                 {#each filteredItems as entry (entry.id)}
                                     <div
                                         in:fade={{ duration: 400 }}
-                                        class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden group relative"
+                                        class="bg-card rounded-2xl border border-border shadow-sm hover:shadow-md transition-all overflow-hidden group relative"
                                     >
                                         <!-- Decorative top bar -->
                                         <div class="h-2 bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30"></div>
 
                                         <div class="p-5">
                                             <!-- Title -->
-                                            <h3 class="font-serif font-bold text-lg text-slate-800 mb-2 line-clamp-2">
+                                            <h3 class="font-serif font-bold text-lg text-foreground mb-2 pr-20 break-words">
                                                 {entry.title || "Untitled Reflection"}
                                             </h3>
 
                                             <!-- Date -->
-                                            <div class="flex items-center gap-2 text-xs text-slate-400 mb-3">
+                                            <div class="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                                                 <Calendar size={12} />
                                                 {formatDate(entry.created_at)}
                                             </div>
 
                                             <!-- Content preview -->
-                                            <p class="text-slate-600 text-sm leading-relaxed line-clamp-4 mb-4">
+                                            <p class="text-muted-foreground text-sm leading-relaxed line-clamp-4 mb-4">
                                                 {entry.content}
                                             </p>
 
@@ -350,7 +382,7 @@
                                             {#if entry.tags}
                                                 <div class="flex flex-wrap gap-1.5">
                                                     {#each entry.tags.split(",").slice(0, 3) as tag}
-                                                        <span class="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+                                                        <span class="px-2 py-0.5 bg-primary-soft text-primary-hover text-xs rounded-full">
                                                             {tag.trim()}
                                                         </span>
                                                     {/each}
@@ -362,7 +394,7 @@
                                         <div class="absolute top-4 right-4 flex gap-1">
                                             <button
                                                 onclick={() => openEditModal(entry)}
-                                                class="p-2 bg-white/90 text-slate-500 hover:text-primary rounded-full shadow-sm transition-colors"
+                                                class="p-2 bg-card/90 text-muted-foreground hover:text-primary rounded-full shadow-sm transition-colors"
                                                 title="Edit"
                                                 aria-label="Edit these details"
                                             >
@@ -370,7 +402,7 @@
                                             </button>
                                             <button
                                                 onclick={() => entry.id && deleteEntry(entry.id)}
-                                                class="p-2 bg-white/90 text-slate-500 hover:text-red-500 rounded-full shadow-sm transition-colors"
+                                                class="p-2 bg-card/90 text-muted-foreground hover:text-foreground rounded-full shadow-sm transition-colors"
                                                 title="Remove"
                                             >
                                                 <Trash2 size={14} />
@@ -382,9 +414,9 @@
                                 <!-- Add new placeholder card -->
                                 <button
                                     onclick={openAddModal}
-                                    class="border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-slate-400 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all min-h-[250px] group"
+                                    class="border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-all min-h-[250px] group"
                                 >
-                                    <div class="w-14 h-14 rounded-full bg-slate-100 group-hover:bg-primary/10 flex items-center justify-center mb-3 transition-colors">
+                                    <div class="w-14 h-14 rounded-full bg-muted group-hover:bg-primary/10 flex items-center justify-center mb-3 transition-colors">
                                         <Plus size={28} />
                                     </div>
                                     <span class="font-bold">Write a new reflection</span>
@@ -392,48 +424,48 @@
                             </div>
                         {:else}
                             <!-- Table View -->
-                            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div class="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                                 <table class="w-full">
-                                    <thead class="bg-slate-50 border-b border-slate-200">
+                                    <thead class="bg-muted border-b border-border">
                                         <tr>
-                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Title</th>
-                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Preview</th>
-                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Date</th>
-                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Tags</th>
-                                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Title</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Preview</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Date</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Tags</th>
+                                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-100">
+                                    <tbody class="divide-y divide-border">
                                         {#each filteredItems as entry (entry.id)}
-                                            <tr class="hover:bg-slate-50 transition-colors group">
+                                            <tr class="hover:bg-muted transition-colors group">
                                                 <td class="px-4 py-3">
-                                                    <span class="font-medium text-slate-800">{entry.title || "Untitled"}</span>
+                                                    <span class="font-medium text-foreground">{entry.title || "Untitled"}</span>
                                                 </td>
-                                                <td class="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">
+                                                <td class="px-4 py-3 text-sm text-muted-foreground max-w-xs truncate">
                                                     {entry.content?.slice(0, 80)}...
                                                 </td>
-                                                <td class="px-4 py-3 text-sm text-slate-500">
+                                                <td class="px-4 py-3 text-sm text-muted-foreground">
                                                     {formatDate(entry.created_at)}
                                                 </td>
                                                 <td class="px-4 py-3">
                                                     {#if entry.tags}
-                                                        <span class="text-xs text-slate-400">{entry.tags}</span>
+                                                        <span class="text-xs text-muted-foreground">{entry.tags}</span>
                                                     {:else}
-                                                        <span class="text-xs text-slate-300">-</span>
+                                                        <span class="text-xs text-muted-foreground">-</span>
                                                     {/if}
                                                 </td>
                                                 <td class="px-4 py-3 text-right">
                                                     <div class="flex items-center justify-end gap-2 transition-opacity">
                                                         <button
                                                             onclick={() => openEditModal(entry)}
-                                                            class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                                            class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                                             title="Edit"
                                                         >
                                                             <Edit3 size={14} />
                                                         </button>
                                                         <button
                                                             onclick={() => entry.id && deleteEntry(entry.id)}
-                                                            class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                                            class="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
                                                             title="Remove"
                                                         >
                                                             <Trash2 size={14} />
@@ -450,11 +482,11 @@
                 </div>
             {:else if activeTab === "will"}
                 <div in:fade={{ duration: 300 }}>
-                    <EthicalWill />
+                    <EthicalWill bind:this={ethicalWill} />
                 </div>
             {:else if activeTab === "lessons"}
                 <div in:fade={{ duration: 300 }}>
-                    <LifeLessons />
+                    <LifeLessons bind:this={lifeLessons} />
                 </div>
             {:else if activeTab === "accomplishments"}
                 <div in:fade={{ duration: 300 }}>
@@ -469,59 +501,59 @@
 <Modal
     bind:open={showAddModal}
     title={editingEntry ? "Continue your reflection" : "Capture a memory"}
-    description="Your stories matter. Take your time - there's no right or wrong way to share what's in your heart."
+    description="Your stories matter. Take your time. Share what is in your heart in your own way."
     maxWidth="max-w-lg"
 >
     <div class="space-y-4">
         <!-- Title -->
         <div>
-            <label for="entry-title" class="block text-xs font-bold uppercase text-slate-500 mb-1.5 tracking-wide">
+            <label for="entry-title" class="block text-xs font-bold uppercase text-muted-foreground mb-1.5 tracking-wide">
                 Give it a title (optional)
             </label>
             <input
                 id="entry-title"
                 type="text"
                 bind:value={newEntry.title}
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 placeholder="e.g., The Day I Learned to Ride a Bike"
             />
         </div>
 
         <!-- Content -->
         <div>
-            <label for="entry-content" class="block text-xs font-bold uppercase text-slate-500 mb-1.5 tracking-wide">
+            <label for="entry-content" class="block text-xs font-bold uppercase text-muted-foreground mb-1.5 tracking-wide">
                 Your memory or reflection
             </label>
             <textarea
                 id="entry-content"
                 bind:value={newEntry.content}
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none min-h-[200px]"
-                placeholder="Write freely. Tell the story as you remember it..."
+                class="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none min-h-[200px]"
+                placeholder="What happened? Who was there? When or where was it? Why do you want this memory remembered?"
             ></textarea>
-            <p class="text-xs text-slate-400 mt-1.5">
+            <p class="text-xs text-muted-foreground mt-1.5">
                 Share as much or as little as you'd like. Your words are a gift.
             </p>
         </div>
 
         <!-- Tags -->
         <div>
-            <label for="entry-tags" class="block text-xs font-bold uppercase text-slate-500 mb-1.5 tracking-wide">
+            <label for="entry-tags" class="block text-xs font-bold uppercase text-muted-foreground mb-1.5 tracking-wide">
                 Tags (optional)
             </label>
             <div class="relative">
-                <Tag size={16} class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Tag size={16} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                     id="entry-tags"
                     type="text"
                     bind:value={newEntry.tags}
-                    class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full pl-10 pr-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="family, childhood, wisdom (comma separated)"
                 />
             </div>
         </div>
 
         <!-- Custom Fields -->
-        <div class="pt-4 mt-4 border-t border-slate-100">
+        <div class="pt-4 mt-4 border-t border-border">
             <CustomFieldsManager
                 entityType="journal_entry"
                 bind:data={parsedCustomAttributes}
@@ -530,19 +562,20 @@
     </div>
 
     <!-- Footer buttons -->
-    <div class="-mx-6 -mb-6 px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 mt-6">
+    <div class="-mx-6 -mb-6 px-6 py-4 bg-muted border-t border-border flex justify-end gap-3 mt-6">
         <button
             onclick={() => (showAddModal = false)}
-            class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+            class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-border transition-colors"
         >
-            Not right now
+            Maybe later
         </button>
         <button
             onclick={saveEntry}
-            disabled={!newEntry.content}
+            disabled={!newEntry.content || saving}
+            aria-busy={saving}
             class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-primary/20"
         >
-            {editingEntry ? "Save my updates" : "Preserve this memory"}
+            {saving ? "Saving..." : editingEntry ? "Save my updates" : "Preserve this memory"}
         </button>
     </div>
 </Modal>

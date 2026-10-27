@@ -37,7 +37,8 @@ import {
     Stethoscope,
     Building2,
     MapPin,
-    Eye
+    Eye,
+    LifeBuoy
 } from "lucide-svelte";
 
 export type UserRole = "Owner" | "Executor" | "Family";
@@ -51,7 +52,6 @@ export type NavItem = {
     isExecutorEssential?: boolean;
     isQuickStart?: boolean;
     isCoreAction?: boolean;
-    behaviour?: "background-tab";
     isExternal?: boolean;
     tooltip?: string;
     // Shows an "Early preview" tag next to the item (card E2).
@@ -136,7 +136,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/time-capsule",
                 icon: Box,
                 allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Messages that open on a date or a milestone"
+                tooltip: "Messages with your wishes about when they should be read"
             },
             {
                 label: "The Life Timeline",
@@ -145,14 +145,6 @@ export const navGroups: NavGroup[] = [
                 icon: Calendar,
                 allowedRoles: ["Owner", "Executor", "Family"],
                 tooltip: "The milestones of your life"
-            },
-            {
-                label: "Family Hub",
-                key: "family-hub",
-                href: "/modules/family-hub",
-                icon: Users,
-                allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Your family network and connections"
             },
         ],
     },
@@ -170,7 +162,7 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor"],
                 isExecutorEssential: true,
                 isCoreAction: true,
-                tooltip: "Securely document bank accounts and investments"
+                tooltip: "A place for your bank accounts and investments"
             },
             {
                 label: "Insurance Portfolio",
@@ -197,7 +189,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/subscriptions",
                 icon: Receipt,
                 allowedRoles: ["Owner", "Executor"],
-                tooltip: "Recurring payments and memberships to cancel"
+                tooltip: "Recurring payments and memberships your family may want to review"
             },
             {
                 label: "Digital Guardian",
@@ -205,7 +197,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/digital-guardian",
                 icon: Shield,
                 allowedRoles: ["Owner", "Executor"],
-                tooltip: "Online accounts, passwords, and digital life"
+                tooltip: "Online account wishes and recovery-instruction locations"
             },
         ],
     },
@@ -223,7 +215,7 @@ export const navGroups: NavGroup[] = [
                 allowedRoles: ["Owner", "Executor"],
                 isExecutorEssential: true,
                 isCoreAction: true,
-                tooltip: "Wills, trusts, and critical legal files"
+                tooltip: "Wills, trusts, and the legal papers that matter"
             },
             {
                 label: "Health & Medical",
@@ -267,7 +259,7 @@ export const navGroups: NavGroup[] = [
                 href: "/binder",
                 icon: Activity,
                 allowedRoles: ["Owner", "Executor"],
-                tooltip: "Generate a physical backup of your plan"
+                tooltip: "A printed copy of your plan to keep close"
             },
         ],
     },
@@ -286,6 +278,14 @@ export const navGroups: NavGroup[] = [
                 isExecutorEssential: true,
                 isCoreAction: true,
                 tooltip: "Key contacts, advisors, and family members"
+            },
+            {
+                label: "Family Hub",
+                key: "family-hub",
+                href: "/modules/family-hub",
+                icon: Users,
+                allowedRoles: ["Owner", "Executor", "Family"],
+                tooltip: "Your family network and connections"
             },
             {
                 label: "Wellness Check-in",
@@ -331,12 +331,20 @@ export const navGroups: NavGroup[] = [
                 tooltip: "Important dates and milestones"
             },
             {
-                label: "Complete Record",
+                label: "Executor Guide",
+                key: "executor",
+                href: "/modules/executor-toolkit",
+                icon: Briefcase,
+                allowedRoles: ["Owner", "Executor"],
+                tooltip: "Step-by-step help for the person settling the estate"
+            },
+            {
+                label: "Additional Records",
                 key: "advanced-registry",
                 href: "/modules/advanced-registry",
                 icon: Database,
                 allowedRoles: ["Owner", "Executor"],
-                tooltip: "Comprehensive database of all items"
+                tooltip: "Purchase history, maintenance, claims, and account wishes"
             },
             {
                 label: "Builder Tools",
@@ -345,7 +353,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/builders-console",
                 icon: Hammer,
                 allowedRoles: ["Owner"],
-                tooltip: "Developer tools for customizing Continuum"
+                tooltip: "Customize how Continuum works for you"
             },
             {
                 label: "Treasure Hunt",
@@ -354,7 +362,7 @@ export const navGroups: NavGroup[] = [
                 href: "/modules/treasure-hunt",
                 icon: MapPin,
                 allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Interactive guide to finding important items"
+                tooltip: "A gentle guide to finding what matters"
             },
             {
                 label: "Settings",
@@ -362,7 +370,7 @@ export const navGroups: NavGroup[] = [
                 href: "/settings",
                 icon: Settings,
                 allowedRoles: ["Owner", "Executor", "Family"],
-                tooltip: "Manage your account and preferences"
+                tooltip: "Your account and preferences"
             },
         ],
     },
@@ -381,6 +389,19 @@ export const recipientPreviewEntry: NavItem = {
     icon: Eye,
     allowedRoles: ["Owner"],
     tooltip: "You can choose who receives a start page of their own in Family & Contacts",
+};
+
+// Help & Resources (G0e U-f). The sidebar lists it at the end of Extras and the Command
+// Center finds it; kept out of navGroups (like the recipient preview) so the dashboard grid
+// and the data settings cards see only modules.
+export const helpAfterGroup = "groupExtras";
+export const helpEntry: NavItem = {
+    label: "Help & Resources",
+    key: "help",
+    href: "/help",
+    icon: LifeBuoy,
+    allowedRoles: ["Owner", "Executor", "Family"],
+    tooltip: "Guides and answers, whenever you need them",
 };
 
 // Pulse sub-navigation (shown when in Pulse section)
@@ -483,12 +504,13 @@ export const catalogCategories: CatalogCategory[] = [
             { label: "Executor Guide", key: "executor", href: "/modules/executor-toolkit", icon: Briefcase, allowedRoles: ["Owner", "Executor"] },
             { label: "Practice Run", key: "simulator", href: "/modules/simulator", icon: Siren, allowedRoles: ["Owner"], isPreview: true },
             { label: "QR Access Codes", key: "qrcodes", href: "/modules/qr-codes", icon: QrCode, allowedRoles: ["Owner", "Executor"], isPreview: true },
+            { label: "Plan Check-in", key: "plan-checkin", href: "/tools/ai-audit", icon: ShieldCheck, allowedRoles: ["Owner"] },
             { label: "Insights", key: "analytics", href: "/modules/analytics", icon: BarChart3, allowedRoles: ["Owner"], isPreview: true },
             { label: "Activity History", key: "activity", href: "/modules/activity-log", icon: History, allowedRoles: ["Owner"] },
             { label: "Important Dates", key: "anniversary", href: "/modules/anniversary-manager", icon: Sparkles, allowedRoles: ["Owner", "Executor", "Family"] },
             { label: "Future Scenarios", key: "scenario", href: "/modules/scenario-mode", icon: Compass, allowedRoles: ["Owner"], isPreview: true },
             { label: "Event Calendar", key: "calendar", href: "/modules/calendar", icon: Calendar, allowedRoles: ["Owner", "Executor", "Family"] },
-            { label: "Complete Record", key: "advanced-registry", href: "/modules/advanced-registry", icon: Database, allowedRoles: ["Owner", "Executor"] },
+            { label: "Additional Records", key: "advanced-registry", href: "/modules/advanced-registry", icon: Database, allowedRoles: ["Owner", "Executor"], tooltip: "Purchase history, maintenance, claims, and account wishes" },
             { label: "Treasure Hunt", key: "treasurehunt", href: "/modules/treasure-hunt", icon: MapPin, allowedRoles: ["Owner", "Executor", "Family"], isPreview: true },
             { label: "Builder Tools", key: "builders", href: "/modules/builders-console", icon: Hammer, allowedRoles: ["Owner"], isPreview: true },
         ]

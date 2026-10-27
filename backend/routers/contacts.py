@@ -1,12 +1,15 @@
+import secrets
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import StringConstraints
-from sqlmodel import Session, SQLModel, select
+from sqlmodel import Session, SQLModel, select, or_
 from typing import Annotated, List, Literal, Optional
 from backend.database import get_session, User
 from backend.auth import get_current_user
 from backend.pulse_models import PulseContact, PulseEscalationTier
+from backend.pulse_tiers import CALL_TIER_NUMBER
 from backend.estate_models import ContactRelationship
 from backend.utils.audit import log_audit, log_deletion
+from backend.utils.table_body import validated_new
 
 router = APIRouter(prefix="/api/contacts", tags=["contacts"])
 
@@ -59,6 +62,11 @@ def _apply(contact: PulseContact, data: dict, user: User, session: Session) -> N
                                    "notify_on_safety_timer"):
             continue
         setattr(contact, key, val)
+    # A guardian (a Pulse/call tier, or the safety-timer reach-out) needs a portal link for their
+    # alert emails; issue one the first time, keep it after (links already sent stay valid).
+    if not contact.portal_token and (contact.tier_id or contact.call_tier in CALL_TIER_NUMBER
+                                     or contact.notify_on_safety_timer):
+        contact.portal_token = secrets.token_urlsafe(32)
 
 @router.get("", response_model=List[PulseContact])
 @router.get("/", response_model=List[PulseContact])
@@ -77,8 +85,7 @@ def create_contact(request: Request, body: ContactCreate, user: User = Depends(g
     _apply(contact, body.model_dump(exclude_unset=True), user, session)
 
     session.add(contact)
-    session.commit()
-    session.refresh(contact)
+    session.flush()  # assigns contact.id for the audit row
 
     # P1-High: Audit logging for contact creation
     log_audit(
@@ -88,9 +95,10 @@ def create_contact(request: Request, body: ContactCreate, user: User = Depends(g
         user_id=user.id,
         user_email=user.email,
         resource_type="contact",
-        resource_id=str(contact.id)
+        resource_id=str(contact.id),
+        commit=False,
     )
-    # log_audit commits, which expires the instance; reload it so the response carries the row.
+    session.commit()  # the row and its audit entry in one transaction (X279)
     session.refresh(contact)
     return contact
 
@@ -99,7 +107,7 @@ def update_contact(contact_id: int, updated: ContactUpdate, user: User = Depends
     """Update a contact. Only the fields sent are changed."""
     contact = session.get(PulseContact, contact_id)
     if not contact or contact.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Contact not found")
+        raise HTTPException(status_code=404, detail="That contact may have been moved.")
 
     _apply(contact, updated.model_dump(exclude_unset=True), user, session)
 
@@ -110,23 +118,33 @@ def update_contact(contact_id: int, updated: ContactUpdate, user: User = Depends
 
 @router.delete("/{contact_id}")
 def delete_contact(request: Request, contact_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    """Delete a contact."""
+    """Remove the contact and its graph links in the same transaction."""
     contact = session.get(PulseContact, contact_id)
     if not contact or contact.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Contact not found")
+        raise HTTPException(status_code=404, detail="That contact may have been moved.")
 
-    # P1-High: Audit logging for contact deletion
-    log_deletion(
-        session=session,
-        request=request,
-        user_id=user.id,
-        user_email=user.email,
-        resource_type="contact",
-        resource_id=contact_id
-    )
+    try:
+        relationships = session.exec(select(ContactRelationship).where(
+            ContactRelationship.user_id == user.id,
+            or_(ContactRelationship.source_id == str(contact_id),
+                ContactRelationship.target_id == str(contact_id)),
+        )).all()
+        for relationship in relationships:
+            log_deletion(
+                session=session, request=request, user_id=user.id, user_email=user.email,
+                resource_type="contact_relationship", resource_id=relationship.id, commit=False,
+            )
+            session.delete(relationship)
 
-    session.delete(contact)
-    session.commit()
+        log_deletion(
+            session=session, request=request, user_id=user.id, user_email=user.email,
+            resource_type="contact", resource_id=contact_id, commit=False,
+        )
+        session.delete(contact)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
     return {"status": "deleted"}
 
 # --- Relationships ---
@@ -136,19 +154,39 @@ def get_relationships(user: User = Depends(get_current_user), session: Session =
     return session.exec(statement).all()
 
 @router.post("/relationships", response_model=ContactRelationship)
-def create_relationship(rel: ContactRelationship, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    rel.user_id = user.id
+def create_relationship(request: Request, rel: ContactRelationship, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    rel = validated_new(ContactRelationship, rel, user.id)
     session.add(rel)
-    session.commit()
+    session.flush()  # assigns rel.id for the audit row
+    log_audit(
+        session=session,
+        request=request,
+        action="create_contact_relationship",
+        user_id=user.id,
+        user_email=user.email,
+        resource_type="contact_relationship",
+        resource_id=str(rel.id),
+        commit=False,
+    )
+    session.commit()  # the row and its audit entry in one transaction (X289)
     session.refresh(rel)
     return rel
 
 @router.delete("/relationships/{rel_id}")
-def delete_relationship(rel_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def delete_relationship(request: Request, rel_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     rel = session.get(ContactRelationship, rel_id)
     if not rel or rel.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Relationship not found")
-    
+        raise HTTPException(status_code=404, detail="That relationship may have been moved.")
+
+    log_deletion(
+        session=session,
+        request=request,
+        user_id=user.id,
+        user_email=user.email,
+        resource_type="contact_relationship",
+        resource_id=rel_id,
+        commit=False,  # written by the delete's own commit (X289)
+    )
     session.delete(rel)
     session.commit()
     return {"status": "deleted"}

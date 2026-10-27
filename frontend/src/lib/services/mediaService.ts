@@ -17,7 +17,8 @@
  */
 
 import { API_BASE_URL } from '$lib/config';
-import { mediaStorage } from './indexedDB';
+import { mediaStorage, requireMediaOwner } from './indexedDB';
+import { assertCurrentSession, captureSession, isCurrentSession, sessionToken, SessionChangedError, type SessionOwnership } from './sessionOwnership';
 
 export interface MediaFile {
     id: number;
@@ -53,15 +54,11 @@ export interface UploadProgress {
 
 export type MediaRef = number | string;
 
-const TOKEN_KEY = 'continuum_auth_token';
 const API_BASE = `${API_BASE_URL}/api/media`;
 
-function authToken(): string | null {
-    return typeof localStorage !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
-}
-
-function authHeaders(): Record<string, string> {
-    const token = authToken();
+function authHeaders(owner: SessionOwnership): Record<string, string> {
+    assertCurrentSession(owner);
+    const token = sessionToken(owner);
     return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -155,8 +152,10 @@ export async function uploadMediaDirect(
     module: string,
     referenceId?: string,
     description?: string,
-    onProgress?: (progress: UploadProgress) => void
+    onProgress?: (progress: UploadProgress) => void,
+    owner = captureSession()
 ): Promise<MediaUploadResponse> {
+    assertCurrentSession(owner);
     const formData = new FormData();
     formData.append('file', file);
 
@@ -166,14 +165,22 @@ export async function uploadMediaDirect(
     const url = `${API_BASE}/upload?${params}`;
 
     const csrf = await csrfToken();
-    let result = await sendUpload(url, formData, authToken(), csrf, onProgress);
+    assertCurrentSession(owner);
+    const progress = onProgress ? (value: UploadProgress) => {
+        if (isCurrentSession(owner)) onProgress(value);
+    } : undefined;
+    let result = await sendUpload(url, formData, sessionToken(owner), csrf, progress);
+    assertCurrentSession(owner);
 
     // Expired session: refresh once and retry (same rule as the fetch wrapper)
     if (result.status === 401) {
         const { refreshSession } = await import('$lib/stores/auth');
-        const refreshed = await refreshSession();
+        assertCurrentSession(owner);
+        const refreshed = await refreshSession(owner);
+        assertCurrentSession(owner);
         if (refreshed.ok) {
-            result = await sendUpload(url, formData, refreshed.token, csrf, onProgress);
+            result = await sendUpload(url, formData, refreshed.token, csrf, progress);
+            assertCurrentSession(owner);
         }
     }
 
@@ -184,9 +191,10 @@ export async function uploadMediaDirect(
 }
 
 /** Fetch the stored file from the server as a Blob. */
-export async function fetchMediaBlob(ref: MediaRef): Promise<Blob> {
+export async function fetchMediaBlob(ref: MediaRef, owner = captureSession()): Promise<Blob> {
     const id = requireId(ref);
-    const response = await fetch(`${API_BASE}/${id}/download`, { headers: authHeaders() });
+    const response = await fetch(`${API_BASE}/${id}/download`, { headers: authHeaders(owner) });
+    assertCurrentSession(owner);
     if (!response.ok) {
         let body: any = null;
         try {
@@ -194,20 +202,29 @@ export async function fetchMediaBlob(ref: MediaRef): Promise<Blob> {
         } catch {
             body = null;
         }
-        throw new Error(messageFrom(body, 'This file is taking a moment to open. You can try again shortly.'));
+        assertCurrentSession(owner);
+        throw new Error(messageFrom(body, "This file is safe in your account. You can open it again whenever you're ready."));
     }
-    return response.blob();
+    const blob = await response.blob();
+    assertCurrentSession(owner);
+    return blob;
 }
 
 /**
- * Read a just-uploaded file back from the server and confirm its size.
- * True only when the server returns the same number of bytes.
+ * Compare a server copy with its original before releasing browser bytes.
+ * Numeric size checks remain supported for callers without an original.
  */
-export async function verifyMediaRetrieval(ref: MediaRef, expectedSize: number): Promise<boolean> {
+export async function verifyMediaRetrieval(ref: MediaRef, original: Blob | number, owner = captureSession()): Promise<boolean> {
     try {
-        const blob = await fetchMediaBlob(ref);
-        return blob.size === expectedSize;
-    } catch {
+        const blob = await fetchMediaBlob(ref, owner);
+        if (typeof original === 'number') return blob.size === original;
+        if (blob.size !== original.size) return false;
+        const [remote, local] = await Promise.all([blob.arrayBuffer(), original.arrayBuffer()]);
+        assertCurrentSession(owner);
+        const localBytes = new Uint8Array(local);
+        return new Uint8Array(remote).every((byte, i) => byte === localBytes[i]);
+    } catch (error) {
+        if (error instanceof SessionChangedError) throw error;
         return false;
     }
 }
@@ -225,49 +242,80 @@ export async function uploadMedia(
     description?: string,
     onProgress?: (progress: UploadProgress) => void
 ): Promise<MediaUploadResponse> {
-    const localKey = `pending:${module}:${referenceId ?? ''}:${Date.now()}`;
+    const owner = requireMediaOwner();
+    const localKey = `pending:${module}:${referenceId ?? ''}:${Date.now()}-${crypto.randomUUID()}`;
     let keptLocally = false;
+    mediaStorage.hold(localKey, owner);
     try {
-        await mediaStorage.save(localKey, file);
-        keptLocally = true;
-    } catch (e) {
-        console.warn('[media] Could not keep a local copy before upload', e);
-    }
-
-    const response = await uploadMediaDirect(file, module, referenceId, description, onProgress);
-
-    if (keptLocally) {
-        if (await verifyMediaRetrieval(response.id, file.size)) {
-            await mediaStorage.delete(localKey).catch(() => undefined);
-        } else {
-            console.warn(`[media] Kept local copy ${localKey}; server copy ${response.id} did not read back yet`);
+        try {
+            await mediaStorage.save(localKey, file, owner);
+            keptLocally = true;
+        } catch (e) {
+            if (e instanceof SessionChangedError) throw e;
+            console.warn('[media] Could not keep a local copy before upload', e);
         }
+
+        requireMediaOwner(owner);
+        const response = await uploadMediaDirect(file, module, referenceId, description, onProgress, owner.session);
+        requireMediaOwner(owner);
+        if (keptLocally) {
+            let identitySaved = false;
+            try {
+                await mediaStorage.rememberUpload(localKey, response, owner);
+                identitySaved = true;
+            } catch (e) {
+                if (e instanceof SessionChangedError) throw e;
+                console.warn('[media] Browser original retained while its uploaded-file identity waits to save', e);
+            }
+            const retrieved = await verifyMediaRetrieval(response.id, file, owner.session);
+            requireMediaOwner(owner);
+            if (retrieved && identitySaved) {
+                try { await mediaStorage.delete(localKey, owner); }
+                catch (e) {
+                    if (e instanceof SessionChangedError) throw e;
+                    console.warn('[media] Server copy verified; local backup removal paused', e);
+                }
+            }
+            else console.warn(`[media] Kept local copy ${localKey}; server copy ${response.id} did not read back yet`);
+        }
+        requireMediaOwner(owner);
+        return response;
+    } finally {
+        // Release only the in-memory hold, even when this account has just signed out.
+        // Its actual bytes remain under the account that began the upload.
+        mediaStorage.release(localKey, owner);
     }
-    return response;
 }
 
 /**
  * List media files for a module
  */
 export async function listMedia(module?: string, referenceId?: string): Promise<MediaFile[]> {
+    const owner = captureSession();
     const params = new URLSearchParams();
     if (module) params.append('module', module);
     if (referenceId) params.append('reference_id', referenceId);
 
     const response = await fetch(`${API_BASE}/${params.toString() ? '?' + params : ''}`, {
-        headers: authHeaders()
+        headers: authHeaders(owner)
     });
-    if (!response.ok) throw new Error('Your files are taking a moment to gather. You can try again shortly.');
-    return response.json();
+    assertCurrentSession(owner);
+    if (!response.ok) throw new Error("Your files are safe in your account. You can gather them again whenever you're ready.");
+    const files = await response.json();
+    assertCurrentSession(owner);
+    return files;
 }
 
 /**
  * Get a single media file's metadata
  */
-export async function getMedia(ref: MediaRef): Promise<MediaFile> {
-    const response = await fetch(`${API_BASE}/${requireId(ref)}`, { headers: authHeaders() });
+export async function getMedia(ref: MediaRef, owner = captureSession()): Promise<MediaFile> {
+    const response = await fetch(`${API_BASE}/${requireId(ref)}`, { headers: authHeaders(owner) });
+    assertCurrentSession(owner);
     if (!response.ok) throw new Error('This file may have been moved.');
-    return response.json();
+    const file = await response.json();
+    assertCurrentSession(owner);
+    return file;
 }
 
 /**
@@ -280,8 +328,9 @@ export function getMediaDownloadUrl(ref: MediaRef): string {
 /**
  * Object URL for displaying media (<img>, <audio>, <video>). Revoke it when done.
  */
-export async function getMediaBlobUrl(ref: MediaRef): Promise<string> {
-    const blob = await fetchMediaBlob(ref);
+export async function getMediaBlobUrl(ref: MediaRef, owner = captureSession()): Promise<string> {
+    const blob = await fetchMediaBlob(ref, owner);
+    assertCurrentSession(owner);
     return URL.createObjectURL(blob);
 }
 
@@ -295,14 +344,17 @@ export async function downloadMedia(
     filename?: string,
     objectUrl?: string | Promise<string>
 ): Promise<void> {
+    const owner = captureSession();
+    assertCurrentSession(owner);
     let name = filename;
     if (!name) {
         try {
-            name = (await getMedia(ref)).filename;
+            name = (await getMedia(ref, owner)).filename;
         } catch {
             name = `file-${requireId(ref)}`;
         }
     }
+    assertCurrentSession(owner);
     let url: string | undefined;
     if (objectUrl) {
         try {
@@ -311,8 +363,10 @@ export async function downloadMedia(
             url = undefined;
         }
     }
+    assertCurrentSession(owner);
     const owned = !url;
-    if (!url) url = await getMediaBlobUrl(ref);
+    if (!url) url = await getMediaBlobUrl(ref, owner);
+    assertCurrentSession(owner);
     const a = document.createElement('a');
     a.href = url;
     a.download = name;
@@ -329,11 +383,22 @@ export async function downloadMedia(
  * Delete a media file
  */
 export async function deleteMedia(ref: MediaRef): Promise<void> {
+    const owner = captureSession();
     const response = await fetch(`${API_BASE}/${requireId(ref)}`, {
         method: 'DELETE',
-        headers: authHeaders()
+        headers: authHeaders(owner)
     });
+    assertCurrentSession(owner);
     if (!response.ok) throw new Error('Removing this file paused. You can try again shortly.');
+}
+
+/** Lifecycle cleanup only: a file used by any current saved record stays available. */
+export async function removeUnusedMedia(ref: MediaRef, owner = captureSession()): Promise<void> {
+    const response = await fetch(`${API_BASE}/${requireId(ref)}?only_if_unused=true`, {
+        method: 'DELETE', headers: authHeaders(owner),
+    });
+    assertCurrentSession(owner);
+    if (!response.ok && response.status !== 404) throw new Error('Clearing the unused file paused. You can try again when you are ready.');
 }
 
 /**
@@ -344,14 +409,16 @@ export async function updateMediaMetadata(
     description?: string,
     referenceId?: string
 ): Promise<void> {
+    const owner = captureSession();
     const params = new URLSearchParams();
     if (description !== undefined) params.append('description', description);
     if (referenceId !== undefined) params.append('reference_id', referenceId);
 
     const response = await fetch(`${API_BASE}/${requireId(ref)}/metadata?${params}`, {
         method: 'PUT',
-        headers: authHeaders()
+        headers: authHeaders(owner)
     });
+    assertCurrentSession(owner);
     if (!response.ok) throw new Error('Updating this file paused. You can try again shortly.');
 }
 

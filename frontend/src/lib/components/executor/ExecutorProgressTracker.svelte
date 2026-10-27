@@ -1,108 +1,112 @@
+<script lang="ts" module>
+    import { executorTasks } from '$lib/data/executorTasks';
+    import { executorSteps, STEP_RECORDS } from '$lib/stores/executorStepsStore.svelte';
+
+    /**
+     * Tailwind only builds classes it sees written out in full, so every colour an executor
+     * surface uses is spelled out here (a class built from a string at runtime gets no style).
+     * The keys stay as the pages name them; each one reads from a V0e token, so on `.surface-dark`
+     * it takes the dark value and keeps the person's accent. Four calm families, no alarm reds.
+     */
+    const PRIMARY = { tile: 'bg-primary/10', icon: 'text-primary', bar: 'bg-primary', border: 'hover:border-primary/30', borderStrong: 'hover:border-primary/50', link: 'bg-primary/20 text-primary hover:bg-primary/30' };
+    const INFO = { tile: 'bg-info/10', icon: 'text-info', bar: 'bg-info', border: 'hover:border-info/30', borderStrong: 'hover:border-info/50', link: 'bg-info/20 text-info hover:bg-info/30' };
+    const SUCCESS = { tile: 'bg-success/10', icon: 'text-success', bar: 'bg-success', border: 'hover:border-success/30', borderStrong: 'hover:border-success/50', link: 'bg-success/20 text-success hover:bg-success/30' };
+    const GOLD = { tile: 'bg-gold-text/10', icon: 'text-gold-text', bar: 'bg-gold-text', border: 'hover:border-gold-text/30', borderStrong: 'hover:border-gold-text/50', link: 'bg-gold-text/20 text-gold-text hover:bg-gold-text/30' };
+    export const TONES = {
+        rose: PRIMARY,
+        indigo: INFO,
+        emerald: SUCCESS,
+        amber: GOLD,
+        cyan: PRIMARY,
+        purple: INFO,
+        blue: INFO,
+    } as const;
+    export type Tone = keyof typeof TONES;
+
+    /** Executor Guide steps finished, overall or for the steps that lean on one record page. */
+    export function stepsFor(href?: string) {
+        const ids = executorTasks.map((t) => t.id).filter((id) => !href || STEP_RECORDS[id]?.href === href);
+        const done = ids.filter((id) => executorSteps.isDone(id)).length;
+        return { done, total: ids.length, pct: ids.length ? Math.round((done / ids.length) * 100) : 0 };
+    }
+</script>
+
 <script lang="ts">
     /**
      * Executor Progress Tracker
      *
-     * Shows estate settlement progress with gentle, grief-aware messaging
+     * The Executor Guide steps finished so far (saved with the account), with gentle messaging
      */
 
-    import { CheckCircle2, Circle } from 'lucide-svelte';
+    import { onMount } from 'svelte';
     import { fade } from 'svelte/transition';
 
-    interface Props {
-        completion?: number;
-    }
+    onMount(() => {
+        executorSteps.sync();
+    });
 
-    let { completion = 0 }: Props = $props();
+    let progress = $derived(stepsFor());
+    let completion = $derived(progress.pct);
 
-    let statusMessage = $derived(() => {
-        if (completion === 0) {
-            return "You're just getting started. Take it one step at a time.";
+    let statusMessage = $derived.by(() => {
+        if (progress.done === 0) {
+            return "Mark guide steps as finished to track your work here.";
         } else if (completion < 30) {
-            return "You've begun gathering information. That's a meaningful first step.";
+            return "These are the guide steps you have marked finished.";
         } else if (completion < 60) {
-            return "You're making steady progress. Remember to take breaks when you need them.";
+            return "Your saved checks track work through this guide.";
         } else if (completion < 90) {
-            return "Most of the essential information has been documented. You're doing well.";
+            return "Most guide steps are marked finished. Review any remaining questions.";
         } else {
-            return "The estate profile is comprehensive. You've done important work here.";
+            return "Review your checks and notes with the people handling the estate.";
         }
     });
 
-    let statusColor = $derived(() => {
-        if (completion < 30) return 'slate';
-        if (completion < 60) return 'amber';
-        if (completion < 90) return 'indigo';
-        return 'emerald';
-    });
+    const STATUS = {
+        start: { pct: 'text-muted-foreground', fill: 'from-muted-foreground to-muted-foreground', pulse: 'bg-muted-foreground/30' },
+        steady: { pct: 'text-primary', fill: 'from-primary to-primary-hover', pulse: 'bg-primary/30' },
+        most: { pct: 'text-info', fill: 'from-info to-primary', pulse: 'bg-info/30' },
+        done: { pct: 'text-success', fill: 'from-success to-success', pulse: 'bg-success/30' },
+    };
+
+    let status = $derived(
+        completion < 30 ? STATUS.start : completion < 60 ? STATUS.steady : completion < 90 ? STATUS.most : STATUS.done
+    );
 </script>
 
-<div class="p-6 rounded-2xl bg-slate-800/40 border border-slate-700/50" in:fade>
+<div class="p-6 rounded-2xl bg-card/40 border border-border/50" in:fade>
     <div class="flex items-start justify-between mb-4">
         <div>
-            <h3 class="text-lg font-semibold text-white mb-1">
-                Estate Settlement Progress
+            <h3 class="text-lg font-semibold text-foreground mb-1">
+                Executor Guide progress
             </h3>
-            <p class="text-sm text-slate-400">
-                {statusMessage()}
+            <p class="text-sm text-muted-foreground">
+                {statusMessage}
             </p>
         </div>
-        <div class="text-3xl font-bold text-{statusColor()}-400">
+        <div class="text-3xl font-bold {status.pct}">
             {completion}%
         </div>
     </div>
 
     <!-- Progress Bar -->
-    <div class="relative w-full h-3 bg-slate-700 rounded-full overflow-hidden mb-4">
+    <div class="relative w-full h-3 bg-border rounded-full overflow-hidden mb-4">
         <div
-            class="absolute inset-y-0 left-0 bg-gradient-to-r from-{statusColor()}-500 to-{statusColor()}-400
+            class="absolute inset-y-0 left-0 bg-gradient-to-r {status.fill}
                    transition-all duration-700 ease-out rounded-full"
             style="width: {completion}%"
         ></div>
         <!-- Gentle pulse animation for active progress -->
         {#if completion > 0 && completion < 100}
             <div
-                class="absolute inset-y-0 left-0 bg-{statusColor()}-400/30 rounded-full animate-pulse"
+                class="absolute inset-y-0 left-0 {status.pulse} rounded-full animate-pulse"
                 style="width: {completion}%"
             ></div>
         {/if}
     </div>
 
-    <!-- Phase Indicators (simplified to 4 key milestones) -->
-    <div class="grid grid-cols-4 gap-2 text-xs">
-        <div class="flex flex-col items-center gap-1">
-            {#if completion >= 25}
-                <CheckCircle2 size={16} class="text-emerald-400" />
-            {:else}
-                <Circle size={16} class="text-slate-600" />
-            {/if}
-            <span class="text-slate-400 text-center">Initial Documentation</span>
-        </div>
-
-        <div class="flex flex-col items-center gap-1">
-            {#if completion >= 50}
-                <CheckCircle2 size={16} class="text-emerald-400" />
-            {:else}
-                <Circle size={16} class="text-slate-600" />
-            {/if}
-            <span class="text-slate-400 text-center">Contact Network</span>
-        </div>
-
-        <div class="flex flex-col items-center gap-1">
-            {#if completion >= 75}
-                <CheckCircle2 size={16} class="text-emerald-400" />
-            {:else}
-                <Circle size={16} class="text-slate-600" />
-            {/if}
-            <span class="text-slate-400 text-center">Asset Inventory</span>
-        </div>
-
-        <div class="flex flex-col items-center gap-1">
-            {#if completion >= 100}
-                <CheckCircle2 size={16} class="text-emerald-400" />
-            {:else}
-                <Circle size={16} class="text-slate-600" />
-            {/if}
-            <span class="text-slate-400 text-center">Complete Profile</span>
-        </div>
-    </div>
+    <p class="text-xs text-muted-foreground" data-testid="executor-steps-count">
+        {progress.done} of {progress.total} steps finished in the
+        <a href="/modules/executor-toolkit" class="underline hover:text-foreground transition-colors">Executor Guide</a>
+    </p>
 </div>

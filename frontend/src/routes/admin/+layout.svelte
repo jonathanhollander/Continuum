@@ -1,13 +1,31 @@
-<script>
+<script lang="ts">
+    import type { Snippet } from "svelte";
     import { page } from "$app/stores";
+    import { goto } from "$app/navigation";
+    import { auth } from "$lib/stores/auth";
     import {
         LayoutDashboard,
         Stethoscope,
         Palette,
+        Zap,
         ArrowLeft,
+        Users,
+        Settings,
     } from "lucide-svelte";
 
+    let { children }: { children: Snippet } = $props();
+
+    // The app's one admin rule (Settings › Data and the email admin routes use it too)
+    let isAdmin = $derived($auth.user?.is_admin === true);
+
+    // Anyone else goes to their dashboard once sign-in has settled
+    $effect(() => {
+        if (!$auth.loading && !isAdmin) goto("/dashboard", { replaceState: true });
+    });
+
     const navItems = [
+        { label: "Users", href: "/admin/users", icon: Users },
+        { label: "AI Settings", href: "/admin/ai-settings", icon: Settings },
         {
             label: "Readiness Hub",
             href: "/admin/readiness",
@@ -15,30 +33,27 @@
         },
         { label: "Data Health", href: "/admin/health", icon: Stethoscope },
         { label: "UI Quality", href: "/admin/ui-audit", icon: Palette },
+        { label: "Automation", href: "/admin/automation", icon: Zap },
     ];
 </script>
 
+{#if isAdmin}
 <div
-    class="min-h-screen bg-slate-950 text-slate-200 flex font-sans antialiased selection:bg-emerald-500/30"
+    class="surface-dark min-h-screen bg-slate-950 text-foreground flex font-sans antialiased selection:bg-primary/30"
 >
     <!-- Admin Sidebar -->
     <aside
-        class="w-64 border-r border-slate-800 bg-slate-900/50 backdrop-blur-xl flex flex-col fixed h-full z-50"
+        class="w-64 border-r border-border bg-background/50 backdrop-blur-xl flex flex-col fixed h-full z-50"
     >
-        <div class="p-6 border-b border-slate-800">
-            <h1
-                class="font-bold text-xl tracking-tight text-white flex items-center gap-2"
+        <div class="p-6 border-b border-border">
+            <div
+                class="font-bold text-xl tracking-tight text-foreground flex items-center gap-2"
             >
                 <div
-                    class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                    class="w-3 h-3 rounded-full bg-primary"
                 ></div>
                 Admin Suite
-            </h1>
-            <p
-                class="text-xs text-slate-500 mt-2 uppercase tracking-wider font-mono"
-            >
-                System v4.0
-            </p>
+            </div>
         </div>
 
         <nav class="flex-1 p-4 space-y-1">
@@ -47,19 +62,19 @@
                     href={item.href}
                     class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
                     {$page.url.pathname === item.href
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800'}"
+                        ? 'bg-primary-soft text-primary border border-primary/20'
+                        : 'text-muted-foreground border border-transparent hover:text-foreground hover:bg-card'}"
                 >
-                    <svelte:component this={item.icon} size={18} />
+                    <item.icon size={18} />
                     {item.label}
                 </a>
             {/each}
         </nav>
 
-        <div class="p-4 border-t border-slate-800">
+        <div class="p-4 border-t border-border">
             <a
-                href="/"
-                class="flex items-center gap-2 text-xs text-slate-500 hover:text-white transition-colors"
+                href="/dashboard"
+                class="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
                 <ArrowLeft size={14} />
                 Return to App
@@ -68,11 +83,13 @@
     </aside>
 
     <!-- Main Content Area -->
-    <main class="flex-1 ml-64 p-8 overflow-y-auto">
+    <main class="flex-1 ml-64 p-8">
         <div
             class="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500"
         >
-            <slot />
+            {@render children()}
         </div>
     </main>
 </div>
+{/if}
+

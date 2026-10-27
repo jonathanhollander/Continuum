@@ -1,10 +1,13 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
+    import { get } from "svelte/store";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
+    import { activeAccountId } from "$lib/stores/keyringStore";
+    import { currentProfileId } from "$lib/stores/profileContext";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, scale } from "svelte/transition";
     import {
-        Music,
-        Flower,
         MapPin,
         Users,
         DollarSign,
@@ -20,31 +23,56 @@
     } from "lucide-svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
+    import { aiJobChanges, currentAIJob, type AIWritingJob } from "$lib/services/aiCapabilities";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
-    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
-    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { estateExecutorName } from "$lib/stores/analyticsStore";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { UserCircle, MapPin as MapPinIcon, Cross } from "lucide-svelte";
-    import { funeralStore, type FuneralWishes, type FuneralBudgetItem } from "$lib/stores/funeralStore.svelte";
-    import FuneralWizard from "$lib/components/modules/funeral/FuneralWizard.svelte";
+    import { funeralStore, funeralSync, type FuneralWishes, type FuneralBudgetItem } from "$lib/stores/funeralStore.svelte";
+    import FuneralWizard, { type FuneralShownContext } from "$lib/components/modules/funeral/FuneralWizard.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import * as registryRaw from "$lib/data/registry.json";
     import { t, language } from "$lib/stores/localization";
-    import { getSmartSamples } from "$lib/data/smartSamples";
 
     // Registry Data Handling
     const registryData = (registryRaw as any).default || registryRaw;
     const registry = Array.isArray(registryData) ? registryData : [];
     const module = registry.find((m) => m.id === "funeral");
 
+    const funeralIntro = "Record the funeral or memorial arrangements you want your family to follow. Start with what matters most; leave details open and return when you're ready.";
     let activeTab = $state("wishes"); // 'wishes' | 'budget'
+    const funeralTabLabel = $derived(activeTab === "wishes" ? "Funeral & memorial wishes" : "Costs & arrangements");
+    const pageOwner = captureSession();
+    let shownContext = $state<FuneralShownContext | null>(null);
+    function acceptShownContext(context: FuneralShownContext | null) {
+        shownContext = context && isCurrentSession(pageOwner) ? context : null;
+    }
+    const funeralJob = $derived.by((): AIWritingJob => {
+        $aiJobChanges;
+        const engaged = currentAIJob();
+        const shown = activeTab === "wishes" ? shownContext : null;
+        const category = shown?.step === 1 ? "foundation" : shown?.step === 4 ? "atmosphere" : shown?.step === 5 ? "legacy" : null;
+        const field = category && engaged?.document_type === "funeral"
+            && engaged.job_id === `funeral:wishes:${category}` ? engaged : undefined;
+        const recorded = funeralSync.data;
+        const displayed = shown ? JSON.stringify({ current_stage: shown.stage, displayed_wishes: shown.wishes, save_pending: shown.pending }) : "";
+        return {
+            ...field, job_id: `funeral:${activeTab}`,
+            job_brief: funeralTabLabel, document_title: "Final Wishes", document_type: "funeral",
+            field_label: field?.field_label || shown?.stage || funeralTabLabel,
+            field_question: field?.field_question || shown?.question || "",
+            question_answers: [...(field?.question_answers || []), ...(field && displayed ? [displayed] : [])],
+            current_draft: field?.current_draft ?? (shown ? displayed : recorded ? JSON.stringify(activeTab === "wishes" ? recorded.wishes || {} : recorded.budget || [], null, 2) : ""),
+            current_draft_source: field?.current_draft_source ?? "edited",
+            source_facts: recorded ? [JSON.stringify({ wishes: recorded.wishes || {}, budget: recorded.budget || [], sync_status: funeralSync.status })] : [],
+        };
+    });
     let showAddExpense = $state(false);
     let newExpense = $state<Partial<FuneralBudgetItem>>({
         name: "",
@@ -52,7 +80,6 @@
     });
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
-    let viewMode = $state<ViewMode>('card');
 
     onMount(async () => {
         await funeralStore.sync?.();
@@ -62,170 +89,180 @@
     let wishes = $derived($funeralStore!.wishes);
     let budgetItems = $derived($funeralStore!.budget);
 
-    // Quick Edit Helpers for Wishes
-    function editWish(field: keyof FuneralWishes, label: string) {
-        if (field === "music" || field === "colors") return;
-        const current = $funeralStore!.wishes[field];
-        const val = prompt(`Update ${label}:`, String(current));
-        if (val !== null) {
-            funeralStore.update((data) => ({
-                ...data,
-                wishes: {
-                    ...(typeof data.wishes === "string" ? JSON.parse(data.wishes || "{}") : data.wishes),
-                    [field]: val,
-                },
-            }));
-        }
-    }
+    let savingExpense = $state(false);
+    let costNote = $state<string | null>(null);
+    const recordedCost = (value: unknown): number | undefined => {
+        if ((typeof value !== "number" && typeof value !== "string") || (typeof value === "string" && !value.trim())) return undefined;
+        const amount = Number(value);
+        return Number.isFinite(amount) ? amount : undefined;
+    };
+    const shownCost = (value: unknown) => {
+        const amount = recordedCost(value);
+        return amount === undefined ? "Unknown" : `$${amount.toLocaleString()}`;
+    };
+    let expenseBusy = $derived(savingExpense || funeralSync.status === "syncing");
+    type ExpenseAttempt = { json: string; run: () => Promise<unknown>; release: () => void };
+    const expenseAttempts = new WeakMap<object, ExpenseAttempt>();
+    const expenseEdits = new Map<string, ExpenseAttempt>();
+    const expenseIds = new WeakMap<object, string>();
+    let expenseWrite: Promise<unknown> | null = null;
+    const expenseFingerprint = (form: object) => JSON.stringify({ fields: $state.snapshot(form), custom: parsedCustomAttributes });
 
-    function addSong() {
-        const song = prompt("Enter song name (Artist - Title):");
-        if (song) {
-            funeralStore.update((data) => ({
-                ...data,
-                wishes: { ...data.wishes, music: [...data.wishes.music, song] },
-            }));
+    async function saveExpense() {
+        if (expenseBusy || !newExpense.name) return;
+        const cost = recordedCost(newExpense.cost);
+        if (cost === undefined) {
+            costNote = "A cost, including 0, completes this detail.";
+            return;
         }
-    }
-
-    function removeSong(index: number) {
-        funeralStore.update((data) => ({
-            ...data,
-            wishes: {
-                ...data.wishes,
-                music: data.wishes.music.filter((_, i) => i !== index),
+        costNote = null;
+        const form = newExpense;
+        const json = expenseFingerprint(form);
+        const earlier = expenseAttempts.get(form);
+        if (earlier?.json === json) { await earlier.run(); return; }
+        earlier?.release();
+        const isEdit = !!form.id;
+        const id = form.id || expenseIds.get(form) || crypto.randomUUID();
+        expenseIds.set(form, id);
+        const entry: FuneralBudgetItem = {
+            ...JSON.parse(json).fields, id, name: form.name, cost,
+            ...(!isEdit ? { estimated: industryAverage(form.name) } : {}),
+            custom_attributes: JSON.stringify(parsedCustomAttributes),
+        };
+        const owner = captureSession();
+        const account = get(activeAccountId);
+        const profile = get(currentProfileId);
+        const current = () => isCurrentSession(owner) && get(activeAccountId) === account && get(currentProfileId) === profile;
+        const userContext = $estateProfile.ownerName || "User";
+        const recoveryId = crypto.randomUUID();
+        let pending: Promise<unknown> | null = null;
+        let completed = false;
+        let released = false;
+        const attempt: ExpenseAttempt = {
+            json,
+            release: () => { released = true; funeralSync.releaseRecovery(recoveryId, owner); },
+            run: () => {
+                if (pending) return pending;
+                if (completed || released || !current()) return Promise.resolve();
+                const before = expenseWrite;
+                const p = (async () => {
+                    if (before) await before.catch(() => {});
+                    if (completed || released || !current()) return;
+                    savingExpense = true;
+                    try {
+                        const rows = funeralSync.data?.budget || [];
+                        const budget = rows.some((row) => row.id === id)
+                            ? rows.map((row) => row.id === id ? { ...row, ...entry } : row)
+                            : [...rows, entry];
+                        await funeralSync.update({ budget }, false, recoveryId, attempt.run);
+                        completed = true;
+                        if (expenseEdits.get(id) === attempt) expenseEdits.delete(id);
+                        try {
+                            activityLog.logEvent({
+                                module: "Funeral Planning", action: isEdit ? "UPDATE" : "CREATE", entityType: "Budget Item",
+                                entityId: id, entityName: entry.name, changes: [], userContext,
+                            });
+                        } catch { /* The record is already saved. */ }
+                        if (!released && current() && newExpense === form) {
+                            if (expenseFingerprint(form) === json) resetExpenseForm();
+                            else form.id = id;
+                        }
+                    } catch { /* The shared notice keeps this attempt; the form keeps its fields. */ }
+                    finally { savingExpense = false; }
+                })().finally(() => { pending = null; if (expenseWrite === p) expenseWrite = null; });
+                pending = p;
+                expenseWrite = p;
+                return p;
             },
-        }));
-    }
-
-    function saveExpense() {
-        if (!newExpense.name) return;
-
-        const customAttrsString = JSON.stringify(parsedCustomAttributes);
-
-        if (newExpense.id) {
-            // Edit Mode
-            funeralStore.update((data) => ({
-                ...data,
-                budget: data.budget.map((item) =>
-                    item.id === newExpense.id
-                        ? ({
-                              ...item,
-                              ...newExpense,
-                              cost: Number(newExpense.cost),
-                              estimated: Number(newExpense.cost),
-                              custom_attributes: customAttrsString,
-                          } as FuneralBudgetItem)
-                        : item,
-                ),
-            }));
-
-            // Log UPDATE
-            activityLog.logEvent({
-                module: "Funeral Planning",
-                action: "UPDATE",
-                entityType: "Budget Item",
-                entityId: newExpense.id,
-                entityName: newExpense.name || "Unnamed Item",
-                changes: [], // Simplified for now
-                userContext: $estateProfile.ownerName || "User",
-            });
-        } else {
-            // Create Mode
-            const newId = crypto.randomUUID();
-            funeralStore.update((data) => ({
-                ...data,
-                budget: [
-                    ...data.budget,
-                    {
-                        id: newId,
-                        name: newExpense.name || "Expense",
-                        cost: Number(newExpense.cost),
-                        estimated: Number(newExpense.cost),
-                        custom_attributes: customAttrsString,
-                    },
-                ],
-            }));
-
-            // Log CREATE
-            activityLog.logEvent({
-                module: "Funeral Planning",
-                action: "CREATE",
-                entityType: "Budget Item",
-                entityId: newId,
-                entityName: newExpense.name,
-                userContext: $estateProfile.ownerName || "User",
-            });
-        }
-        resetExpenseForm();
+        };
+        expenseAttempts.set(form, attempt);
+        expenseEdits.set(id, attempt);
+        await attempt.run();
     }
 
     function editExpense(item: FuneralBudgetItem) {
+        costNote = null;
+        expenseEdits.get(item.id)?.release();
+        expenseEdits.delete(item.id);
         newExpense = { ...item };
         parsedCustomAttributes = readCustom(item);
         showAddExpense = true;
     }
 
     function resetExpenseForm() {
+        costNote = null;
         newExpense = { id: undefined, name: "", cost: 0 };
         parsedCustomAttributes = {};
         showAddExpense = false;
     }
 
-    function removeExpense(id: string) {
-        if (!confirm("Remove this expense? You can add it back later.")) return;
-        funeralStore.update((data) => ({
-            ...data,
-            budget: data.budget.filter((i) => i.id !== id),
-        }));
+    async function removeExpense(id: string) {
+        if (!(await askConfirm("Remove this expense? You can add it back later."))) return;
+        await funeralStore
+            .update((data) => ({
+                ...data,
+                budget: data.budget.filter((i) => i.id !== id),
+            }))
+            .catch(() => {}); // the manager already showed the one gentle message
     }
 
-    function updateMood(mood: string) {
-        funeralStore.update((data) => ({
-            ...data,
-            wishes: { ...data.wishes, mood },
-        }));
-    }
-
-    // Reactive Updates
-    let totalBudget = $derived(
-        $funeralStore!.budget.reduce((acc, item) => acc + item.cost, 0),
-    );
-    let totalEstimated = $derived(
-        $funeralStore!.budget.reduce(
-            (acc, item) => acc + (item.estimated || item.cost),
-            0,
-        ),
-    );
-    let variance = $derived(totalEstimated - totalBudget);
-
-    function prefillEstimates() {
-        if (
-            !confirm(
-                "This will add standard industry average costs (2021 NFDA) to your budget. Continue?",
-            )
-        )
-            return;
-
-        const standardItems = [
+    // 2021 NFDA national averages. `aliases` are names these items were saved under before.
+    const standardItems = [
             { name: "Basic Services Fees", cost: 2300, estimated: 2300 },
-            { name: "Embalming & Prep", cost: 775, estimated: 775 },
+            { name: "Embalming and preparation", cost: 775, estimated: 775, aliases: ["Embalming & Prep"] },
             { name: "Viewing / Visitation", cost: 450, estimated: 450 },
             { name: "Funeral Ceremony", cost: 515, estimated: 515 },
             { name: "Hearse", cost: 350, estimated: 350 },
-            { name: "Transfer of Remains", cost: 350, estimated: 350 },
+            { name: "Transport of your loved one", cost: 350, estimated: 350, aliases: ["Transfer of Remains"] },
             { name: "Casket (Metal)", cost: 2500, estimated: 2500 },
             { name: "Vault", cost: 1572, estimated: 1572 },
             { name: "Memorial Printed Package", cost: 183, estimated: 183 },
-        ];
+    ];
 
+    const findStandard = (name?: string) => {
+        const n = (name || "").trim().toLowerCase();
+        return standardItems.find(
+            (s) => s.name.toLowerCase() === n || s.aliases?.some((a) => a.toLowerCase() === n),
+        );
+    };
+    // The national average comes from this table, never from the person's own cost
+    // (rows saved earlier carry estimated = cost, so the stored value can't be trusted).
+    const industryAverage = (name?: string) => findStandard(name)?.estimated;
+
+    // Reactive Updates
+    let totalBudget = $derived(
+        $funeralStore!.budget.reduce((acc, item) => acc + (recordedCost(item.cost) ?? 0), 0),
+    );
+    let unknownBudgetCost = $derived(budgetItems.some((item) => recordedCost(item.cost) === undefined));
+    // Compare only the items that have a national average, against their own costs.
+    let comparedItems = $derived(budgetItems.filter((i) => industryAverage(i.name) !== undefined));
+    let totalEstimated = $derived(
+        comparedItems.reduce((acc, item) => acc + (industryAverage(item.name) ?? 0), 0),
+    );
+    let comparedCost = $derived(comparedItems.reduce((acc, item) => acc + (recordedCost(item.cost) ?? 0), 0));
+    let unknownComparedCost = $derived(comparedItems.some((item) => recordedCost(item.cost) === undefined));
+    let variance = $derived(totalEstimated - comparedCost);
+    // Auto-Fill adds only the common costs the budget doesn't hold yet.
+    let missingStandard = $derived(standardItems.filter((s) => !budgetItems.some((i) => findStandard(i.name) === s)));
+
+    async function prefillEstimates() {
+        if (
+            !(await askConfirm(
+                "This will add standard industry average costs (2021 NFDA) to your budget. Continue?",
+                "Add these costs",
+            ))
+        )
+            return;
+
+        const toAdd = missingStandard;
+        if (toAdd.length === 0) return;
         // One save for the whole set: one POST, one affirmation (was one per item).
         funeralStore
             .update((data) => ({
                 ...data,
                 budget: [
                     ...data.budget,
-                    ...standardItems.map((std) => ({
+                    ...toAdd.map((std) => ({
                         id: crypto.randomUUID(),
                         name: std.name,
                         cost: std.cost,
@@ -245,16 +282,17 @@
 {#if module}
     <LivingBlueprintHeader
         title="Final Wishes"
-        subtitle={module.title}
-        tier={module.role === "owner" ? "preparation" : "executor"}
-        detailedDescription={module.description}
+        subtitle="Funeral and memorial preferences"
+        detailedDescription={funeralIntro}
     />
 {/if}
 
 <div class="max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
     <div class="mb-12 text-center">
         <div class="max-w-xl mx-auto mb-8">
-            <AIPromptBar context="obituary" />
+            <p class="text-left text-muted-foreground mb-4">{funeralIntro}</p>
+            <p class="text-left text-sm text-muted-foreground mb-4">This notebook holds your wishes. The helper uses the current field and wishes shown here to draft text for you to review and copy.</p>
+            <AIPromptBar context="funeral" job={funeralJob} />
         </div>
 
         <div class="max-w-3xl mx-auto text-left">
@@ -273,129 +311,132 @@
 
     <!-- Tabs -->
     <div class="flex justify-center items-center gap-4 mb-8">
-        <DataViewToggle module="funeral" onchange={(mode) => viewMode = mode} />
-        <div class="bg-gray-100 p-1.5 rounded-xl inline-flex gap-2">
+        <div class="bg-muted p-1.5 rounded-xl inline-flex max-w-full flex-wrap justify-center gap-2">
             <button
                 class="px-6 py-2.5 rounded-lg font-bold text-sm transition-all {activeTab ===
                 'wishes'
-                    ? 'bg-white shadow-sm text-[#304743]'
-                    : 'text-gray-500 hover:text-gray-900'}"
+                    ? 'bg-card shadow-sm text-primary-deep dark:text-primary-hover'
+                    : 'text-muted-foreground hover:text-foreground'}"
                 onclick={() => (activeTab = "wishes")}
             >
-                Vision & Spirit
+                Funeral &amp; memorial wishes
             </button>
             <button
                 class="px-6 py-2.5 rounded-lg font-bold text-sm transition-all {activeTab ===
                 'budget'
-                    ? 'bg-white shadow-sm text-[#304743]'
-                    : 'text-gray-500 hover:text-gray-900'}"
+                    ? 'bg-card shadow-sm text-primary-deep dark:text-primary-hover'
+                    : 'text-muted-foreground hover:text-foreground'}"
                 onclick={() => (activeTab = "budget")}
             >
-                Financial Care
+                Costs &amp; arrangements
             </button>
         </div>
     </div>
 
     <div
-        class="bg-white rounded-2xl border border-border shadow-sm overflow-hidden min-h-[500px] p-8"
+        class="bg-card rounded-2xl border border-border shadow-sm min-h-[500px] p-8"
     >
-        <!-- Memorial Subject Header (Synced) -->
+        <!-- Memorial Subject Header (Synced): only the values that are filled in -->
+        {#if $estateProfile.ownerName || $estateExecutorName || $estateProfile.legalCityState}
         <div
-            class="mb-10 p-6 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-6"
+            class="mb-10 p-6 bg-muted border border-border rounded-2xl flex flex-col md:flex-row justify-between items-center gap-6"
         >
+            {#if $estateProfile.ownerName}
             <div class="flex items-center gap-4">
-                <div class="p-3 bg-white rounded-xl shadow-sm text-slate-400">
+                <div class="p-3 bg-card rounded-xl shadow-sm text-muted-foreground">
                     <UserCircle size={32} />
                 </div>
                 <div>
-                    <h2 class="text-xl font-bold text-slate-800">
-                        Celebrating the Life of {$estateProfile.ownerName ||
-                            "Valued Member"}
+                    <h2 class="text-xl font-bold text-foreground">
+                        Celebrating the Life of {$estateProfile.ownerName}
                     </h2>
-                    <p class="text-sm text-slate-500 italic">
+                    <p class="text-sm text-muted-foreground italic">
                         Pre-filled from Estate Profile
                     </p>
                 </div>
             </div>
+            {/if}
 
-            <div class="h-10 w-px bg-slate-200 hidden md:block"></div>
+            {#if $estateExecutorName}
+            {#if $estateProfile.ownerName}
+            <div class="h-10 w-px bg-border hidden md:block"></div>
+            {/if}
 
             <div class="flex items-center gap-4">
                 <div class="text-right">
                     <p
-                        class="text-xs font-bold uppercase tracking-widest text-slate-400"
+                        class="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                     >
                         Chief Coordinator
                     </p>
-                    <p class="font-bold text-slate-700">
-                        {$estateProfile.executorName || "None Designated"}
+                    <p class="font-bold text-foreground">
+                        {$estateExecutorName}
                     </p>
                 </div>
-                <div class="p-3 bg-white rounded-xl shadow-sm text-primary">
+                <div class="p-3 bg-card rounded-xl shadow-sm text-primary">
                     <Users size={24} />
                 </div>
             </div>
+            {/if}
 
-            <div class="h-10 w-px bg-slate-200 hidden md:block"></div>
+            {#if $estateProfile.legalCityState}
+            {#if $estateProfile.ownerName || $estateExecutorName}
+            <div class="h-10 w-px bg-border hidden md:block"></div>
+            {/if}
 
             <div class="flex items-center gap-4">
                 <div class="text-right">
                     <p
-                        class="text-xs font-bold uppercase tracking-widest text-slate-400"
+                        class="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                     >
                         Local Area
                     </p>
-                    <p class="font-bold text-slate-700">
-                        {$estateProfile.legalCityState || "Not Set"}
+                    <p class="font-bold text-foreground">
+                        {$estateProfile.legalCityState}
                     </p>
                 </div>
-                <div class="p-3 bg-white rounded-xl shadow-sm text-primary">
+                <div class="p-3 bg-card rounded-xl shadow-sm text-primary">
                     <MapPinIcon size={24} />
                 </div>
             </div>
+            {/if}
         </div>
+        {/if}
 
         {#if activeTab === "wishes"}
-            <FuneralWizard />
+            <FuneralWizard onOpenBudget={() => (activeTab = "budget")} onContextChange={acceptShownContext} />
         {/if}
         {#if activeTab === "budget"}
             <!-- BUDGET TAB -->
             <div in:fade={{ duration: 300 }}>
                 {#if budgetItems.length === 0}
                     <EmptyState
-                        title="How you'd like to be remembered"
-                        whyMatters="<strong>Without these instructions, your family will make these deeply personal choices while grieving—and wonder forever if they got it right.</strong> The music at your service, the flowers, the tone, the dress code—these details shape how people remember you.<br/><br/>Documenting your wishes isn't morbid. It's a gift. It lets your family focus on honoring you instead of guessing what you would have wanted."
-                        encouragement="You don't have to decide everything now. Start with just one thing—maybe your favorite song or flower."
-                        icon={Music}
-                        iconClass="text-purple-500"
-                        ctaLabel="Share your wishes"
+                        title="Financial Stewardship"
+                        whyMatters="By thinking through these costs now, you're protecting your family from difficult financial decisions during an already hard time."
+                        icon={DollarSign}
+                        ctaLabel="Auto-Fill Common Costs"
                         onAction={prefillEstimates}
-                        skipMessage="Come back to this when you're ready. There's no rush."
+                        skipMessage="Come back to this whenever you're ready."
                     />
 
-                    <!-- Sample Data GhostRows -->
+                    <!-- Example costs (the same standard estimates Auto-Fill adds) -->
                     <div class="mt-8">
-                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-60">
-                            {#each getSmartSamples($language).funeral || [] as sample}
+                            {#each standardItems.slice(0, 3) as sample}
                                 <GhostRow
                                     name={sample.name}
-                                    subtitle={sample.description}
-                                    type={sample.type}
+                                    value={sample.cost}
                                     onClick={() => {
                                         newExpense = {
                                             name: sample.name,
-                                            cost: 0
+                                            cost: sample.cost
                                         };
                                         showAddExpense = true;
                                     }}
                                 >
                                     {#snippet icon()}
-                                        {#if sample.type === 'music'}
-                                            <Music size={20} class="text-slate-400" />
-                                        {:else}
-                                            <Flower size={20} class="text-slate-400" />
-                                        {/if}
+                                        <DollarSign size={20} class="text-muted-foreground" />
                                     {/snippet}
                                 </GhostRow>
                             {/each}
@@ -407,7 +448,7 @@
                         class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 items-end"
                     >
                         <div
-                            class="p-6 rounded-2xl bg-[#304743] text-white shadow-lg"
+                            class="p-6 rounded-2xl bg-primary-deep text-white shadow-lg"
                         >
                             <div
                                 class="text-xs font-bold uppercase tracking-wider opacity-70 mb-1"
@@ -415,33 +456,43 @@
                                 Total Estimated Cost
                             </div>
                             <div class="text-4xl font-serif font-bold">
-                                ${totalBudget.toLocaleString()}
+                                {unknownBudgetCost ? "Unknown" : `$${totalBudget.toLocaleString()}`}
                             </div>
                         </div>
 
+                        {#if comparedItems.length > 0}
                         <div
-                            class="p-6 rounded-2xl bg-white border border-stone-200 shadow-sm"
+                            class="p-6 rounded-2xl bg-card border border-border shadow-sm"
                         >
                             <div
-                                class="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1"
+                                class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1"
                             >
                                 Industry Avg. (Projected)
                             </div>
-                            <div class="text-2xl font-bold text-stone-700">
+                            <div class="text-2xl font-bold text-foreground">
                                 ${totalEstimated.toLocaleString()}
                             </div>
+                            {#if comparedItems.length < budgetItems.length}
+                                <div class="text-xs text-muted-foreground mt-1">
+                                    Across the {comparedItems.length} common costs
+                                </div>
+                            {/if}
                         </div>
 
                         <div
                             class="p-6 rounded-2xl h-fit {variance >= 0
-                                ? 'bg-emerald-50 text-emerald-800'
-                                : 'bg-rose-50 text-rose-800'}"
+                                ? 'bg-success/10 text-success'
+                                : 'bg-muted text-foreground'}"
                         >
                             <div class="flex items-center gap-2 font-bold mb-1">
                                 Saving vs. Avg
                             </div>
                             <p class="text-sm opacity-90 leading-relaxed">
-                                {#if variance >= 0}
+                                {#if unknownComparedCost}
+                                    Unknown
+                                {:else if variance === 0}
+                                    Your plan matches the national average.
+                                {:else if variance > 0}
                                     You are projected to save <span
                                         class="font-bold underline"
                                         >${variance.toLocaleString()}</span
@@ -452,66 +503,71 @@
                                         >${Math.abs(
                                             variance,
                                         ).toLocaleString()}</span
-                                    > over the national average.
+                                    > above the national average.
                                 {/if}
                             </p>
                         </div>
+                        {/if}
                     </div>
 
                     <!-- Budget Table -->
                     <div
-                        class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden"
+                        class="bg-card rounded-xl shadow-sm border border-border overflow-hidden"
                     >
                         <div
-                            class="px-6 py-4 border-b border-stone-100 flex justify-between items-center"
+                            class="px-6 py-4 border-b border-border flex justify-between items-center"
                         >
                             <h3
-                                class="font-bold text-stone-700 flex items-center gap-2"
+                                class="font-bold text-foreground flex items-center gap-2"
                             >
                                 <DollarSign size={18} /> Financial Stewardship
                             </h3>
                             <div class="flex gap-2">
+                                {#if missingStandard.length > 0}
                                 <button
                                     onclick={prefillEstimates}
-                                    class="text-xs font-bold text-stone-500 hover:text-[#4A7C74] px-3 py-1.5 rounded-lg hover:bg-stone-50 transition-colors"
+                                    class="text-xs font-bold text-muted-foreground hover:text-primary px-3 py-1.5 rounded-lg hover:bg-muted transition-colors"
                                 >
                                     Auto-Fill Common Costs
                                 </button>
+                                {/if}
                                 <button
                                     onclick={() => {
                                         newExpense = { name: "", cost: 0 };
                                         showAddExpense = true;
                                     }}
-                                    class="bg-[#4A7C74] hover:bg-[#3b635d] text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-1"
+                                    class="bg-primary hover:bg-primary-hover text-primary-foreground px-4 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-1"
                                 >
                                     <Plus size={14} /> Add Item
                                 </button>
                             </div>
                         </div>
 
-                        <div class="divide-y divide-stone-100">
+                        <div class="divide-y divide-border">
                             {#each budgetItems as item (item.id)}
                                 <div
-                                    class="px-6 py-4 flex items-center justify-between group hover:bg-stone-50 transition-colors"
+                                    class="px-6 py-4 flex items-center justify-between group hover:bg-muted transition-colors"
                                 >
                                     <div>
-                                        <div class="font-bold text-stone-800">
+                                        <div class="font-bold text-foreground">
                                             {item.name}
                                         </div>
-                                        <div class="text-xs text-stone-400">
-                                            Estimated: ${item.estimated?.toLocaleString()}
-                                        </div>
+                                        {#if industryAverage(item.name) !== undefined}
+                                            <div class="text-xs text-muted-foreground">
+                                                Industry avg.: ${industryAverage(item.name)?.toLocaleString()}
+                                            </div>
+                                        {/if}
                                     </div>
                                     <div class="flex items-center gap-6">
-                                        <div class="font-bold text-stone-700">
-                                            ${item.cost.toLocaleString()}
+                                        <div class="font-bold text-foreground">
+                                            {shownCost(item.cost)}
                                         </div>
                                         <div class="flex gap-2">
                                             <button
                                                 onclick={() =>
                                                     editExpense(item)}
                                                 aria-label="Edit these details"
-                                                class="p-2 text-stone-400 hover:text-[#4A7C74] bg-white border border-stone-200 rounded-full shadow-sm"
+                                                class="p-2 text-muted-foreground hover:text-primary bg-card border border-border rounded-full shadow-sm"
                                             >
                                                 <Pencil size={14} />
                                             </button>
@@ -519,7 +575,7 @@
                                                 onclick={() =>
                                                     removeExpense(item.id)}
                                                 aria-label="Remove this item"
-                                                class="p-2 text-stone-400 hover:text-red-500 bg-white border border-stone-200 rounded-full shadow-sm"
+                                                class="p-2 text-muted-foreground hover:text-foreground bg-card border border-border rounded-full shadow-sm"
                                             >
                                                 <Trash2 size={14} />
                                             </button>
@@ -540,20 +596,20 @@
                 transition:fade
             >
                 <div
-                    class="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden"
+                    class="bg-card rounded-2xl w-full max-w-md shadow-xl overflow-hidden"
                     transition:scale={{ start: 0.95 }}
                 >
                     <div
-                        class="bg-[#304743] p-6 flex justify-between items-start text-white"
+                        class="bg-primary-deep p-6 flex justify-between items-start text-white"
                     >
                         <div class="flex-1 pr-4">
-                            <h3 class="font-serif font-bold text-xl">
+                            <h3 class="font-serif font-bold text-xl text-white">
                                 {newExpense.id
-                                    ? "Update This Detail"
+                                    ? "Refine this detail"
                                     : "Plan Ahead"}
                             </h3>
                             <p
-                                class="text-emerald-100/80 text-sm mt-1 leading-relaxed"
+                                class="text-white/80 text-sm mt-1 leading-relaxed"
                             >
                                 {newExpense.id
                                     ? "Keep your estimates current—it helps your family plan with clarity."
@@ -562,36 +618,40 @@
                         </div>
                         <button aria-label="Close"
                             onclick={resetExpenseForm}
-                            class="text-white/50 hover:text-white transition-colors mt-1"
+                            class="text-white/70 hover:text-white transition-colors mt-1"
                         >
                             <X size={24} />
                         </button>
                     </div>
                     <div class="p-6 space-y-4">
                         <div class="space-y-2">
-                            <label
+                            <label for="funeral-name"
                                 class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                                 >Item Name</label
                             >
-                            <input
+                            <input id="funeral-name"
                                 bind:value={newExpense.name}
-                                class="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-[#4A7C74] outline-none font-medium"
+                                class="w-full p-3 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium"
                                 placeholder="e.g. Venue Rental"
                             />
                         </div>
                         <div class="space-y-2">
-                            <label
+                            <label for="funeral-cost"
                                 class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                                 >Cost ($)</label
                             >
-                            <input
+                            <input id="funeral-cost"
                                 type="number"
                                 bind:value={newExpense.cost}
-                                class="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-[#4A7C74] outline-none font-medium"
+                                aria-invalid={costNote ? true : undefined}
+                                aria-describedby={costNote ? "funeral-cost-note" : undefined}
+                                oninput={() => (costNote = null)}
+                                class="w-full p-3 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium"
                                 placeholder="0.00"
                             />
+                            {#if costNote}<p id="funeral-cost-note" role="status" class="text-sm text-muted-foreground">{costNote}</p>{/if}
                         </div>
-                        <div class="pt-4 mt-4 border-t border-stone-100">
+                        <div class="pt-4 mt-4 border-t border-border">
                             <CustomFieldsManager
                                 entityType="funeral"
                                 bind:data={parsedCustomAttributes}
@@ -599,10 +659,11 @@
                         </div>
                         <button
                             onclick={saveExpense}
-                            disabled={!newExpense.name}
-                            class="w-full py-4 bg-[#4A7C74] hover:bg-[#3b635d] text-white font-bold rounded-xl shadow-lg shadow-[#4A7C74]/20 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={expenseBusy || !newExpense.name}
+                            aria-busy={expenseBusy}
+                            class="w-full py-4 bg-primary hover:bg-primary-hover text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Save Expense
+                            {expenseBusy ? "Saving..." : "Save this detail"}
                         </button>
                     </div>
                 </div>

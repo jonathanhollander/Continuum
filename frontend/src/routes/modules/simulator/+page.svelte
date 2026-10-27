@@ -1,150 +1,208 @@
 <script lang="ts">
     import { fade, slide } from "svelte/transition";
+    import { onMount, onDestroy } from "svelte";
     import {
-        TriangleAlert,
-        Siren,
+        Compass,
         CreditCard,
         Stethoscope,
-        Ghost,
+        HeartHandshake,
         CircleCheck,
-        CircleX,
+        CirclePlus,
         ArrowRight,
     } from "lucide-svelte";
-    import { onMount } from "svelte";
+    import { documentSync } from "$lib/stores/documentStore.svelte";
+    import { financialAssetsSync, isDebt } from "$lib/stores/financialAssetsStore.svelte";
+    import { directiveSync } from "$lib/stores/medicalStore.svelte";
+    import { auth } from "$lib/stores/auth";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
 
-    let activeScenario: "none" | "wallet" | "medical" | "passing" = "none";
-    let simulationState: "idle" | "running" | "complete" = "idle";
+    type Scenario = "wallet" | "medical" | "passing";
+    let activeScenario: "none" | Scenario = "none";
+    let simulationState: "idle" | "running" | "paused" | "complete" = "idle";
     let report: any[] = [];
     let overallStatus: "pass" | "fail" | "warn" = "pass";
+    let runVersion = 0;
+    let runOwner = captureSession();
+    let pausedSources: { name: string; path: string }[] = [];
+    let pauseMessage = "";
 
-    // Mock Data Store Access
-    let docs: any[] = [];
-    let assets: any[] = [];
+    onMount(() => auth.subscribe(() => {
+        if (activeScenario !== "none" && !isCurrentSession(runOwner)) {
+            runVersion++;
+            report = [];
+            pausedSources = [];
+            pauseMessage = "The signed-in account changed. Try Again to read this scenario's records for the current account.";
+            simulationState = "paused";
+        }
+    }));
+    onDestroy(() => { runVersion++; });
 
-    import { getStored } from "$lib/stores/persistence";
+    const scenarioSources = (id: Scenario) => [
+        { manager: documentSync, name: "Document Vault", path: "/modules/legal-documents" },
+        id === "medical"
+            ? { manager: directiveSync, name: "Medical directives", path: "/modules/medical" }
+            : { manager: financialAssetsSync, name: "Financial Accounts", path: "/modules/financial-accounts" },
+    ];
 
-    // ...
-
-    onMount(() => {
-        docs = getStored<any[]>("docs_legal-vault", []);
-        assets = getStored<any[]>("assets_assets-main", []);
-    });
+    const named = (d: any, pattern: RegExp) =>
+        pattern.test(`${d?.name ?? ""} ${d?.title ?? ""}`.toLowerCase());
 
     const scenarios = [
         {
             id: "wallet",
             title: "Lost Wallet",
             icon: CreditCard,
-            color: "text-amber-600",
-            bg: "bg-amber-100",
+            color: "text-warning",
+            bg: "bg-warning-soft",
             desc: "Your physical wallet is stolen while traveling.",
         },
         {
             id: "medical",
-            title: " Sudden Hospitalization",
+            title: "Sudden Hospitalization",
             icon: Stethoscope,
-            color: "text-rose-600",
-            bg: "bg-rose-100",
-            desc: "You are incapacitated and cannot make decisions.",
+            color: "text-primary-hover",
+            bg: "bg-primary-soft",
+            desc: "Which care wishes and decision-maker records could someone look for?",
         },
         {
             id: "passing",
             title: "Unexpected Passing",
-            icon: Ghost,
-            color: "text-stone-600",
-            bg: "bg-stone-200",
-            desc: "The unthinkable happens today.",
+            icon: HeartHandshake,
+            color: "text-muted-foreground",
+            bg: "bg-muted",
+            desc: "Which documents and beneficiary notes could your family review?",
         },
     ];
 
-    function runSimulation(id: "wallet" | "medical" | "passing") {
+    async function runSimulation(id: Scenario) {
+        const version = ++runVersion;
+        const owner = captureSession();
+        runOwner = owner;
         activeScenario = id;
         simulationState = "running";
         report = [];
+        pausedSources = [];
+        pauseMessage = "";
 
-        setTimeout(() => {
-            // Simulation Logic
-            if (id === "wallet") {
-                const hasIDs = docs.some((d) => d.type === "ID");
-                const hasCards = assets.some((a) => a.type === "Financial");
+        const sources = scenarioSources(id);
+        await Promise.allSettled(sources.map(({ manager }) => manager.sync()));
+        if (version !== runVersion || activeScenario !== id || !isCurrentSession(owner)) return;
+        // SyncManager catches read failures. A settled promise or a populated cache
+        // alone does not establish that this scenario's required sources answered.
+        pausedSources = sources.filter(({ manager }) => !manager.lastSync || manager.status !== "synced")
+            .map(({ name, path }) => ({ name, path }));
+        if (pausedSources.length > 0) {
+            pauseMessage = "These sources have not been confirmed, so this walkthrough has no result yet. Existing device records are kept. Try Again to refresh the selected scenario.";
+            simulationState = "paused";
+            return;
+        }
+        const docs: any[] = documentSync.items;
+        const assets: any[] = id === "medical" ? [] : financialAssetsSync.items.filter((a: any) => !a.is_closed);
+        const directives: any[] = id === "medical" ? directiveSync.items : [];
+        const checks: any[] = [];
 
-                report.push({
-                    check: "Digital ID Backup",
-                    status: hasIDs,
-                    msg: hasIDs
-                        ? "Passport/ID copies found in Vault."
-                        : "CRITICAL: No backup IDs found.",
-                });
-                report.push({
-                    check: "Card List",
-                    status: hasCards,
-                    msg: hasCards
-                        ? "Financial accounts listed."
-                        : "WARNING: No card numbers recorded.",
-                });
-                overallStatus = hasIDs && hasCards ? "pass" : "fail";
-            }
+        if (id === "wallet") {
+            const hasIDs = docs.some((d) => d.type === "ID");
+            const hasCards = assets.some(
+                (a) => a.type === "Financial" || isDebt(a),
+            );
 
-            if (id === "medical") {
-                const hasPOA = docs.some(
-                    (d) =>
-                        d.name.toLowerCase().includes("power of attorney") ||
-                        d.type === "Other",
-                ); // broad check
-                const hasHealth = docs.some(
-                    (d) =>
-                        d.name.toLowerCase().includes("health") ||
-                        d.type === "Other",
+            checks.push({
+                check: "ID Record",
+                status: hasIDs,
+                msg: hasIDs
+                    ? "A Document Vault record is categorized as ID. Open it to check the attachment or original's location."
+                    : "No Document Vault record categorized as ID was found. Record where a copy or original can be found.",
+            });
+            checks.push({
+                check: "Financial or Debt Record",
+                status: hasCards,
+                msg: hasCards
+                    ? "An open Financial or debt record was found. Check that the actual cards and institution contact details are listed."
+                    : "No open Financial or debt record was found. Record the actual accounts or cards and institution contacts.",
+            });
+            overallStatus = hasIDs && hasCards ? "pass" : "fail";
+        }
+
+        if (id === "medical") {
+            // A care directive from the Medical page (a healthcare proxy counts toward
+            // Power of Attorney below), or a vault document named as one
+            const hasDirective = directives.some((d) =>
+                ["living_will", "dnr", "palliative_care", "other"].includes(d.type),
+            );
+            const hasHealth =
+                hasDirective ||
+                docs.some((d) =>
+                    named(d, /living will|advance directive|medical directive|health ?care directive|\bdnr\b/),
                 );
+            // A healthcare proxy from the Medical page, or a vault document named as a POA
+            const hasProxy = directives.some((d) => d.type === "healthcare_proxy");
+            const hasPOA =
+                hasProxy || docs.some((d) => named(d, /power of attorney|\bpoa\b/));
 
-                report.push({
-                    check: "Medical Directive",
-                    status: hasHealth,
-                    msg: hasHealth
-                        ? "Healthcare Directive found."
-                        : "CRITICAL: Doctors don't know your wishes.",
-                });
-                report.push({
-                    check: "Power of Attorney",
-                    status: hasPOA,
-                    msg: hasPOA
-                        ? "POA found."
-                        : "CRITICAL: No one can pay your bills.",
-                });
-                overallStatus = hasHealth && hasPOA ? "pass" : "fail";
-            }
+            checks.push({
+                check: "Medical Directive",
+                status: hasHealth,
+                msg: hasHealth
+                    ? hasDirective
+                        ? "A living-will, DNR, palliative-care or other directive record was found in Health & Medical."
+                        : "A Document Vault title matches a healthcare-directive term. Review the actual document and original."
+                    : "No matching directive record or document title was found. Record your wishes and where the relevant originals are kept.",
+            });
+            checks.push({
+                check: "Proxy / Power-of-Attorney Record",
+                status: hasPOA,
+                msg: hasPOA
+                    ? hasProxy
+                        ? "A healthcare-proxy record was found in Health & Medical. Confirm the person, document and applicable authority."
+                        : "A Document Vault title matches power of attorney or POA. Check its actual purpose and authority."
+                    : "No healthcare-proxy record or matching power-of-attorney title was found. Record the person and location of the relevant document.",
+            });
+            overallStatus = hasHealth && hasPOA ? "pass" : "fail";
+        }
 
-            if (id === "passing") {
-                const hasWill = docs.some((d) => d.type === "Will");
-                const hasTrust = docs.some((d) => d.type === "Trust");
-                const benCov =
-                    assets.filter((a) => a.beneficiaries).length /
-                    Math.max(1, assets.length);
+        if (id === "passing") {
+            const hasWill = docs.some((d) => d.type === "Will");
+            const hasTrust = docs.some((d) => d.type === "Trust");
+            const owned = assets.filter((a) => !isDebt(a));
+            const withBen = owned.filter((a) =>
+                String(a.beneficiaries ?? "").trim(),
+            ).length;
+            const benCov = withBen / Math.max(1, owned.length);
 
-                report.push({
-                    check: "Will / Trust",
-                    status: hasWill || hasTrust,
-                    msg:
-                        hasWill || hasTrust
-                            ? "Legal structure found."
-                            : "CRITICAL: Estate is Intestate (Court decides).",
-                });
-                report.push({
-                    check: "Beneficiaries",
-                    status: benCov > 0.8,
-                    msg: `Beneficiaries named on ${Math.round(benCov * 100)}% of assets.`,
-                });
-                overallStatus =
-                    (hasWill || hasTrust) && benCov > 0.8 ? "pass" : "fail";
-            }
+            checks.push({
+                check: "Will / Trust",
+                status: hasWill || hasTrust,
+                msg:
+                    hasWill || hasTrust
+                        ? "A Document Vault record is categorized as Will or Trust. Review the document and original's location."
+                        : "No Document Vault record categorized as Will or Trust was found. Record where the relevant documents or originals are kept.",
+            });
+            checks.push({
+                check: "Beneficiary Fields",
+                status: benCov > 0.8,
+                msg:
+                    withBen === 0
+                        ? `Beneficiary text is recorded on 0 of ${owned.length} open non-debt assets. This check requires more than 80%; confirm designations with each institution.`
+                        : withBen === owned.length
+                          ? `Beneficiary text is recorded on ${withBen} of ${owned.length} open non-debt assets. Confirm the actual designations with each institution.`
+                          : `Beneficiary text is recorded on ${withBen} of ${owned.length} open non-debt assets. This check requires more than 80%; confirm designations with each institution.`,
+            });
+            overallStatus =
+                (hasWill || hasTrust) && benCov > 0.8 ? "pass" : "fail";
+        }
 
-            simulationState = "complete";
-        }, 1500);
+        report = checks;
+        simulationState = "complete";
     }
 
     function reset() {
+        runVersion++;
         activeScenario = "none";
         simulationState = "idle";
+        report = [];
+        pausedSources = [];
+        pauseMessage = "";
     }
 </script>
 
@@ -152,17 +210,18 @@
     <!-- Header -->
     <div class="mb-12 flex items-center justify-between">
         <div>
-            <h1 class="font-serif font-bold text-4xl text-[#304743] mb-2">
+            <h1 class="font-serif font-bold text-4xl text-foreground mb-2">
                 Practice Run
             </h1>
             <p class="text-lg text-muted-foreground">
-                Stress-test your estate plan against real-world events.
+                Look for selected record categories and fields in a practice scenario.
+                This does not test document validity, attachments, access or a complete response to an emergency.
             </p>
         </div>
         <div
-            class="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2"
+            class="bg-primary-soft text-primary-hover px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2"
         >
-            <Siren size={18} /> Fire Drill Mode
+            <Compass size={18} /> Practice walkthrough
         </div>
     </div>
 
@@ -172,7 +231,7 @@
                 <button
                     on:click={() =>
                         runSimulation(s.id as "wallet" | "medical" | "passing")}
-                    class="bg-white p-8 rounded-2xl border border-border hover:border-black/20 hover:shadow-xl transition-all text-left group"
+                    class="bg-card p-8 rounded-2xl border border-border hover:border-primary/30 hover:shadow-xl transition-all text-left group flex flex-col items-start justify-start"
                 >
                     <div
                         class="w-16 h-16 rounded-2xl {s.bg} {s.color} flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform"
@@ -180,7 +239,7 @@
                         <svelte:component this={s.icon} size={32} />
                     </div>
                     <h3
-                        class="font-bold font-serif text-xl text-[#304743] mb-2"
+                        class="font-bold font-serif text-xl text-foreground mb-2"
                     >
                         {s.title}
                     </h3>
@@ -190,9 +249,9 @@
                         {s.desc}
                     </p>
                     <div
-                        class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-black/40 group-hover:text-[#4A7C74]"
+                        class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary-hover"
                     >
-                        Run Simulation <ArrowRight size={14} />
+                        Walk through this moment <ArrowRight size={14} />
                     </div>
                 </button>
             {/each}
@@ -201,22 +260,22 @@
 
     {#if activeScenario !== "none"}
         <div
-            class="bg-white rounded-2xl border border-border shadow-2xl overflow-hidden"
+            class="bg-card rounded-2xl border border-border shadow-2xl overflow-hidden"
             in:fade
         >
             <!-- Sim Header -->
             <div
-                class="p-8 border-b border-border bg-stone-50 flex items-center justify-between"
+                class="p-8 border-b border-border bg-muted flex items-center justify-between"
             >
                 <div class="flex items-center gap-4">
                     <button
                         on:click={reset}
-                        class="text-muted-foreground hover:text-black"
+                        class="text-muted-foreground hover:text-foreground"
                     >
                         ← Back
                     </button>
                     <h2 class="font-bold text-xl flex items-center gap-2">
-                        Simulating: <span class="text-[#304743]"
+                        Moment: <span class="text-primary-hover"
                             >{scenarios.find((s) => s.id === activeScenario)
                                 ?.title}</span
                         >
@@ -224,9 +283,9 @@
                 </div>
                 {#if simulationState === "running"}
                     <div
-                        class="flex items-center gap-2 text-[#4A7C74] font-bold animate-pulse"
+                        class="flex items-center gap-2 text-primary font-bold animate-pulse"
                     >
-                        <Siren size={18} /> Running Checks...
+                        <Compass size={18} /> Looking over your plan…
                     </div>
                 {/if}
             </div>
@@ -237,17 +296,32 @@
                         class="flex flex-col items-center justify-center h-full space-y-6 pt-12"
                     >
                         <div
-                            class="w-20 h-20 border-4 border-[#4A7C74] border-t-transparent rounded-full animate-spin"
+                            class="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin"
                         ></div>
                         <div class="space-y-2 text-center">
-                            <p class="text-lg font-bold text-[#304743]">
-                                Audit in Progress
+                            <p class="text-lg font-bold text-foreground">
+                                Looking over your plan
                             </p>
                             <p class="text-muted-foreground">
-                                Checking Vault... scanning Assets... verifying
-                                Roles...
+                                Reading your Document Vault and {activeScenario === "medical" ? "medical directives" : "Financial Accounts"}…
                             </p>
                         </div>
+                    </div>
+                {:else if simulationState === "paused"}
+                    <div class="max-w-2xl mx-auto space-y-6" role="status" data-testid="simulation-paused">
+                        <h2 class="font-serif font-bold text-3xl text-foreground">Records Not Confirmed</h2>
+                        <p class="text-muted-foreground">{pauseMessage}</p>
+                        {#if pausedSources.length > 0}
+                            <ul class="space-y-2">
+                                {#each pausedSources as source}
+                                    <li><a class="text-primary underline underline-offset-2" href={source.path}>{source.name}</a></li>
+                                {/each}
+                            </ul>
+                        {/if}
+                        <button
+                            on:click={() => activeScenario !== "none" && runSimulation(activeScenario)}
+                            class="px-5 py-3 rounded-lg bg-primary text-primary-foreground font-bold hover:bg-primary-hover"
+                        >Try Again</button>
                     </div>
                 {:else if simulationState === "complete"}
                     <div class="max-w-2xl mx-auto" in:slide>
@@ -255,20 +329,27 @@
                         <div class="text-center mb-12">
                             {#if overallStatus === "pass"}
                                 <div
-                                    class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"
+                                    class="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4"
                                 >
                                     <CircleCheck size={40} />
                                 </div>
                                 <h1
-                                    class="font-serif font-bold text-3xl text-green-800"
+                                    class="font-serif font-bold text-3xl text-success"
                                 >
-                                    Plan Resilient
+                                    Records Found for This Walkthrough
                                 </h1>
-                                <p class="text-green-700/80 mt-2">
-                                    Your estate is prepared for this event.
+                                <p class="text-muted-foreground mt-2">
+                                    The selected record checks passed. Open the actual records and confirm their details and availability.
                                 </p>
                             {:else}
-                                <!-- Warn case if needed -->
+                                <h1
+                                    class="font-serif font-bold text-3xl text-foreground"
+                                >
+                                    Questions to Review
+                                </h1>
+                                <p class="text-muted-foreground mt-2">
+                                    One or more selected record checks did not pass. Use the findings below to review the source records.
+                                </p>
                             {/if}
                         </div>
 
@@ -277,18 +358,18 @@
                             {#each report as item}
                                 <div
                                     class="p-4 rounded-xl border flex items-start gap-4 transition-all {item.status
-                                        ? 'bg-green-50 border-green-200'
-                                        : 'bg-rose-50 border-rose-200'}"
+                                        ? 'bg-success/10 border-success/20'
+                                        : 'bg-warning-soft border-warning/20'}"
                                 >
                                     <div class="mt-1">
                                         {#if item.status}
                                             <CircleCheck
-                                                class="text-green-600"
+                                                class="text-success"
                                                 size={20}
                                             />
                                         {:else}
-                                            <CircleX
-                                                class="text-rose-600"
+                                            <CirclePlus
+                                                class="text-warning"
                                                 size={20}
                                             />
                                         {/if}
@@ -296,15 +377,15 @@
                                     <div>
                                         <h4
                                             class="font-bold {item.status
-                                                ? 'text-green-900'
-                                                : 'text-rose-900'}"
+                                                ? 'text-foreground'
+                                                : 'text-foreground'}"
                                         >
                                             {item.check}
                                         </h4>
                                         <p
                                             class="text-sm {item.status
-                                                ? 'text-green-800'
-                                                : 'text-rose-800'}"
+                                                ? 'text-success'
+                                                : 'text-warning'}"
                                         >
                                             {item.msg}
                                         </p>
@@ -316,8 +397,8 @@
                         <div class="mt-12 text-center">
                             <button
                                 on:click={reset}
-                                class="text-[#4A7C74] font-bold hover:underline"
-                                >Run Another Simulation</button
+                                class="text-primary font-bold hover:underline"
+                                >Walk through another moment</button
                             >
                         </div>
                     </div>

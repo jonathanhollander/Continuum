@@ -6,6 +6,7 @@ export type ClosurePreference = 'memorialize' | 'delete' | 'transfer' | 'none';
 export interface DigitalAccount {
     id: string;
     platform: string;
+    name?: string;
     username: string;
     preference?: ClosurePreference;
     instructions?: string;
@@ -34,19 +35,15 @@ export const digitalAssetsSync = registerSync<DigitalAccount>('digital_assets', 
 // Wrapper for compatibility
 export const digitalAssetsStore = {
     get items() { return digitalAssetsSync.items; },
-    addAccount: (acc: Omit<DigitalAccount, 'id'>) => {
-        digitalAssetsSync.create({
-            ...acc,
-            id: crypto.randomUUID(),
-            isClosed: false
-        });
-    },
+    // Resolves with the saved record (the server assigns its id); rejects when the save fails.
+    addAccount: (acc: Omit<DigitalAccount, 'id'>) =>
+        digitalAssetsSync.create({ ...acc, isClosed: false }),
     removeAccount: (id: string) => digitalAssetsSync.delete(id),
     updateAccount: (id: string, data: Partial<DigitalAccount>) => digitalAssetsSync.update(id, data),
-    toggleClosure: (id: string) => {
+    toggleClosure: async (id: string) => {
         const item = digitalAssetsSync.items.find(i => i.id === id);
         if (item) {
-            digitalAssetsSync.update(id, {
+            return digitalAssetsSync.update(id, {
                 isClosed: !item.isClosed,
                 closureDate: !item.isClosed ? new Date().toISOString() : null // null clears it on the server
             });

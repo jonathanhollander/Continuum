@@ -1,83 +1,61 @@
-"""
-Server-side AI proxy. The OpenRouter key stays on the server; the browser
-only talks to /api/ai/chat with its normal login token.
-"""
-from typing import List, Literal, Optional
-
+"""Send exactly the request prepared by the visible settings resolver."""
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, Field
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
+from sqlmodel import Session
 
+from backend.ai_capabilities import validate_selection
+from backend.ai_request import StructuredRequest
+from backend.ai_settings import UNAVAILABLE_MESSAGE, get_client, prepare_request, runtime_config
 from backend.auth import get_current_user
-from backend.config import settings
+from backend.database import User, get_session
 from backend.limiter import limiter
-from backend.database import User
 from backend.utils.logger import get_logger
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 logger = get_logger(__name__)
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-ALLOWED_MODELS = {"google/gemini-2.0-flash-001"}
-UNAVAILABLE_MESSAGE = (
-    "AI help isn't available right now. Everything else is still here for you, "
-    "and you can come back to this whenever you're ready."
-)
 
-_client: Optional[httpx.AsyncClient] = None
-
-
-def _get_client() -> httpx.AsyncClient:
-    """One shared client (lazily created) so connections to OpenRouter are reused."""
-    global _client
-    if _client is None or _client.is_closed:
-        _client = httpx.AsyncClient(timeout=httpx.Timeout(45.0, connect=10.0))
-    return _client
-
-
-class ChatMessage(BaseModel):
-    role: Literal["system", "user", "assistant"]
-    content: str = Field(max_length=20000)
-
-
-class ChatRequest(BaseModel):
-    model: str = "google/gemini-2.0-flash-001"
-    messages: List[ChatMessage] = Field(min_length=1, max_length=30)
-    temperature: Optional[float] = Field(default=None, ge=0, le=2)
-    max_tokens: Optional[int] = Field(default=None, ge=1, le=4000)
+@router.get("/config")
+def get_runtime_config(purpose: str = "concierge.chat", variant: str = "",
+                       user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    try:
+        validate_selection(purpose, variant)
+        return runtime_config(session, purpose, variant)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from None
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=UNAVAILABLE_MESSAGE) from None
 
 
 @router.post("/chat")
 @limiter.limit("30/minute")
-async def ai_chat(
-    request: Request,
-    body: ChatRequest,
-    current_user: User = Depends(get_current_user),
-):
-    """Forward a chat completion to OpenRouter and return its response unchanged."""
-    api_key = settings.OPENROUTER_API_KEY or settings.VITE_OPENROUTER_API_KEY
-    if not api_key:
-        raise HTTPException(status_code=503, detail=UNAVAILABLE_MESSAGE)
-    if body.model not in ALLOWED_MODELS:
-        raise HTTPException(status_code=400, detail="That assistant isn't one we offer.")
-
-    payload = body.model_dump(exclude_none=True)
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "HTTP-Referer": "https://continuum.estate",
-        "X-Title": "Continuum Estate",
-        "Content-Type": "application/json",
-    }
+async def ai_chat(request: Request, body: StructuredRequest,
+                  current_user: User = Depends(get_current_user),
+                  session: Session = Depends(get_session)):
     try:
-        resp = await _get_client().post(OPENROUTER_URL, json=payload, headers=headers)
-    except httpx.HTTPError as exc:
-        logger.warning(f"AI provider request failed: {type(exc).__name__}")
-        raise HTTPException(status_code=503, detail=UNAVAILABLE_MESSAGE)
-
-    if resp.status_code != 200:
-        logger.warning(f"AI provider returned status {resp.status_code}")
-        raise HTTPException(status_code=503, detail=UNAVAILABLE_MESSAGE)
-    try:
-        return resp.json()
+        prepared, transport = prepare_request(session, body)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=UNAVAILABLE_MESSAGE) from None
     except ValueError:
+        raise HTTPException(status_code=503, detail=UNAVAILABLE_MESSAGE) from None
+    if prepared["limits"]["exceeded"]:
+        raise HTTPException(status_code=413, detail="Your conversation and draft are kept. Review the input limits in AI settings before trying again.")
+    if not prepared["can_send"]:
         raise HTTPException(status_code=503, detail=UNAVAILABLE_MESSAGE)
+    try:
+        response = await get_client().post(transport["url"], json=prepared["request"], headers=transport["headers"])
+        response.raise_for_status()
+        result = response.json()
+        if not isinstance(result, dict):
+            raise ValueError("response envelope")
+        if current_user.is_admin:
+            result["continuum_request"] = {**prepared, "attempt_status": "completed"}
+        return result
+    except (httpx.HTTPError, ValueError) as error:
+        logger.warning("AI gateway request paused: %s", type(error).__name__)
+        detail = {"detail": UNAVAILABLE_MESSAGE}
+        if current_user.is_admin:
+            detail["continuum_request"] = {**prepared, "attempt_status": "attempted"}
+        return JSONResponse(status_code=503, content=detail)

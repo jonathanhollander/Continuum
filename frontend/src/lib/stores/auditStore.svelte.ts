@@ -1,6 +1,6 @@
 import { financialAssetsStore, isDebt } from './financialAssetsStore.svelte';
 import { insuranceStore } from './insuranceStore.svelte';
-import { familyStore } from './familyStore.svelte';
+import { familyStore, type FamilyMember } from './familyStore.svelte';
 import { medicalStore } from './medicalStore.svelte';
 import { digitalAssetsStore } from './digitalAssetsStore.svelte';
 import { heirloomStore } from './heirloomStore.svelte';
@@ -24,6 +24,10 @@ export interface AuditResult {
     maxTotalScore: number;
     percentage: number;
     moduleScores: Record<string, number>;
+    contactEvidence: {
+        rule: string;
+        includedContacts: Pick<FamilyMember, 'id' | 'name' | 'role' | 'relation' | 'email' | 'phone'>[];
+    };
     issues: string[];
     zombieData: string[];
 }
@@ -33,6 +37,9 @@ function calculateAudit(): AuditResult {
     let maxTotalScore = 0;
     const moduleScores: Record<string, number> = {};
     const issues: string[] = [];
+    // members contains the actual contact records; the account owner is never inserted here.
+    const includedContacts = familyStore.members.map(({ id, name, role, relation, email, phone }) =>
+        ({ id, name, role, relation, email, phone }));
 
     // 1. Financial: the open accounts on the financial page (debts are owed, so they are no account)
     {
@@ -45,13 +52,19 @@ function calculateAudit(): AuditResult {
             let s = 20;
             const withBen = items.filter((i) => String(i.beneficiaries ?? '').trim() && i.beneficiaries !== 'None').length;
             s += (withBen / items.length) * 40;
-            const withVal = items.filter((i) => Number(i.value) > 0).length;
+            // An entered value counts, $0 included; only an empty one is missing
+            const withVal = items.filter((i) => i.value != null && String(i.value).trim() !== '' && Number.isFinite(Number(i.value))).length;
             s += (withVal / items.length) * 40;
             moduleScores['financial'] = Math.round(s);
             totalScore += moduleScores['financial'];
             if (withBen < items.length) {
                 const n = items.length - withBen;
                 issues.push(`[Assets] Name a beneficiary for ${n} ${n === 1 ? 'account' : 'accounts'}`);
+            }
+            // Value is the other half of the score, so a partial score always names its step
+            if (withVal < items.length) {
+                const n = items.length - withVal;
+                issues.push(`[Assets] Add an estimated value for ${n} ${n === 1 ? 'account' : 'accounts'}`);
             }
         }
     }
@@ -71,9 +84,9 @@ function calculateAudit(): AuditResult {
 
     // 3. Family / Contacts
     {
-        const items = familyStore.members;
+        const items = includedContacts;
         maxTotalScore += 50;
-        if (items.length <= 1) { // Owner only
+        if (items.length === 0) {
             issues.push('[Network] Add the people who matter to you');
             moduleScores['family'] = 0;
         } else {
@@ -131,6 +144,10 @@ function calculateAudit(): AuditResult {
         maxTotalScore,
         percentage: maxTotalScore > 0 ? Math.round((totalScore / maxTotalScore) * 100) : 0,
         moduleScores,
+        contactEvidence: {
+            rule: 'One or more saved contacts earns 50 points. An empty contact list earns 0 points.',
+            includedContacts,
+        },
         issues,
         zombieData: []
     };

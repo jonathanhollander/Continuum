@@ -1,11 +1,15 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { getRegistry, type SyncManager } from "$lib/services/sync.svelte";
-    import { onMount } from "svelte";
+    import { onMount, untrack } from "svelte";
+    import { get } from "svelte/store";
+    import { activeAccountId } from "$lib/stores/keyringStore";
+    import { currentProfileId } from "$lib/stores/profileContext";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
+    import type { SamplePurgeResult } from "$lib/services/testDataFactory";
     import { navGroups, catalogCategories, type NavItem } from "$lib/config/navigation";
     import { dict, userRole } from "$lib/stores/conciergeStore.svelte";
     import { auth } from "$lib/stores/auth";
-    import { API_BASE_URL } from "$lib/config";
-    import { get } from "svelte/store";
     import {
         RefreshCw,
         Database,
@@ -22,11 +26,25 @@
     // Initialize Registry safely via lazy getter
     const syncRegistry = getRegistry();
 
+    // The validation tooling and the cloud comparison are for the admin only: the same rule the
+    // server uses for administrator access: the saved account designation.
+    let isAdmin = $derived($auth.user?.is_admin === true);
+
     let syncingAll = $state(false);
     let generatingTest = $state(false);
     let purgingTest = $state(false);
     let selectedModule = $state<string | null>(null);
     let testDataFactory = $state<any>(null); // Dynamic import
+    let purgeResult = $state<SamplePurgeResult | null>(null);
+    let factoryRun = 0;
+
+    function captureFactoryView() {
+        const session = captureSession();
+        const account = get(activeAccountId);
+        const profile = get(currentProfileId);
+        return () => isCurrentSession(session) && account === get(activeAccountId)
+            && profile === get(currentProfileId);
+    }
 
     // Audit State
     let auditResults = $state<Record<string, any>>({});
@@ -36,6 +54,20 @@
 
     // Test Registry Cache (for highlighting)
     let testRegistry = $state<Record<string, string[]>>({});
+
+    $effect(() => {
+        const account = $activeAccountId;
+        const profile = $currentProfileId;
+        const user = $auth.user?.id;
+        untrack(() => {
+            factoryRun++;
+            purgeResult = null;
+            generatingTest = false;
+            purgingTest = false;
+            showConfirmGenerate = false;
+            refreshTestRegistry();
+        });
+    });
 
     onMount(async () => {
         // Load factory client-side only to avoid SSR complications
@@ -49,7 +81,6 @@
 
         // Register every module's own store so a direct load counts them all.
         await Promise.allSettled(OWNING_STORES.map((load) => load()));
-        countComponentKeys();
     });
 
     // Stores behind the module cards; loading one registers (and syncs) its managers.
@@ -68,7 +99,6 @@
         () => import("$lib/stores/heirloomStore.svelte"),
         () => import("$lib/stores/estateStore.svelte"),
         () => import("$lib/stores/toneStore.svelte"),
-        () => import("$lib/stores/onboardingStore.svelte"),
         () => import("$lib/stores/visualMemoryStore.svelte"),
         () => import("$lib/stores/calendarStore.svelte"),
         () => import("$lib/stores/advancedAssetStore.svelte"),
@@ -79,34 +109,11 @@
         () => import("$lib/stores/funeralStore.svelte"),
         () => import("$lib/stores/scenarioStore.svelte"),
         () => import("$lib/stores/activityLog.svelte"),
+        () => import("$lib/stores/documentStore.svelte"),
+        () => import("$lib/stores/vendorStore.svelte"),
+        () => import("$lib/stores/homeAccessStore.svelte"),
+        () => import("$lib/stores/utilityStore.svelte"),
     ];
-
-    // Keys a page component registers (with its own mapper). Until that page has been opened,
-    // the card reads the saved count straight from the same endpoint instead.
-    const COMPONENT_KEYS: Record<string, string> = {
-        "docs_legal-vault": "/api/data/vault_documents",
-        vendors: "/api/data/vendors",
-        home_access: "/api/data/home_access",
-        utilities: "/api/data/utilities",
-    };
-    let componentCounts = $state<Record<string, number>>({});
-
-    async function countComponentKeys() {
-        const token = get(auth).token;
-        if (!token) return;
-        await Promise.allSettled(
-            Object.entries(COMPONENT_KEYS)
-                .filter(([key]) => !syncRegistry[key])
-                .map(async ([key, path]) => {
-                    const res = await fetch(`${API_BASE_URL}${path}`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-                    if (!res.ok) return;
-                    const body = await res.json();
-                    if (Array.isArray(body)) componentCounts[key] = body.length;
-                }),
-        );
-    }
 
     function refreshTestRegistry() {
         if (testDataFactory) {
@@ -134,17 +141,16 @@
     }
 
     async function syncAll() {
-        if (!testDataFactory) return;
         syncingAll = true;
         // Object.values works on the proxy
         const managers = Object.values(syncRegistry);
         await Promise.all(managers.map((m) => m.sync()));
-        await runAudit();
+        if (isAdmin) await runAudit();
         syncingAll = false;
     }
 
     async function generateTestData() {
-        if (!testDataFactory) return;
+        if (!testDataFactory || generatingTest || purgingTest || !isAdmin) return;
         if (!showConfirmGenerate) {
             showConfirmGenerate = true;
             return;
@@ -152,22 +158,43 @@
 
         showConfirmGenerate = false;
 
+        const current = captureFactoryView();
+        const run = ++factoryRun;
         generatingTest = true;
-        await testDataFactory.generate();
-        refreshTestRegistry();
-        await syncAll();
-        generatingTest = false;
+        purgeResult = null;
+        try {
+            await testDataFactory.generate();
+            if (!current() || run !== factoryRun) return;
+            refreshTestRegistry();
+            await syncAll();
+        } finally {
+            if (current() && run === factoryRun) generatingTest = false;
+        }
     }
 
     async function purgeTestData() {
-        if (!testDataFactory) return;
-        if (!confirm("Remove all test data? This will clean up sample content from your account.")) return;
+        if (!testDataFactory || generatingTest || purgingTest || !isAdmin) return;
+        const current = captureFactoryView();
+        if (!(await askConfirm("Remove all test data? This will clean up sample content from your account."))) return;
+        if (!current()) return;
 
+        const run = ++factoryRun;
         purgingTest = true;
-        await testDataFactory.purge();
-        refreshTestRegistry();
-        await syncAll();
-        purgingTest = false;
+        try {
+            await testDataFactory.purge((result: SamplePurgeResult) => {
+                if (!current() || run !== factoryRun) return;
+                purgeResult = result;
+                refreshTestRegistry();
+                // The store's own Try Again can confirm a removal after this batch returned.
+                // Refresh its companion cloud comparison too, once per retry rather than per row.
+                if (!purgingTest && !syncingAll) void syncAll();
+            });
+            if (!current() || run !== factoryRun) return;
+            refreshTestRegistry();
+            await syncAll();
+        } finally {
+            if (current() && run === factoryRun) purgingTest = false;
+        }
     }
 
     // List managers hold `items`; a singleton holds one `data` record, counted once only when it
@@ -214,6 +241,16 @@
         return saved ? [d] : [];
     }
 
+    // Home Manual rows carry no name: utilities are named by provider, home access by location.
+    function rowName(item: any) {
+        return item.name || item.title || item.provider || item.service_type || item.location || "Untitled";
+    }
+
+    // Assets and utilities carry their kind in category / service_type rather than type.
+    function rowType(item: any) {
+        return item.type || item.category || item.service_type || item.serviceType || "Generic";
+    }
+
     // Helper: isTestRow
     function isTestRow(moduleKey: string, id: string | number) {
         return testRegistry[moduleKey]?.includes(String(id));
@@ -226,7 +263,7 @@
         financial: ["financial_assets"],
         insurance: ["insurance_policies"],
         contacts: ["family_members", "family_relationships"],
-        documents: ["docs_legal-vault"],
+        documents: ["documents"],
         medical: ["medical_profile", "medical_directives"],
         "home-manual": ["vendors", "home_access", "utilities"],
         pulse: ["pulse_settings"],
@@ -236,7 +273,7 @@
         guardian: ["digital_guardian", "digital_assets"],
         letters: ["letters"],
         heirlooms: ["heirlooms"],
-        settings: ["estate_profile", "app_tone", "concierge_settings", "onboarding_settings"],
+        settings: ["estate_profile", "app_tone", "concierge_settings"],
         "family-hub": ["family_memories"],
         calendar: ["calendar_events"],
         "advanced-registry": ["advanced_assets"],
@@ -280,7 +317,7 @@
 
     function cardCount(card: ModuleCard) {
         return card.keys.reduce(
-            (n, k) => n + (syncRegistry[k] ? rowsOf(syncRegistry[k]).length : (componentCounts[k] ?? 0)),
+            (n, k) => n + rowsOf(syncRegistry[k]).length,
             0,
         );
     }
@@ -317,61 +354,70 @@
 >
     <!-- Header -->
     <div
-        class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 pb-8"
+        class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-8"
     >
         <div>
             <div class="flex items-center gap-3 mb-2">
-                <div class="p-2 bg-emerald-100/50 rounded-lg text-emerald-800">
+                <div class="p-2 bg-primary-soft rounded-lg text-primary-hover">
                     <ShieldCheck size={32} />
                 </div>
-                <h1 class="font-bold text-3xl text-slate-900">
-                    Data Confidence
+                <h1 class="font-bold text-3xl text-foreground">
+                    Your record copies
                 </h1>
             </div>
-            <p class="text-slate-500 max-w-xl text-lg">
-                System-wide persistence verification. Monitor the
-                synchronization truth between your local device and the
-                Continuum Secure Cloud.
+            <p class="text-muted-foreground max-w-xl text-lg">
+                Review the working copy on this device and the saved copy in your account.
+                Sync records to refresh them; review any errors before continuing.
             </p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 shrink-0 whitespace-nowrap">
+            {#if isAdmin}
+            <a
+                href="/admin"
+                class="px-4 py-2.5 bg-card border border-border text-foreground rounded-xl flex items-center gap-2 font-semibold hover:bg-muted transition-all shadow-sm"
+            >
+                <ShieldCheck size={18} />
+                Admin
+            </a>
             <button
                 onclick={runAudit}
                 disabled={isAuditing}
-                class="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl flex items-center gap-2 font-semibold hover:bg-slate-50 transition-all shadow-sm"
+                class="px-4 py-2.5 bg-card border border-border text-foreground rounded-xl flex items-center gap-2 font-semibold hover:bg-muted transition-all shadow-sm"
             >
                 <div class={isAuditing ? "animate-spin" : ""}>
                     <RefreshCw size={18} />
                 </div>
-                {isAuditing ? "Verifying..." : "Verify Truth"}
+                {isAuditing ? "Checking..." : "Compare saved copies"}
             </button>
+            {/if}
 
             <button
                 onclick={syncAll}
                 disabled={syncingAll}
-                class="px-5 py-2.5 bg-slate-900 text-white rounded-xl flex items-center gap-2 font-bold hover:bg-slate-800 disabled:opacity-50 transition-all shadow-lg shadow-slate-900/10"
+                class="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl flex items-center gap-2 font-bold hover:bg-primary-hover disabled:opacity-50 transition-all shadow-lg shadow-primary/10"
             >
                 <RefreshCw class={syncingAll ? "animate-spin" : ""} size={18} />
-                {syncingAll ? "Syncing..." : "Sync All"}
+                {syncingAll ? "Syncing..." : "Sync records"}
             </button>
         </div>
     </div>
 
     <!-- Test Data Controls -->
+    {#if isAdmin}
     <div
-        class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6"
+        class="bg-primary-soft border border-primary/20 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6"
     >
         <div class="flex items-center gap-4">
-            <div class="p-3 bg-indigo-100 rounded-xl text-indigo-600">
+            <div class="p-3 bg-card rounded-xl text-primary-hover">
                 <TestTube size={24} />
             </div>
             <div>
-                <h3 class="font-bold text-slate-900 text-lg">
-                    Validation Suite
+                <h3 class="font-bold text-foreground text-lg">
+                    Sample data
                 </h3>
-                <p class="text-indigo-600/80 text-sm font-medium">
-                    Generate schematic-compliant data to prove persistence.
+                <p class="text-primary-hover text-sm font-medium">
+                    Add sample entries to see how saving works.
                 </p>
             </div>
         </div>
@@ -379,42 +425,52 @@
         <div class="flex items-center gap-3 w-full md:w-auto">
             <button
                 onclick={generateTestData}
-                disabled={generatingTest || !testDataFactory}
-                class="flex-1 md:flex-none px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                disabled={generatingTest || purgingTest || !testDataFactory}
+                class="flex-1 md:flex-none px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
                 {#if generatingTest}<RefreshCw
                         class="animate-spin"
                         size={16}
                     />{/if}
                 {showConfirmGenerate
-                    ? "Click AGAIN to Confirm"
-                    : "Generate Validation Data"}
+                    ? "Tap again if you'd like to continue"
+                    : "Add sample data"}
             </button>
             <button
                 onclick={purgeTestData}
-                disabled={purgingTest || !testDataFactory}
-                class="flex-1 md:flex-none px-4 py-2 bg-white border border-rose-200 text-rose-600 font-semibold rounded-lg hover:bg-rose-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                disabled={purgingTest || generatingTest || !testDataFactory}
+                class="flex-1 md:flex-none px-4 py-2 bg-card border border-danger/30 text-danger font-semibold rounded-lg hover:bg-danger-soft transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
                 {#if purgingTest}<RefreshCw
                         class="animate-spin"
                         size={16}
                     />{/if}
-                Purge Validation Data
+                Remove sample data
             </button>
         </div>
     </div>
+    {#if purgeResult}
+        <p class="text-sm text-muted-foreground" role="status" data-testid="sample-purge-result">
+            {purgeResult.deletedCount} sample {purgeResult.deletedCount === 1 ? "entry" : "entries"} removed.
+            {#if purgeResult.remainingCount > 0}
+                {purgeResult.remainingCount} sample {purgeResult.remainingCount === 1 ? "entry remains" : "entries remain"}.
+                Choose Remove sample data to continue.
+            {/if}
+        </p>
+    {/if}
+    {/if}
 
     <!-- Module Grid -->
     <div class="space-y-12">
         {#each moduleGroups as { group, cards }}
                 <section>
                     <div
-                        class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"
+                        class="flex items-center gap-3 mb-6 border-b border-border pb-4"
                     >
-                        <h2 class="font-bold text-xl text-slate-800">
+                        <h2 class="font-bold text-xl text-foreground">
                             {$dict[group.groupKey] || group.groupLabel}
                         </h2>
-                        <span class="text-slate-400 text-sm"
+                        <span class="text-muted-foreground text-sm"
                             >{group.groupDescription}</span
                         >
                     </div>
@@ -428,30 +484,36 @@
                             {@const status = cardStatus(card)}
                             {@const isTest = card.keys.some((k) => testRegistry[k]?.length > 0)}
 
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <!-- svelte-ignore a11y-no-static-element-interactions -->
                             <div
-                                class="bg-white rounded-xl border transition-all cursor-pointer overflow-hidden group
+                                class="bg-card rounded-xl border transition-all cursor-pointer overflow-hidden group
                                     {selectedModule === key
-                                    ? 'ring-2 ring-indigo-500 border-indigo-500 shadow-xl'
-                                    : 'border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300'}"
+                                    ? 'ring-2 ring-primary border-primary shadow-xl'
+                                    : 'border-border shadow-sm hover:shadow-md hover:border-primary/40'}"
+                                role="button"
+                                tabindex="0"
                                 onclick={() =>
                                     (selectedModule =
                                         selectedModule === key ? null : key)}
+                                onkeydown={(e) => {
+                                    if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                                        e.preventDefault();
+                                        selectedModule = selectedModule === key ? null : key;
+                                    }
+                                }}
                             >
                                 <div
-                                    class="p-5 flex items-center justify-between border-b border-slate-100 bg-slate-50/50"
+                                    class="p-5 flex items-center justify-between border-b border-border bg-muted/50"
                                 >
                                     <div class="flex items-center gap-3">
                                         <h3
-                                            class="font-bold text-slate-800 text-lg"
+                                            class="font-bold text-foreground text-lg"
                                         >
                                             {card.label}
                                         </h3>
                                         {#if isTest}
                                             <span
-                                                class="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase rounded tracking-wider"
-                                                >Test Active</span
+                                                class="px-1.5 py-0.5 bg-primary-soft text-primary-hover text-[10px] font-black uppercase rounded tracking-wider"
+                                                >Sample data shown</span
                                             >
                                         {/if}
                                     </div>
@@ -459,62 +521,66 @@
                                         {#if status === "syncing"}
                                             <RefreshCw
                                                 size={16}
-                                                class="text-indigo-500 animate-spin"
+                                                class="text-info animate-spin"
                                             />
                                         {:else if status === "error"}
                                             <AlertTriangle
                                                 size={16}
-                                                class="text-rose-500"
+                                                class="text-warning"
                                             />
                                         {:else if audit?.matches}
                                             <CheckCircle
                                                 size={18}
-                                                class="text-emerald-500"
+                                                class="text-success"
                                             />
                                         {:else}
                                             <div
-                                                class="w-3 h-3 rounded-full bg-slate-300"
+                                                class="w-3 h-3 rounded-full bg-muted-foreground/40"
                                             ></div>
                                         {/if}
                                     </div>
                                 </div>
                                 <div
-                                    class="grid grid-cols-2 divide-x divide-slate-100"
+                                    class="grid {isAdmin
+                                        ? 'grid-cols-2 divide-x divide-border'
+                                        : 'grid-cols-1'}"
                                 >
                                     <div class="p-4 text-center">
                                         <div
-                                            class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
+                                            class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
                                         >
-                                            Local
+                                            On this device
                                         </div>
                                         <div
-                                            class="text-2xl font-mono text-slate-700 font-bold"
+                                            class="text-2xl font-mono text-foreground font-bold"
                                         >
                                             {cardCount(card)}
                                         </div>
                                     </div>
-                                    <div class="p-4 text-center bg-slate-50/30">
+                                    {#if isAdmin}
+                                    <div class="p-4 text-center bg-muted/30">
                                         <div
-                                            class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
+                                            class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
                                         >
-                                            Cloud DB
+                                            In your account
                                         </div>
                                         {#if audit}
                                             <div
                                                 class="text-2xl font-mono font-bold {audit.matches
-                                                    ? 'text-emerald-600'
-                                                    : 'text-amber-600'}"
+                                                    ? 'text-success'
+                                                    : 'text-warning'}"
                                             >
                                                 {audit.remoteCount}
                                             </div>
                                         {:else}
                                             <div
-                                                class="text-sm text-slate-400 py-1.5 italic"
+                                                class="text-sm text-muted-foreground py-1.5 italic"
                                             >
                                                 --
                                             </div>
                                         {/if}
                                     </div>
+                                    {/if}
                                 </div>
                             </div>
                         {/each}
@@ -526,9 +592,9 @@
         {#if otherModules.length > 0}
             <section>
                 <div
-                    class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"
+                    class="flex items-center gap-3 mb-6 border-b border-border pb-4"
                 >
-                    <h2 class="font-bold text-xl text-slate-400">
+                    <h2 class="font-bold text-xl text-muted-foreground">
                         {$dict.groupOtherModules}
                     </h2>
                 </div>
@@ -537,12 +603,12 @@
                 >
                     {#each otherModules as [key, manager]}
                         <div
-                            class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-center"
+                            class="bg-card rounded-xl border border-border shadow-sm p-4 text-center"
                         >
-                            <h3 class="font-bold text-slate-800 capitalize">
+                            <h3 class="font-bold text-foreground capitalize">
                                 {key.replaceAll("_", " ")}
                             </h3>
-                            <p class="text-sm text-slate-500">
+                            <p class="text-sm text-muted-foreground">
                                 {rowsOf(manager).length} items
                             </p>
                         </div>
@@ -559,37 +625,37 @@
 
         <div
             transition:slide
-            class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden mt-4"
+            class="bg-card rounded-2xl border border-border shadow-xl overflow-hidden mt-4"
         >
             <div
-                class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50"
+                class="p-6 border-b border-border flex items-center justify-between bg-muted/50"
             >
                 <h3
-                    class="font-bold text-xl text-slate-800 flex items-center gap-2"
+                    class="font-bold text-xl text-foreground flex items-center gap-2"
                 >
-                    <Database size={20} class="text-slate-400" />
+                    <Database size={20} class="text-muted-foreground" />
                     {card.label} Records
                 </h3>
-                <div class="text-sm text-slate-500">
-                    Showing merged view of Local & Cloud State
+                <div class="text-sm text-muted-foreground">
+                    Device records, plus account records from the latest comparison
                 </div>
             </div>
             <div class="max-h-[500px] overflow-y-auto">
                 <table class="w-full text-left text-sm">
                     <thead
-                        class="bg-slate-50 sticky top-0 z-10 font-bold text-slate-500 uppercase tracking-wider text-xs"
+                        class="bg-muted sticky top-0 z-10 font-bold text-muted-foreground uppercase tracking-wider text-xs"
                     >
                         <tr>
-                            <th class="p-4 border-b">Status</th>
-                            <th class="p-4 border-b">Type</th>
-                            <th class="p-4 border-b">Name/Title</th>
-                            <th class="p-4 border-b">Origin</th>
-                            <th class="p-4 border-b font-mono text-right"
+                            {#if isAdmin}<th class="p-4 border-b border-border">Status</th>{/if}
+                            <th class="p-4 border-b border-border">Type</th>
+                            <th class="p-4 border-b border-border">Name/Title</th>
+                            <th class="p-4 border-b border-border">Origin</th>
+                            <th class="p-4 border-b border-border font-mono text-right"
                                 >Data ID</th
                             >
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-border">
                         {#each managers as [mkey, manager]}
                         {@const audit = auditResults[mkey]}
                         {#each rowsOf(manager) as item}
@@ -598,72 +664,71 @@
                                 (r: any) => String(r.id) === String(item.id),
                             )}
                             <tr
-                                class="hover:bg-slate-50 transition-colors {isTest
-                                    ? 'bg-indigo-50/30'
+                                class="hover:bg-muted transition-colors {isTest
+                                    ? 'bg-primary-soft/50'
                                     : ''}"
                             >
+                                {#if isAdmin}
                                 <td class="p-4">
-                                    {#if inCloud}
+                                    {#if !audit || audit.error}
+                                        <span class="text-muted-foreground">--</span>
+                                    {:else if inCloud}
                                         <div
-                                            class="flex items-center gap-2 text-emerald-600 font-bold"
+                                            class="flex items-center gap-2 text-success font-bold"
                                         >
-                                            <CheckCircle size={16} /> Synced
+                                            <CheckCircle size={16} /> In account copy
                                         </div>
                                     {:else}
                                         <div
-                                            class="flex items-center gap-2 text-amber-600 font-bold"
+                                            class="flex items-center gap-2 text-warning font-bold"
                                         >
-                                            <RefreshCw
-                                                size={16}
-                                                class="animate-spin"
-                                            /> Pending
+                                            <RefreshCw size={16} /> Device only at last check
                                         </div>
                                     {/if}
                                 </td>
+                                {/if}
                                 <td class="p-4"
                                     ><span
-                                        class="px-2 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200"
-                                        >{item.type || "Generic"}</span
+                                        class="px-2 py-1 rounded-full text-xs font-bold bg-muted text-muted-foreground border border-border"
+                                        >{rowType(item)}</span
                                     ></td
                                 >
-                                <td class="p-4 font-medium text-slate-900"
-                                    >{item.name || item.title || "Untitled"}</td
+                                <td class="p-4 font-medium text-foreground"
+                                    >{rowName(item)}</td
                                 >
                                 <td class="p-4">
                                     {#if isTest}
                                         <span
-                                            class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold bg-indigo-100 text-indigo-700 border border-indigo-200"
-                                            ><TestTube size={12} /> Validation</span
+                                            class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold bg-primary-soft text-primary-hover border border-primary/20"
+                                            ><TestTube size={12} /> Sample entry</span
                                         >
                                     {:else}
-                                        <span class="text-slate-500"
-                                            >User Input</span
+                                        <span class="text-muted-foreground"
+                                            >Your record</span
                                         >
                                     {/if}
                                 </td>
                                 <td
-                                    class="p-4 font-mono text-xs text-slate-400 text-right"
+                                    class="p-4 font-mono text-xs text-muted-foreground text-right"
                                     >{item.id}</td
                                 >
                             </tr>
                         {/each}
                         {#if audit?.details?.onlyRemote}
                             {#each audit.details.onlyRemote as item}
-                                <tr class="bg-stripe-slate">
-                                    <td class="p-4 text-slate-400 italic"
-                                        >Cloud Only</td
+                                <tr class="bg-muted/50">
+                                    <td class="p-4 text-muted-foreground italic"
+                                        >In account copy</td
                                     >
-                                    <td class="p-4 text-slate-400"
-                                        >{item.type || "Generic"}</td
+                                    <td class="p-4 text-muted-foreground"
+                                        >{rowType(item)}</td
                                     >
-                                    <td class="p-4 text-slate-400"
-                                        >{item.name ||
-                                            item.title ||
-                                            "Untitled"}</td
+                                    <td class="p-4 text-muted-foreground"
+                                        >{rowName(item)}</td
                                     >
-                                    <td class="p-4 text-slate-400">Unknown</td>
+                                    <td class="p-4 text-muted-foreground">—</td>
                                     <td
-                                        class="p-4 font-mono text-xs text-slate-400 text-right"
+                                        class="p-4 font-mono text-xs text-muted-foreground text-right"
                                         >{item.id}</td
                                     >
                                 </tr>
@@ -673,8 +738,8 @@
                         {#if cardCount(card) === 0 && !managers.some(([mkey]) => auditResults[mkey]?.details?.onlyRemote?.length)}
                             <tr
                                 ><td
-                                    colspan="5"
-                                    class="p-12 text-center text-slate-400 italic"
+                                    colspan={isAdmin ? 5 : 4}
+                                    class="p-12 text-center text-muted-foreground italic"
                                     >What you save in {card.label} will appear here.</td
                                 ></tr
                             >

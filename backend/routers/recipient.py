@@ -35,18 +35,19 @@ from datetime import datetime, timezone
 from typing import Any, Dict, FrozenSet, Optional, Set, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from sqlmodel import Session, SQLModel, select
 
 from backend.auth import get_current_user
 from backend.database import User, get_session
 from backend.pulse_models import PulseContact
-from backend.routers.export import build_snapshot
+from backend.routers.export import build_snapshot, snapshot_profile
 from backend.utils.clock import utc_now
 
 router = APIRouter(prefix="/api/recipient", tags=["recipient"])
 
-CLOSED = "This page is closed for now. The person who shared it can send a fresh link whenever it is needed."
-FOUND_NOTHING = "We couldn't find that person. They may have been moved."
+CLOSED = "This page is closed for now. The executor, or the person who shared it, can open it again for you."
+FOUND_NOTHING = "That person may have been moved."
 MIN_TOKEN_LENGTH = 32
 
 
@@ -74,9 +75,18 @@ def capsule_released(row: Dict[str, Any], today: str) -> bool:
     return row.get("trigger_type") == "date" and bool(value) and value <= today
 
 
+def executor_notes_shared(session: Session, contact: PulseContact, profile: Optional[Dict[str, Any]] = None) -> bool:
+    if contact.is_executor:
+        return True
+    profile = profile if profile is not None else snapshot_profile(session, contact.user_id)
+    return profile.get("executor_note_sharing") == "all_recipients"
+
+
 def recipient_snapshot(session: Session, contact: PulseContact) -> Dict[str, Any]:
     names = _names(contact)
     today = datetime.now(timezone.utc).date().isoformat()
+    profile = snapshot_profile(session, contact.user_id)
+    share_executor_notes = executor_notes_shared(session, contact, profile)
 
     def for_this_person(row: Dict[str, Any], text_field: str) -> bool:
         """The chosen contact wins; rows with no chosen contact match on their text."""
@@ -86,13 +96,15 @@ def recipient_snapshot(session: Session, contact: PulseContact) -> Dict[str, Any
         return _is_for(row.get(text_field), names)
 
     def keep(section: str, row: Dict[str, Any]) -> bool:
+        if section == "executor_steps":
+            return share_executor_notes
         if section == "letters":
             return not row.get("isLocked") and for_this_person(row, "recipient_name")
         if section == "time_capsule":
             return capsule_released(row, today) and for_this_person(row, "recipient")
         return True
 
-    snap = build_snapshot(session, contact.user_id, keep=keep)
+    snap = build_snapshot(session, contact.user_id, keep=keep, owner_profile=profile)
     for row in snap["sections"].get("contacts", []):
         row.pop("recipient_note", None)
     return snap
@@ -108,11 +120,13 @@ def contact_for_token(session: Session, token: str) -> PulseContact:
     return contact
 
 
-# Card X104: token -> (expires at, contact id, media ids the view shows). Only ever read after
+# Card X104: token -> (expiry, contact id, shown media ids, effective checklist-note sharing).
+# Policy/explicit executor changes invalidate membership even while the media cache is warm.
+# Only ever read after
 # contact_for_token() has passed for that token, so a closed or replaced link stops at once.
 SHOWN_TTL_SECONDS = 30
 _SHOWN_MAX = 512
-_shown: Dict[str, Tuple[float, int, FrozenSet[int]]] = {}
+_shown: Dict[str, Tuple[float, int, FrozenSet[int], bool]] = {}
 _shown_lock = threading.Lock()
 _shown_build_lock = threading.Lock()
 
@@ -121,7 +135,7 @@ def _media_ids(snap: Dict[str, Any]) -> FrozenSet[int]:
     return frozenset(a.get("media_id") for a in snap["attachments"] if a.get("source") == "media")
 
 
-def _remember_shown(token: str, contact: PulseContact, ids: FrozenSet[int]) -> None:
+def _remember_shown(token: str, contact: PulseContact, ids: FrozenSet[int], share_executor_notes: bool) -> None:
     now = time.monotonic()
     with _shown_lock:
         if len(_shown) >= _SHOWN_MAX:
@@ -129,41 +143,52 @@ def _remember_shown(token: str, contact: PulseContact, ids: FrozenSet[int]) -> N
                 del _shown[k]
             if len(_shown) >= _SHOWN_MAX:
                 _shown.clear()
-        _shown[token] = (now + SHOWN_TTL_SECONDS, contact.id, ids)
+        _shown[token] = (now + SHOWN_TTL_SECONDS, contact.id, ids, share_executor_notes)
 
 
-def _cached_shown(token: str, contact: PulseContact) -> Optional[FrozenSet[int]]:
+def _cached_shown(token: str, contact: PulseContact, share_executor_notes: bool) -> Optional[FrozenSet[int]]:
     with _shown_lock:
         hit = _shown.get(token)
-    if hit and hit[0] > time.monotonic() and hit[1] == contact.id:
+    if hit and hit[0] > time.monotonic() and hit[1] == contact.id and hit[3] == share_executor_notes:
         return hit[2]
     return None
 
 
 def shown_media_ids(session: Session, contact: PulseContact, token: str) -> FrozenSet[int]:
     """The media ids a live link's page shows. `contact` must come from contact_for_token(token)."""
-    ids = _cached_shown(token, contact)
+    share_executor_notes = executor_notes_shared(session, contact)
+    ids = _cached_shown(token, contact, share_executor_notes)
     if ids is not None:
         return ids
     with _shown_build_lock:  # many files of one page arriving at once build the set once
-        ids = _cached_shown(token, contact)
+        ids = _cached_shown(token, contact, share_executor_notes)
         if ids is None:
             ids = _media_ids(recipient_snapshot(session, contact))
-            _remember_shown(token, contact, ids)
+            _remember_shown(token, contact, ids, share_executor_notes)
     return ids
 
 
+def is_executor(contact: PulseContact, owner: Dict[str, Any]) -> bool:
+    """One executor test (the packet's, exportService.isExecutorContact): the contact's flag,
+    the role "Executor", or the name the owner gave as executor in the estate profile."""
+    if contact.is_executor or (contact.role or "").strip().lower() == "executor":
+        return True
+    named = str(owner.get("executor_name") or "").strip().lower()
+    return bool(named) and named == (contact.name or "").strip().lower()
+
+
 def _view(session: Session, contact: PulseContact, preview: bool) -> Dict[str, Any]:
+    snap = recipient_snapshot(session, contact)
     return {
         "preview": preview,
         "recipient": {
             "id": contact.id,
             "name": contact.name,
             "relation": contact.relation,
-            "is_executor": bool(contact.is_executor),
+            "is_executor": is_executor(contact, snap.get("owner") or {}),
         },
         "note": contact.recipient_note or "",
-        "snapshot": recipient_snapshot(session, contact),
+        "snapshot": snap,
     }
 
 
@@ -197,13 +222,14 @@ class RecipientUpdate(SQLModel):
 def view(token: str, session: Session = Depends(get_session)):
     contact = contact_for_token(session, token)
     out = _view(session, contact, preview=False)
-    _remember_shown(token, contact, _media_ids(out["snapshot"]))  # the page's files ask next
-    return out
+    share_notes = contact.is_executor or out["snapshot"]["owner"].get("executor_note_sharing") == "all_recipients"
+    _remember_shown(token, contact, _media_ids(out["snapshot"]), bool(share_notes))  # the page's files ask next
+    return JSONResponse(content=out)
 
 
 @router.get("/preview/{contact_id}", summary="The owner's preview of a recipient's start page")
 def preview(contact_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    return _view(session, _owned(session, contact_id, user), preview=True)
+    return JSONResponse(content=_view(session, _owned(session, contact_id, user), preview=True))
 
 
 @router.get("/links")

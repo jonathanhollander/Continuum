@@ -51,18 +51,30 @@
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import { fly } from "svelte/transition"; // Ensure fly is imported
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
+    import { portal } from "$lib/actions/portal";
     import { plural } from "$lib/utils/plural";
 
     let showAddModal = $state(false);
     let isLoading = $state(true);
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('property'));
+
+    // A scanned QR label opens /modules/property?id=N: that asset's card is brought into view and marked.
+    let focusId = $state<string | null>(null);
 
     onMount(async () => {
         await propertyStore.sync?.();
         isLoading = false;
+
+        const id = new URLSearchParams(window.location.search).get("id");
+        if (id && propertyStore.items.some((p) => String(p.id) === id)) {
+            focusId = id;
+            await tick();
+            document.getElementById(`property-item-${id}`)?.scrollIntoView({ block: "center" });
+        }
     });
     let isEditing = $state(false);
+    let exampleDraft = $state(false);
     let searchQuery = $state("");
     let filterType = $state<string>("All");
     let showWizard = $state(false);
@@ -72,7 +84,7 @@
         name: "",
         type: "Real Estate",
         location: "",
-        valuation: 0,
+        valuation: undefined,
         status: "Owned",
         ownershipDetails: "",
         documents: "",
@@ -130,7 +142,7 @@
         );
         const waiting = wanted.filter((_, i) => results[i].status === "rejected");
         if (waiting.length === 0) {
-            notifications.showAffirmation("general");
+            notifications.showAffirmation("general", "create");
             return;
         }
         const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
@@ -140,7 +152,7 @@
                     "Your answers are safe here. We can save them again whenever you're ready.",
                 code: "DATABASE_ERROR",
                 technicalDetails: reason.reason?.technicalDetails || reason.reason?.message || String(reason.reason),
-            } as any,
+            },
             () => saveWizardItems(waiting),
         );
     }
@@ -150,12 +162,12 @@
             id: crypto.randomUUID(),
             name: name,
             type: type,
-            location: "TBD",
-            valuation: 0,
+            location: "",
+            valuation: undefined,
             status: "Owned",
             ownershipDetails: "",
             documents: "",
-            notes: "Added via Concierge Wizard",
+            notes: "",
             evidence: [],
             thumbnail: "",
         }, false, true);
@@ -173,9 +185,10 @@
     let items = $derived(propertyStore.items); // Updated to access property directly
     let filteredItems = $derived(
         items.filter((i) => {
+            const q = searchQuery.toLowerCase();
             const matchesSearch =
-                i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                i.location.toLowerCase().includes(searchQuery.toLowerCase());
+                String(i.name ?? "").toLowerCase().includes(q) ||
+                String(i.location ?? "").toLowerCase().includes(q);
             const matchesFilter = filterType === "All" || i.type === filterType;
             return matchesSearch && matchesFilter;
         }),
@@ -196,6 +209,16 @@
         } finally {
             downloadingEvidence = false;
         }
+    }
+
+    function showAllAssets() {
+        filterType = "All";
+        searchQuery = "";
+    }
+
+    // A value is shown once one is recorded; a blank or zero valuation is left out.
+    function hasValue(v: unknown): boolean {
+        return Number(v) > 0;
     }
 
     let totalValuation = $derived(propertyStore.getTotalValuation());
@@ -219,6 +242,7 @@
     ];
 
     function resetForm() {
+        exampleDraft = false;
         // Files added in this form but never saved on the record, except those a Try Again still holds.
         removeMediaQuietly(
             formMediaIds().filter((id) => !savedMediaIds.includes(id) && !retryMediaIds.has(id)),
@@ -229,7 +253,7 @@
             name: "",
             type: "Real Estate",
             location: "",
-            valuation: 0,
+            valuation: undefined,
             status: "Owned",
             ownershipDetails: "",
             documents: "",
@@ -262,20 +286,56 @@
     }
 
     // Card covers, as object URLs from the shared authorised cache.
+    // Each cover is asked for once its card is within 200 px of the screen.
     let coverUrls = $state<Record<string, string>>({});
-    $effect(() => {
-        for (const item of items) {
-            const id = mediaIdFromRef(item.thumbnail);
-            if (id === null || coverUrls[id] !== undefined) continue;
-            coverUrls[id] = "";
-            blobUrlFor(id).then(
-                (u) => (coverUrls[id] = u),
-                (e) => console.warn("[property] cover open paused", id, e),
-            );
-        }
-    });
+    function loadCover(ref: string | undefined) {
+        const id = mediaIdFromRef(ref);
+        if (id === null || coverUrls[id] !== undefined) return;
+        coverUrls[id] = "";
+        blobUrlFor(id).then(
+            (u) => (coverUrls[id] = u),
+            (e) => console.warn("[property] cover open paused", id, e),
+        );
+    }
+    function coverInView(node: HTMLElement, ref: string | undefined) {
+        let current = ref;
+        let near = false;
+        const io = new IntersectionObserver(
+            (entries) => {
+                near = entries.some((e) => e.isIntersecting);
+                if (near) loadCover(current);
+            },
+            { rootMargin: "200px 0px" },
+        );
+        io.observe(node);
+        return {
+            update(next: string | undefined) {
+                current = next;
+                if (near) loadCover(current);
+            },
+            destroy: () => io.disconnect(),
+        };
+    }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function handleAddItem() {
+        if (saving) return;
+        saving = true;
+        try {
+            await handleAddItemOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    // With no cover chosen, the first photo among the evidence is the cover.
+    function firstImageId(): number | null {
+        const img = (newItem.evidence ?? []).find((e) => e.mime?.startsWith("image/"));
+        return img ? img.id : null;
+    }
+
+    async function handleAddItemOnce() {
         if (!newItem.name || !newItem.location) return;
 
         const keptIds = formMediaIds();
@@ -283,7 +343,12 @@
         const itemData = {
             ...newItem,
             // The cover is one of this record's evidence images, or none.
-            thumbnail: cover !== null && keptIds.includes(cover) ? String(cover) : "",
+            thumbnail:
+                cover !== null && keptIds.includes(cover)
+                    ? String(cover)
+                    : firstImageId() !== null
+                      ? String(firstImageId())
+                      : "",
             custom_attributes: JSON.stringify(parsedCustomAttributes),
         };
 
@@ -366,6 +431,7 @@
     }
 
     function editItem(item: PropertyItem) {
+        exampleDraft = false;
         newItem = { ...item, evidence: [...(item.evidence ?? [])] };
         savedMediaIds = (item.evidence ?? []).map((e) => e.id);
         parsedCustomAttributes = readCustom(item);
@@ -374,27 +440,46 @@
         showAddModal = true;
     }
 
-    async function deleteItem(id: string, name: string) {
-        if (
-            confirm(
-                `Remove "${name}" from your property list? You can add it back anytime.`,
-            )
-        ) {
-            try {
-                await propertyStore.deleteItem(id);
-            } catch {
-                return;
-            }
-            if (propertyStore.items.some((i) => String(i.id) === String(id))) return;
+    // Remove asks in the page first: the card (or table row) shows the question and two answers.
+    let removingId = $state<string | null>(null);
 
-            activityLog.logEvent({
-                module: "Property",
-                action: "DELETE",
-                entityType: "Asset",
-                entityId: id,
-                entityName: name,
-                userContext: $estateProfile.ownerName || "User",
-            });
+    async function deleteItem(id: string, name: string) {
+        removingId = null;
+        try {
+            await propertyStore.deleteItem(id);
+        } catch {
+            return;
+        }
+        if (propertyStore.items.some((i) => String(i.id) === String(id))) return;
+
+        activityLog.logEvent({
+            module: "Property",
+            action: "DELETE",
+            entityType: "Asset",
+            entityId: id,
+            entityName: name,
+            userContext: $estateProfile.ownerName || "User",
+        });
+    }
+
+    // Status as a label: first letter capitalised; nothing shown when empty.
+    function statusLabel(status: string | undefined): string {
+        const s = (status ?? "").trim();
+        return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+    }
+
+    // The modal's "Ownership Document" field, opened from the card.
+    let openingDocument = $state<string | null>(null);
+    async function openOwnershipDocument(item: PropertyItem) {
+        const ref = mediaIdFromRef(item.documents);
+        if (ref === null || openingDocument) return;
+        openingDocument = String(item.id);
+        try {
+            await downloadMedia(ref, undefined, cachedBlobUrl(ref));
+        } catch (e) {
+            console.warn("[property] ownership document open paused", ref, e);
+        } finally {
+            openingDocument = null;
         }
     }
 
@@ -407,17 +492,18 @@
     };
 
     const typeColors = {
-        "Real Estate": "text-primary bg-primary/10 border-primary/20",
-        Vehicle: "text-primary bg-primary/10 border-primary/20",
-        "Personal Property": "text-slate-600 bg-slate-50 border-slate-100",
-        Valuable: "text-primary bg-primary/10 border-primary/20",
-        Other: "text-purple-600 bg-purple-50 border-purple-100",
+        "Real Estate": "text-primary-hover bg-primary/10 border-primary/20",
+        Vehicle: "text-primary-hover bg-primary/10 border-primary/20",
+        "Personal Property": "text-muted-foreground bg-background border-border",
+        Valuable: "text-primary-hover bg-primary/10 border-primary/20",
+        Other: "text-muted-foreground bg-muted border-border",
     };
 
     function generateQR(item: PropertyItem) {
         qrStore.generateAssetQR({
             id: crypto.randomUUID(),
-            assetId: item.id,
+            // A string, as the heirloom labels are, so one asset never gets two labels.
+            assetId: String(item.id),
             assetName: item.name,
             assetType: "Property",
             location: item.location,
@@ -427,12 +513,12 @@
             module: "Property",
             action: "CREATE",
             entityType: "QR Label",
-            entityId: item.id,
+            entityId: String(item.id),
             entityName: item.name,
             userContext: $estateProfile.ownerName || "User",
         });
 
-        alert("QR Label generated! Redirecting to QR Access Center...");
+        notifications.showSuccess("Your label is ready in the QR Access Center.", "QR Label generated");
         goto("/modules/qr-codes");
     }
 </script>
@@ -440,12 +526,11 @@
 <LivingBlueprintHeader
     title="Property & Real Estate"
     subtitle="Your home, your vehicles, the possessions that matter"
-    tier="preparation"
-    detailedDescription="These are the physical things you've built, bought, and cared for. Documenting them now means your family won't have to search for deeds, titles, or proof of ownership during an already difficult time."
-    whyMatters="Without clear records of what you own and where the documents are, your family could face legal complications, miss valuable assets, or struggle to prove ownership when they need access most."
+    detailedDescription="Record the home, vehicles and other property your family may need to find or care for. Describe the ownership information you have, where the original papers are kept, and the people who can help."
+    whyMatters="Useful property notes help your family locate keys and originals, identify maintenance contacts, and prepare questions for the lender, insurer or relevant professional."
 >
     <div class="flex flex-wrap items-center gap-3">
-        <DataViewToggle module="property" onchange={(mode) => viewMode = mode} />
+        <DataViewToggle module="property" />
         <button
             onclick={() => (showWizard = true)}
             class="flex items-center gap-2 px-5 py-3 border border-primary/20 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
@@ -473,15 +558,18 @@
 >
     <!-- Wizard Modal -->
     {#if showWizard}
+        <!-- Moved to <body>: the animated page wrapper would otherwise hold this "fixed" overlay below the fold. -->
         <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showWizard = false) }}
+            use:portal
             class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
             <div class="w-full max-w-2xl relative" in:fly={{ y: 20 }}>
                 <button
-                    class="absolute -top-12 right-0 text-white/50 hover:text-white"
+                    class="absolute -top-12 right-0 text-white hover:text-white/80"
                     onclick={() => (showWizard = false)}>Go back</button
                 >
+                <p class="mb-3 rounded-xl bg-card p-4 text-sm text-muted-foreground">Guided Setup starts a list of property types. Open each new record to add its name, location, ownership details and documents.</p>
                 <ConciergeFlow
                     steps={wizardSteps}
                     oncomplete={handleWizardComplete}
@@ -494,7 +582,7 @@
     <!-- Filter Controls -->
     <div class="flex flex-wrap items-center gap-3">
         <div
-            class="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm"
+            class="flex bg-card p-1 rounded-2xl border border-border shadow-sm"
         >
             {#each types as type}
                 <button
@@ -502,7 +590,7 @@
                     class="px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all {filterType ===
                     type
                         ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                        : 'text-slate-500 hover:text-primary hover:bg-slate-50'}"
+                        : 'text-muted-foreground hover:text-primary hover:bg-background'}"
                 >
                     {type}
                 </button>
@@ -510,109 +598,27 @@
         </div>
     </div>
 
-    <!-- AI Prompt Bar -->
-    <div class="max-w-3xl mx-auto mb-8">
-        <AIPromptBar context="property" />
-    </div>
-
-    <!-- Asset Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-        >
-            <div class="flex items-start justify-between mb-4">
-                <div
-                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
-                >
-                    <DollarSign size={24} />
-                </div>
-                <div
-                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
-                >
-                    TOTAL
-                </div>
-            </div>
-            <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
-            >
-                Total Asset Value
-            </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
-                ${totalValuation.toLocaleString()}
-            </p>
-        </div>
-
-        <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-        >
-            <div class="flex items-start justify-between mb-4">
-                <div
-                    class="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform"
-                >
-                    <Building size={24} />
-                </div>
-                <div
-                    class="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded-lg font-bold"
-                >
-                    COUNT
-                </div>
-            </div>
-            <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
-            >
-                Real Estate Items
-            </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
-                {typeCounts["Real Estate"] || 0}
-            </p>
-        </div>
-
-        <div
-            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
-        >
-            <div class="flex items-start justify-between mb-4">
-                <div
-                    class="p-3 bg-amber-50 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform"
-                >
-                    <Gem size={24} />
-                </div>
-                <div
-                    class="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded-lg font-bold"
-                >
-                    HIGH-VALUE
-                </div>
-            </div>
-            <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1"
-            >
-                Valuables Recorded
-            </p>
-            <p class="text-3xl font-black text-slate-900 tracking-tight">
-                {typeCounts["Valuable"] || 0}
-            </p>
-        </div>
-    </div>
-
     <!-- Search & Filters -->
     <div
-        class="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm"
+        class="flex flex-col md:flex-row gap-4 items-center justify-between bg-card/50 backdrop-blur-sm p-4 rounded-2xl border border-border shadow-sm"
     >
         <div class="relative w-full md:w-96">
-            <Search class="absolute left-4 top-3.5 text-slate-400" size={18} />
+            <Search class="absolute left-4 top-3.5 text-muted-foreground" size={18} />
             <input
                 type="text"
                 bind:value={searchQuery}
+                aria-label="Search by asset name or location"
                 placeholder="Search by asset name or location..."
-                class="w-full px-4 py-3 pl-12 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                class="w-full px-4 py-3 pl-12 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
             />
         </div>
         <div class="flex items-center gap-2">
             <span
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest"
                 >Inventory: {plural(filteredItems.length, "Asset")}</span
             >
             <button
-                class="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm disabled:opacity-40 disabled:hover:text-slate-500"
+                class="p-3 bg-card border border-border rounded-xl text-muted-foreground hover:text-primary transition-colors shadow-sm disabled:opacity-40 disabled:hover:text-muted-foreground"
                 aria-label="Download"
                 disabled={shownEvidence.length === 0 || downloadingEvidence}
                 onclick={downloadShownEvidence}
@@ -627,8 +633,12 @@
     <!-- Property Cards Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-8">
         {#each filteredItems as item (item.id)}
+            {@const Icon = typeIcons[item.type] || LayoutGrid}
             <div
-                class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col relative"
+                id="property-item-{item.id}"
+                data-focused={focusId === String(item.id)}
+                class="bg-card rounded-2xl border border-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden group flex flex-col relative {focusId === String(item.id) ? 'ring-2 ring-primary' : ''}"
+                use:coverInView={item.thumbnail}
                 transition:scale={{
                     duration: 400,
                     delay: 0,
@@ -640,7 +650,7 @@
                 {#if item.thumbnail && coverUrls[item.thumbnail]}
                     <div class="absolute inset-0 h-48 z-0">
                         <div
-                            class="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent z-10"
+                            class="absolute inset-0 bg-gradient-to-t from-card via-card/80 to-transparent z-10"
                         ></div>
                         <img
                             src={coverUrls[item.thumbnail]}
@@ -655,38 +665,39 @@
                         <div class="flex items-center gap-4">
                             <div
                                 class="w-14 h-14 rounded-2xl shadow-inner flex items-center justify-center transition-all duration-500 {item.thumbnail
-                                    ? 'bg-white/80 backdrop-blur'
+                                    ? 'bg-card/80 backdrop-blur'
                                     : typeColors[item.type]}"
                             >
-                                <svelte:component
-                                    this={typeIcons[item.type] || LayoutGrid}
+                                <Icon
                                     size={28}
                                     strokeWidth={2.5}
                                     class={item.thumbnail
-                                        ? "text-slate-900"
+                                        ? "text-foreground"
                                         : ""}
                                 />
                             </div>
                             <div>
                                 <h3
-                                    class="text-xl font-black text-slate-900 leading-tight group-hover:text-primary transition-colors"
+                                    class="text-xl font-black text-foreground leading-tight group-hover:text-primary transition-colors"
                                 >
                                     {item.name}
                                 </h3>
+                                {#if item.location}
                                 <div
-                                    class="flex items-center gap-1.5 text-slate-400 font-bold text-xs uppercase tracking-tighter"
+                                    class="flex items-center gap-1.5 text-muted-foreground font-bold text-xs uppercase tracking-tighter"
                                 >
-                                    <MapPin size={12} class="text-primary/60" />
+                                    <MapPin size={12} class="text-primary" />
                                     {item.location}
                                 </div>
+                                {/if}
                             </div>
                         </div>
                         <div
-                            class="flex items-center gap-1 bg-white/50 backdrop-blur rounded-2xl p-1"
+                            class="flex items-center gap-1 bg-card/50 backdrop-blur rounded-2xl p-1"
                         >
                             <button
                                 onclick={() => generateQR(item)}
-                                class="p-3 bg-slate-50 hover:bg-amber-50 text-slate-400 hover:text-amber-600 rounded-2xl transition-all"
+                                class="p-3 bg-background hover:bg-primary-soft text-muted-foreground hover:text-primary rounded-2xl transition-all"
                                 title="Generate QR Label"
                             >
                                 <QrCode size={18} />
@@ -694,86 +705,116 @@
                             <button
                                 onclick={() => editItem(item)}
                                 aria-label="Edit these details"
-                                class="p-3 bg-slate-50 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-2xl transition-all"
+                                class="p-3 bg-background hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-2xl transition-all"
                             >
                                 <Edit2 size={18} />
                             </button>
                             <button
-                                onclick={() => deleteItem(item.id, item.name)}
+                                onclick={() => (removingId = String(item.id))}
                                 aria-label="Remove this item"
-                                class="p-3 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-2xl transition-all"
+                                class="p-3 bg-background hover:bg-danger-soft text-muted-foreground hover:text-danger rounded-2xl transition-all"
                             >
                                 <Trash2 size={18} />
                             </button>
                         </div>
                     </div>
 
+                    {#if removingId === String(item.id)}
+                        <div class="p-4 mb-8 bg-muted rounded-2xl border border-border space-y-3" role="group" aria-label="Remove {item.name}" transition:slide>
+                            <p class="text-sm text-foreground">Remove "{item.name}" from your property list? You can add it back anytime.</p>
+                            <div class="flex gap-2">
+                                <button
+                                    type="button"
+                                    onclick={() => (removingId = null)}
+                                    class="flex-1 py-2 text-sm font-bold text-muted-foreground bg-card border border-border rounded-xl hover:bg-background transition-all"
+                                >
+                                    Maybe later
+                                </button>
+                                <button
+                                    type="button"
+                                    onclick={() => deleteItem(item.id, item.name)}
+                                    class="flex-1 py-2 text-sm font-bold text-card bg-danger rounded-xl hover:opacity-90 transition-all"
+                                >
+                                    Remove this item
+                                </button>
+                            </div>
+                        </div>
+                    {/if}
+
+                    {#if hasValue(item.valuation) || statusLabel(item.status)}
                     <div class="grid grid-cols-2 gap-4 mb-8">
+                        {#if hasValue(item.valuation)}
                         <div
-                            class="bg-slate-50 rounded-2xl p-4 border border-slate-100/50"
+                            class="bg-background rounded-2xl p-4 border border-border/50"
                         >
                             <p
-                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                                class="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1"
                             >
                                 Est. Value
                             </p>
                             <p
-                                class="text-lg font-black text-slate-900 tracking-tight"
+                                class="text-lg font-black text-foreground tracking-tight"
                             >
-                                ${item.valuation?.toLocaleString() || '0'}
+                                ${Number(item.valuation).toLocaleString()}
                             </p>
                         </div>
+                        {/if}
+                        {#if statusLabel(item.status)}
                         <div
-                            class="bg-slate-50 rounded-2xl p-4 border border-slate-100/50"
+                            class="bg-background rounded-2xl p-4 border border-border/50"
                         >
                             <p
-                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                                class="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1"
                             >
-                                Ownership
+                                Current Status
                             </p>
                             <p
-                                class="text-sm font-black text-slate-700 tracking-tight capitalize"
+                                class="text-sm font-black text-foreground tracking-tight"
                             >
-                                {item.status}
+                                {statusLabel(item.status)}
                             </p>
                         </div>
+                        {/if}
                     </div>
+                    {/if}
 
                     <div class="space-y-4 mb-8">
+                        {#if item.ownershipDetails}
                         <div class="flex items-start gap-4">
                             <div
-                                class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"
+                                class="w-8 h-8 rounded-xl bg-background flex items-center justify-center text-muted-foreground shrink-0"
                             >
                                 <FileText size={14} />
                             </div>
                             <div>
                                 <p
-                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                                    class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
                                 >
                                     Ownership Details
                                 </p>
                                 <p
-                                    class="text-sm font-bold text-slate-700 leading-snug"
+                                    class="text-sm font-bold text-foreground leading-snug"
                                 >
-                                    {item.ownershipDetails || "Sole Ownership"}
+                                    {item.ownershipDetails}
                                 </p>
                             </div>
                         </div>
+                        {/if}
                         {#if item.notes}
                             <div class="flex items-start gap-4">
                                 <div
-                                    class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"
+                                    class="w-8 h-8 rounded-xl bg-background flex items-center justify-center text-muted-foreground shrink-0"
                                 >
                                     <Info size={14} />
                                 </div>
                                 <div>
                                     <p
-                                        class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                                        class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
                                     >
                                         Key Notes
                                     </p>
                                     <p
-                                        class="text-sm font-medium text-slate-500 line-clamp-2 leading-relaxed"
+                                        class="text-sm font-medium text-muted-foreground line-clamp-2 leading-relaxed"
                                     >
                                         {item.notes}
                                     </p>
@@ -783,32 +824,72 @@
                     </div>
                 </div>
 
-                <div class="mt-auto p-2">
-                    <div
-                        class="bg-primary rounded-2xl p-6 text-primary-foreground flex items-center justify-between group/footer hover:bg-slate-900 transition-colors duration-500 cursor-pointer"
-                    >
-                        <div>
-                            <p
-                                class="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1"
-                            >
-                                Asset Verification
-                            </p>
-                            <h4 class="font-bold text-sm tracking-tight">
-                                View Ownership Documents
-                            </h4>
-                        </div>
-                        <div
-                            class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover/footer:translate-x-1 transition-transform"
+                <div class="mt-auto p-2 space-y-2">
+                    {#if mediaIdFromRef(item.documents) !== null}
+                        <button
+                            type="button"
+                            onclick={() => openOwnershipDocument(item)}
+                            aria-busy={openingDocument === String(item.id)}
+                            class="w-full text-left bg-muted rounded-2xl p-6 text-foreground flex items-center justify-between group/doc hover:bg-border transition-colors duration-300"
                         >
-                            <ArrowRight size={20} />
-                        </div>
-                    </div>
+                            <span>
+                                <span
+                                    class="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1"
+                                >
+                                    Important Documents
+                                </span>
+                                <span class="block font-bold text-sm tracking-tight">
+                                    Ownership Document
+                                </span>
+                            </span>
+                            <span
+                                class="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center group-hover/doc:translate-x-1 transition-transform"
+                            >
+                                <Download size={20} />
+                            </span>
+                        </button>
+                    {/if}
+                    {#if (item.evidence ?? []).length > 0}
+                        <button
+                            type="button"
+                            onclick={() => editItem(item)}
+                            class="w-full text-left bg-muted rounded-2xl p-6 text-foreground flex items-center justify-between group/footer hover:bg-border transition-colors duration-300"
+                        >
+                            <span>
+                                <span
+                                    class="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1"
+                                >
+                                    Asset Verification
+                                </span>
+                                <span class="block font-bold text-sm tracking-tight">
+                                    View Ownership Documents
+                                </span>
+                            </span>
+                            <span
+                                class="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center group-hover/footer:translate-x-1 transition-transform"
+                            >
+                                <ArrowRight size={20} />
+                            </span>
+                        </button>
+                    {/if}
                 </div>
             </div>
         {:else}
-            <!-- GHOST ROW IMPLEMENTATION -->
-            {#if filteredItems.length === 0 && searchQuery === ""}
+            <!-- First run: the examples. With assets saved, a search or filter that shows none
+                 offers the way back to all of them. -->
+            {#if items.length > 0}
+                <div class="col-span-full flex justify-center py-12">
+                    <button
+                        type="button"
+                        onclick={showAllAssets}
+                        class="px-6 py-3 rounded-2xl font-bold border border-primary/20 text-primary hover:bg-primary/5 transition-colors"
+                    >
+                        Show all assets
+                    </button>
+                </div>
+            {:else}
                 <div class="col-span-full space-y-4">
+                    <p class="text-sm text-muted-foreground">Examples open a blank property record for your own details.</p>
                     {#each getSmartSamples($language).property || [] as sample}
                         <GhostRow
                             name={sample.name}
@@ -816,17 +897,13 @@
                             value={sample.valuation}
                             type="Property"
                             onClick={() => {
-                                newItem = {
-                                    ...newItem,
-                                    name: sample.name,
-                                    type: sample.type as any,
-                                    valuation: sample.valuation || 0,
-                                };
+                                exampleDraft = true;
+                                newItem = { ...newItem, type: newItem.name ? newItem.type : sample.type as any };
                                 showAddModal = true;
                             }}
                         >
                             {#snippet icon()}
-                                <Building size={20} class="text-slate-400" />
+                                <Building size={20} class="text-muted-foreground" />
                             {/snippet}
                         </GhostRow>
                     {/each}
@@ -837,7 +914,7 @@
                             class="bg-primary text-primary-foreground px-8 py-3 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                         >
                             <Plus size={18} />
-                            Register First Asset
+                            Share your first asset
                         </button>
                     </div>
                 </div>
@@ -846,7 +923,17 @@
     </div>
     {:else}
         <!-- Table View -->
-        {#if filteredItems.length === 0 && searchQuery === ""}
+        {#if items.length > 0 && filteredItems.length === 0}
+            <div class="flex justify-center py-12">
+                <button
+                    type="button"
+                    onclick={showAllAssets}
+                    class="px-6 py-3 rounded-2xl font-bold border border-primary/20 text-primary hover:bg-primary/5 transition-colors"
+                >
+                    Show all assets
+                </button>
+            </div>
+        {:else if items.length === 0}
             {#each getSmartSamples($language).property || [] as sample}
                 <GhostRow
                     name={sample.name}
@@ -854,56 +941,56 @@
                     value={sample.valuation}
                     type="Property"
                     onClick={() => {
-                        newItem = {
-                            ...newItem,
-                            name: sample.name,
-                            type: sample.type as any,
-                            valuation: sample.valuation || 0,
-                        };
+                        exampleDraft = true;
+                        newItem = { ...newItem, type: newItem.name ? newItem.type : sample.type as any };
                         showAddModal = true;
                     }}
                 >
                     {#snippet icon()}
-                        <Building size={20} class="text-slate-400" />
+                        <Building size={20} class="text-muted-foreground" />
                     {/snippet}
                 </GhostRow>
             {/each}
         {:else}
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                 <table class="w-full">
-                    <thead class="bg-slate-50 border-b border-slate-200">
+                    <thead class="bg-background border-b border-border">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Asset</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Type</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Location</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Value</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-500">Status</th>
-                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">Actions</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Asset</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Location</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Value</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Status</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-border">
                         {#each filteredItems as item (item.id)}
                             {@const Icon = typeIcons[item.type] || LayoutGrid}
-                            <tr class="hover:bg-slate-50 transition-colors group">
+                            <tr
+                                id="property-item-{item.id}"
+                                data-focused={focusId === String(item.id)}
+                                class="hover:bg-background transition-colors group {focusId === String(item.id) ? 'ring-2 ring-primary ring-inset' : ''}"
+                            >
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-lg flex items-center justify-center {typeColors[item.type]}">
                                             <Icon size={16} />
                                         </div>
-                                        <span class="font-medium text-slate-800">{item.name}</span>
+                                        <span class="font-medium text-foreground">{item.name}</span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-slate-600">{item.type}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600">{item.location || '-'}</td>
-                                <td class="px-4 py-3 text-sm text-slate-600 font-medium">${item.valuation?.toLocaleString() || '0'}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{item.type}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{item.location || ''}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground font-medium">{hasValue(item.valuation) ? `$${Number(item.valuation).toLocaleString()}` : ""}</td>
                                 <td class="px-4 py-3">
-                                    <span class="text-xs font-medium text-slate-600 capitalize">{item.status || 'owned'}</span>
+                                    <span class="text-xs font-medium text-muted-foreground">{statusLabel(item.status)}</span>
                                 </td>
                                 <td class="px-4 py-3 text-right">
-                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div class="flex items-center justify-end gap-2">
                                         <button
                                             onclick={() => generateQR(item)}
-                                            class="p-1.5 text-slate-400 hover:text-amber-600 transition-colors"
+                                            class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                             title="Generate QR Label"
                                         >
                                             <QrCode size={14} />
@@ -911,25 +998,134 @@
                                         <button
                                             onclick={() => editItem(item)}
                                             aria-label="Edit these details"
-                                            class="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                            class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                                         >
                                             <Edit2 size={14} />
                                         </button>
                                         <button aria-label="Remove this item"
-                                            onclick={() => deleteItem(item.id, item.name)}
-                                            class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                                            onclick={() => (removingId = String(item.id))}
+                                            class="p-1.5 text-muted-foreground hover:text-danger transition-colors"
                                         >
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
                                 </td>
                             </tr>
+                            {#if removingId === String(item.id)}
+                                <tr class="bg-muted">
+                                    <td colspan="6" class="px-4 py-3">
+                                        <div class="flex items-center justify-between gap-4" role="group" aria-label="Remove {item.name}">
+                                            <p class="text-sm text-foreground">Remove "{item.name}" from your property list? You can add it back anytime.</p>
+                                            <div class="flex gap-2 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onclick={() => (removingId = null)}
+                                                    class="px-4 py-2 text-sm font-bold text-muted-foreground bg-card border border-border rounded-xl hover:bg-background transition-all"
+                                                >
+                                                    Maybe later
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onclick={() => deleteItem(item.id, item.name)}
+                                                    class="px-4 py-2 text-sm font-bold text-card bg-danger rounded-xl hover:opacity-90 transition-all"
+                                                >
+                                                    Remove this item
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {/if}
                         {/each}
                     </tbody>
                 </table>
             </div>
         {/if}
     {/if}
+
+    <!-- Asset Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+            class="bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow group"
+        >
+            <div class="flex items-start justify-between mb-4">
+                <div
+                    class="p-3 bg-primary/10 rounded-2xl text-primary-hover group-hover:scale-110 transition-transform"
+                >
+                    <DollarSign size={24} />
+                </div>
+                <div
+                    class="text-[10px] bg-primary/20 text-primary-hover px-2 py-1 rounded-lg font-bold"
+                >
+                    TOTAL
+                </div>
+            </div>
+            <p
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
+            >
+                Total Asset Value
+            </p>
+            <p class="text-3xl font-black text-foreground tracking-tight">
+                ${totalValuation.toLocaleString()}
+            </p>
+        </div>
+
+        <div
+            class="bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow group"
+        >
+            <div class="flex items-start justify-between mb-4">
+                <div
+                    class="p-3 bg-primary/10 rounded-2xl text-primary-hover group-hover:scale-110 transition-transform"
+                >
+                    <Building size={24} />
+                </div>
+                <div
+                    class="text-[10px] bg-primary/20 text-primary-hover px-2 py-1 rounded-lg font-bold"
+                >
+                    COUNT
+                </div>
+            </div>
+            <p
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
+            >
+                Real Estate Items
+            </p>
+            <p class="text-3xl font-black text-foreground tracking-tight">
+                {typeCounts["Real Estate"] || 0}
+            </p>
+        </div>
+
+        <div
+            class="bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow group"
+        >
+            <div class="flex items-start justify-between mb-4">
+                <div
+                    class="p-3 bg-gold/10 rounded-2xl text-gold-text group-hover:scale-110 transition-transform"
+                >
+                    <Gem size={24} />
+                </div>
+                <div
+                    class="text-[10px] bg-gold/10 text-gold-text px-2 py-1 rounded-lg font-bold"
+                >
+                    HIGH-VALUE
+                </div>
+            </div>
+            <p
+                class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1"
+            >
+                Valuables Recorded
+            </p>
+            <p class="text-3xl font-black text-foreground tracking-tight">
+                {typeCounts["Valuable"] || 0}
+            </p>
+        </div>
+    </div>
+
+    <!-- AI Prompt Bar -->
+    <div class="max-w-3xl mx-auto mt-8">
+        <p class="text-sm text-muted-foreground">Describe one item for help explaining its records, document locations or practical next steps. Review the wording, then add it to the record you save.</p>
+        <AIPromptBar context="property" />
+    </div>
 </div>
 {/if}
 
@@ -953,22 +1149,23 @@
 
         <!-- Panel -->
         <div
-            class="relative bg-white rounded-2xl shadow-2xl ring-1 ring-slate-900/5 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            class="relative bg-card rounded-2xl shadow-2xl ring-1 ring-slate-900/5 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
             transition:scale={{ duration: 250, start: 0.95, easing: cubicOut }}
         >
             <!-- Header -->
-            <div class="flex items-start justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-10">
+            <div class="flex items-start justify-between px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
                 <div class="flex-1 pr-4">
-                    <h2 class="font-serif font-bold text-xl text-slate-800">
-                        {isEditing ? "Update" : "Record"} Asset Detail
+                    <h2 class="font-serif font-bold text-xl text-foreground">
+                        {isEditing ? "Update" : "Record"} property details
                     </h2>
-                    <p class="text-slate-500 text-sm mt-2 leading-relaxed">
-                        Document your property details to help your family understand what you own and where to find important documents.
+                    <p class="text-muted-foreground text-sm mt-2 leading-relaxed">
+                        Describe this item using your own records. Include where to find it, its ownership papers, and whom your family should contact.
+                    {#if exampleDraft}<span class="block mt-2 text-primary-hover" role="status">Example starting point: enter your own item name and details. Your entered words stay in the form.</span>{/if}
                     </p>
                 </div>
                 <button
                     onclick={resetForm}
-                    class="p-2 -mr-2 -mt-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
+                    class="p-2 -mr-2 -mt-1 text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-full transition-colors flex-shrink-0"
                     aria-label="Close"
                 >
                     <X class="w-5 h-5" />
@@ -980,7 +1177,7 @@
                 <!-- Group 1: General Info -->
                 <section class="space-y-4">
                     <h3
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wide"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wide"
                     >
                         Asset Description
                     </h3>
@@ -988,25 +1185,25 @@
                         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                     >
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="property-name"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Asset Name</label
                             >
-                            <input
+                            <input id="property-name"
                                 type="text"
                                 bind:value={newItem.name}
                                 placeholder="e.g. Primary Residence"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="property-type"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Asset Type</label
                             >
-                            <select
+                            <select id="property-type"
                                 bind:value={newItem.type}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none cursor-pointer"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground appearance-none cursor-pointer"
                             >
                                 {#each types.filter((t) => t !== "All") as type}
                                     <option value={type}>{type}</option>
@@ -1014,15 +1211,15 @@
                             </select>
                         </div>
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="property-location"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Primary Location</label
                             >
-                            <input
+                            <input id="property-location"
                                 type="text"
                                 bind:value={newItem.location}
                                 placeholder="City, State / Full Address"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                     </div>
@@ -1033,45 +1230,48 @@
                     class="bg-primary/5 rounded-2xl p-6 border border-primary/10 space-y-4"
                 >
                     <h3
-                        class="text-xs font-bold uppercase text-primary tracking-wide"
+                        class="text-xs font-bold uppercase text-primary-hover tracking-wide"
                     >
                         Ownership & Value
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
-                                >Current Valuation ($)</label
+                            <label for="property-valuation"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
+                                >Recorded valuation ($)</label
                             >
                             <div class="relative">
                                 <DollarSign
                                     size={16}
                                     class="absolute left-4 top-3.5 text-primary"
                                 />
-                                <input
+                                <input id="property-valuation"
                                     type="number"
                                     bind:value={newItem.valuation}
-                                    class="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                    class="w-full px-4 py-3 pl-10 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                                 />
                             </div>
                         </div>
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
-                                >Current Status</label
+                            <span id="property-status-label"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
+                                >Current Status</span
                             >
                             <div
-                                class="flex bg-white rounded-xl p-1 border border-slate-200"
+                                role="group"
+                                aria-labelledby="property-status-label"
+                                class="flex bg-card rounded-xl p-1 border border-border"
                             >
                                 {#each ["Owned", "Mortgaged", "Leased"] as status}
                                     <button
                                         type="button"
+                                        aria-pressed={newItem.status === status}
                                         onclick={() =>
                                             (newItem.status = status as any)}
                                         class="flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all {newItem.status ===
                                         status
-                                            ? 'bg-primary text-white shadow-lg'
-                                            : 'text-slate-500 hover:bg-slate-50'}"
+                                            ? 'bg-primary text-primary-foreground shadow-lg'
+                                            : 'text-muted-foreground hover:bg-background'}"
                                     >
                                         {status}
                                     </button>
@@ -1079,14 +1279,14 @@
                             </div>
                         </div>
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="property-purchase-date"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Purchase/Acquisition Date</label
                             >
-                            <input
+                            <input id="property-purchase-date"
                                 type="date"
                                 bind:value={newItem.purchaseDate}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 cursor-pointer"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground cursor-pointer"
                             />
                         </div>
                     </div>
@@ -1095,27 +1295,27 @@
                 <!-- Group 3: Legacy Details -->
                 <section class="space-y-4">
                     <h3
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wide"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wide"
                     >
                         Ownership & Documents
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="property-ownership-details"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Title / Ownership Group</label
                             >
-                            <input
+                            <input id="property-ownership-details"
                                 type="text"
                                 bind:value={newItem.ownershipDetails}
-                                placeholder="e.g. Individual Title, Joint with Spouse"
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                placeholder="Ownership wording from your title, deed or other records"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                         <div class="space-y-1.5">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
-                                >Critical Documents</label
+                            <p
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
+                                >Important Documents</p
                             >
                             <UniversalUploader
                                 bind:value={newItem.documents}
@@ -1125,15 +1325,15 @@
                             />
                         </div>
                         <div class="space-y-1.5 md:col-span-2">
-                            <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                            <label for="property-notes"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Inventory Notes</label
                             >
-                            <textarea
+                            <textarea id="property-notes"
                                 bind:value={newItem.notes}
                                 rows="4"
-                                placeholder="Additional details, disposal instructions, or historical significance..."
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 resize-none"
+                                placeholder="Where are the keys and originals? Who maintains this item? Include any valuation source/date and questions for the lender, insurer or adviser."
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground resize-none"
                             ></textarea>
                         </div>
                     </div>
@@ -1142,9 +1342,9 @@
                 <!-- Group 4: Visual Evidence -->
                 <section class="space-y-4">
                     <h3
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wide"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wide"
                     >
-                        Insurance Evidence
+                        Photos & supporting evidence
                     </h3>
 
                     <EvidenceGalleryUploader
@@ -1155,7 +1355,7 @@
                 </section>
 
                 <!-- Custom Fields -->
-                <section class="pt-4 mt-4 border-t border-slate-100">
+                <section class="pt-4 mt-4 border-t border-border">
                     <CustomFieldsManager
                         entityType="property"
                         bind:data={parsedCustomAttributes}
@@ -1165,20 +1365,21 @@
 
             <!-- Footer -->
             <div
-                class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3"
+                class="px-6 py-4 bg-background border-t border-border flex justify-end gap-3"
             >
                 <button
                     onclick={resetForm}
-                    class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+                    class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-border transition-colors"
                 >
-                    Not right now
+                    Maybe later
                 </button>
                 <button
                     onclick={handleAddItem}
-                    disabled={!newItem.name || !newItem.location}
+                    disabled={!newItem.name || !newItem.location || saving}
+                    aria-busy={saving}
                     class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Save my thoughts
+                    {saving ? "Saving..." : "Save property details"}
                 </button>
             </div>
         </div>
@@ -1188,6 +1389,7 @@
 <style>
     select {
         -webkit-appearance: none;
+        appearance: none;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
         background-repeat: no-repeat;
         background-position: right 1.25rem center;

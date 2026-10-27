@@ -130,8 +130,8 @@ class PulseContact(SQLModel, table=True):
     individual_delay_hours: Optional[int] = Field(default=None) # Overrides Tier delay
     notify_on_safety_timer: bool = Field(default=True) # If this contact is part of the "Safety Timer" reach-out
 
-    # Contacts-page call list (who to tell, in what order, and how far along). Separate from
-    # tier_id: tier_id enrolls the contact in Pulse escalation alerts (pulse_logic).
+    # Contacts-page call list (who to tell, in what order, and how far along). Pulse uses call
+    # tiers 1-3 when tier_id is unset; an explicit Pulse tier takes precedence (pulse_tiers).
     call_tier: Optional[str] = Field(default=None) # "1_Immediate", "2_SameDay", "3_Service", "4_DNR"
     notification_status: Optional[str] = Field(default=None) # "Pending", "Called", "LeftMsg", "Notified", "Unreachable"
 

@@ -5,20 +5,18 @@ description: How Continuum's static SvelteKit single-page app, the FastAPI backe
 tags: [architecture, overview, frontend, backend, deployment]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-10-26T04:52:34.633Z
+    at: 2026-10-27T00:41:19.118Z
 sources:
   - id: openwiki-source-43cec924cc2faa688a976aa9
     resource: repo://backend/csrf.py
   - id: openwiki-source-fcffbe3e28749eaf9a39557c
     resource: repo://backend/main.py
+  - id: openwiki-source-1a6b39ee8664f86da46ae3b4
+    resource: repo://frontend/src/hooks.client.ts
   - id: openwiki-source-79cd44ea11c40597832d7dd7
     resource: repo://frontend/src/lib/api/client.ts
   - id: openwiki-source-9e1f8b42a6b85abeadc5dee0
     resource: repo://frontend/src/lib/config.ts
-  - id: openwiki-source-17706240e8ad2d6632263f60
-    resource: repo://frontend/src/lib/services/aiConciergeService.ts
-  - id: openwiki-source-927356adb03f037fb4b7dca3
-    resource: repo://frontend/src/lib/services/errorHandler.ts
   - id: openwiki-source-e3bf734261f21a2f92f35877
     resource: repo://frontend/src/routes/%2Blayout.ts
   - id: openwiki-source-a893f51acc4cb0c9f3b93fc4
@@ -29,7 +27,7 @@ sources:
     resource: repo://nixpacks.toml
   - id: openwiki-source-0f7600e0d2d7c91e381ed675
     resource: repo://railway.toml
-generated: { by: "claude-code", at: "2026-10-26T04:52:34.633Z" }
+generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
 ---
 
 # System Architecture Overview
@@ -61,8 +59,8 @@ Railway builds the image with Nixpacks (`railway.toml`, `nixpacks.toml`): it ins
 
 ## Request flow
 
-1. A module page calls its store. Most stores wrap a `SyncManager` (`frontend/src/lib/services/sync.svelte.ts`) that renders from a localStorage cache first, applies the change optimistically, and sends the request (see [Frontend State and SyncManager](/openwiki/frontend/state-and-sync.md)).
-2. Requests carry the JWT from `localStorage['continuum_auth_token']` as a Bearer header. The helpers in `frontend/src/lib/api/client.ts` log the user out and redirect to `/login` on a 401.
+1. A module page calls its store. Most stores wrap a `SyncManager` (`frontend/src/lib/services/sync.svelte.ts`) that renders from a localStorage cache first, tracks the mutation and sends the request (see [Frontend State and SyncManager](/openwiki/frontend/state-and-sync.md)).
+2. Requests carry the JWT from `localStorage['continuum_auth_token']` as a Bearer header. The helpers in `frontend/src/lib/api/client.ts` preserve HTTP errors. The owner-bound client fetch hook refreshes eligible 401s once, sharing concurrent refresh work; it signs out only on a definite refresh refusal. Transient failures remain retryable, and session ownership checks prevent a delayed request/result from crossing an account change.
 3. FastAPI runs the middleware chain (request ID, security headers, CORS, CSRF, HTTPS redirect in production), resolves the user with `get_current_user`, and the router reads or writes SQLModel rows scoped to that user.
 4. Errors come back as `{ "error": { "message", "code", ... } }`; `parseApiError` in `frontend/src/lib/services/errorHandler.ts` turns them into `ErrorDetails` for notifications.
 

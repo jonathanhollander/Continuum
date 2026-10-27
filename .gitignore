@@ -46,6 +46,7 @@ next-env.d.ts
 *.sqlite
 *.db-journal
 *.log
+backend/logs/
 __pycache__/
 *.py[cod]
 *$py.class

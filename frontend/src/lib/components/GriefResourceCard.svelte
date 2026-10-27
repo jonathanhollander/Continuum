@@ -11,7 +11,7 @@
         url?: string;
         category: string;
         icon: ComponentType;
-        color: string;
+        tone?: "primary" | "gold";
         delay?: number;
     }
 
@@ -23,9 +23,26 @@
         url,
         category,
         icon: Icon,
-        color,
+        tone: toneName = "primary",
         delay = 0,
-    } = $props<Props>();
+    }: Props = $props();
+
+    // Written-out classes (Tailwind only generates classes it can read in full), on the
+    // site tokens: one accent (primary) plus gold. This card sits on a dark surface in both
+    // themes, so the accent text uses the on-dark member of each family.
+    const tones = {
+        primary: {
+            badge: "bg-primary-on-dark/10 border-primary-on-dark/20 text-primary-on-dark",
+            action: "text-primary-on-dark",
+            glow: "hover:shadow-primary-on-dark/10",
+        },
+        gold: {
+            badge: "bg-gold/10 border-gold/20 text-gold",
+            action: "text-gold",
+            glow: "hover:shadow-gold/10",
+        },
+    } as const;
+    const tone = $derived(tones[toneName] ?? tones.primary);
 
     function getTypeLabel(t: string): string {
         switch (t) {
@@ -64,15 +81,15 @@
         target="_blank"
         rel="noopener noreferrer"
         in:fly={{ y: 20, delay, duration: 600 }}
-        class="group relative block p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-xl hover:shadow-{color}-500/10 cursor-pointer"
+        class="group relative block p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-xl {tone.glow} cursor-pointer"
     >
         <div class="flex items-start justify-between mb-4">
             <div
-                class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-{color}-500/10 text-{color}-400 border border-{color}-500/20"
+                class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border {tone.badge}"
             >
                 {category}
             </div>
-            <LucideExternalLink class="w-4 h-4 text-slate-500" />
+            <LucideExternalLink class="w-4 h-4 text-muted-foreground" />
         </div>
 
         <h3
@@ -80,19 +97,19 @@
         >
             {title}
         </h3>
-        <p class="text-sm text-slate-400 line-clamp-2 leading-relaxed mb-6">
+        <p class="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-6">
             {description}
         </p>
 
         <div class="flex items-center justify-between text-xs font-medium">
-            <div class="flex items-center gap-2 text-slate-500">
+            <div class="flex items-center gap-2 text-muted-foreground">
                 {#if Icon}
                     <Icon class="w-4 h-4" />
                 {/if}
                 <span>{getTypeLabel(type)}</span>
             </div>
             <div
-                class="text-{color}-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                class="{tone.action} flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
             >
                 {getActionLabel(type)}
                 <LucideExternalLink class="w-3 h-3" />
@@ -102,48 +119,50 @@
 {:else}
     <div
         in:fly={{ y: 20, delay, duration: 600 }}
-        class="group relative p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-xl hover:shadow-{color}-500/10 cursor-pointer"
+        class="group relative p-6 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300 {type === 'guide' ? `hover:border-white/20 hover:shadow-xl ${tone.glow} cursor-pointer` : ''}"
     >
         <div class="flex items-start justify-between mb-4">
             <div
-                class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-{color}-500/10 text-{color}-400 border border-{color}-500/20"
+                class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border {tone.badge}"
             >
                 {category}
             </div>
             {#if type === "video" && duration}
                 <div
-                    class="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono"
+                    class="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono"
                 >
                     <LucidePlay class="w-3 h-3" />
                     {duration}
                 </div>
             {:else if type === "guide"}
-                <LucideBookOpen class="w-4 h-4 text-slate-500" />
+                <LucideBookOpen class="w-4 h-4 text-muted-foreground" />
             {/if}
         </div>
 
         <h3
-            class="text-lg font-medium mb-2 group-hover:text-white transition-colors"
+            class="text-lg font-medium mb-2 {type === 'guide' ? 'group-hover:text-white' : ''} transition-colors"
         >
             {title}
         </h3>
-        <p class="text-sm text-slate-400 line-clamp-2 leading-relaxed mb-6">
+        <p class="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-6">
             {description}
         </p>
 
         <div class="flex items-center justify-between text-xs font-medium">
-            <div class="flex items-center gap-2 text-slate-500">
+            <div class="flex items-center gap-2 text-muted-foreground">
                 {#if Icon}
                     <Icon class="w-4 h-4" />
                 {/if}
                 <span>{getTypeLabel(type)}</span>
             </div>
-            <div
-                class="text-{color}-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-                {getActionLabel(type)}
-                <LucideExternalLink class="w-3 h-3" />
-            </div>
+            {#if type === "guide"}
+                <div
+                    class="{tone.action} flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                    {getActionLabel(type)}
+                    <LucideExternalLink class="w-3 h-3" />
+                </div>
+            {/if}
         </div>
     </div>
 {/if}

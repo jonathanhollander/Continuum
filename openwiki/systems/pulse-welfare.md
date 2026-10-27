@@ -1,14 +1,12 @@
 ---
 type: system
 title: Pulse Welfare Check-ins
-description: How the Pulse wellness check-in system works — its settings, contacts, tiers and log models, the hourly scheduler and deadline/escalation rules, guardian email alerts and portal tokens, the public check-in and guardian endpoints, and the frontend Pulse store and pages.
+description: How configured Pulse scheduling, owner check-ins, guardian pauses, tier and safety-timer outcomes, portal sharing and companion transparency views work together.
 tags: [pulse, scheduler, escalation, guardians, email]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-10-26T04:52:34.633Z
+    at: 2026-10-27T00:48:46.078Z
 sources:
-  - id: openwiki-source-82a325da453da1db06378e6d
-    resource: repo://backend/config.py
   - id: openwiki-source-2cb07ade85d43d677f359e23
     resource: repo://backend/pulse_logic.py
   - id: openwiki-source-f223caf470b1dba5c60511ed
@@ -21,11 +19,7 @@ sources:
     resource: repo://frontend/src/lib/stores/pulse.svelte.ts
   - id: openwiki-source-a8a830617ab03d4b55d49d9a
     resource: repo://frontend/src/routes/%2Blayout.svelte
-  - id: openwiki-source-20eed2e04047c6add1e8cfba
-    resource: repo://frontend/src/routes/portal/%5Btoken%5D/%2Bpage.svelte
-  - id: openwiki-source-c2775d4b5d728c13ffc15dcb
-    resource: repo://frontend/src/routes/pulse/portal/%5Btoken%5D/%2Bpage.svelte
-generated: { by: "claude-code", at: "2026-10-26T04:52:34.633Z" }
+generated: { by: "codex", at: "2026-10-27T00:48:46.078Z" }
 ---
 
 # Pulse Welfare Check-ins
@@ -49,20 +43,15 @@ Key files: `backend/pulse_models.py`, `backend/pulse_scheduler.py`, `backend/pul
 
 ## Scheduler and escalation rules
 
-`start_scheduler()` runs at app startup and adds an APScheduler `BackgroundScheduler` job that calls `check_and_escalate_all` **every hour** in the web process. The `PULSE_SCHEDULER_ENABLED` and `PULSE_CHECK_INTERVAL_MINUTES` settings exist but the scheduler does not read them.
+`start_scheduler()` runs during app lifespan only when `PULSE_SCHEDULER_ENABLED` is true. Its interval is `max(1, PULSE_CHECK_INTERVAL_MINUTES)` (default 15 minutes), with coalescing and one job instance. Each tick checks welfare escalation and expired safety timers. API probes should isolate database, uploads and outbox and avoid lifespan startup unless scheduled work is deliberately replaced.
 
-For each user with Pulse enabled, `process_user_pulse`:
+For each enabled user, the owner's own last check-in starts the outage. The soft deadline adds `frequency_days`; the hard deadline also adds `grace_period_hours`. Owner reminder emails begin after the soft deadline, before guardian escalation. After the hard deadline the configured delay for tier 1 is measured from that deadline and each later tier's delay from the previous reached stage. Missing tier definitions or reaching tier 4 stop progression.
 
-1. Takes the latest check-in time (or the earliest possible time if there is none).
-2. Computes the **soft deadline** = last check-in + `frequency_days`, and the **hard deadline** = soft deadline + `grace_period_hours`.
-3. Before the soft deadline: nothing. Between the two: grace period, only logged (the nudge to the user is a TODO).
-4. After the hard deadline: finds the highest tier already logged since the last check-in. If none, tier 1 fires immediately. Otherwise the next tier fires once its own `delay_hours` have passed since the previous tier's log entry. It stops after tier 4, or at the first tier number that has no definition.
+Ghost Mode pauses alerts/retries/advances. Guardian snooze or confirmation pauses new alerts for one frequency-plus-grace window but never changes the owner's own check-in clock, reached-tier history or other guardians' access. Acknowledgement records a note, not a check-in. An actual owner check-in resets the outage and sends an all-clear to previously alerted guardians.
 
-A new check-in of any kind resets the cycle, because only log rows newer than the last check-in count.
+Tier membership uses the shared effective-tier helper, covering contact tier settings consistently across scheduler and interface. Contacts with an individual wait follow that wait separately. `trigger_escalation` commits the reached stage before sends, then records each contact's provider-accepted, saved-local or failed outcome. Failed sends retry independently of stage progression, up to three attempts. Provider acceptance does not prove delivery or that anyone read the alert.
 
-`trigger_escalation` writes a `PulseEscalationLog` row and emails every contact whose `tier_id` is that tier's id. `send_notification` sends the `pulse_escalation_tier{N}` template through the email service (see [Email and AI Services](/openwiki/systems/email-and-ai.md)) with a link to `/portal/{portal_token}`, adds last-check-in details from tier 2 upward, and records a `PulseMessage`. Contacts without a tier are never alerted.
-
-Errors for one user are logged and do not stop the others.
+The same tick processes expired active safety timers for opted-in contacts. Failed timer sends can retry up to three attempts; completed/capped timers close and receive a tier-0 bookkeeping row. Tier-0 timers and negative reminder markers are not welfare escalation tiers. Per-user failures roll back and log without stopping other users.
 
 ## API (`/api/pulse`)
 
@@ -70,21 +59,21 @@ Authenticated:
 
 - `POST /checkin` (5/minute) — record a manual check-in (`method`, `note` as query parameters).
 - `GET /status` — `not_configured`, `disabled`, or `active`/`grace` with the last check-in and next expected time.
-- `GET /settings` — creates default settings and a `checkin_token` on first read. `POST /settings` (10/minute) — partial update.
+- `GET /settings` — returns defaults without a write when no row exists; saving creates settings and the check-in token. `POST /settings` (10/minute) — partial update.
 - `GET /history`, `GET|POST|PUT|DELETE /contacts` (creating a contact generates its `portal_token`), `GET /messages`, `POST /messages`.
 - `GET /tiers` — creates default tiers on first read (tier 1: 0 h, email; tiers 2–4: 6, 12 and 24 h, email+SMS); `PUT /tiers/{id}`.
 - `GET|POST|PUT|DELETE /vault` — vault items for the logged-in user.
-- `POST /safety/start|cancel`, `GET /safety/status` — safety timers. The scheduler does not act on expired timers.
+- `POST /safety/start|cancel`, `GET /safety/status` — safety timers. The scheduler processes expired active timers and records attempt outcomes.
 
-Public, token-based (CSRF-exempt by prefix where they are POSTs):
+Public, token-based (guardian respond/confirm/nudge POSTs are CSRF-exempt; the owner verify POST uses the normal CSRF header supplied by the client hook):
 
-- `GET /verify/{token}` — the user's one-click check-in using `checkin_token`.
+- `GET /verify/{token}` — read-only readiness for the owner's one-click link; `POST /verify/{token}` records the check-in. Opening an email link or scanner prefetch never checks the owner in.
 - `GET /portal/{token}` — guardian view: user name, active/grace status, last check-in, and `show_sensitive` once the latest escalation tier is at or above the guardian's tier.
 - `POST /respond/{token}?action=snooze` — guardian snooze, recorded as a check-in.
 - `POST /confirm/{token}` — guardian confirms the user is OK, recorded as a check-in.
-- `POST /nudge?contact_id=` — sends a nudge message; it takes a contact id rather than a token and has no auth dependency.
+- `POST /nudge/{token}` — records a guardian nudge after validating the unexpired portal token.
 
-Because guardian snooze and confirm create `PulseCheckin` rows, they reset escalation just like the user's own check-in.
+Guardian check-in methods are excluded from `owner_last_checkin`. Their pause leaves owner timing and outage history intact. Public portal/vault reads validate token expiry and apply the same current-outage sharing rules as the owner's preview.
 
 ## Frontend
 
@@ -94,9 +83,9 @@ Public pages:
 
 - `/pulse/verify/[token]` calls the one-click check-in.
 - `/pulse/respond/[token]` loads the portal view and posts snooze/acknowledge.
-- `/portal/[token]` (the link in alert emails) and `/pulse/portal/[token]` show the guardian portal, nudge and confirm. `/pulse/portal` also requests `/api/pulse/vault`, which needs a logged-in user.
+- `/portal/[token]` (the link in alert emails) and `/pulse/portal/[token]` show the guardian portal, nudge and confirm. The token-authorized `/api/pulse/portal/{token}/vault` read returns only notes allowed by the sharing switch, current reach and note tier.
 
-The root layout's login guard lets only `/pulse/respond*` and `/pulse/verify*` through without a session. `/portal/...` and `/pulse/portal/...` are not on that list, so a guardian who is not signed in is redirected to `/login` (see [Routes, Modules and Navigation](/openwiki/frontend/routes-and-navigation.md)).
+The root layout explicitly exempts `/portal/` and `/pulse/portal/` routes as well as respond/verify pages, so a guardian can use the token without owner sign-in. The Pulse transparency/status surfaces show reached stages separately from named contact email outcomes, including source message rows, attempts and retry availability. Reading a portal does not by itself send a message or record a check-in.
 
 ## Related pages
 

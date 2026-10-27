@@ -49,20 +49,6 @@
         )
             return;
 
-        // Track History before moving (unless it's just a validation failure)
-        // But wait, if validation fails we return. So we should record only if we proceed?
-        // The original code wrapped it, so it recorded history *before* calling originalNext.
-        // But originalNext had the validation check at the top.
-        // So it recorded history even if validation failed?
-        // No, if validation failed, originalNext returned early.
-        // But the history push happened *before* calling originalNext.
-        // So it pushed current index even if we didn't move? That seems like a bug in the original code too.
-        // Let's assume we want to push history only if we are actually moving.
-
-        // However, to be safe and strictly follow the "fix crash" goal, let's put it where it executes.
-
-        recordHistory();
-
         // Save Answer
         answers[currentStep.id] = currentInput;
         onanswer?.({ id: currentStep.id, value: currentInput });
@@ -93,6 +79,7 @@
             }
             const nextIndex = steps.findIndex((s: any) => s.id === nextId);
             if (nextIndex !== -1) {
+                recordHistory();
                 currentStepIndex = nextIndex;
                 restoreInput();
                 return;
@@ -101,6 +88,7 @@
 
         // Fallback: Linear
         if (currentStepIndex < steps.length - 1) {
+            recordHistory();
             currentStepIndex++;
             restoreInput();
         } else {
@@ -150,12 +138,12 @@
 </script>
 
 <div
-    class="w-full h-full min-h-[400px] flex flex-col items-center justify-center p-8 bg-slate-50 rounded-2xl border border-slate-200 relative overflow-hidden"
+    class="w-full h-full min-h-[400px] flex flex-col items-center justify-center p-8 bg-muted rounded-2xl border border-border relative overflow-hidden"
 >
     <!-- Progress Bar -->
-    <div class="absolute top-0 left-0 w-full h-2 bg-slate-200">
+    <div class="absolute top-0 left-0 w-full h-2 bg-border">
         <div
-            class="h-full bg-indigo-500 transition-all duration-500"
+            class="h-full bg-primary transition-all duration-500"
             style="width: {progress}%"
         ></div>
     </div>
@@ -164,7 +152,7 @@
     {#if currentStepIndex > 0}
         <button aria-label="Back"
             onclick={prevStep}
-            class="absolute top-6 left-6 text-slate-400 hover:text-slate-600 transition-colors"
+            class="absolute top-6 left-6 text-muted-foreground hover:text-foreground transition-colors"
         >
             <ArrowLeft size={24} />
         </button>
@@ -177,7 +165,7 @@
             class="max-w-xl w-full space-y-8"
         >
             <h2
-                class="font-serif text-3xl md:text-4xl text-slate-800 font-bold leading-tight"
+                class="font-serif text-3xl md:text-4xl text-foreground font-bold leading-tight"
             >
                 {$t(currentStep.question)}
             </h2>
@@ -189,8 +177,8 @@
                         <button
                             class="p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 {currentInput ===
                             true
-                                ? 'border-green-500 bg-green-50 text-green-700'
-                                : 'border-slate-200 hover:border-green-200 bg-white'}"
+                                ? 'border-primary bg-primary-soft text-primary-hover'
+                                : 'border-border hover:border-primary/40 bg-card text-foreground'}"
                             onclick={() => {
                                 currentInput = true;
                                 nextStep();
@@ -204,8 +192,8 @@
                         <button
                             class="p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 {currentInput ===
                             false
-                                ? 'border-red-500 bg-red-50 text-red-700'
-                                : 'border-slate-200 hover:border-red-200 bg-white'}"
+                                ? 'border-primary bg-primary-soft text-primary-hover'
+                                : 'border-border hover:border-primary/40 bg-card text-foreground'}"
                             onclick={() => {
                                 currentInput = false;
                                 nextStep();
@@ -218,11 +206,13 @@
                         </button>
                     </div>
                 {:else if currentStep.type === "textarea"}
+                    <!-- Focus moves to this field because the person just chose to add something here. -->
+                    <!-- svelte-ignore a11y_autofocus -->
                     <textarea
                         bind:value={currentInput}
                         onkeydown={handleKeydown}
                         placeholder={$t(currentStep.placeholder || "")}
-                        class="w-full text-2xl bg-transparent border-b-2 border-slate-200 focus:border-indigo-500 outline-none py-2 placeholder:text-slate-300 min-h-[100px] resize-none"
+                        class="w-full text-2xl bg-transparent border-b-2 border-border focus:border-primary outline-none py-2 placeholder:text-muted-foreground min-h-[100px] resize-none"
                         autofocus
                     ></textarea>
                 {:else if currentStep.type === "select"}
@@ -231,8 +221,8 @@
                             <button
                                 class="text-left p-4 rounded-xl border-2 transition-all {currentInput ===
                                 option
-                                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                    : 'border-slate-200 hover:border-indigo-200 bg-white'}"
+                                    ? 'border-primary bg-primary-soft text-primary-hover'
+                                    : 'border-border hover:border-primary/40 bg-card text-foreground'}"
                                 onclick={() => {
                                     currentInput = option;
                                     nextStep();
@@ -243,12 +233,14 @@
                         {/each}
                     </div>
                 {:else}
+                    <!-- Focus moves to this field because the person just chose to add something here. -->
+                    <!-- svelte-ignore a11y_autofocus -->
                     <input
                         type="text"
                         bind:value={currentInput}
                         onkeydown={handleKeydown}
                         placeholder={$t(currentStep.placeholder || "")}
-                        class="w-full text-3xl bg-transparent border-b-2 border-slate-200 focus:border-indigo-500 outline-none py-2 placeholder:text-slate-300"
+                        class="w-full text-3xl bg-transparent border-b-2 border-border focus:border-primary outline-none py-2 placeholder:text-muted-foreground"
                         autofocus
                     />
                 {/if}
@@ -260,7 +252,7 @@
                     <button
                         onclick={nextStep}
                         disabled={currentStep.required && !currentInput}
-                        class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-lg flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200"
+                        class="px-8 py-3 bg-primary hover:bg-primary-hover text-primary-foreground font-bold rounded-xl text-lg flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
                     >
                         {#if currentStepIndex === steps.length - 1 && !currentStep.logic}
                             <span>{$t("wizard.finish")}</span>
@@ -271,7 +263,7 @@
                         {/if}
                     </button>
                     <span
-                        class="text-xs text-slate-400 font-medium uppercase tracking-wider"
+                        class="text-xs text-muted-foreground font-medium uppercase tracking-wider"
                     >
                         Press Enter ↵
                     </span>

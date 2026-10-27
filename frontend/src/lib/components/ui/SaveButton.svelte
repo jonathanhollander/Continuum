@@ -73,31 +73,35 @@
             state = "saved";
             triggerHaptic("success");
         } catch (e) {
+            // The caller's onclick reports the failure; rethrowing here only
+            // left an unhandled rejection from a click handler.
+            console.error("Save did not go through:", e);
             state = "error";
             triggerHaptic("error");
-            throw e;
         }
     }
 
-    // Variant styles
+    // Variant styles, on the palette tokens (app.css): saved = success, a save that
+    // didn't go through = warning (gentle, never alarm red). Solid status fills use
+    // dark text in the dark theme, where the token colours are light.
     const variantStyles = {
         primary: {
-            idle: "bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20",
-            saving: "bg-slate-700 text-white cursor-wait",
-            saved: "bg-green-600 text-white",
-            error: "bg-red-600 hover:bg-red-700 text-white",
+            idle: "bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg shadow-primary/20",
+            saving: "bg-primary-hover text-primary-foreground cursor-wait",
+            saved: "bg-success text-white dark:text-background",
+            error: "bg-warning-soft border-2 border-warning/40 text-warning",
         },
         secondary: {
-            idle: "bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50",
-            saving: "bg-slate-50 border-2 border-slate-200 text-slate-500 cursor-wait",
-            saved: "bg-green-50 border-2 border-green-200 text-green-700",
-            error: "bg-red-50 border-2 border-red-200 text-red-700 hover:bg-red-100",
+            idle: "bg-card border-2 border-border hover:border-primary/40 text-foreground hover:bg-muted",
+            saving: "bg-muted border-2 border-border text-muted-foreground cursor-wait",
+            saved: "bg-success/10 border-2 border-success/30 text-success",
+            error: "bg-warning-soft border-2 border-warning/40 text-warning",
         },
         ghost: {
-            idle: "bg-transparent hover:bg-slate-100 text-slate-700",
-            saving: "bg-slate-50 text-slate-500 cursor-wait",
-            saved: "bg-green-50 text-green-700",
-            error: "bg-red-50 text-red-700 hover:bg-red-100",
+            idle: "bg-transparent hover:bg-muted text-foreground",
+            saving: "bg-muted text-muted-foreground cursor-wait",
+            saved: "bg-success/10 text-success",
+            error: "bg-warning-soft text-warning",
         },
     };
 

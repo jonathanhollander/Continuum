@@ -4,25 +4,43 @@
     import { fly } from "svelte/transition";
     import GuidanceBlock from "$lib/components/guidance/GuidanceBlock.svelte";
 
-    export let title: string;
-    export let subtitle: string | undefined = undefined;
-    // Kept so existing pages compile; the header shows no tier label (card E3:
-    // the raw tier id rendered as a literal "financial Module" eyebrow).
-    export let tier: string = "preparation";
-    export let detailedDescription: string | undefined = undefined;
-    export let whyMatters: string | undefined = undefined;
+    import type { Snippet } from "svelte";
 
-    let className: string | undefined = undefined;
-    export { className as class };
+    let {
+        title,
+        subtitle = undefined,
+        detailedDescription = undefined,
+        whyMatters = undefined,
+        class: className = undefined,
+        children,
+    }: {
+        title: string;
+        subtitle?: string;
+        detailedDescription?: string;
+        whyMatters?: string;
+        class?: string;
+        children?: Snippet;
+    } = $props();
 
-    let mounted = false;
+    let mounted = $state(false);
+    let headerEl: HTMLElement;
+    // Inside a padded page wrapper the header already sits on the body's left
+    // edge, so its content takes no inset of its own; full-width it takes the
+    // same 32px inset as the module page bodies (p-8).
+    let nested = $state(false);
 
     onMount(() => {
+        const host = headerEl.closest("main") ?? document.body;
+        nested =
+            headerEl.getBoundingClientRect().left -
+                host.getBoundingClientRect().left >
+            1;
         mounted = true;
     });
 </script>
 
 <header
+    bind:this={headerEl}
     class={cn(
         "relative overflow-hidden bg-background text-foreground border-b border-border py-12",
         "before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,var(--color-primary)_0%,transparent_70%)] before:opacity-5",
@@ -52,7 +70,7 @@
     </div>
 
     <!-- Layer 3: Content using Heirloom Typography -->
-    <div class="container relative z-10 px-6 mx-auto">
+    <div class={cn("container relative z-10 mx-auto", nested ? "px-0" : "px-8")}>
         <div class="max-w-3xl space-y-4">
             {#if mounted}
                 <div in:fly={{ y: 20, duration: 800 }}>
@@ -79,7 +97,7 @@
 
                 <!-- Action Slot -->
                 <div class="pt-4" in:fly={{ y: 20, duration: 800, delay: 200 }}>
-                    <slot />
+                    {@render children?.()}
                 </div>
             {/if}
         </div>

@@ -1,3 +1,10 @@
+<script module lang="ts">
+    type ConfirmedChecks = { account: string; profile: string; id: string; recoveryIds: string[] };
+    // A save may finish after its page unmounts. A remounted page observes only the
+    // exact confirmed draft, without an old component writing into its newer UI.
+    const confirmedChecks = new Set<(confirmation: ConfirmedChecks) => void>();
+</script>
+
 <script lang="ts">
     import { focusTrap } from "$lib/actions/focusTrap";
     import { fade, slide } from "svelte/transition";
@@ -19,9 +26,16 @@
         X,
         Loader2,
         Pencil,
+        Plus,
     } from "lucide-svelte";
-    import { onMount } from "svelte";
+    import { onDestroy, untrack } from "svelte";
+    import { get } from "svelte/store";
+    import { auth } from "$lib/stores/auth";
+    import { activeAccountId } from "$lib/stores/keyringStore";
+    import { currentProfileId } from "$lib/stores/profileContext";
+    import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { estateExecutorName } from "$lib/stores/analyticsStore";
     import { getStored, setStored } from "$lib/stores/persistence";
     import { digitalGuardianSync, type GuardianChecks } from "$lib/stores/digitalGuardianStore.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
@@ -34,8 +48,9 @@
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
 
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('digital-guardian'));
 
     // Sync Integration
     import {
@@ -66,88 +81,172 @@
         const { id: _id, ...rest } = row;
         return rest;
     };
-    if (Object.keys(digitalGuardianSync.data ?? {}).length === 0) {
-        const legacyStatus = legacyMap(LEGACY_STATUS_KEY);
-        const legacyDrill = legacyMap(LEGACY_DRILL_KEY);
-        if (legacyStatus || legacyDrill) {
-            digitalGuardianSync.updateLocal({
-                ...(legacyStatus ? { setupStatus: legacyStatus } : {}),
-                ...(legacyDrill ? { fireDrill: legacyDrill } : {}),
-            });
+    function adoptLegacy() {
+        if (Object.keys(digitalGuardianSync.data ?? {}).length === 0) {
+            const legacyStatus = legacyMap(LEGACY_STATUS_KEY);
+            const legacyDrill = legacyMap(LEGACY_DRILL_KEY);
+            if (legacyStatus || legacyDrill) {
+                digitalGuardianSync.updateLocal({
+                    ...(legacyStatus ? { setupStatus: legacyStatus } : {}),
+                    ...(legacyDrill ? { fireDrill: legacyDrill } : {}),
+                });
+            }
         }
     }
 
-    // Toggles show at once and are saved together ~500 ms after the last one. Until a save that
-    // carries them succeeds they stay in `pending`, drawn over whatever the manager holds (its
-    // rollback, a sync, or its own Try Again), and the next save re-sends them.
     type Checks = { setupStatus?: GuardianChecks; fireDrill?: GuardianChecks };
-    // `pending` is also kept on this device (namespaced like the manager's own key), so unsaved
-    // toggles survive a reload; it is cleared once a save carrying them lands.
+    type Owner = { session: SessionOwnership; account: string; profile: string };
+    const captureOwner = (): Owner => ({ session: captureSession(), account: get(activeAccountId) || "anonymous", profile: get(currentProfileId) || "owner" });
+    const currentOwner = (owner: Owner) => isCurrentSession(owner.session)
+        && owner.account === get(activeAccountId) && owner.profile === (get(currentProfileId) || "owner");
     const PENDING_KEY = "digital_guardian_pending";
-    let pending = $state<Checks | null>(getStored<Checks | null>(PENDING_KEY, null));
+    const RECOVERY_IDS_KEY = "digital_guardian_pending_recovery_ids";
+    const PENDING_ID_KEY = "digital_guardian_pending_id";
+    let pageOwner: Owner | null = null;
+    let pending = $state<Checks | null>(null);
+    let recoveryIds: string[] = [];
+    let pendingId: string | null = null;
+    let recoveryNotice: string | null = null;
     let saveTimer: ReturnType<typeof setTimeout> | undefined;
     let saving = false;
-    let failed = false;
+    const samePage = (owner: Owner) => pageOwner === owner && currentOwner(owner);
+
+    function keepChecks(owner: Owner) {
+        try {
+            setStored(PENDING_KEY, pending ? $state.snapshot(pending) : null, owner.profile, owner.account);
+            setStored(RECOVERY_IDS_KEY, recoveryIds, owner.profile, owner.account);
+            setStored(PENDING_ID_KEY, pendingId, owner.profile, owner.account);
+        } catch (e) { console.warn("[guardian] Keeping the pending checks in memory", e); }
+    }
+
+    function releaseChecks(owner: Owner, ids = recoveryIds) {
+        if (currentOwner(owner)) ids.forEach(id => digitalGuardianSync.releaseRecovery(id, owner.session));
+    }
+
+    function offerChecks(owner: Owner) {
+        if (!samePage(owner) || !pending || recoveryNotice) return;
+        // The page owns the latest combined maps; older interrupted saves are superseded by them.
+        releaseChecks(owner);
+        recoveryNotice = notifications.showError({
+            message: "Your earlier changes are kept. Review your saved details, then choose Try Again to apply them.",
+            code: "DATABASE_ERROR",
+        }, async () => {
+            if (!samePage(owner)) return;
+            recoveryNotice = null;
+            await flushChecks(owner);
+        });
+    }
+
+    function suspendOwner() {
+        clearTimeout(saveTimer);
+        saveTimer = undefined;
+        if (pageOwner) keepChecks(pageOwner);
+        if (recoveryNotice) notifications.dismiss(recoveryNotice);
+        recoveryNotice = null;
+        pageOwner = null;
+        pending = null;
+        recoveryIds = [];
+        pendingId = null;
+        saving = false;
+        editingId = null;
+        draft = { ...EMPTY_DRAFT };
+        showWizard = false;
+        activeGuide = null;
+        savingEdit = false;
+        isLoading = true;
+    }
+
+    async function activateOwner(owner: Owner) {
+        if (!currentOwner(owner)) { if (pageOwner && !currentOwner(pageOwner)) suspendOwner(); return; }
+        if (pageOwner && pageOwner.session.generation === owner.session.generation
+            && pageOwner.account === owner.account && pageOwner.profile === owner.profile) return;
+        suspendOwner();
+        pageOwner = owner;
+        if (digitalGuardianSync.loadedFor !== owner.account) digitalGuardianSync.reset(false);
+        if (digitalAssetsSync.loadedFor !== owner.account) digitalAssetsSync.reset(false);
+        adoptLegacy();
+        pending = getStored<Checks | null>(PENDING_KEY, null, owner.profile);
+        recoveryIds = getStored<string[]>(RECOVERY_IDS_KEY, [], owner.profile);
+        pendingId = pending ? getStored<string | null>(PENDING_ID_KEY, null, owner.profile) || crypto.randomUUID() : null;
+        keepChecks(owner);
+        await Promise.all([digitalGuardianSync.sync(), digitalAssetsSync.sync()]);
+        if (!samePage(owner)) return;
+        isLoading = false;
+        offerChecks(owner);
+    }
+
     $effect(() => {
-        setStored(PENDING_KEY, pending ? $state.snapshot(pending) : null);
+        $auth.token; $auth.user?.id; $auth.loading; $activeAccountId; $currentProfileId;
+        untrack(() => { void activateOwner(captureOwner()); });
     });
-    // Toggles kept from before a reload: shown at once, sent once the server row has loaded.
-    let restored = pending !== null;
-    // Restored before this sync ran: the sync's answer (or its upload of the device copy) is the
-    // server's, so it can show the toggles already saved. After it, the copy is only this page's.
-    const restoredBeforeSync = digitalGuardianSync.status !== "synced";
-    // True when the manager's server copy already holds every pending map.
-    const pendingSaved = () => {
-        const data: Checks = digitalGuardianSync.data ?? {};
-        return (Object.keys(pending ?? {}) as (keyof Checks)[]).every(
-            (k) => JSON.stringify(data[k]) === JSON.stringify(pending![k]),
-        );
-    };
-    if (pending) digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...pending });
-    $effect(() => {
-        if (restored && digitalGuardianSync.status === "synced") {
-            restored = false;
-            // A new account's sync already uploaded the device copy, which carries them: one POST.
-            if (restoredBeforeSync && pendingSaved()) { pending = null; return; }
-            clearTimeout(saveTimer);
-            saveTimer = setTimeout(flushChecks, 500);
+
+    const observeConfirmedChecks = (confirmation: ConfirmedChecks) => {
+        const owner = pageOwner;
+        if (!owner || !samePage(owner) || owner.account !== confirmation.account || owner.profile !== confirmation.profile) return;
+        recoveryIds = recoveryIds.filter(id => !confirmation.recoveryIds.includes(id));
+        if (pendingId === confirmation.id) {
+            pending = null;
+            pendingId = null;
+            if (recoveryNotice) notifications.dismiss(recoveryNotice);
+            recoveryNotice = null;
         }
+    };
+    confirmedChecks.add(observeConfirmedChecks);
+
+    function retireConfirmedChecks(owner: Owner, id: string, ids: string[]) {
+        if (!currentOwner(owner)) return;
+        releaseChecks(owner, ids);
+        // A newer page may already have replaced the pending maps; compare identity,
+        // never content, before removing the captured namespace's confirmed draft.
+        if (getStored<string | null>(PENDING_ID_KEY, null, owner.profile, owner.account) === id) {
+            setStored(PENDING_KEY, null, owner.profile, owner.account);
+            setStored(PENDING_ID_KEY, null, owner.profile, owner.account);
+        }
+        const storedIds = getStored<string[]>(RECOVERY_IDS_KEY, [], owner.profile, owner.account);
+        setStored(RECOVERY_IDS_KEY, storedIds.filter(key => !ids.includes(key)), owner.profile, owner.account);
+        confirmedChecks.forEach(observe => observe({ account: owner.account, profile: owner.profile, id, recoveryIds: ids }));
+    }
+
+    onDestroy(() => {
+        // Ordinary navigation can finish its own checks; an account switch only retains them.
+        if (pageOwner && currentOwner(pageOwner) && pending && !saving) void flushChecks(pageOwner);
+        confirmedChecks.delete(observeConfirmedChecks);
+        suspendOwner();
     });
 
     function saveChecks(next: Checks) {
+        const owner = pageOwner;
+        if (!owner || !samePage(owner)) return;
         pending = { ...(pending ?? {}), ...next };
-        digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...pending });
+        pendingId = crypto.randomUUID();
+        keepChecks(owner);
         clearTimeout(saveTimer);
-        saveTimer = setTimeout(flushChecks, 500);
+        saveTimer = setTimeout(() => { void flushChecks(owner); }, 500);
     }
 
-    async function flushChecks() {
-        if (!pending) return;
-        if (saving) { saveTimer = setTimeout(flushChecks, 500); return; }
-        const sent = pending;
+    async function flushChecks(owner = pageOwner) {
+        if (!owner || !samePage(owner) || !pending) return;
+        if (saving) { saveTimer = setTimeout(() => { void flushChecks(owner); }, 500); return; }
+        const sentId = pendingId || crypto.randomUUID();
+        pendingId = sentId;
+        const sent = $state.snapshot(pending);
+        const key = crypto.randomUUID();
+        recoveryIds = [...recoveryIds, key];
+        const sentIds = [...recoveryIds];
+        keepChecks(owner);
         saving = true;
         try {
-            await digitalGuardianSync.update(sent);
-            failed = false;
-            if (pending === sent) pending = null;
+            await digitalGuardianSync.update(sent, false, key);
+            retireConfirmedChecks(owner, sentId, sentIds);
         } catch {
-            failed = true;
-            // the manager shows the one gentle retry line; `pending` keeps the toggles
+            if (!samePage(owner)) return;
+            // Keep one retry for the latest combined maps, rather than an older interrupted save.
+            releaseChecks(owner, [key]);
+            offerChecks(owner);
         } finally {
-            saving = false;
+            if (samePage(owner)) saving = false;
         }
-        if (pending) digitalGuardianSync.updateLocal({ ...(digitalGuardianSync.data ?? {}), ...pending });
     }
-
-    // The manager's Try Again re-sends the save that failed; once it lands, send anything newer.
-    $effect(() => {
-        if (digitalGuardianSync.status === "synced" && pending && failed && !saving) {
-            failed = false;
-            if (pendingSaved()) { pending = null; return; }
-            clearTimeout(saveTimer);
-            saveTimer = setTimeout(flushChecks, 500);
-        }
-    });
 
     // Default Status
     const DEFAULT_STATUS = {
@@ -197,11 +296,6 @@
     let showWizard = $state(false);
     let isLoading = $state(true);
 
-    onMount(async () => {
-        await digitalAssetsSync.init();
-        isLoading = false;
-    });
-
     const wizardSteps = [
         {
             id: "intro",
@@ -230,14 +324,15 @@
             return;
         }
 
+        // Only what the answers say: the manager and usernames are left for the person to fill in.
         const wanted: [string, string, string][] = [];
         if (answers.password_manager) {
             // Update status (fire and forget update)
             updateStatus("passwordManager", true);
-            wanted.push(["1Password", "Master Account", "Access"]);
+            wanted.push(["Password Manager", "", "Access"]);
         }
         if (answers.email) {
-            wanted.push([answers.email, "Primary Account", "Email"]);
+            wanted.push([answers.email === "Other" ? "Email" : answers.email, "", "Email"]);
         }
 
         showWizard = false;
@@ -246,13 +341,15 @@
 
     // One wizard run is one save: the creates run quietly, then one affirmation when all land,
     // or one gentle message whose Try Again re-sends only the accounts still waiting.
-    async function saveWizardAssets(wanted: [string, string, string][]) {
+    async function saveWizardAssets(wanted: [string, string, string][], owner = pageOwner) {
+        if (!owner || !samePage(owner)) return;
         const results = await Promise.allSettled(
-            wanted.map(([platform, username, type]) => addAsset(platform, username, type, true)),
+            wanted.map(([platform, username, type]) => addAsset(platform, username, type, true, {}, owner)),
         );
+        if (!samePage(owner)) return;
         const waiting = wanted.filter((_, i) => results[i].status === "rejected");
         if (waiting.length === 0) {
-            notifications.showAffirmation("general");
+            notifications.showAffirmation("general", "create");
             return;
         }
         const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
@@ -262,8 +359,8 @@
                     "Your answers are safe here. We can save them again whenever you're ready.",
                 code: "DATABASE_ERROR",
                 technicalDetails: reason.reason?.technicalDetails || reason.reason?.message || String(reason.reason),
-            } as any,
-            () => saveWizardAssets(waiting),
+            },
+            () => saveWizardAssets(waiting, owner),
         );
     }
 
@@ -275,24 +372,25 @@
         saveChecks({ setupStatus: { ...current, [key]: value } });
     }
 
-    async function addAsset(platform: string, username: string, type: string, quiet = false) {
+    type Wishes = Pick<DigitalAccount, "description" | "preference" | "instructions" | "priority">;
+    async function addAsset(platform: string, username: string, type: string, quiet = false, wishes: Wishes = {}, owner = pageOwner) {
+        if (!owner || !samePage(owner)) return;
         let newAsset;
         try {
         newAsset = await digitalAssetsSync.create({
             platform,
             username,
-            description: `${type} Account`,
             type,
-            preference: "none",
-            instructions: "",
-            priority: "medium",
             isClosed: false,
-        }, false, quiet, quiet ? undefined : () => addAsset(platform, username, type));
+            ...wishes,
+            description: wishes.description || `${type} Account`,
+        }, false, quiet, quiet ? undefined : () => addAsset(platform, username, type, false, wishes, owner));
         } catch (e) {
             if (quiet) throw e; // the wizard shows one message for the whole run
             return; // the manager already showed the one gentle message
         }
 
+        if (!samePage(owner)) return;
         activityLog.logEvent({
             module: "Digital Guardian",
             action: "CREATE",
@@ -305,21 +403,60 @@
 
     // Edit: the add modal's shell, filled in with the account's details; one update on save.
     let editingId = $state<string | null>(null);
-    let draft = $state({ platform: "", username: "", type: "", description: "" });
+    // Wishes (preference, instructions, priority) are set here too, not only in the Advanced Registry.
+    const EMPTY_DRAFT = { platform: "", username: "", type: "", description: "", preference: "", instructions: "", priority: "" };
+    let draft = $state({ ...EMPTY_DRAFT });
+
+    // An example row opens the form filled in; nothing is saved until the person saves it.
+    function openNew(prefill: Partial<DigitalAccount> = {}) {
+        editingId = "new";
+        draft = {
+            ...EMPTY_DRAFT,
+            platform: prefill.platform ?? "",
+            username: prefill.username ?? "",
+            type: prefill.type ?? "",
+            preference: prefill.preference && prefill.preference !== "none" ? prefill.preference : "",
+            instructions: prefill.instructions ?? "",
+            priority: prefill.priority ?? "",
+        };
+    }
 
     function openEdit(asset: DigitalAccount) {
         editingId = String(asset.id);
         draft = {
-            platform: asset.platform ?? "",
+            platform: asset.platform || asset.name || "",
             username: asset.username ?? "",
             type: asset.type ?? "",
             description: asset.description ?? "",
+            preference: asset.preference && asset.preference !== "none" ? asset.preference : "",
+            instructions: asset.instructions ?? "",
+            priority: asset.priority ?? "",
         };
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let savingEdit = $state(false);
     async function saveEdit() {
+        const owner = pageOwner;
+        if (savingEdit || !owner || !samePage(owner)) return;
+        savingEdit = true;
+        try {
+            await saveEditOnce();
+        } finally {
+            if (samePage(owner)) savingEdit = false;
+        }
+    }
+
+    async function saveEditOnce() {
         if (!editingId) return;
         const id = editingId;
+        if (id === "new") {
+            const d = $state.snapshot(draft);
+            editingId = null;
+            const { platform, username, type, ...wishes } = d;
+            await addAsset(platform.trim(), username, type || "Account", false, wishes as Wishes);
+            return;
+        }
         const changes = { ...$state.snapshot(draft), name: draft.platform };
         editingId = null;
         try {
@@ -330,6 +467,9 @@
     }
 
     async function deleteAsset(id: string) {
+        const owner = pageOwner;
+        if (!owner || !samePage(owner)) return;
+        if (!(await askConfirm("Remove this account from your inventory?")) || !samePage(owner)) return;
         try {
             await digitalAssetsSync.delete(id);
         } catch {
@@ -358,78 +498,76 @@
 </script>
 
 {#if isLoading}
-    <div class="flex items-center justify-center py-12">
-        <Loader2 class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    {#if $auth.offline && !$auth.loading}
+        <div class="max-w-xl mx-auto p-8 text-center space-y-4">
+            <p>We couldn't confirm your signed-in account. Reconnect, then try again to load your saved details.</p>
+            <button class="px-5 py-2 rounded-xl bg-primary text-primary-foreground font-semibold" onclick={() => { void auth.init(); }}>Try again</button>
+        </div>
+    {:else}
+        <div class="flex items-center justify-center py-12">
+            <Loader2 class="w-8 h-8 animate-spin text-primary" />
+        </div>
+    {/if}
 {:else}
 <div class="max-w-5xl mx-auto p-8 animate-in fade-in duration-500">
     <!-- Header -->
     <LivingBlueprintHeader
         title="Digital Guardian"
-        subtitle="Protect your digital legacy from being locked away forever"
-        tier="protection"
-        detailedDescription="Your physical assets are protected by law. Your digital assets are protected by passwords. Set up legacy contacts, inactive account managers, and document your digital inventory so your family isn't locked out of your photos, emails, and accounts."
-        whyMatters="Without these specific setups, your family may lose access to irreplaceable memories, important accounts, and digital assets. Taking action now ensures your digital life can be properly managed."
+        subtitle="Your online accounts, wishes and recovery arrangements"
+        detailedDescription="Record your online accounts, what you want to happen to each one, and where your recovery instructions are kept. Use each provider's official settings to make any legacy-access arrangements."
+        whyMatters="A useful digital record names the account, the person you want to help, and the provider instructions they should follow. Provider settings determine the access available."
     />
-
-    <div class="flex justify-end mb-6">
-        <button
-            onclick={() => (showWizard = true)}
-            class="bg-[#304743] text-white px-4 py-2 rounded-full font-bold hover:bg-[#2a3f3b] transition-colors flex items-center gap-2 text-sm"
-        >
-            <Siren size={16} /> Run Discovery Wizard
-        </button>
-    </div>
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">
+        <p class="text-sm text-muted-foreground">Describe one account for help recording your wish or questions for the provider. Use placeholders for secrets, review the wording, then add it to the record you save.</p>
         <AIPromptBar context="digital-guardian" />
     </div>
 
     <!-- Global Successor Sync Card -->
     <div class="mb-12 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div
-            class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex items-center gap-5"
+            class="bg-card border border-border rounded-2xl p-6 shadow-sm flex items-center gap-5"
         >
-            <div class="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
+            <div class="p-4 bg-primary/10 text-primary-hover rounded-2xl shrink-0">
                 <UserCheck size={28} />
             </div>
             <div>
                 <span
-                    class="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1"
-                    >Primary Digital Successor</span
+                    class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1"
+                    >Person named in your plan</span
                 >
-                <div class="text-xl font-bold text-slate-800">
-                    {$estateProfile.executorName || "None Designated"}
+                <div class="text-xl font-bold text-foreground">
+                    {$estateExecutorName || "Choose an executor in your plan"}
                 </div>
-                <p class="text-xs text-slate-500 mt-1">
-                    Synced from your Lead Executor designation.
+                <p class="text-xs text-muted-foreground mt-1">
+                    From your executor details. Record each provider's own legacy or recovery arrangement below.
                 </p>
             </div>
         </div>
 
         <div
-            class="bg-white border border-indigo-100 rounded-2xl p-6 shadow-sm flex items-center gap-5 relative overflow-hidden group"
+            class="bg-card border border-border rounded-2xl p-6 shadow-sm flex items-center gap-5 relative overflow-hidden group"
         >
             <div
                 class="absolute right-0 top-0 p-8 opacity-[0.03] group-hover:scale-110 transition-transform"
             >
                 <Fingerprint size={80} />
             </div>
-            <div class="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
+            <div class="p-4 bg-primary/10 text-primary-hover rounded-2xl shrink-0">
                 <Fingerprint size={28} />
             </div>
             <div>
                 <span
-                    class="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1"
-                    >Recovery Verification Info</span
+                    class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block mb-1"
+                    >Recorded identity reference</span
                 >
-                <div class="text-xl font-bold text-slate-800">
+                <div class="text-xl font-bold text-foreground">
                     ID: {($estateProfile.ownerName || "").split(" ")[0]} / SSN: ***-**-{$estateProfile.last4SSN ||
                         "####"}
                 </div>
-                <p class="text-xs text-slate-500 mt-1">
-                    Pre-filled for identity verification forms.
+                <p class="text-xs text-muted-foreground mt-1">
+                    Use your recorded details to help locate official documents a provider may request.
                 </p>
             </div>
         </div>
@@ -437,38 +575,37 @@
 
     <!-- Access Drill (Verification Mode) -->
     <div
-        class="mb-12 bg-rose-50 border border-rose-100 rounded-2xl p-8 relative overflow-hidden"
+        class="mb-12 bg-primary/5 border border-primary/20 rounded-2xl p-8 relative overflow-hidden"
     >
         <div class="relative z-10 flex flex-col md:flex-row items-start gap-6">
-            <div class="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
+            <div class="p-4 bg-primary/10 text-primary-hover rounded-2xl shrink-0">
                 <Siren size={32} />
             </div>
             <div class="flex-1">
-                <h3 class="font-serif font-bold text-2xl text-[#304743] mb-2">
-                    The Fire Drill
+                <h3 class="font-serif font-bold text-2xl text-foreground mb-2">
+                    A gentle practice run
                 </h3>
-                <p class="text-gray-600 mb-6 max-w-xl leading-relaxed">
-                    Hope is not a strategy. Verify that your Legacy Contact can
-                    actually get in when you aren't there to help.
+                <p class="text-muted-foreground mb-6 max-w-xl leading-relaxed">
+                    Use this as your own checklist for a walkthrough with the person you choose. Tick each step after you complete it together and record where the recovery instructions are kept.
                 </p>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.key
                             ? 'bg-primary border-primary/20 text-primary-foreground'
-                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                            : 'bg-card border-primary/20 hover:shadow-md'}"
                         onclick={() => toggleDrill("key")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.key
-                                ? 'text-white/80'
+                                ? 'text-primary-foreground'
                                 : 'text-primary'}">Step 1</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.key
-                                    ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-primary'}"
+                                    ? 'text-primary-foreground'
+                                    : 'text-foreground group-hover:text-primary'}"
                                 >Locate the Key</span
                             >
                             {#if fireDrill.key}
@@ -479,20 +616,20 @@
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.twoFactor
                             ? 'bg-primary border-primary/20 text-primary-foreground'
-                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                            : 'bg-card border-primary/20 hover:shadow-md'}"
                         onclick={() => toggleDrill("twoFactor")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.twoFactor
-                                ? 'text-white/80'
+                                ? 'text-primary-foreground'
                                 : 'text-primary'}">Step 2</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.twoFactor
-                                    ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-primary'}"
-                                >Bypass 2FA</span
+                                    ? 'text-primary-foreground'
+                                    : 'text-foreground group-hover:text-primary'}"
+                                >Enter the 2FA Code</span
                             >
                             {#if fireDrill.twoFactor}
                                 <CircleCheck size={16} />
@@ -502,19 +639,19 @@
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.login
                             ? 'bg-primary border-primary/20 text-primary-foreground'
-                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                            : 'bg-card border-primary/20 hover:shadow-md'}"
                         onclick={() => toggleDrill("login")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.login
-                                ? 'text-white/80'
+                                ? 'text-primary-foreground'
                                 : 'text-primary'}">Step 3</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.login
-                                    ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-primary'}"
+                                    ? 'text-primary-foreground'
+                                    : 'text-foreground group-hover:text-primary'}"
                                 >Confirm Login</span
                             >
                             {#if fireDrill.login}
@@ -525,19 +662,19 @@
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.phone
                             ? 'bg-primary border-primary/20 text-primary-foreground'
-                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                            : 'bg-card border-primary/20 hover:shadow-md'}"
                         onclick={() => toggleDrill("phone")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.phone
-                                ? 'text-white/80'
+                                ? 'text-primary-foreground'
                                 : 'text-primary'}">Step 4</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.phone
-                                    ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-primary'}"
+                                    ? 'text-primary-foreground'
+                                    : 'text-foreground group-hover:text-primary'}"
                                 >Unlock Phone</span
                             >
                             {#if fireDrill.phone}
@@ -548,19 +685,19 @@
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.email
                             ? 'bg-primary border-primary/20 text-primary-foreground'
-                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                            : 'bg-card border-primary/20 hover:shadow-md'}"
                         onclick={() => toggleDrill("email")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.email
-                                ? 'text-white/80'
+                                ? 'text-primary-foreground'
                                 : 'text-primary'}">Step 5</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.email
-                                    ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-primary'}"
+                                    ? 'text-primary-foreground'
+                                    : 'text-foreground group-hover:text-primary'}"
                                 >Access Email</span
                             >
                             {#if fireDrill.email}
@@ -571,19 +708,19 @@
                     <button
                         class="text-left p-4 rounded-xl border transition-all group {fireDrill.will
                             ? 'bg-primary border-primary/20 text-primary-foreground'
-                            : 'bg-white border-rose-200 hover:shadow-md'}"
+                            : 'bg-card border-primary/20 hover:shadow-md'}"
                         onclick={() => toggleDrill("will")}
                     >
                         <span
                             class="block text-xs font-bold uppercase tracking-wide mb-1 {fireDrill.will
-                                ? 'text-white/80'
+                                ? 'text-primary-foreground'
                                 : 'text-primary'}">Step 6</span
                         >
                         <div class="flex items-center gap-2">
                             <span
                                 class="font-bold {fireDrill.will
-                                    ? 'text-white'
-                                    : 'text-gray-900 group-hover:text-primary'}"
+                                    ? 'text-primary-foreground'
+                                    : 'text-foreground group-hover:text-primary'}"
                                 >Locate Will</span
                             >
                             {#if fireDrill.will}
@@ -596,17 +733,17 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         <!-- Apple Legacy Contact -->
         <div
-            class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
                 onclick={() => toggleGuide("apple")}
             >
                 <div
-                    class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
+                    class="w-12 h-12 rounded-xl bg-background flex items-center justify-center shrink-0"
                 >
                     <Apple class="w-6 h-6 text-foreground" />
                 </div>
@@ -626,19 +763,19 @@
                         {/if}
                     </div>
                     <p class="text-sm text-muted-foreground">
-                        Allow someone to access your Apple account data after
-                        you pass away.
+                        Choose someone who can reach your Apple account data
+                        when the time comes.
                     </p>
                 </div>
             </button>
 
             {#if activeGuide === "apple"}
                 <div
-                    class="p-6 bg-gray-50 border-t border-gray-100"
+                    class="p-6 bg-background border-t border-border"
                     transition:slide
                 >
                     <ol
-                        class="space-y-4 text-sm text-gray-700 list-decimal pl-4 mb-6"
+                        class="space-y-4 text-sm text-foreground list-decimal pl-4 mb-6"
                     >
                         <li>
                             Open <strong>Settings</strong> on your iPhone / iPad.
@@ -660,21 +797,21 @@
                         </li>
                     </ol>
                     <div
-                        class="flex items-center gap-4 pt-4 border-t border-gray-200"
+                        class="flex items-center gap-4 pt-4 border-t border-border"
                     >
                         <a
                             href="https://support.apple.com/en-us/HT212360"
                             target="_blank"
-                            class="text-sky-600 font-bold text-xs flex items-center gap-1 hover:underline"
+                            class="text-primary font-bold text-xs flex items-center gap-1 underline"
                         >
                             Official Guide <ExternalLink size={12} />
                         </a>
                         <button
                             onclick={() => markComplete("apple")}
-                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:bg-success/10 hover:text-success hover:border-success/30 transition-colors"
                         >
                             {setupStatus.apple
-                                ? "Mark Incomplete"
+                                ? "Mark In Progress"
                                 : "Mark Done"}
                         </button>
                     </div>
@@ -684,14 +821,14 @@
 
         <!-- Google Inactive Account Manager -->
         <div
-            class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
                 onclick={() => toggleGuide("google")}
             >
                 <div
-                    class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
+                    class="w-12 h-12 rounded-xl bg-background flex items-center justify-center shrink-0"
                 >
                     <Mail class="w-6 h-6 text-foreground" />
                 </div>
@@ -719,15 +856,15 @@
 
             {#if activeGuide === "google"}
                 <div
-                    class="p-6 bg-gray-50 border-t border-gray-100"
+                    class="p-6 bg-background border-t border-border"
                     transition:slide
                 >
-                    <p class="text-sm text-gray-600 mb-4">
-                        Google acts as a "Dead Man's Switch". If you don't log
-                        in for X months, it notifies your contact.
+                    <p class="text-sm text-muted-foreground mb-4">
+                        Google can notify your chosen contact once your account
+                        has been inactive for a period you choose.
                     </p>
                     <ol
-                        class="space-y-4 text-sm text-gray-700 list-decimal pl-4 mb-6"
+                        class="space-y-4 text-sm text-foreground list-decimal pl-4 mb-6"
                     >
                         <li>Go to <strong>myaccount.google.com</strong>.</li>
                         <li>
@@ -743,21 +880,21 @@
                         <li>Review the auto-reply email they will receive.</li>
                     </ol>
                     <div
-                        class="flex items-center gap-4 pt-4 border-t border-gray-200"
+                        class="flex items-center gap-4 pt-4 border-t border-border"
                     >
                         <a
                             href="https://myaccount.google.com/inactive"
                             target="_blank"
-                            class="text-sky-600 font-bold text-xs flex items-center gap-1 hover:underline"
+                            class="text-primary font-bold text-xs flex items-center gap-1 underline"
                         >
                             Direct Link <ExternalLink size={12} />
                         </a>
                         <button
                             onclick={() => markComplete("google")}
-                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:bg-success/10 hover:text-success hover:border-success/30 transition-colors"
                         >
                             {setupStatus.google
-                                ? "Mark Incomplete"
+                                ? "Mark In Progress"
                                 : "Mark Done"}
                         </button>
                     </div>
@@ -767,14 +904,14 @@
 
         <!-- Password Manager (The Master Key) -->
         <div
-            class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow md:col-span-2"
+            class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow md:col-span-2"
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
                 onclick={() => toggleGuide("passwordManager")}
             >
                 <div
-                    class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
+                    class="w-12 h-12 rounded-xl bg-background flex items-center justify-center shrink-0"
                 >
                     <Key class="w-6 h-6 text-foreground" />
                 </div>
@@ -794,27 +931,25 @@
                         {/if}
                     </div>
                     <p class="text-sm text-muted-foreground">
-                        Ensure your executor has access to your master password
-                        through a secure mechanism (e.g., emergency kit).
+                        You can let your executor know where to find your master
+                        password, through a secure mechanism (e.g., emergency kit).
                     </p>
                 </div>
             </button>
             {#if activeGuide === "passwordManager"}
                 <div
-                    class="p-6 bg-gray-50 border-t border-gray-100"
+                    class="p-6 bg-background border-t border-border"
                     transition:slide
                 >
                     <div
-                        class="flex gap-4 items-start bg-amber-50 p-4 rounded-lg border border-amber-100 text-amber-900 text-sm mb-6"
+                        class="flex gap-4 items-start bg-primary-soft p-4 rounded-lg border border-primary/20 text-foreground text-sm mb-6"
                     >
                         <Lock size={18} class="shrink-0 mt-0.5" />
                         <div>
                             <strong
-                                >Do NOT store your Master Password digitally.</strong
+                                >Record where your password manager's emergency instructions are kept and who you want to help.</strong
                             ><br />
-                            It should be written down on the Emergency Card in your
-                            physical Red Binder, or stored in a bank safety deposit
-                            box.
+                            Review the provider's official recovery or emergency-access options and choose arrangements appropriate to your own situation.
                         </div>
                     </div>
 
@@ -822,30 +957,28 @@
                         Emergency Kit Checklist:
                     </h4>
                     <ul
-                        class="space-y-2 text-sm text-gray-700 list-disc pl-4 mb-6"
+                        class="space-y-2 text-sm text-foreground list-disc pl-4 mb-6"
                     >
                         <li>
-                            Export your "Emergency Kit" PDF from your password
-                            manager.
+                            Check whether your provider supplies an emergency kit or recovery instructions.
                         </li>
                         <li>
-                            Write the Master Password on it (it is usually
-                            blank).
+                            Record where you keep the instructions needed for your chosen arrangement.
                         </li>
                         <li>
-                            Seal it in an envelope marked "For Executor Only".
+                            Discuss the arrangement with the person you want to help.
                         </li>
-                        <li>Place in Red Binder or Safe.</li>
+                        <li>Review the arrangement when your account or provider changes.</li>
                     </ul>
                     <div
-                        class="flex items-center gap-4 pt-4 border-t border-gray-200"
+                        class="flex items-center gap-4 pt-4 border-t border-border"
                     >
                         <button
                             onclick={() => markComplete("passwordManager")}
-                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:bg-success/10 hover:text-success hover:border-success/30 transition-colors"
                         >
                             {setupStatus.passwordManager
-                                ? "Mark Incomplete"
+                                ? "Mark In Progress"
                                 : "Mark Done"}
                         </button>
                     </div>
@@ -855,14 +988,14 @@
 
         <!-- Social Media -->
         <div
-            class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
                 onclick={() => toggleGuide("facebook")}
             >
                 <div
-                    class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
+                    class="w-12 h-12 rounded-xl bg-background flex items-center justify-center shrink-0"
                 >
                     <Facebook class="w-6 h-6 text-foreground" />
                 </div>
@@ -889,11 +1022,11 @@
             </button>
             {#if activeGuide === "facebook"}
                 <div
-                    class="p-6 bg-gray-50 border-t border-gray-100"
+                    class="p-6 bg-background border-t border-border"
                     transition:slide
                 >
                     <ol
-                        class="space-y-4 text-sm text-gray-700 list-decimal pl-4 mb-6"
+                        class="space-y-4 text-sm text-foreground list-decimal pl-4 mb-6"
                     >
                         <li>Settings & Privacy > Settings.</li>
                         <li><strong>Memorialization Settings</strong>.</li>
@@ -901,17 +1034,17 @@
                             Choose a friend to manage your account (they can pin
                             posts, change profile pic).
                         </li>
-                        <li>Alternatively, select "Delete After Death".</li>
+                        <li>Or you can ask Facebook to remove the account instead.</li>
                     </ol>
                     <div
-                        class="flex items-center gap-4 pt-4 border-t border-gray-200"
+                        class="flex items-center gap-4 pt-4 border-t border-border"
                     >
                         <button
                             onclick={() => markComplete("facebook")}
-                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:bg-success/10 hover:text-success hover:border-success/30 transition-colors"
                         >
                             {setupStatus.facebook
-                                ? "Mark Incomplete"
+                                ? "Mark In Progress"
                                 : "Mark Done"}
                         </button>
                     </div>
@@ -920,14 +1053,14 @@
         </div>
 
         <div
-            class="bg-white rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            class="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
         >
             <button
                 class="w-full text-left p-6 flex items-start gap-4 cursor-pointer"
                 onclick={() => toggleGuide("linkedin")}
             >
                 <div
-                    class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"
+                    class="w-12 h-12 rounded-xl bg-background flex items-center justify-center shrink-0"
                 >
                     <Linkedin class="w-6 h-6 text-foreground" />
                 </div>
@@ -947,22 +1080,21 @@
                         {/if}
                     </div>
                     <p class="text-sm text-muted-foreground">
-                        Request to memorialize or close the account of a
-                        deceased member.
+                        Your executor can ask LinkedIn to memorialize or close
+                        your account.
                     </p>
                 </div>
             </button>
             {#if activeGuide === "linkedin"}
                 <div
-                    class="p-6 bg-gray-50 border-t border-gray-100"
+                    class="p-6 bg-background border-t border-border"
                     transition:slide
                 >
-                    <p class="text-sm text-gray-600 mb-4">
-                        LinkedIn does not allow pre-selection. Your executor
-                        must contact them.
+                    <p class="text-sm text-muted-foreground mb-4">
+                        Your executor can contact LinkedIn when the time comes.
                     </p>
                     <ul
-                        class="space-y-4 text-sm text-gray-700 list-disc pl-4 mb-6"
+                        class="space-y-4 text-sm text-foreground list-disc pl-4 mb-6"
                     >
                         <li>
                             Include your LinkedIn URL in your Executor Toolkit.
@@ -972,19 +1104,18 @@
                             (stays up) or <strong>Close Account</strong>.
                         </li>
                         <li>
-                            Executor will need: Link to obituary or death
-                            certificate.
+                            Record where your family can find the documents the provider requests.
                         </li>
                     </ul>
                     <div
-                        class="flex items-center gap-4 pt-4 border-t border-gray-200"
+                        class="flex items-center gap-4 pt-4 border-t border-border"
                     >
                         <button
                             onclick={() => markComplete("linkedin")}
-                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+                            class="ml-auto text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:bg-success/10 hover:text-success hover:border-success/30 transition-colors"
                         >
                             {setupStatus.linkedin
-                                ? "Mark Incomplete"
+                                ? "Mark In Progress"
                                 : "Mark Done"}
                         </button>
                     </div>
@@ -997,17 +1128,31 @@
     <div
         class="mt-12 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700"
     >
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div>
-                <h2 class="font-serif font-bold text-2xl text-[#304743]">
+                <h2 class="font-serif font-bold text-2xl text-foreground">
                     Digital Asset Inventory
                 </h2>
-                <p class="text-slate-500 text-sm">
-                    Key accounts your executor needs access to.
+                <p class="text-muted-foreground text-sm">
+                    Identify the accounts, your wishes for them, and the official process your chosen person should use.
                 </p>
             </div>
-            <div class="flex items-center gap-3">
-                <DataViewToggle module="digital-guardian" onchange={(mode) => viewMode = mode} />
+            <div class="flex flex-wrap items-center gap-3">
+                <button
+                    onclick={() => (showWizard = true)}
+                    class="bg-primary text-primary-foreground px-4 py-2 rounded-full font-bold hover:bg-primary-hover transition-colors flex items-center gap-2 text-sm"
+                >
+                    <Siren size={16} /> Walk me through my accounts
+                </button>
+                <button
+                    onclick={() => openNew()}
+                    data-testid="digital-add"
+                    class="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-all text-sm"
+                >
+                    <Plus class="w-4 h-4" />
+                    Share an account
+                </button>
+                <DataViewToggle module="digital-guardian" />
             </div>
         </div>
 
@@ -1018,11 +1163,11 @@
                     transition:fade
                 >
                     <div
-                        class="w-full max-w-2xl relative bg-white rounded-2xl shadow-2xl overflow-hidden"
+                        class="w-full max-w-2xl relative bg-card rounded-2xl shadow-2xl overflow-hidden"
                         transition:slide
                     >
                         <button aria-label="Close"
-                            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+                            class="absolute top-4 right-4 text-muted-foreground hover:text-muted-foreground z-10"
                             onclick={() => (showWizard = false)}
                         >
                             <X size={20} />
@@ -1037,11 +1182,15 @@
 
             {#if editingId}
                 <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={editingId === "new" ? "Add an account" : "Edit these details"}
+                    use:focusTrap={{ onEscape: () => (editingId = null) }}
                     class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
                     transition:fade
                 >
                     <form
-                        class="w-full max-w-2xl relative bg-white rounded-2xl shadow-2xl overflow-hidden"
+                        class="w-full max-w-2xl relative bg-card rounded-2xl shadow-2xl overflow-hidden"
                         transition:slide
                         aria-label="Edit these details"
                         data-testid="digital-edit-form"
@@ -1049,47 +1198,72 @@
                     >
                         <button
                             type="button"
-                            aria-label="Not right now"
-                            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+                            aria-label="Maybe later"
+                            class="absolute top-4 right-4 text-muted-foreground hover:text-muted-foreground z-10"
                             onclick={() => (editingId = null)}
                         >
                             <X size={20} />
                         </button>
                         <div class="p-8 space-y-4">
-                            <h3 class="font-serif font-bold text-2xl text-[#304743]">
-                                Edit these details
+                            <h3 class="font-serif font-bold text-2xl text-foreground">
+                                {editingId === "new" ? "Add an account" : "Edit these details"}
                             </h3>
-                            <label class="block text-sm font-bold text-slate-600">
+                            <label class="block text-sm font-bold text-muted-foreground">
                                 Platform
-                                <input bind:value={draft.platform} name="platform" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
+                                <input bind:value={draft.platform} name="platform" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground" />
                             </label>
-                            <label class="block text-sm font-bold text-slate-600">
+                            <label class="block text-sm font-bold text-muted-foreground">
                                 Username
-                                <input bind:value={draft.username} name="username" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
+                                <input bind:value={draft.username} name="username" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground" />
                             </label>
-                            <label class="block text-sm font-bold text-slate-600">
+                            <label class="block text-sm font-bold text-muted-foreground">
                                 Type
-                                <input bind:value={draft.type} name="type" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
+                                <input bind:value={draft.type} name="type" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground" />
                             </label>
-                            <label class="block text-sm font-bold text-slate-600">
+                            <label class="block text-sm font-bold text-muted-foreground">
                                 Description
-                                <input bind:value={draft.description} name="description" class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800" />
+                                <input bind:value={draft.description} name="description" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground" />
+                            </label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="block text-sm font-bold text-muted-foreground">
+                                    Preference
+                                    <select bind:value={draft.preference} name="preference" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground bg-card">
+                                        <option value=""></option>
+                                        <option value="memorialize">Memorialize</option>
+                                        <option value="delete">Remove / Close the account</option>
+                                        <option value="transfer">Transfer Ownership</option>
+                                    </select>
+                                </label>
+                                <label class="block text-sm font-bold text-muted-foreground">
+                                    Priority
+                                    <select bind:value={draft.priority} name="priority" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground bg-card">
+                                        <option value=""></option>
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <label class="block text-sm font-bold text-muted-foreground">
+                                Final Instructions
+                                <textarea bind:value={draft.instructions} name="instructions" rows="3" placeholder="What would you like to happen? Who should help, and where are the provider or recovery instructions kept?" class="mt-1 w-full border border-border rounded-xl px-3 py-2 font-normal text-foreground resize-none"></textarea>
                             </label>
                         </div>
-                        <div class="px-8 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                        <div class="px-8 py-4 bg-background border-t border-border flex justify-end gap-3">
                             <button
                                 type="button"
                                 onclick={() => (editingId = null)}
-                                class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+                                class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-border transition-colors"
                             >
-                                Not right now
+                                Maybe later
                             </button>
                             <button
                                 type="submit"
-                                disabled={!draft.platform.trim()}
-                                class="px-6 py-2.5 rounded-xl font-semibold bg-[#304743] text-white hover:bg-[#2a3f3b] transition-colors disabled:opacity-50"
+                                disabled={!draft.platform.trim() || savingEdit}
+                                aria-busy={savingEdit}
+                                class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50"
                             >
-                                Save my updates
+                                {savingEdit ? "Saving..." : editingId === "new" ? "Save account details" : "Save my updates"}
                             </button>
                         </div>
                     </form>
@@ -1103,12 +1277,10 @@
                         name={sample.platform}
                         subtitle={`${sample.username} - ${sample.instructions}`}
                         type="Security"
-                        onClick={() => {
-                            addAsset(sample.platform, sample.username, "Vault");
-                        }}
+                        onClick={() => openNew({ ...sample, type: "Vault" })}
                     >
                         {#snippet icon()}
-                            <Key size={20} class="text-slate-400" />
+                            <Key size={20} class="text-muted-foreground" />
                         {/snippet}
                     </GhostRow>
                 {/each}
@@ -1116,12 +1288,12 @@
                 {#if viewMode === 'card'}
                     {#each assets as asset (asset.id)}
                         <div
-                            class="bg-white p-4 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm"
+                            class="bg-card p-4 rounded-xl border border-border flex justify-between items-center shadow-sm"
                             transition:slide
                         >
                             <div class="flex items-center gap-4">
                                 <div
-                                    class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary"
+                                    class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary-hover"
                                 >
                                     {#if asset.type === "Email"}
                                         <Mail size={18} />
@@ -1130,13 +1302,13 @@
                                     {/if}
                                 </div>
                                 <div>
-                                    <div class="font-bold text-slate-800">
-                                        {asset.platform}
+                                    <div class="font-bold text-foreground">
+                                        {asset.platform || asset.name}
                                     </div>
                                     <div
-                                        class="text-xs text-slate-500 uppercase tracking-wider"
+                                        class="text-xs text-muted-foreground uppercase tracking-wider"
                                     >
-                                        {asset.username} - {asset.description}
+                                        {[asset.username, asset.description].filter(Boolean).join(" - ")}
                                     </div>
                                 </div>
                             </div>
@@ -1145,7 +1317,7 @@
                                     onclick={() => openEdit(asset)}
                                     aria-label="Edit these details"
                                     title="Edit these details"
-                                    class="text-slate-400 hover:text-primary p-2 hover:bg-primary/5 rounded-full transition-colors"
+                                    class="text-muted-foreground hover:text-primary p-2 hover:bg-primary/5 rounded-full transition-colors"
                                 >
                                     <Pencil size={16} />
                                 </button>
@@ -1153,7 +1325,7 @@
                                     onclick={() => deleteAsset(asset.id)}
                                     aria-label="Remove this item"
                                     title="Remove this item"
-                                    class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full transition-colors"
+                                    class="text-muted-foreground hover:text-danger p-2 hover:bg-danger-soft rounded-full transition-colors"
                                 >
                                     <X size={16} />
                                 </button>
@@ -1162,34 +1334,34 @@
                     {/each}
                 {:else}
                     <!-- Table View -->
-                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <div class="bg-card rounded-xl border border-border overflow-hidden">
                         <table class="w-full">
-                            <thead class="bg-slate-50 border-b border-slate-200">
+                            <thead class="bg-background border-b border-border">
                                 <tr>
-                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Platform</th>
-                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Username</th>
-                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
-                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Description</th>
-                                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Platform</th>
+                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Username</th>
+                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Type</th>
+                                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Description</th>
+                                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100">
+                            <tbody class="divide-y divide-border">
                                 {#each assets as asset (asset.id)}
-                                    <tr class="hover:bg-slate-50 transition-colors">
-                                        <td class="px-4 py-3 font-medium text-slate-800">{asset.platform}</td>
-                                        <td class="px-4 py-3 text-slate-600">{asset.username}</td>
+                                    <tr class="hover:bg-background transition-colors">
+                                        <td class="px-4 py-3 font-medium text-foreground">{asset.platform || asset.name}</td>
+                                        <td class="px-4 py-3 text-muted-foreground">{asset.username}</td>
                                         <td class="px-4 py-3">
-                                            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
+                                            <span class="px-2 py-1 bg-muted text-muted-foreground rounded text-xs font-medium">
                                                 {asset.type}
                                             </span>
                                         </td>
-                                        <td class="px-4 py-3 text-slate-500 text-sm">{asset.description}</td>
+                                        <td class="px-4 py-3 text-muted-foreground text-sm">{asset.description}</td>
                                         <td class="px-4 py-3 text-right">
                                             <button
                                                 onclick={() => openEdit(asset)}
                                                 aria-label="Edit these details"
                                                 title="Edit these details"
-                                                class="text-slate-400 hover:text-primary p-1 hover:bg-primary/5 rounded transition-colors"
+                                                class="text-muted-foreground hover:text-primary p-1 hover:bg-primary/5 rounded transition-colors"
                                             >
                                                 <Pencil size={16} />
                                             </button>
@@ -1197,7 +1369,7 @@
                                                 onclick={() => deleteAsset(asset.id)}
                                                 aria-label="Remove this item"
                                                 title="Remove this item"
-                                                class="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition-colors"
+                                                class="text-muted-foreground hover:text-danger p-1 hover:bg-danger-soft rounded transition-colors"
                                             >
                                                 <X size={16} />
                                             </button>

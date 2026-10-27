@@ -10,7 +10,9 @@ from typing import List, Optional
 import logging
 import mimetypes
 import re
+import json
 from pathlib import Path
+from sqlalchemy import String, Text, and_, or_, cast, func, literal, union_all, update
 
 from backend.database import get_session, User
 from backend.auth import get_current_user
@@ -159,8 +161,7 @@ async def upload_media(
     )
 
     session.add(media_record)
-    session.commit()
-    session.refresh(media_record)
+    session.flush()  # assigns media_record.id for the audit row
 
     # P1-High: Audit logging for media upload
     log_audit(
@@ -170,8 +171,11 @@ async def upload_media(
         user_id=user.id,
         user_email=user.email,
         resource_type="media",
-        resource_id=str(media_record.id)
+        resource_id=str(media_record.id),
+        commit=False,
     )
+    session.commit()  # the row and its audit entry in one transaction (X279)
+    session.refresh(media_record)
 
     return MediaUploadResponse(
         id=media_record.id,
@@ -203,7 +207,7 @@ def serve_media_file(media: MediaFile):
     if media.storage_provider == "s3":
         presigned_url = storage.get_presigned_url(media.storage_path)
         if not presigned_url:
-            raise HTTPException(status_code=500, detail="This file is taking a moment to open. You can try again shortly.")
+            raise HTTPException(status_code=500, detail="This file is safe in your account. You can open it again whenever you're ready.")
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url=presigned_url)
 
@@ -312,10 +316,81 @@ def get_media(
     )
 
 
+def _remove_if_unreferenced(session: Session, media: MediaFile) -> bool:
+    """Bounded candidate read plus the packet's exact matcher, followed by an atomic guard.
+
+    The final UPDATE excludes only unchanged rows already proved to be false positives.
+    A reference added or edited during this request therefore keeps the file available.
+    """
+    from backend.routers.export import SECTION_MODELS, PRIVATE_FIELDS, ADVANCED_LISTS, _attachments, _handover_rows
+
+    plans = []
+    scans = []
+    json_object = func.json_object if session.bind.dialect.name == "sqlite" else func.json_build_object
+    for section, model in SECTION_MODELS:
+        table = model.__table__
+        cols = [c for c in table.columns if c.name not in PRIVATE_FIELDS.get(section, ())
+                and c.name != "user_id" and (isinstance(c.type, String)
+                    or isinstance(getattr(c.type, "impl", None), String) or c.name == "media_id")]
+        conditions = []
+        for col in cols:
+            text = cast(col, Text)
+            conditions.append(or_(text.contains(f"/api/media/{media.id}", autoescape=True),
+                                  text.contains("/api/media/0", autoescape=True),
+                                  text.regexp_match(r"/api/media/[0-9]*[^0-9/#?]")))
+            if col.name == "media_id" or (section == "assets" and col.name == "thumbnail"):
+                conditions.append(text.contains(str(media.id)))
+            if (col.name == "custom_attributes" or (section == "assets" and col.name == "evidence")
+                    or (section == "advanced_assets" and col.name in ADVANCED_LISTS)):
+                # JSON id values, including escaped keys/digits, are checked exactly below.
+                conditions.append(or_(text.contains(str(media.id)), text.contains("\\u", autoescape=True)))
+                if media.id == 1:
+                    conditions.append(text.contains("true"))
+        if not conditions:
+            continue
+        pk = next(iter(table.primary_key.columns))
+        candidate = and_(table.c.user_id == media.user_id, or_(*conditions))
+        pairs = [value for col in cols for value in (literal(col.name), col)]
+        scans.append(select(literal(section).label("section"), cast(pk, Text).label("rid"),
+                            json_object(*pairs).label("data")).where(candidate))
+        plans.append((section, table, pk, cols, candidate))
+
+    rows = session.execute(union_all(*scans).limit(65)).all() if scans else []
+    if len(rows) >= 65:
+        return False  # Preserve the bytes when a bounded read cannot prove they are unused.
+    sections = {}
+    seen = {}
+    for section, rid, raw in rows:
+        data = json.loads(raw) if isinstance(raw, str) else raw
+        sections.setdefault(section, []).append({**data, "id": rid})
+        seen.setdefault(section, []).append((rid, data))
+    expanded = {}
+    for section, records in sections.items():
+        expanded.update(_handover_rows(section, records) if section == "advanced_assets" else {section: records})
+    if sum(len(records) for records in expanded.values()) >= 65:
+        return False
+    attachments, _ = _attachments(expanded, {media.id: media})
+    if any(a.get("media_id") == media.id for a in attachments):
+        return False
+
+    guards = []
+    for section, table, pk, cols, candidate in plans:
+        unchanged = [and_(cast(pk, Text) == rid, *[
+            col.is_(None) if data.get(col.name) is None else col == data[col.name] for col in cols
+        ]) for rid, data in seen.get(section, [])]
+        guards.append(select(literal(1)).select_from(table).where(candidate, ~or_(*unchanged) if unchanged else literal(True)))
+    result = session.execute(update(MediaFile).where(
+        MediaFile.id == media.id, MediaFile.user_id == media.user_id, MediaFile.deleted_at.is_(None),
+        ~union_all(*guards).exists() if guards else literal(True),
+    ).values(deleted_at=utc_now()).execution_options(synchronize_session=False))
+    return result.rowcount == 1
+
+
 @router.delete("/{media_id}")
 def delete_media(
     request: Request,
     media_id: int,
+    only_if_unused: bool = Query(False),
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
@@ -324,6 +399,9 @@ def delete_media(
     The actual file remains on disk but is marked as deleted.
     """
     media = get_owned_media(session, media_id, user)
+    if only_if_unused and not _remove_if_unreferenced(session, media):
+        session.rollback()
+        return {"ok": True, "removed": False, "message": "This file stays available."}
 
     # P1-High: Audit logging for media deletion
     log_deletion(
@@ -332,20 +410,21 @@ def delete_media(
         user_id=user.id,
         user_email=user.email,
         resource_type="media",
-        resource_id=media_id
+        resource_id=media_id,
+        commit=False,  # written by the delete's own commit (X279)
     )
 
     # Soft delete (Mark as deleted in DB)
-    media.deleted_at = utc_now()
-
-    session.add(media)
+    if not only_if_unused:
+        media.deleted_at = utc_now()
+        session.add(media)
     session.commit()
 
     # Note: We keep the file in storage for now to allow undo/recovery
     # If hard delete is needed, we would call:
     # storage.delete_file(media.storage_path, provider=media.storage_provider)
 
-    return {"ok": True, "message": "This file has been removed."}
+    return {"ok": True, "removed": True, "message": "This file has been removed."}
 
 
 @router.put("/{media_id}/metadata")
@@ -371,4 +450,4 @@ def update_media_metadata(
     session.commit()
     session.refresh(media)
 
-    return {"ok": True, "message": "Metadata updated"}
+    return {"ok": True, "message": "Saved."}

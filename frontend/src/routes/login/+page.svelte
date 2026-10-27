@@ -1,9 +1,10 @@
 <script lang="ts">
+    import { browserStorage } from "$lib/services/browserStorage";
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
-    import { auth } from "$lib/stores/auth";
-    import { API_BASE_URL } from "$lib/config";
+    import { auth, storeTokens } from "$lib/stores/auth";
+    import { beginSession, captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
     import { apiPost } from "$lib/api/client";
     import { notifications } from "$lib/stores/notificationStore";
     import { startAuthentication } from "@simplewebauthn/browser";
@@ -20,27 +21,53 @@
     let showHelp = $state(false);
     let showMagicLink = $state(false);
     let magicLinkEmail = $state("");
-    let magicLinkSent = $state(false);
+    let magicLinkRequested = $state(false);
+
+    // Same-site relative path only (as on /auth/verify); anything else is dropped
+    function sameSitePath(value: string | null): string | null {
+        return value &&
+            value.startsWith("/") &&
+            !value.startsWith("//") &&
+            !value.includes("\\") &&
+            !value.includes("://")
+            ? value
+            : null;
+    }
 
     // Get redirect URL from query params or default to dashboard
-    let redirectUrl = $derived($page.url.searchParams.get("redirect") || "/dashboard");
+    let safeRedirect = $derived(sameSitePath($page.url.searchParams.get("redirect")));
+    let redirectUrl = $derived(safeRedirect || "/dashboard");
 
     // Redirect if already logged in
     onMount(() => {
-        if ($auth.user) {
+        const handoffEmail = $page.url.searchParams.get("email")?.trim() || "";
+        const signedInEmail = $auth.user?.email?.trim().toLowerCase();
+        if (signedInEmail && (!handoffEmail || signedInEmail === handoffEmail.toLowerCase())) {
             goto(redirectUrl);
         }
 
+        // Arriving from signup's email-link choice: open the email-link form
+        if ($page.url.searchParams.get("method") === "email") {
+            showMagicLink = true;
+        }
+
         // Remember Me: pre-fill last used email
-        if (typeof localStorage !== "undefined") {
-            const lastEmail = localStorage.getItem("continuum_last_email");
+        if (typeof window !== "undefined") {
+            const lastEmail = browserStorage.getItem("continuum_last_email");
             if (lastEmail) {
                 magicLinkEmail = lastEmail;
             }
         }
+
+        // Arriving from /start with the marketing email this browser knows: fill it in
+        if (handoffEmail) {
+            magicLinkEmail = handoffEmail;
+            showMagicLink = true;
+        }
     });
 
     async function handlePasskeyLogin() {
+        let owner = beginSession();
         isLoading = true;
 
         try {
@@ -50,12 +77,14 @@
                 "/api/auth/passkey/login/start",
                 magicLinkEmail ? { email: magicLinkEmail } : {},
             );
+            if (!isCurrentSession(owner, true)) return;
 
             const { challenge_id, options } = startResult;
 
             // Step 2: Show browser passkey prompt
             // Note: v11+ API requires { optionsJSON: options } format
             const credential = await startAuthentication({ optionsJSON: options });
+            if (!isCurrentSession(owner, true)) return;
 
             // Step 3: Verify credential and get JWT
             const finishResult = await apiPost(
@@ -66,41 +95,35 @@
                 },
             );
 
-            // Store token and fetch user info
-            if (typeof localStorage !== "undefined") {
-                localStorage.setItem(
-                    "continuum_auth_token",
-                    finishResult.access_token,
-                );
-                if (finishResult.refresh_token)
-                    localStorage.setItem("continuum_refresh_token", finishResult.refresh_token);
-            }
+            if (!storeTokens(finishResult.access_token, finishResult.refresh_token, owner)) return;
+            owner = captureSession();
+            await auth.init();
+            if (!isCurrentSession(owner, true) || !isCurrentSession(captureSession())) return;
 
             notifications.showSuccess(
                 "Welcome back! Taking you to your vault...",
-                "Login Successful",
+                "Welcome back",
             );
 
-            await auth.init();
-
             // Store email for "Remember Me" and register account context
-            if ($auth.user?.email && typeof localStorage !== "undefined") {
-                localStorage.setItem("continuum_last_email", $auth.user.email);
+            if ($auth.user?.email && typeof window !== "undefined") {
+                browserStorage.setItem("continuum_last_email", $auth.user.email);
                 registerAccount($auth.user.email);
             }
 
             goto(redirectUrl);
         } catch (e: any) {
+            if (!isCurrentSession(owner, true)) return;
             console.error("Passkey login failed:", e);
 
             if (e.name === "NotAllowedError") {
                 notifications.showError({
-                    message: "Login was cancelled or timed out. Please try again.",
+                    message: "That sign-in paused. We can try again whenever you're ready.",
                     code: "AUTH_CANCELLED",
                 });
             } else if (e.name === "NotSupportedError") {
                 notifications.showError({
-                    message: "Your device does not support passkeys. Please use email link instead.",
+                    message: "You can request an email link from this device.",
                     code: "PASSKEY_NOT_SUPPORTED",
                 });
                 showMagicLink = true;
@@ -108,97 +131,65 @@
                 notifications.showError(e);
             }
         } finally {
-            isLoading = false;
+            if (isCurrentSession(owner, true)) isLoading = false;
         }
     }
 
     async function handleMagicLink() {
         if (!magicLinkEmail) {
             notifications.showError({
-                message: "We'll need your email address to continue.",
+                message: "Enter your email address to request a sign-in link.",
                 code: "VALIDATION_ERROR",
             });
             return;
         }
 
+        const owner = beginSession();
+        const email = magicLinkEmail;
         isLoading = true;
 
         try {
-            // DEVELOPER BYPASS
-            if (magicLinkEmail === "jh@continuum.estate") {
-                const params = new URLSearchParams();
-                params.append("username", magicLinkEmail);
-                params.append("password", "bypass");
-
-                const response = await fetch(`${API_BASE_URL}/api/auth/token`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    body: params,
-                });
-
-                if (!response.ok) {
-                    const errText = await response.text();
-                    console.error("Bypass failed:", response.status, errText);
-                    throw new Error(
-                        `Bypass failed: ${response.status} ${errText}`,
-                    );
-                }
-
-                const data = await response.json();
-
-                if (typeof localStorage !== "undefined") {
-                    localStorage.setItem(
-                        "continuum_auth_token",
-                        data.access_token,
-                    );
-                    if (data.refresh_token)
-                        localStorage.setItem("continuum_refresh_token", data.refresh_token);
-                }
-
-                await auth.init();
-
-                // Store email for "Remember Me" and Register account context
-                if ($auth.user?.email && typeof localStorage !== "undefined") {
-                    localStorage.setItem(
-                        "continuum_last_email",
-                        $auth.user.email,
-                    );
-                    registerAccount($auth.user.email);
-                }
-
-                notifications.showSuccess(
-                    "Developer Mode Enabled",
-                    "Bypass Successful",
-                );
-
-                goto(redirectUrl);
-                return;
-            }
-
-            await apiPost("/api/auth/magic-link", { email: magicLinkEmail });
+            await apiPost("/api/auth/magic-link", {
+                email,
+                redirect: safeRedirect || undefined,
+            });
+            if (!isCurrentSession(owner, true)) return;
 
             // Store email for "Remember Me" early
-            if (typeof localStorage !== "undefined") {
-                localStorage.setItem("continuum_last_email", magicLinkEmail);
+            if (typeof window !== "undefined") {
+                browserStorage.setItem("continuum_last_email", email);
             }
 
-            magicLinkSent = true;
-            notifications.showSuccess(
-                "Check your email for the login link!",
-                "Magic Link Sent",
+            magicLinkRequested = true;
+            notifications.showInfo(
+                "You can check your email or sign in with an existing passkey.",
+                "Sign-in Request Received",
             );
         } catch (e: any) {
+            if (!isCurrentSession(owner, true)) return;
             console.error("Login failed:", e);
-            notifications.showError(e, handleMagicLink);
+            notifications.showError(e, () => {
+                if (isCurrentSession(owner, true)) void handleMagicLink();
+            });
         } finally {
-            isLoading = false;
+            if (isCurrentSession(owner, true)) isLoading = false;
+        }
+    }
+
+    // Leaving the email form drops ?method=email (kept by signup's email-link choice) and the
+    // /start ?email so a reload stays on the passkey view; other params such as ?redirect are kept.
+    function backToPasskey() {
+        showMagicLink = false;
+        const url = new URL($page.url);
+        if (url.searchParams.has("method") || url.searchParams.has("email")) {
+            url.searchParams.delete("method");
+            url.searchParams.delete("email");
+            goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
         }
     }
 
     function handleKeydown(event: KeyboardEvent) {
-        if (event.key === "Enter" && magicLinkEmail && !magicLinkSent) {
+        if (event.key === "Enter" && magicLinkEmail && !magicLinkRequested) {
             handleMagicLink();
         }
     }
@@ -209,29 +200,29 @@
 </svelte:head>
 
 <div
-    class="min-h-screen bg-[#0F1115] flex items-center justify-center p-6 font-sans"
+    class="min-h-screen surface-dark bg-background text-foreground flex items-center justify-center p-6 font-sans"
 >
     <div class="max-w-2xl w-full" in:fade={{ duration: 600 }}>
         <!-- Header -->
         <div class="text-center mb-12">
             <div
-                class="inline-flex p-5 rounded-3xl bg-teal-500/10 text-teal-400 mb-8 border border-teal-500/20 shadow-2xl shadow-teal-500/10"
+                class="inline-flex p-5 rounded-3xl bg-primary/10 text-primary mb-8 border border-primary/20 shadow-2xl shadow-primary/10"
             >
                 <Shield size={56} />
             </div>
             <h1
-                class="text-6xl font-serif font-black tracking-tighter text-white mb-3"
+                class="text-6xl font-serif font-black tracking-tighter text-foreground mb-3"
             >
                 Welcome Back
             </h1>
-            <p class="text-slate-400 text-xl font-medium">
-                Continue securing your legacy with courage.
+            <p class="text-muted-foreground text-xl font-medium">
+                Everything you've saved is right where you left it.
             </p>
         </div>
 
         <!-- Main Login Card -->
         <div
-            class="bg-slate-900/50 border border-slate-800 rounded-3xl p-10 backdrop-blur-sm space-y-6"
+            class="bg-card/50 border border-border rounded-3xl p-10 backdrop-blur-sm space-y-6"
         >
             {#if !showMagicLink}
                 <!-- Passkey Login (Primary) -->
@@ -239,7 +230,7 @@
                     <button
                         onclick={handlePasskeyLogin}
                         disabled={isLoading}
-                        class="w-full bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-400 hover:to-teal-300 text-slate-950 font-black py-6 px-8 rounded-2xl transition-all text-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-teal-500/20 flex items-center justify-center gap-4 group relative overflow-hidden"
+                        class="w-full bg-primary hover:bg-primary-hover text-primary-foreground font-black py-6 px-8 rounded-2xl transition-all text-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-primary/20 flex items-center justify-center gap-4 group relative overflow-hidden"
                     >
                         <div
                             class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"
@@ -253,7 +244,7 @@
                     <!-- Help Text for Passkeys -->
                     <button
                         onclick={() => (showHelp = !showHelp)}
-                        class="w-full text-slate-400 hover:text-teal-400 text-sm flex items-center justify-center gap-2 transition-colors"
+                        class="w-full text-muted-foreground hover:text-primary text-sm flex items-center justify-center gap-2 transition-colors"
                     >
                         <Info size={16} />
                         What is a passkey?
@@ -261,25 +252,22 @@
 
                     {#if showHelp}
                         <div
-                            class="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-6 space-y-3"
+                            class="bg-primary/5 border border-primary/20 rounded-2xl p-6 space-y-3"
                             in:fly={{ y: -10, duration: 300 }}
                         >
-                            <h3 class="text-white font-bold text-lg flex items-center gap-2">
-                                <Info size={20} class="text-teal-400" />
+                            <h3 class="text-foreground font-bold text-lg flex items-center gap-2">
+                                <Info size={20} class="text-primary" />
                                 What is a Passkey?
                             </h3>
-                            <p class="text-slate-300 text-base leading-relaxed">
-                                A Passkey is a safe way to log in using what's
-                                already on your device—like your fingerprint,
-                                your face, or the code you use to unlock your
-                                screen.
+                            <p class="text-foreground text-base leading-relaxed">
+                                A passkey lets you sign in with your device's
+                                fingerprint, face recognition, or screen unlock code.
                             </p>
-                            <div class="bg-slate-950/40 rounded-xl p-4">
-                                <p class="text-slate-300 text-sm">
-                                    It's much safer than a password, and best of
-                                    all: <strong class="text-white">
-                                        nothing to remember and nothing to type.
-                                    </strong>
+                            <div class="bg-background/40 rounded-xl p-4">
+                                <p class="text-foreground text-sm">
+                                    You can also choose <strong class="text-foreground">
+                                        email sign-in below
+                                    </strong> to request a sign-in link.
                                 </p>
                             </div>
                         </div>
@@ -287,17 +275,17 @@
 
                     <!-- Divider -->
                     <div class="flex items-center gap-4 my-8">
-                        <div class="flex-1 h-px bg-slate-800"></div>
-                        <span class="text-slate-500 text-sm font-bold uppercase tracking-widest">
+                        <div class="flex-1 h-px bg-border"></div>
+                        <span class="text-muted-foreground text-sm font-bold uppercase tracking-widest">
                             Or
                         </span>
-                        <div class="flex-1 h-px bg-slate-800"></div>
+                        <div class="flex-1 h-px bg-border"></div>
                     </div>
 
                     <!-- Magic Link Option -->
                     <button
                         onclick={() => (showMagicLink = true)}
-                        class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-5 px-6 rounded-2xl transition-all text-lg flex items-center justify-center gap-3 border border-slate-700"
+                        class="w-full bg-card hover:bg-border text-foreground font-bold py-5 px-6 rounded-2xl transition-all text-lg flex items-center justify-center gap-3 border border-border"
                     >
                         <Mail size={24} />
                         Use Email Link Instead
@@ -306,12 +294,12 @@
             {:else}
                 <!-- Magic Link Form -->
                 <div class="space-y-6" in:fly={{ x: 20, duration: 300 }}>
-                    {#if !magicLinkSent}
+                    {#if !magicLinkRequested}
                         <div class="space-y-4">
                             <div>
                                 <label
                                     for="email"
-                                    class="block text-lg font-bold text-white mb-3"
+                                    class="block text-lg font-bold text-foreground mb-3"
                                 >
                                     Email Address
                                 </label>
@@ -321,7 +309,7 @@
                                     bind:value={magicLinkEmail}
                                     onkeydown={handleKeydown}
                                     placeholder="you@example.com"
-                                    class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-6 py-5 text-white text-xl placeholder-slate-500 focus:border-teal-500 focus:outline-none transition-colors"
+                                    class="w-full bg-background border border-border rounded-2xl px-6 py-5 text-foreground text-xl placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
                                     disabled={isLoading}
                                 />
                             </div>
@@ -329,61 +317,70 @@
                             <button
                                 onclick={handleMagicLink}
                                 disabled={isLoading || !magicLinkEmail}
-                                class="w-full bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-400 hover:to-teal-300 text-slate-950 font-black py-6 px-8 rounded-2xl transition-all text-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-teal-500/20 flex items-center justify-center gap-4 group relative overflow-hidden"
+                                class="w-full bg-primary hover:bg-primary-hover text-primary-foreground font-black py-6 px-8 rounded-2xl transition-all text-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-primary/20 flex items-center justify-center gap-4 group relative overflow-hidden"
                             >
                                 <div
                                     class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"
                                 ></div>
                                 <Mail size={28} class="relative" />
                                 <span class="relative">
-                                    {isLoading ? "Sending..." : "Send Sign-in Link"}
+                                    {isLoading ? "Requesting..." : "Send Sign-in Link"}
                                 </span>
                             </button>
 
                             <button
-                                onclick={() => (showMagicLink = false)}
-                                class="w-full text-slate-400 hover:text-white font-medium py-3 transition-colors text-base"
+                                onclick={backToPasskey}
+                                class="w-full text-muted-foreground hover:text-foreground font-medium py-3 transition-colors text-base"
                             >
                                 Back to Passkey Login
                             </button>
                         </div>
                     {:else}
-                        <!-- Magic Link Sent Confirmation -->
+                        <!-- Uniform request receipt; delivery and account existence stay private. -->
                         <div
-                            class="bg-teal-500/10 border border-teal-500/30 rounded-2xl p-8 text-center"
+                            class="bg-primary/10 border border-primary/30 rounded-2xl p-8 text-center"
                             in:fly={{ y: 20, duration: 300 }}
                         >
-                            <Mail size={48} class="text-teal-400 mx-auto mb-4" />
-                            <h3 class="text-white font-bold text-2xl mb-3">
-                                Check Your Email
+                            <Mail size={48} class="text-primary mx-auto mb-4" />
+                            <h3 class="text-foreground font-bold text-2xl mb-3">
+                                Sign-in Request Received
                             </h3>
-                            <p class="text-slate-300 text-lg leading-relaxed mb-6">
-                                We've sent a secure sign-in link to <strong class="text-white">
+                            <p class="text-foreground text-lg leading-relaxed mb-6">
+                                You requested a sign-in link for <strong class="text-foreground">
                                     {magicLinkEmail}
                                 </strong>
                             </p>
-                            <p class="text-slate-400 text-base">
-                                Click the link in your email to continue. The link expires in 15 minutes.
+                            <p class="text-muted-foreground text-base">
+                                If a link arrives, open it within 15 minutes. You can also use a passkey you've already set up.
                             </p>
                         </div>
 
                         <button
-                            onclick={() => (magicLinkSent = false)}
-                            class="w-full text-slate-400 hover:text-white font-medium py-3 transition-colors text-base"
+                            onclick={() => (magicLinkRequested = false)}
+                            class="w-full text-muted-foreground hover:text-foreground font-medium py-3 transition-colors text-base"
                         >
                             Use a different email
+                        </button>
+                        <button
+                            onclick={handlePasskeyLogin}
+                            disabled={isLoading}
+                            class="w-full bg-primary hover:bg-primary-hover text-primary-foreground font-bold py-4 px-6 rounded-2xl transition-colors disabled:opacity-50"
+                        >
+                            {isLoading ? "Connecting..." : "Login with Passkey"}
                         </button>
                     {/if}
                 </div>
             {/if}
 
             <!-- Sign Up Link -->
-            <div class="text-center pt-6 border-t border-slate-800">
-                <p class="text-slate-400 text-lg">
-                    Don't have an account?
+            <div class="text-center pt-6 border-t border-border">
+                <p class="text-muted-foreground text-lg">
+                    New here?
                     <a
-                        href="/signup"
-                        class="text-teal-400 hover:text-teal-300 font-bold transition-colors"
+                        href={safeRedirect
+                            ? `/signup?redirect=${encodeURIComponent(safeRedirect)}`
+                            : "/signup"}
+                        class="text-primary hover:text-primary-hover font-bold transition-colors"
                     >
                         Create one
                     </a>
@@ -393,15 +390,10 @@
 
         <!-- Footer Info -->
         <div class="mt-8 text-center">
-            <p class="text-slate-600 text-sm">
-                Your data is encrypted and secured with industry-standard protection
+            <p class="text-muted-foreground text-sm">
+                Your information stays private to your account and travels over a secure connection
             </p>
         </div>
     </div>
 </div>
 
-<style>
-    :global(body) {
-        background-color: #0f1115;
-    }
-</style>

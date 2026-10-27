@@ -8,9 +8,9 @@ interface ToneState {
     intensity: number; // 0 to 1, could scale animations or color saturation
 }
 
-const manager = registerProfileSlice<ToneState>('app_tone', (data: any) => ({
-    mode: data.mode || data.toneMode || 'planning',
-    intensity: data.intensity !== undefined ? data.intensity : 0.5
+const manager = registerProfileSlice<ToneState>('app_tone', (data: Record<string, unknown>) => ({
+    mode: (data.mode || data.toneMode || 'planning') as AppTone,
+    intensity: (data.intensity !== undefined ? data.intensity : 0.5) as number
 }));
 
 if (browser) {

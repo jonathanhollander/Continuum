@@ -14,12 +14,15 @@
     import { preferenceStore } from "$lib/stores/preferenceStore";
     import { conciergeEngine } from "$lib/stores/conciergeEngine";
     import { API_BASE_URL } from "$lib/config";
+    import { apiFetch } from "$lib/api/client";
+    import { parseApiError, handleFetchError } from "$lib/services/errorHandler";
 
     // Flow states
     let ready = $state(false);
     let displayName = $state("");
     let nameSubmitted = $state(false);
     let isCompleting = $state(false);
+    let saveError = $state("");
 
     // Input ref for auto-focus
     let nameInputRef: HTMLInputElement | undefined = $state();
@@ -78,6 +81,13 @@
         }
     }
 
+    // Back to the name field (it is locked once Continue is chosen)
+    function editName() {
+        nameSubmitted = false;
+        saveError = "";
+        setTimeout(() => nameInputRef?.focus(), 0);
+    }
+
     function handleNameKeydown(event: KeyboardEvent) {
         if (event.key === "Enter" && displayName.trim().length > 0) {
             handleNameSubmit();
@@ -88,20 +98,23 @@
         if (isCompleting) return;
         isCompleting = true;
 
+        saveError = "";
+
         try {
-            // Persist to backend
-            await fetch(`${API_BASE_URL}/api/auth/onboarding`, {
+            // Persist to backend; only a saved answer marks onboarding complete
+            const response = await apiFetch(`/api/auth/onboarding`, {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${$auth.token}`,
-                },
                 body: JSON.stringify({
                     display_name: displayName.trim(),
                     onboarding_step: "complete",
                     onboarding_completed: true,
                 }),
             });
+            if (!response.ok) {
+                saveError = (await parseApiError(response)).message;
+                isCompleting = false;
+                return;
+            }
 
             // Mark complete in preference store (localStorage)
             preferenceStore.setOnboardingComplete(true);
@@ -116,6 +129,7 @@
             goto("/modules/contacts");
         } catch (e) {
             console.error("Failed to complete onboarding:", e);
+            saveError = handleFetchError(e).message;
             isCompleting = false;
         }
     }
@@ -128,17 +142,17 @@
     <title>Welcome to Continuum</title>
 </svelte:head>
 
-<div class="min-h-screen bg-slate-900 flex flex-col relative overflow-hidden">
+<div class="surface-dark min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
     <!-- Ambient Background -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-            class="absolute -top-24 -left-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"
+            class="absolute -top-24 -left-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
         ></div>
         <div
-            class="absolute -bottom-24 -right-24 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl"
+            class="absolute -bottom-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl"
         ></div>
         <div
-            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-3xl"
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl"
         ></div>
     </div>
 
@@ -154,18 +168,18 @@
                 <!-- Welcome & Name Section -->
                 <div class="text-center space-y-6">
                     <div
-                        class="mx-auto w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30"
+                        class="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30"
                     >
                         <Sparkles size={32} />
                     </div>
 
                     <div class="space-y-3">
                         <h1
-                            class="text-3xl md:text-4xl font-serif font-bold text-white"
+                            class="text-3xl md:text-4xl font-serif font-bold text-foreground"
                         >
                             Welcome to Continuum
                         </h1>
-                        <p class="text-slate-400 text-lg max-w-md mx-auto">
+                        <p class="text-muted-foreground text-lg max-w-md mx-auto">
                             A gentle space to organize what matters most for the
                             people you love.
                         </p>
@@ -179,9 +193,9 @@
                         <div class="space-y-2">
                             <label
                                 for="name-input"
-                                class="block text-sm text-slate-400 text-left"
+                                class="block text-sm text-muted-foreground text-left"
                             >
-                                What should we call you?
+                                Name you want your family to see
                             </label>
                             <input
                                 id="name-input"
@@ -189,17 +203,21 @@
                                 type="text"
                                 bind:value={displayName}
                                 onkeydown={handleNameKeydown}
-                                placeholder="Your first name"
+                                placeholder="Your name"
                                 disabled={nameSubmitted}
-                                class="w-full px-5 py-4 bg-white/5 border border-white/20 rounded-2xl text-white placeholder-slate-500 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                                class="w-full px-5 py-4 bg-foreground/5 border border-border rounded-2xl text-foreground placeholder:text-muted-foreground text-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                             />
                         </div>
+
+                        <p class="text-sm text-muted-foreground text-left">
+                            This is your display name in Continuum. You can use the name familiar to your family.
+                        </p>
 
                         {#if !nameSubmitted}
                             <button
                                 onclick={handleNameSubmit}
                                 disabled={!nameIsValid}
-                                class="w-full group flex items-center justify-center gap-2 px-6 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                                class="w-full group flex items-center justify-center gap-2 px-6 py-4 bg-primary hover:bg-primary-hover text-primary-foreground font-medium rounded-xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
                             >
                                 <span>Continue</span>
                                 <ArrowRight
@@ -210,13 +228,21 @@
                         {:else}
                             <!-- Confirmed state -->
                             <div
-                                class="flex items-center justify-center gap-2 text-emerald-400 py-2"
+                                class="flex items-center justify-center gap-2 text-success py-2"
                                 in:fade={{ duration: 200 }}
                             >
                                 <Check size={18} />
                                 <span class="text-sm"
                                     >Nice to meet you, {displayName}!</span
                                 >
+                                <button
+                                    type="button"
+                                    onclick={editName}
+                                    disabled={isCompleting}
+                                    class="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+                                >
+                                    Change name
+                                </button>
                             </div>
                         {/if}
                     </div>
@@ -229,10 +255,10 @@
                         in:fly={{ y: 30, duration: 400, delay: 100 }}
                     >
                         <div class="text-center">
-                            <h2 class="text-xl font-medium text-white">
+                            <h2 class="text-xl font-medium text-foreground">
                                 How would you like to get started?
                             </h2>
-                            <p class="text-slate-400 text-sm mt-1">
+                            <p class="text-muted-foreground text-sm mt-1">
                                 Choose whichever feels right - you can always
                                 change your approach.
                             </p>
@@ -243,25 +269,25 @@
                             <button
                                 onclick={() => completeOnboarding(true)}
                                 disabled={isCompleting}
-                                class="group relative p-5 bg-indigo-600/20 border-2 border-indigo-500/50 rounded-2xl text-left hover:bg-indigo-600/30 transition-all disabled:opacity-70"
+                                class="group relative p-5 bg-primary/10 border-2 border-primary/50 rounded-2xl text-left hover:bg-primary/20 transition-all disabled:opacity-70"
                             >
                                 <div class="flex items-start gap-4">
                                     <div
-                                        class="p-2.5 bg-indigo-500 rounded-xl text-white shrink-0"
+                                        class="p-2.5 bg-primary rounded-xl text-primary-foreground shrink-0"
                                     >
                                         <MessageCircle size={22} />
                                     </div>
                                     <div class="space-y-1">
                                         <h3
-                                            class="font-medium text-white flex items-center gap-2"
+                                            class="font-medium text-foreground flex items-center gap-2"
                                         >
                                             Guide me through it
                                             <span
-                                                class="text-xs bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded-full"
+                                                class="text-xs bg-primary/20 text-primary-hover px-2 py-0.5 rounded-full"
                                                 >Recommended</span
                                             >
                                         </h3>
-                                        <p class="text-sm text-slate-400">
+                                        <p class="text-sm text-muted-foreground">
                                             Have a friendly conversation to
                                             capture your important information
                                             step by step.
@@ -274,19 +300,19 @@
                             <button
                                 onclick={() => completeOnboarding(false)}
                                 disabled={isCompleting}
-                                class="group p-5 bg-white/5 border border-white/10 rounded-2xl text-left hover:bg-white/10 transition-all disabled:opacity-70"
+                                class="group p-5 bg-foreground/5 border border-border rounded-2xl text-left hover:bg-foreground/10 transition-all disabled:opacity-70"
                             >
                                 <div class="flex items-start gap-4">
                                     <div
-                                        class="p-2.5 bg-slate-700 rounded-xl text-slate-300 shrink-0 group-hover:bg-slate-600"
+                                        class="p-2.5 bg-border rounded-xl text-foreground shrink-0 group-hover:bg-muted-foreground/40"
                                     >
                                         <LayoutGrid size={22} />
                                     </div>
                                     <div class="space-y-1">
-                                        <h3 class="font-medium text-white">
+                                        <h3 class="font-medium text-foreground">
                                             I'll explore on my own
                                         </h3>
-                                        <p class="text-sm text-slate-400">
+                                        <p class="text-sm text-muted-foreground">
                                             Start with your contacts and explore
                                             the modules at your own pace.
                                         </p>
@@ -294,6 +320,15 @@
                                 </div>
                             </button>
                         </div>
+
+                        {#if saveError}
+                            <p
+                                role="alert"
+                                class="text-sm text-warning text-center"
+                            >
+                                {saveError}
+                            </p>
+                        {/if}
                     </div>
                 {/if}
             </div>
@@ -302,15 +337,15 @@
             <div class="flex flex-col items-center gap-4">
                 <div class="flex gap-2">
                     <div
-                        class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce"
+                        class="w-2 h-2 rounded-full bg-primary animate-bounce"
                         style="animation-delay: 0s"
                     ></div>
                     <div
-                        class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce"
+                        class="w-2 h-2 rounded-full bg-primary animate-bounce"
                         style="animation-delay: 0.1s"
                     ></div>
                     <div
-                        class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce"
+                        class="w-2 h-2 rounded-full bg-primary animate-bounce"
                         style="animation-delay: 0.2s"
                     ></div>
                 </div>
@@ -321,7 +356,7 @@
     <!-- Footer -->
     <footer class="relative z-10 p-6 text-center">
         <div
-            class="flex items-center justify-center gap-2 text-white/20 text-[10px] font-bold uppercase tracking-[0.3em]"
+            class="flex items-center justify-center gap-2 text-muted-foreground text-[10px] font-bold uppercase tracking-[0.3em]"
         >
             <Sparkles size={10} />
             <span>Continuum</span>
@@ -329,8 +364,3 @@
     </footer>
 </div>
 
-<style>
-    :global(body) {
-        background-color: #0f172a;
-    }
-</style>

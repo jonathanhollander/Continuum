@@ -27,6 +27,8 @@
         onchange?: (url: string, id?: number) => void;
     }>();
 
+    const uid = $props.id();
+
     let dragging = $state(false);
     let processing = $state(false);
     let error: string | null = $state(null);
@@ -106,6 +108,14 @@
                 if (onchange) onchange(compressedDataUrl);
                 processing = false;
             };
+            img.onerror = () => {
+                processing = false;
+                error = "This space keeps images (JPG, PNG).";
+            };
+        };
+        reader.onerror = () => {
+            processing = false;
+            error = "This space keeps images (JPG, PNG).";
         };
     }
 
@@ -128,13 +138,13 @@
     />
 {:else}
 <div class="space-y-2">
-    <label class="block text-xs font-bold uppercase text-gray-500 mb-1"
+    <label id="{uid}-label" for="{uid}-file" class="block text-xs font-bold uppercase text-muted-foreground mb-1"
         >{label}</label
     >
 
     {#if imageUrl}
         <div
-            class="relative h-48 w-full rounded-xl overflow-hidden bg-gray-100 border border-gray-200 group"
+            class="relative h-48 w-full rounded-xl overflow-hidden bg-muted border border-border group"
         >
             <img
                 src={imageUrl}
@@ -146,15 +156,16 @@
                 class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
             >
                 <button
+                    type="button"
                     onclick={clearImage}
-                    class="bg-white text-rose-600 px-4 py-2 rounded-lg font-bold text-sm shadow-lg hover:bg-rose-50 flex items-center gap-2"
+                    class="bg-card text-foreground px-4 py-2 rounded-lg font-bold text-sm shadow-lg hover:bg-muted flex items-center gap-2"
                 >
                     <X size={16} /> Remove
                 </button>
             </div>
 
             <div
-                class="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1 shadow-sm"
+                class="absolute top-2 right-2 bg-success text-background rounded-full p-1 shadow-sm"
             >
                 <CircleCheck size={16} />
             </div>
@@ -163,9 +174,10 @@
         <div
             class="relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer
             {dragging
-                ? 'border-[#4A7C74] bg-[#4A7C74]/5'
-                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}
-            {error ? 'border-red-300 bg-red-50' : ''}"
+                ? 'border-primary bg-primary-soft'
+                : error
+                  ? 'border-warning bg-card'
+                  : 'border-border bg-card hover:border-muted-foreground/40 hover:bg-muted'}"
             ondragover={handleDragOver}
             ondragleave={handleDragLeave}
             ondrop={handleDrop}
@@ -173,8 +185,10 @@
             onkeydown={(e) => e.key === "Enter" && fileInput?.click()}
             role="button"
             tabindex="0"
+            aria-describedby="{uid}-label"
         >
             <input
+                id="{uid}-file"
                 type="file"
                 bind:this={fileInput}
                 onchange={handleFileSelect}
@@ -183,20 +197,20 @@
             />
 
             <div
-                class="flex flex-col items-center justify-center gap-3 text-gray-400"
+                class="flex flex-col items-center justify-center gap-3 text-muted-foreground"
             >
                 {#if processing}
                     <div
-                        class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A7C74]"
+                        class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
                     ></div>
                     <span class="text-sm font-medium">Compressing...</span>
                 {:else}
-                    <div class="p-3 bg-white rounded-full shadow-sm">
+                    <div class="p-3 bg-card rounded-full shadow-sm">
                         <Upload size={24} />
                     </div>
                     <div>
-                        <p class="text-sm font-bold text-gray-600">
-                            Click to upload or drag image here
+                        <p class="text-sm font-bold text-foreground">
+                            Add an image here, or drag one in
                         </p>
                         <p class="text-xs mt-1">Supports JPG, PNG (Max 5MB)</p>
                     </div>
@@ -205,7 +219,8 @@
 
             {#if error}
                 <div
-                    class="absolute bottom-2 left-0 right-0 text-center text-xs font-bold text-red-500"
+                    role="alert"
+                    class="absolute bottom-2 left-0 right-0 text-center text-xs font-bold text-warning"
                 >
                     {error}
                 </div>

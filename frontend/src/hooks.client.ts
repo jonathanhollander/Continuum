@@ -4,7 +4,19 @@
 // The backend (backend/csrf.py) uses double-submit-cookie CSRF protection: every
 // POST/PUT/PATCH/DELETE must send the csrf_token cookie value back in X-CSRF-Token.
 // Production enforces it, so the header is added here once instead of in each caller.
+import type { HandleClientError } from '@sveltejs/kit';
 import { API_BASE_URL } from '$lib/config';
+import {
+	assertCurrentSession, captureSession, ownsSessionToken, sessionToken,
+	SessionChangedError, type SessionOwnership,
+} from '$lib/services/sessionOwnership';
+
+// An unknown address (404) is shown by routes/+error.svelte, so it stays out of the
+// console; every other unexpected error is logged as SvelteKit's default does.
+export const handleError: HandleClientError = ({ error, status, message }) => {
+	if (status !== 404) console.error(error);
+	return { message };
+};
 
 const CSRF_COOKIE = 'csrf_token';
 const CSRF_HEADER = 'X-CSRF-Token';
@@ -31,7 +43,8 @@ if (typeof window !== 'undefined' && !(window.fetch as { __csrfWrapped?: boolean
 	const nativeFetch = window.fetch.bind(window);
 	const origins = allowedOrigins();
 
-	const csrfFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+	const csrfFetch = async (input: RequestInfo | URL, init?: RequestInit, owner?: SessionOwnership, allowTransition = false): Promise<Response> => {
+		if (owner) assertCurrentSession(owner, allowTransition);
 		const request = input instanceof Request ? input : null;
 		const method = (init?.method ?? request?.method ?? 'GET').toUpperCase();
 		if (!WRITE_METHODS.has(method)) return nativeFetch(input, init);
@@ -61,6 +74,7 @@ if (typeof window !== 'undefined' && !(window.fetch as { __csrfWrapped?: boolean
 		}
 		if (token) headers.set(CSRF_HEADER, token);
 
+		if (owner) assertCurrentSession(owner, allowTransition);
 		return nativeFetch(input, { ...init, headers });
 	};
 
@@ -68,37 +82,53 @@ if (typeof window !== 'undefined' && !(window.fetch as { __csrfWrapped?: boolean
 	// the session once (shared by parallel calls, see refreshSession) and retry the
 	// call with the new token. If the refresh is refused, sign out gently.
 	const wrapped = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-		const res = await csrfFetch(input, init);
-		if (res.status !== 401 || input instanceof Request) return res;
-
-		const headers = new Headers(init?.headers);
+		const request = input instanceof Request ? input : null;
+		const headers = new Headers(init?.headers ?? request?.headers);
 		const sent = headers.get('Authorization');
-		if (!sent?.startsWith('Bearer ')) return res;
-
 		let url: URL;
 		try {
-			url = new URL(String(input instanceof URL ? input.href : input), window.location.href);
+			url = new URL(request?.url ?? String(input), window.location.href);
 		} catch {
-			return res;
+			return csrfFetch(input, init);
 		}
-		if (!origins.has(url.origin) || url.pathname.startsWith('/api/auth/')) return res;
+		if (!sent?.startsWith('Bearer ') || !origins.has(url.origin)) return csrfFetch(input, init);
+
+		const owner = captureSession();
+		// Credential challenges and /me are handled by their initiating auth flow. Other
+		// authenticated auth APIs (preferences/onboarding) refresh like ordinary records.
+		const allowTransition = url.pathname === '/api/auth/access-status' || (url.pathname === '/api/auth/me' && !owner.ready)
+			|| /^\/api\/auth\/(?:token|signup|refresh|passkey|magic-link)(?:\/|$)/.test(url.pathname);
+		assertCurrentSession(owner, allowTransition);
+		if (!ownsSessionToken(owner, sent.slice(7), allowTransition)) throw new SessionChangedError();
+		// A caller may still hold the token that this same session refreshed earlier.
+		const current = sessionToken(owner, allowTransition);
+		if (current) headers.set('Authorization', `Bearer ${current}`);
+		init = { ...init, headers };
+		const res = await csrfFetch(input, init, owner, allowTransition);
+		assertCurrentSession(owner, allowTransition);
+		if (res.status !== 401 || request || allowTransition) return res;
 
 		const { refreshSession, auth } = await import('$lib/stores/auth');
-		let token = localStorage.getItem('continuum_auth_token');
-		if (!token || `Bearer ${token}` === sent) {
+		assertCurrentSession(owner);
+		let token = sessionToken(owner);
+		if (!token || token === current) {
 			// Nobody has refreshed since this call was sent, so do it now
-			const refreshed = await refreshSession();
+			const refreshed = await refreshSession(owner);
+			assertCurrentSession(owner);
 			if (!refreshed.ok) {
-				if (refreshed.definite) {
-					auth.logout();
-					if (!window.location.pathname.startsWith('/login')) window.location.href = '/login';
+				if (!refreshed.definite) {
+					throw Object.assign(new Error("We can try again whenever you're ready."), { code: 'SERVICE_UNAVAILABLE' });
 				}
+				auth.logout();
+				if (!window.location.pathname.startsWith('/login')) window.location.href = '/login';
 				return res;
 			}
 			token = refreshed.token;
 		}
 		headers.set('Authorization', `Bearer ${token}`);
-		return csrfFetch(input, { ...init, headers });
+		const retried = await csrfFetch(input, { ...init, headers }, owner);
+		assertCurrentSession(owner);
+		return retried;
 	};
 	(wrapped as unknown as { __csrfWrapped: boolean }).__csrfWrapped = true;
 	window.fetch = wrapped as typeof window.fetch;

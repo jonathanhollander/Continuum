@@ -2,6 +2,8 @@ import { registerProfileSlice } from "$lib/services/sync.svelte";
 
 export type EstateProfile = {
     ownerName: string;
+    // Shown to guardians on the portal (pulse_logic.owner_phone reads owner_phone)
+    ownerPhone: string;
     dateOfDeath: string;
     executorName: string;
     spouseName: string;
@@ -14,6 +16,7 @@ export type EstateProfile = {
 
 const DEFAULT_PROFILE: EstateProfile = {
     ownerName: '',
+    ownerPhone: '',
     dateOfDeath: '',
     executorName: '',
     spouseName: '',
@@ -33,7 +36,7 @@ const DEFAULT_PROFILE: EstateProfile = {
  * Only this profile's own keys are sent, so saving it never rewrites the tone, onboarding,
  * scenario, concierge or complexity keys other stores keep in the same record.
  */
-const estateMapper = (data: any): EstateProfile => {
+const estateMapper = (data: Record<string, unknown>): EstateProfile => {
     const src = data && typeof data === 'object' ? data : {};
     const out: any = { ...DEFAULT_PROFILE };
     for (const k of Object.keys(DEFAULT_PROFILE)) {

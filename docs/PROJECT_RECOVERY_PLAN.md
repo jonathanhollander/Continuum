@@ -1,19 +1,34 @@
 # Continuum — Project Recovery Plan
 
-**Last Updated:** 2026-10-26 01:55 EST
+**Last Updated:** 2026-10-26 15:32 EDT
 
 **Revised 2026-10-26** after the features/usability review (`docs/reviews/2026-10-25-features-usability/REVIEW.md`): the order is now built around the handover, not the existing navigation.
 
 **Execution:** task cards for each phase are in [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md).
 
-**Scope:** Features and the user's experience come first. Security, admin, CI and
-infrastructure hardening are listed in Phase F and wait until the handover works.
+**Current recovery status (2026-10-26):** the later [code/plan cross-check](reviews/2026-10-26-plan-crosscheck/REVIEW.md)
+found 55 follow-up cards (X303–X357: 27 P1, 28 P2) and reopened 29 contradicted
+acceptance rows plus affected section/Release marks in the canonical execution
+plan. The previous local rehearsal, browser release and targeted X292–X294 fixes
+remain recorded evidence for their specific scenarios; they do not prove the new
+account-boundary, save-concurrency, text/file completeness and status-truth paths.
+See [the prior browser report](reviews/2026-10-26-release/BROWSER-TEST.md) and
+the historical completion-test results below. This was a source review with
+isolated synthetic probes, not a new browser run or deployment. X6 key rotation,
+X141 config apply and intentional product deferrals remain separate owner items.
+
+**Scope:** Features and the user's experience come first. Broader security, admin,
+CI and infrastructure hardening remain deferred; Phase F distinguishes the
+targeted Wave X fixes already completed from the remaining scope.
 **Ground rule:** No module or feature is deleted. Where something is unfinished, it is
 labelled or moved lower in the navigation, never removed.
 
 ---
 
-## 1. Where the project actually stands (measured 2026-10-25)
+## 1. Historical baseline (measured 2026-10-25)
+
+This table preserves the findings that started recovery. It describes the
+pre-recovery application; current status is in the execution plan linked above.
 
 | Check | Result | How it was measured |
 |---|---|---|
@@ -39,7 +54,7 @@ not exercise are covered by the full browser test in the release pass.
 
 ---
 
-## 2. Why the project went off track
+## 2. Historical causes of the recovery
 
 Each cause below has evidence from the repo. They are listed by how much they hurt the
 user-facing product.
@@ -188,13 +203,22 @@ deferred to a later phase as the first draft of this plan had it.
 - The remaining type errors.
 - Desktop keyboard usability (the desktop part of CU-025). **This build is desktop-only (owner decision 2026-10-26); phone, tablet and other devices come in a later build.**
 
-**Phase F — Security, admin and operations. Out of scope for this upgrade (owner decision: features and functionality only).** Listed so nothing is lost:
-- **Rotate the exposed OpenRouter key now.** It's an owner step in the dashboard and takes
-  minutes.
-- Server-side AI calls.
-- Production environment variables.
-- Untrack the committed `.db` files.
-- The bypass, only when asked.
+**Phase F — Security, admin and operations. Broader work remains deferred under the owner's feature-first scope.** The separate Wave X track completed several originally deferred items:
+
+- Server-side AI calls: X1 complete; the frontend uses the authenticated backend proxy.
+- Production environment variables: X3 and release step 9 complete; production mode
+  and CSRF behavior were verified during the release.
+- Committed `.db` files: X2 complete; databases are untracked and ignored, with local
+  copies preserved.
+- Login bypass: X5 complete after the owner's passkey sign-in; the former bypass
+  returned 401 in the recorded live proof.
+- OpenRouter key rotation: X6 remains an owner action. Replace the exposed key and
+  revoke the old one.
+- Railway config migration: X141 apply remains pending before 2026-12-01; its
+  unmerged branch and exact apply instructions are recorded in the execution plan.
+
+These targeted completions do not represent a full security, administration or
+operations review.
 
 **Not a phase:** Pulse, QR, scenarios, analytics and builder tools stay reachable, with
 early-preview labels. They no longer decide when the project counts as "usable".
@@ -214,13 +238,20 @@ All project Markdown is in `/docs`:
 
 ## Completion test status
 
+The rows below summarize the **recorded 2026-10-26 verification**, replacing the
+2026-10-25 failure baseline. The production browser report covers owner, recipient
+and output journeys; the execution plan records the targeted X292–X294 resolution
+proofs after that run. The three media files lost before X292 remain lost; the fix
+was verified using replacement uploads across a redeploy. This table makes no
+claim of a new full rerun after later changes.
+
 | Step | Status | Evidence |
 |---|---|---|
-| Account with all fields round-trips | ❌ CU-001 | review api-probes.json |
-| PDF will with original location saves | ❌ CU-002 | 400 `vault_documents` |
-| Letter to son, edited, no duplicate | ❌ CU-008 | review source trace |
-| Photo and video retrievable from a second context | ❌ CU-010 | review source trace |
-| Controlled save failure keeps the draft and offers retry | ❌ CU-013 | review browser screenshot |
-| Owner preview of the recipient view | ❌ CU-005 | not built |
-| Recipient finds note, steps, advisor and original | ❌ CU-005 | not built |
-| Screen, binder and PDF agree | ❌ CU-003 | binder omits accounts |
+| Account with all fields round-trips | ✅ Recorded pass | Release steps 1–15: add, edit, reload; every module checked in a second fresh-login context |
+| PDF will with original location saves | ✅ Recorded pass | Release steps 1–12 and 17–20: uploaded will and original's location; X292 replacement-file downloads matched upload hashes across a redeploy |
+| Letter to son, edited, no duplicate | ✅ Recorded pass | Release steps 14 and 21: one edited row; full recipient text matched, 4,647/4,647 characters |
+| Photo and video retrievable from a second context | ✅ Recorded pass with X292 limitation above | Release step 22 initially played media; redeploy loss found and fixed under X292; C2/D2 second-context playback and X292 durable replacement-file proof are recorded in the execution plan |
+| Controlled save failure keeps the draft and offers retry | ✅ Recorded pass | Release step 13: forced 500 kept the draft; Try Again persisted the account edit |
+| Owner preview of the recipient view | ✅ Recorded pass | Release step 16: owner preview matched the recipient page |
+| Recipient finds note, steps, advisor and original | ✅ Recorded pass | Release steps 17–20 in a fresh recipient context: note, first steps, advisor phone and call order, executor step, will location |
+| Screen, binder and PDF agree | ✅ Recorded pass | Release output check: 34 values and full edited letter agreed in six outputs; zip files matched uploads; X275 transfer instructions confirmed live |

@@ -2,44 +2,62 @@
     // The Red Binder: the readable packet, built from the one export snapshot
     // (GET /api/export/snapshot). Print saves it as a PDF; the download copy is a zip
     // with this same packet, the actual files and a manifest.
-    import { Printer, FileDown, Archive, Loader2 } from "lucide-svelte";
+    import { Printer, Archive, Loader2 } from "lucide-svelte";
     import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import { goto } from "$app/navigation";
     import { onMount, onDestroy } from "svelte";
+    import { SvelteMap } from "svelte/reactivity";
+    import { captureSession, assertCurrentSession, isCurrentSession, SessionChangedError } from "$lib/services/sessionOwnership";
     import {
         fetchSnapshot,
         buildPacket,
         packetHTML,
-        createPDFBlob,
         loadAttachmentFiles,
         buildDownloadCopy,
         saveBlob,
+        fileCoverage,
+        fileCoverageLabel,
+        downloadCopyStatus,
+        packetRecordId,
+        fileFieldLabel,
         type Packet,
         type Snapshot,
     } from "$lib/services/exportService";
 
     let snapshot = $state<Snapshot | null>(null);
     let packet = $state<Packet | null>(null);
-    let files = $state<Map<string, Blob>>(new Map());
-    let urls = $state<Map<string, string>>(new Map());
+    const files = new SvelteMap<string, Blob>();
+    const urls = new SvelteMap<string, string>();
     let loading = $state(true);
     let note = $state<string | null>(null);
     let busy = $state<string | null>(null);
+    let downloadNote = $state<string | null>(null);
+    let gone = false;
+    const coverage = $derived(snapshot && packet ? fileCoverage(snapshot, packet, files) : null);
 
-    let html = $derived(packet ? packetHTML(packet, (a) => urls.get(a.key) ?? null) : "");
+    let html = $derived(packet ? packetHTML(packet, (a) => urls.get(a.key) ?? null, coverage ?? undefined) : "");
+
+    function showFiles(got: Map<string, Blob>) {
+        if (gone) return;
+        for (const [key, blob] of got) {
+            files.set(key, blob);
+            if (!urls.has(key)) urls.set(key, URL.createObjectURL(blob));
+        }
+    }
 
     async function load() {
         loading = true;
         note = null;
+        downloadNote = null;
+        for (const url of urls.values()) URL.revokeObjectURL(url);
+        urls.clear();
+        files.clear();
         try {
             snapshot = await fetchSnapshot();
             packet = buildPacket(snapshot, "full");
-            files = await loadAttachmentFiles(snapshot, packet.attachments);
-            const next = new Map<string, string>();
-            for (const [k, b] of files) next.set(k, URL.createObjectURL(b));
-            urls = next;
+            showFiles(await loadAttachmentFiles(snapshot, packet.attachments, undefined, () => {}, () => {}));
         } catch (e: any) {
-            note = e?.message || "Your binder is taking a moment to gather. You can try again shortly.";
+            note = e?.message || "Your records are safe in your account. You can gather your binder again whenever you're ready.";
         } finally {
             loading = false;
         }
@@ -50,6 +68,7 @@
         load();
     });
     onDestroy(() => {
+        gone = true;
         if (typeof document !== "undefined") document.body.classList.remove("binder-print");
         for (const u of urls.values()) URL.revokeObjectURL(u);
     });
@@ -60,11 +79,15 @@
         window.print();
     }
 
-    async function downloadPDF() {
-        if (!packet) return;
-        busy = "pdf";
+    async function retryFile(key: string) {
+        if (!snapshot || !packet || busy) return;
+        busy = "files";
         try {
-            saveBlob(await createPDFBlob("full", true, () => {}, snapshot ?? undefined), `Continuum_binder_${day()}.pdf`);
+            showFiles(await loadAttachmentFiles(snapshot, packet.attachments.filter((a) => a.key === key), undefined, () => {}, () => {}));
+            downloadNote = fileCoverageLabel(fileCoverage(snapshot, packet, files));
+        } catch (e: any) {
+            downloadNote = e instanceof SessionChangedError ? "The account changed. Open the packet from the account you want to use."
+                : e?.message || "You can try gathering this file again.";
         } finally {
             busy = null;
         }
@@ -72,64 +95,88 @@
 
     async function downloadCopy() {
         if (!snapshot) return;
+        const owner = captureSession();
         busy = "zip";
         try {
-            saveBlob(await buildDownloadCopy(snapshot, () => {}, files), `Continuum_download_copy_${day()}.zip`);
+            const copy = await buildDownloadCopy(snapshot, (message) => downloadNote = message, files, undefined, owner);
+            assertCurrentSession(owner);
+            if (gone) return;
+            showFiles(files);
+            saveBlob(copy, `Continuum_download_copy_${day()}.zip`);
+            downloadNote = downloadCopyStatus(fileCoverage(snapshot, packet!, files));
         } catch (e: any) {
-            note = e?.message || "The download copy is taking a moment. You can try again shortly.";
+            downloadNote = e instanceof SessionChangedError ? "The account changed. Open the packet from the account you want to use."
+                : e?.message || "Your binder is right here. You can save a download copy again whenever you're ready.";
         } finally {
+            if (isCurrentSession(owner)) showFiles(files);
             busy = null;
         }
     }
 </script>
 
-<div class="min-h-screen bg-stone-100 p-8 print:bg-white print:p-0">
-    <div class="max-w-4xl mx-auto mb-8 flex justify-between items-center gap-6 print:hidden">
-        <div>
-            <h1 class="font-serif font-bold text-3xl text-[#304743]">The Red Binder</h1>
-            <p class="text-stone-500">
-                Everything you have recorded, in one place to print or keep.
+<div class="min-h-screen bg-muted p-8 print:bg-white print:p-0">
+    <div class="max-w-4xl mx-auto mb-8 print:hidden">
+        <div class="mb-4">
+            <h1 class="font-serif font-bold text-3xl text-primary-deep dark:text-primary-hover">The Red Binder</h1>
+            <p class="text-muted-foreground">
+                Your legacy and practical records, financial history and recorded executor steps, in one place to print or keep.
             </p>
         </div>
         {#if packet && packet.sections.length > 0}
-            <div class="flex items-center gap-3 shrink-0">
+            <div class="flex flex-wrap items-center gap-3">
                 <button
                     onclick={printBinder}
-                    class="bg-[#304743] hover:bg-[#2A3F3B] text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all"
+                    class="bg-primary-deep hover:bg-primary-deep/90 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all"
                 >
                     <Printer size={18} /> Print or save as PDF
-                </button>
-                <button
-                    onclick={downloadPDF}
-                    disabled={busy !== null}
-                    class="bg-white hover:bg-stone-50 text-[#304743] border border-stone-300 px-4 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all disabled:opacity-60"
-                >
-                    {#if busy === "pdf"}<Loader2 size={18} class="animate-spin" />{:else}<FileDown size={18} />{/if}
-                    PDF file
                 </button>
                 <button
                     onclick={downloadCopy}
                     disabled={busy !== null}
                     data-testid="download-copy"
-                    class="bg-white hover:bg-stone-50 text-[#304743] border border-stone-300 px-4 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all disabled:opacity-60"
+                    class="bg-card hover:bg-muted text-primary-deep dark:text-primary-hover border border-border px-4 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all disabled:opacity-60"
                 >
                     {#if busy === "zip"}<Loader2 size={18} class="animate-spin" />{:else}<Archive size={18} />{/if}
-                    Download copy
+                    Download full record and files
                 </button>
             </div>
+            <p class="mt-3 text-sm text-muted-foreground">The ZIP includes the readable record and available original files. Extract it, open <code>packet.html</code> and keep the <code>files</code> folder beside it. Use <code>packet.pdf</code> for a printable copy; review the file list for anything missing.</p>
         {/if}
     </div>
 
     {#if note}
-        <div class="max-w-4xl mx-auto mb-6 p-4 rounded-xl bg-white border border-stone-200 text-stone-700 flex items-center justify-between print:hidden">
+        <div class="max-w-4xl mx-auto mb-6 p-4 rounded-xl bg-card border border-border text-foreground flex items-center justify-between print:hidden">
             <span>{note}</span>
-            <button onclick={load} class="text-[#304743] font-semibold underline">Try again</button>
+            <button onclick={load} class="text-primary-deep dark:text-primary-hover font-semibold underline">Try again</button>
         </div>
     {/if}
+    {#if downloadNote}
+        <p class="max-w-4xl mx-auto mb-6 text-sm text-foreground print:hidden" role="status" data-testid="binder-download-note">{downloadNote}</p>
+    {/if}
+    {#if !loading && coverage?.issues.length}
+        <section class="max-w-4xl mx-auto mb-6 p-5 rounded-xl bg-card border border-border space-y-3 print:hidden" aria-label="Files to revisit" data-testid="binder-file-issues">
+            <h2 class="font-semibold">{fileCoverageLabel(coverage)}</h2>
+            <ul class="space-y-4">
+                {#each coverage.issues as issue (issue.key)}
+                    <li class="text-sm space-y-1">
+                        <p class="font-semibold">{issue.filename}</p>
+                        {#each issue.records as record (`${record.section}:${record.id}:${record.field}`)}
+                            <a class="block text-primary-deep dark:text-primary-hover underline" href={`#${packetRecordId(record.section, record.id)}`}>{record.title} · {fileFieldLabel(record.field)}</a>
+                        {/each}
+                        {#if issue.kind === "retry"}
+                            <button onclick={() => retryFile(issue.key)} disabled={busy !== null} class="font-semibold text-primary-deep dark:text-primary-hover underline disabled:opacity-60">Try this file again</button>
+                        {:else}
+                            <p>The original record names this file. You can review its details in the record.</p>
+                        {/if}
+                    </li>
+                {/each}
+            </ul>
+        </section>
+    {/if}
 
-    <div class="max-w-4xl mx-auto bg-white shadow-xl border border-stone-200 print:shadow-none print:border-none">
+    <div class="max-w-4xl mx-auto shadow-xl border border-border print:shadow-none print:border-none {!loading && packet && packet.sections.length > 0 ? 'bg-white' : 'bg-card'}">
         {#if loading}
-            <div class="p-20 flex items-center justify-center gap-3 text-stone-500 min-h-[600px]">
+            <div class="p-20 flex items-center justify-center gap-3 text-muted-foreground min-h-[600px]">
                 <Loader2 size={22} class="animate-spin" /> Gathering your binder...
             </div>
         {:else if packet && packet.sections.length > 0}

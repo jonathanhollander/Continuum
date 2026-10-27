@@ -2,11 +2,8 @@
     import { onMount } from "svelte";
     import { estateAudit, AuditStore } from "$lib/stores/auditStore.svelte";
     import { CircleCheck, Circle, ArrowRight, Loader2 } from "lucide-svelte";
-    import { financialAssetsSync } from "$lib/stores/financialAssetsStore.svelte";
-    import { insuranceSync } from "$lib/stores/insuranceStore.svelte";
-    import { contactSync } from "$lib/stores/familyStore.svelte";
-    import { directiveSync } from "$lib/stores/medicalStore.svelte";
-    import { digitalAssetsSync } from "$lib/stores/digitalAssetsStore.svelte";
+    import { auditReadiness } from "$lib/utils/auditReadiness.svelte";
+    import AuditSourceStatus from "$lib/components/AuditSourceStatus.svelte";
 
     onMount(() => {
         estateAudit.runAudit();
@@ -14,15 +11,10 @@
 
     let audit = $derived($estateAudit);
     let ringColor = $derived(
-        audit.percentage === 100 ? "stroke-emerald-500" : "stroke-blue-500",
+        audit.percentage === 100 ? "stroke-success" : "stroke-info",
     );
-    // A gentle cue, not 0% and 0 pts, until every store the audit reads has its first server
-    // answer (a store this device already holds records for counts as answered).
-    let isLoading = $derived(
-        [financialAssetsSync, insuranceSync, contactSync, directiveSync, digitalAssetsSync].some(
-            (m) => m.lastSync === null && m.status !== "error" && m.items.length === 0,
-        ),
-    );
+    let auditSources = $derived(auditReadiness());
+    let isLoading = $derived(!auditSources.canScore);
 
     // Each area's page; every id the audit scores has one
     const modulePath: Record<string, string> = {
@@ -35,16 +27,29 @@
     };
     const share = (id: string, score: number) =>
         Math.min(1, score / (AuditStore.maxScores[id] || 50));
+    const checkRule: Record<string, string> = {
+        financial: "Open non-debt accounts: 20 points for any record, up to 40 for filled beneficiary fields and up to 40 for numeric values, including zero. This does not verify institution records.",
+        insurance: "Any insurance policy record earns 50 points. Coverage, beneficiaries and claim requirements still need review.",
+        family: "Any saved contact earns 50 points. This does not confirm that the person knows their role or can access your records.",
+        medical: "Any medical directive record earns 50 points. Its content, original and applicable authority still need review.",
+        digital: "Any digital account record earns 50 points. This does not test credentials, recovery instructions or recipient access.",
+        legacy: "25 points each for any heirloom, any letter, a filled funeral wish, and any journal entry, visual memory or time-capsule message. This does not check their completeness or delivery.",
+    };
+    const sectionSources: Record<string, string[]> = {
+        financial: ["financial_assets"], insurance: ["insurance_policies"],
+        family: ["family_members"], medical: ["medical_directives"],
+        digital: ["digital_assets"],
+        legacy: ["heirlooms", "letters", "funeral_data", "journal_entries", "visual_memories", "time_capsule"],
+    };
 </script>
 
 <!-- Header Section -->
-<div class="flex items-center justify-between mb-12">
+<div class="flex flex-col items-start gap-6 sm:flex-row sm:items-center justify-between mb-12">
     <div>
-        <h2 class="text-3xl font-bold text-white mb-2">Estate Readiness Hub</h2>
+        <h1 class="text-3xl font-bold text-white mb-2">Record Coverage</h1>
         <p class="text-slate-400 max-w-2xl">
-            Track the completion status of every critical module in the estate.
-            This replaces the traditional "rollout" view with a live data
-            readiness check.
+            Points for recorded information in six areas. A filled check does not
+            establish legal validity, current values, access or a complete handover.
         </p>
     </div>
 
@@ -72,30 +77,27 @@
                 stroke-dashoffset={2 *
                     Math.PI *
                     60 *
-                    (1 - audit.percentage / 100)}
+                    (1 - (auditSources.canScore ? audit.percentage : 0) / 100)}
             />
         </svg>
         <div class="absolute inset-0 flex flex-col items-center justify-center">
             {#if isLoading}
-                <Loader2 size={28} class="animate-spin text-blue-400" />
+                {#if auditSources.hasErrors}<span class="text-3xl text-muted-foreground">—</span>
+                {:else}<Loader2 size={28} class="animate-spin text-info" />{/if}
             {:else}
                 <span class="text-3xl font-bold text-white"
                     >{audit.percentage}%</span
                 >
-                <span class="text-[10px] uppercase tracking-widest text-slate-500"
-                    >Ready</span
+                <span class="text-[10px] uppercase tracking-widest text-muted-foreground"
+                    >{auditSources.confirmed ? "Record checks" : "Provisional"}</span
                 >
             {/if}
         </div>
     </div>
 </div>
 
-{#if isLoading}
-    <div class="flex flex-col items-center justify-center gap-3 py-16" role="status" data-testid="readiness-loading">
-        <Loader2 class="w-8 h-8 animate-spin text-blue-400" />
-        <p class="text-sm text-slate-400">Gathering your records...</p>
-    </div>
-{:else}
+<AuditSourceStatus state={auditSources} />
+{#if !isLoading}
 <!-- Module Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {#each Object.entries(audit.moduleScores) as [id, score], i}
@@ -114,27 +116,65 @@
             <!-- Mini Progress Bar -->
             <div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
                 <div
-                    class="h-full bg-blue-500 transition-all duration-500"
+                    class="h-full bg-info transition-all duration-500"
                     style="width: {share(id, score) * 100}%"
                 ></div>
             </div>
 
             <p class="text-sm text-slate-400 mb-4">
                 {#if score === 0}
-                    Ready when you are.
+                    No points from these record checks yet.
                 {:else if share(id, score) < 1}
-                    A good start.
+                    Some checked fields are filled.
                 {:else}
-                    Well covered.
+                    These record checks are filled.
                 {/if}
             </p>
+            <p class="text-xs text-slate-400 mb-4">{checkRule[id]}</p>
+            <details class="mb-4 text-xs text-slate-300" data-coverage-sources={id}>
+                <summary class="cursor-pointer font-semibold">Source records for these checks</summary>
+                <p class="mt-2 text-slate-400">Loaded source IDs before the scoring rules above are applied. A listed row does not necessarily add points.</p>
+                {#each auditSources.sources.filter((source) => sectionSources[id]?.includes(source.id)) as source (source.id)}
+                    <div class="mt-3" data-coverage-source={source.id}>
+                        <a class="underline underline-offset-2" href={source.path}>{source.name}</a>
+                        <span class="text-slate-400"> · {source.state === "ready" ? "Loaded" : source.state === "error" ? "Refresh failed" : "Device copy"}</span>
+                        {#if source.recordIds.length > 0}
+                            <ul class="mt-1 space-y-1 break-all">
+                                {#each source.recordIds as recordId}
+                                    <li data-coverage-record-id={recordId}>Source ID: {recordId}</li>
+                                {/each}
+                            </ul>
+                        {:else}
+                            <p class="mt-1 text-slate-400">No source IDs returned.</p>
+                        {/if}
+                    </div>
+                {/each}
+            </details>
+
+            {#if id === "family"}
+                <div class="mb-4 text-sm text-slate-300" data-testid="contact-readiness-evidence">
+                    <p class="text-xs text-slate-400 mb-3">{audit.contactEvidence.rule}</p>
+                    <p class="font-medium mb-2">Recorded contacts: {audit.contactEvidence.includedContacts.length}</p>
+                    {#each audit.contactEvidence.includedContacts as contact (contact.id)}
+                        <details class="border-t border-slate-800 py-2" data-contact-id={contact.id}>
+                            <summary class="cursor-pointer break-words">{contact.name} <span class="text-xs text-slate-400">#{contact.id}</span></summary>
+                            <dl class="mt-2 space-y-1 text-xs break-words">
+                                <div><dt class="inline text-slate-400">Role: </dt><dd class="inline">{contact.role}</dd></div>
+                                {#if contact.relation}<div><dt class="inline text-slate-400">Relationship: </dt><dd class="inline">{contact.relation}</dd></div>{/if}
+                                {#if contact.email}<div><dt class="inline text-slate-400">Email: </dt><dd class="inline">{contact.email}</dd></div>{/if}
+                                {#if contact.phone}<div><dt class="inline text-slate-400">Phone: </dt><dd class="inline">{contact.phone}</dd></div>{/if}
+                            </dl>
+                        </details>
+                    {/each}
+                </div>
+            {/if}
 
             <div class="flex justify-end">
                 <a
                     href="/modules/{modulePath[id] ?? id}"
-                    class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium"
+                    class="text-xs text-primary hover:text-primary-hover flex items-center gap-1 font-medium"
                 >
-                    Go to Module <ArrowRight size={12} />
+                    {id === "family" ? "View contact records" : "Go to Module"} <ArrowRight size={12} />
                 </a>
             </div>
         </div>
@@ -144,13 +184,13 @@
 <!-- Action Cards -->
 {#if audit.issues.length > 0}
     <div class="mt-12">
-        <h3 class="text-xl font-bold text-white mb-6">Priority Actions</h3>
+        <h3 class="text-xl font-bold text-white mb-6">Questions to Review</h3>
         <div class="space-y-3">
             {#each audit.issues.slice(0, 5) as issue}
                 <div
-                    class="flex items-center gap-4 p-4 bg-slate-900/50 border-l-4 border-amber-500 rounded-r-lg"
+                    class="flex items-center gap-4 p-4 bg-slate-900/50 border-l-4 border-warning rounded-r-lg"
                 >
-                    <CircleCheck class="text-amber-500 shrink-0" size={20} />
+                    <CircleCheck class="text-warning shrink-0" size={20} />
                     <span class="text-slate-300 text-sm font-medium"
                         >{issue}</span
                     >

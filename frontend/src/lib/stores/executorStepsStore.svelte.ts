@@ -5,6 +5,13 @@
  * `${stepId}:${n}` where n is the checkbox's position in that step, so the table needs no new column.
  */
 import { registerSync } from "$lib/services/sync.svelte";
+import { get } from 'svelte/store';
+import { auth } from './auth';
+import { activeAccountId } from './keyringStore';
+import { currentProfileId } from './profileContext';
+import { getStored, setStored } from './persistence';
+import { notifications } from './notificationStore';
+import { captureSession, isCurrentSession, SessionChangedError, type SessionOwnership } from '$lib/services/sessionOwnership';
 
 export interface ExecutorStepRecord {
     id: number | string;
@@ -13,11 +20,11 @@ export interface ExecutorStepRecord {
     note: string;
 }
 
-const mapper = (d: any): ExecutorStepRecord => ({
-    id: d.id,
+const mapper = (d: Record<string, unknown>): ExecutorStepRecord => ({
+    id: d.id as number | string,
     stepId: String(d.stepId ?? d.step_id ?? ''),
     done: !!d.done,
-    note: d.note ?? '',
+    note: (d.note ?? '') as string,
 });
 
 const stepSync = registerSync<ExecutorStepRecord>('executor_steps', 'executor_steps', mapper);
@@ -60,21 +67,132 @@ function latest(stepId: string): ExecutorStepRecord | undefined {
     return found;
 }
 
-// One write at a time per step: a quick second tick waits for the first row to exist.
+type StepChanges = Partial<Pick<ExecutorStepRecord, 'done' | 'note'>>;
+type Owner = { session: SessionOwnership; account: string; profile: string };
+type PendingStep = { key: string; changes: StepChanges; recoveryIds: string[] };
+const PENDING_KEY = 'executor_steps_pending';
+const captureOwner = (): Owner => ({ session: captureSession(), account: get(activeAccountId) || 'anonymous', profile: get(currentProfileId) || 'owner' });
+const namespace = (owner: Owner) => `continuum_acc_${owner.account}_prof_${owner.profile}`;
+const currentOwner = (owner: Owner) => isCurrentSession(owner.session)
+    && owner.account === get(activeAccountId) && owner.profile === (get(currentProfileId) || 'owner');
+const pendingScopes = new Map<string, Record<string, PendingStep>>();
+const recoveryNotices = new Map<string, { id: string; owner: Owner }>();
+
+function pendingFor(owner: Owner) {
+    const scope = namespace(owner);
+    let pending = pendingScopes.get(scope);
+    if (!pending) {
+        pending = getStored<Record<string, PendingStep>>(PENDING_KEY, {}, owner.profile, owner.account);
+        if (!pending || typeof pending !== 'object' || Array.isArray(pending)) pending = {};
+        pendingScopes.set(scope, pending);
+    }
+    return pending;
+}
+
+function keepPending(owner: Owner) {
+    // Memory remains available if this device's cache is full.
+    try { setStored(PENDING_KEY, pendingFor(owner), owner.profile, owner.account); }
+    catch (e) { console.warn('[executor] Keeping the queued draft in memory', e); }
+}
+
+function release(owner: Owner, ids: string[]) {
+    if (!currentOwner(owner)) return;
+    ids.forEach(id => stepSync.releaseRecovery(id, owner.session));
+}
+
+function offerRecovered(owner: Owner, message = 'Your earlier draft is kept. Review your saved list, then choose Try Again to apply that change.') {
+    if (!currentOwner(owner)) return;
+    for (const [stepId, draft] of Object.entries(pendingFor(owner))) {
+        const key = `${namespace(owner)}:${stepId}`;
+        if (chains.has(key) || recoveryNotices.has(key)) continue;
+        release(owner, draft.recoveryIds);
+        const id = notifications.showError({
+            message,
+            code: 'DATABASE_ERROR'
+        }, () => { void retryStep(owner, stepId).catch(() => {}); });
+        recoveryNotices.set(key, { id, owner });
+    }
+}
+
+async function retryStep(owner: Owner, stepId: string) {
+    if (!currentOwner(owner)) return;
+    const pending = pendingFor(owner)[stepId];
+    if (!pending) return;
+    release(owner, pending.recoveryIds);
+    const key = `${namespace(owner)}:${stepId}`;
+    const notice = recoveryNotices.get(key);
+    if (notice) notifications.dismiss(notice.id);
+    recoveryNotices.delete(key);
+    // A prior create may have reached the server before its reply was interrupted.
+    await stepSync.sync();
+    if (!currentOwner(owner)) throw new SessionChangedError();
+    // sync() retains the device copy and resolves on a failed GET. It is not permission
+    // to create another row while the result of an earlier create is still unknown.
+    if (stepSync.status !== 'synced' || !stepSync.lastSync) {
+        offerRecovered(owner, "Your draft is kept. Choose Try Again to load your saved list before applying this change.");
+        return;
+    }
+    return save(stepId, pending.changes);
+}
+
+// One write per account/profile/step. Drafts are retained before a queued closure starts.
 const chains = new Map<string, Promise<unknown>>();
-function queue(stepId: string, write: () => Promise<unknown>) {
-    const next = (chains.get(stepId) ?? Promise.resolve()).catch(() => {}).then(write);
-    chains.set(stepId, next);
+function queue(owner: Owner, stepId: string, write: () => Promise<unknown>) {
+    const key = `${namespace(owner)}:${stepId}`;
+    const next = (chains.get(key) ?? Promise.resolve()).catch(() => {}).then(write);
+    chains.set(key, next);
+    const settled = () => {
+        if (chains.get(key) !== next) return;
+        chains.delete(key);
+        const current = captureOwner();
+        if (namespace(current) === namespace(owner) && currentOwner(current)) offerRecovered(current);
+    };
+    next.then(settled, settled);
     return next;
 }
 
-function save(stepId: string, changes: Partial<Pick<ExecutorStepRecord, 'done' | 'note'>>) {
-    return queue(stepId, () => {
+function save(stepId: string, changes: StepChanges) {
+    const owner = captureOwner();
+    if (!currentOwner(owner)) return Promise.reject(new SessionChangedError());
+    const pending = pendingFor(owner);
+    const key = crypto.randomUUID();
+    const draft: PendingStep = { key, changes: { ...pending[stepId]?.changes, ...changes }, recoveryIds: [...(pending[stepId]?.recoveryIds || []), key] };
+    pending[stepId] = draft;
+    keepPending(owner);
+    return queue(owner, stepId, async () => {
+        if (!currentOwner(owner)) throw new SessionChangedError();
         const row = latest(stepId);
-        if (row) return stepSync.update(row.id, changes);
-        return stepSync.create({ id: crypto.randomUUID(), stepId, done: false, note: '', ...changes });
+        const retry = () => retryStep(owner, stepId);
+        const saved = row
+            ? await stepSync.update(row.id, draft.changes, true, retry, key)
+            : await stepSync.create({ id: crypto.randomUUID(), stepId, done: false, note: '', ...draft.changes }, false, false, retry, key);
+        if (!currentOwner(owner)) throw new SessionChangedError();
+        const latestDraft = pendingFor(owner)[stepId];
+        if (latestDraft?.key === key) {
+            release(owner, latestDraft.recoveryIds);
+            delete pendingFor(owner)[stepId];
+            const noticeKey = `${namespace(owner)}:${stepId}`;
+            const notice = recoveryNotices.get(noticeKey);
+            if (notice) notifications.dismiss(notice.id);
+            recoveryNotices.delete(noticeKey);
+        } else if (latestDraft) latestDraft.recoveryIds = latestDraft.recoveryIds.filter(id => id !== key);
+        keepPending(owner);
+        return saved;
     });
 }
+
+function recoverCurrentOwner() {
+    for (const [key, notice] of recoveryNotices) {
+        if (!currentOwner(notice.owner)) { notifications.dismiss(notice.id); recoveryNotices.delete(key); }
+    }
+    const owner = captureOwner();
+    if (currentOwner(owner) && Object.keys(pendingFor(owner)).length) {
+        queueMicrotask(() => { if (currentOwner(owner)) void stepSync.sync().then(() => offerRecovered(owner)); });
+    }
+}
+auth.subscribe(recoverCurrentOwner);
+activeAccountId.subscribe(recoverCurrentOwner);
+currentProfileId.subscribe(recoverCurrentOwner);
 
 /** Row key for the n-th checkbox inside a step's detail. */
 const subKey = (stepId: string, n: number) => `${stepId}:${n}`;
@@ -82,7 +200,7 @@ const subKey = (stepId: string, n: number) => `${stepId}:${n}`;
 export const executorSteps = {
     get items() { return stepSync.items; },
     get status() { return stepSync.status; },
-    sync: () => stepSync.sync(),
+    sync: async () => { const owner = captureOwner(); await stepSync.sync(); offerRecovered(owner); },
     isDone: (stepId: string) => !!latest(stepId)?.done,
     noteFor: (stepId: string) => latest(stepId)?.note ?? '',
     toggle: (stepId: string) => save(stepId, { done: !latest(stepId)?.done }),

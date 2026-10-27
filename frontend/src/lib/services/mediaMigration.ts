@@ -1,256 +1,214 @@
-/**
- * Media Migration Utility
- * Helps migrate media from IndexedDB to backend storage
- */
-
-import { mediaStorage } from './indexedDB';
+import { browserStorage } from "./browserStorage";
+/** Recover current account uploads only after their durable record links read back. */
+import { API_BASE_URL } from '$lib/config';
+import { mediaStorage, captureMediaOwner, requireMediaOwner, mediaMappingKey, type MediaOwner, type PendingMediaUpload } from './indexedDB';
 import { uploadMediaDirect, verifyMediaRetrieval } from './mediaService';
+import { SessionChangedError, sessionToken } from './sessionOwnership';
+import { mediaReferences } from '$lib/utils/mediaStorage';
+import type { Snapshot } from './exportService';
 
-export interface MigrationProgress {
-    total: number;
-    completed: number;
-    failed: number;
-    current: string;
-}
+export interface MigrationProgress { total: number; completed: number; failed: number; current: string }
+export interface MigrationResult { success: boolean; total: number; migrated: number; failed: number; errors: Array<{ id: string; error: string }> }
+export interface PendingMediaSummary { id: string; filename: string; area: string; canRecover: boolean }
 
-export interface MigrationResult {
-    success: boolean;
-    total: number;
-    migrated: number;
-    failed: number;
-    errors: Array<{ id: string; error: string }>;
-}
-
-/**
- * Get all media IDs from IndexedDB
- */
-async function getAllMediaIds(): Promise<string[]> {
-    // Through indexedDB.ts, so the store is created with the database (a bare
-    // open here used to create an empty database that never got its store)
-    try {
-        return await mediaStorage.keys();
-    } catch {
-        return [];
-    }
-}
-
-/**
- * Parse media ID to extract module and reference info
- * Expected format: "heirlooms_<id>_image" or "properties_<id>_photo_<index>"
- */
-const EXTENSION_BY_TYPE: Record<string, string> = {
-    'application/pdf': 'pdf', 'text/plain': 'txt', 'text/csv': 'csv',
-    'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp', 'image/heic': 'heic',
-    'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov',
-    'audio/mpeg': 'mp3', 'audio/wav': 'wav', 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a'
+const areas: Record<string, string> = {
+    heirlooms: 'heirlooms', properties: 'properties', visual_memories: 'visual-memories',
+    time_capsules: 'time-capsule', documents: 'legal-documents', financial: 'financial-accounts',
+    insurance: 'insurance', pets: 'pets', medical_directives: 'medical', advanced_assets: 'advanced-registry', family_memories: 'family-hub'
 };
-
-function parseMediaId(id: string, blob?: Blob): { module: string; referenceId?: string; filename: string } {
-    // Uploads that mediaService kept locally: "pending:<module>:<referenceId>:<time>"
-    if (id.startsWith('pending:')) {
-        const [, module, referenceId] = id.split(':');
-        const name = blob instanceof File && blob.name ? blob.name : `${id.replace(/:/g, '_')}`;
-        return { module: module || 'general', referenceId: referenceId || undefined, filename: name };
-    }
-    const typed = blob?.type ? EXTENSION_BY_TYPE[blob.type.split(';')[0].trim().toLowerCase()] : undefined;
-    const parsed = parseLegacyId(id);
-    if (blob instanceof File && blob.name) parsed.filename = blob.name;
-    else if (typed) parsed.filename = parsed.filename.replace(/\.[a-z0-9]+$/, `.${typed}`);
-    return parsed;
+function fileInfo(id: string, blob: Blob) {
+    const [, module, referenceId] = id.split(':');
+    return { module: module || 'general', referenceId: referenceId || undefined,
+        filename: blob instanceof File && blob.name ? blob.name : 'Browser copy',
+        area: `/modules/${areas[module] || 'legal-documents'}` };
 }
-
-function parseLegacyId(id: string): { module: string; referenceId?: string; filename: string } {
-    const parts = id.split('_');
-
-    // Default values
-    let module = 'general';
-    let referenceId: string | undefined;
-    let filename = `${id}.jpg`; // Default extension
-
-    if (parts.length >= 2) {
-        // First part is usually the module
-        const moduleMap: Record<string, string> = {
-            'heirlooms': 'heirlooms',
-            'heirloom': 'heirlooms',
-            'properties': 'properties',
-            'property': 'properties',
-            'visual': 'visual_memories',
-            'visualmemory': 'visual_memories',
-            'timecapsule': 'time_capsules',
-            'capsule': 'time_capsules'
-        };
-
-        const detectedModule = moduleMap[parts[0].toLowerCase()];
-        if (detectedModule) {
-            module = detectedModule;
-            referenceId = parts[1];
-
-            // Try to determine file type from the ID
-            const idLower = id.toLowerCase();
-            if (idLower.includes('video')) {
-                filename = `${id}.mp4`;
-            } else if (idLower.includes('audio')) {
-                filename = `${id}.mp3`;
-            } else {
-                filename = `${id}.jpg`;
-            }
-        }
+export async function listPendingMedia(owner = requireMediaOwner()): Promise<PendingMediaSummary[]> {
+    const summaries: PendingMediaSummary[] = [];
+    for (const id of await mediaStorage.keys(owner)) {
+        const pending = await mediaStorage.getPending(id, owner);
+        requireMediaOwner(owner);
+        if (!pending) continue;
+        const info = fileInfo(id, pending.blob);
+        summaries.push({ id, filename: pending.uploads[0]?.filename || info.filename, area: info.area, canRecover: pending.uploads.length > 0 });
     }
-
-    return { module, referenceId, filename };
+    return summaries;
 }
-
-/**
- * Migrate a single media file from IndexedDB to backend
- */
-async function migrateSingleMedia(
-    id: string,
-    onProgress?: (id: string) => void
-): Promise<{ id: string; mediaId: number; downloadUrl: string }> {
-    if (onProgress) onProgress(id);
-
-    // Get blob from IndexedDB
-    const blob = await mediaStorage.get(id);
-    if (!blob) {
-        throw new Error('Media not found in IndexedDB');
-    }
-
-    // Parse ID to get module info
-    const { module, referenceId, filename } = parseMediaId(id, blob);
-
-    // Convert blob to File
-    const file = new File([blob], filename, { type: blob.type });
-
-    // Upload to backend (the original stays in IndexedDB until it reads back)
-    const response = await uploadMediaDirect(file, module, referenceId, `Migrated from IndexedDB: ${id}`);
-
-    if (!(await verifyMediaRetrieval(response.id, file.size))) {
-        throw new Error(`Server copy ${response.id} did not read back yet; the local original is kept`);
-    }
-
-    return {
-        id,
-        mediaId: response.id,
-        downloadUrl: response.download_url
-    };
-}
-
-/**
- * Migrate all media from IndexedDB to backend
- */
-export async function migrateAllMedia(
-    onProgress?: (progress: MigrationProgress) => void
-): Promise<MigrationResult> {
-    const errors: Array<{ id: string; error: string }> = [];
-    const migrations: Array<{ oldId: string; newId: number; downloadUrl: string }> = [];
-
+export async function savePendingCopy(id: string, owner = requireMediaOwner()): Promise<void> {
+    const pending = await mediaStorage.getPending(id, owner);
+    requireMediaOwner(owner);
+    if (!pending) throw new Error('Please refresh the browser copy list.');
+    const url = URL.createObjectURL(pending.blob);
     try {
-        // Get all media IDs from IndexedDB
-        const mediaIds = await getAllMediaIds();
-        const total = mediaIds.length;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = pending.uploads[0]?.filename || fileInfo(id, pending.blob).filename;
+        link.click();
+    } finally { setTimeout(() => URL.revokeObjectURL(url), 1000); }
+}
+async function request(path: string, owner: MediaOwner, body?: Record<string, unknown>): Promise<any> {
+    requireMediaOwner(owner);
+    const token = sessionToken(owner.session);
+    const response = await fetch(`${API_BASE_URL}${path}`, { method: body ? 'PUT' : 'GET',
+        headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+        ...(body ? { body: JSON.stringify(body) } : {}) });
+    requireMediaOwner(owner);
+    if (!response.ok) throw new Error('The browser original is kept. Try its saved record again when you are ready.');
+    const value = await response.json();
+    requireMediaOwner(owner);
+    return value;
+}
+function collectionPath(section: string): string {
+    const dedicated: Record<string, string> = { visual_memories: '/api/memories/visual', family_memories: '/api/memories/family',
+        external_archives: '/api/memories/archives', contacts: '/api/contacts', medical_profiles: '/api/medical/profile' };
+    return dedicated[section] || `/api/data/${section}`;
+}
+const rowId = (section: string, row: Record<string, unknown>) => section === 'medical_profiles' ? 'profile' : String(row.id);
+const snapshot = (owner: MediaOwner): Promise<Snapshot> => request('/api/export/snapshot', owner);
+const advancedLists: Record<string, string> = {
+    asset_transactions: 'transactions', maintenance_logs: 'maintenance', insurance_claims: 'claims',
+};
+type MediaParent = { section: string; id: string };
 
-        if (total === 0) {
-            return {
-                success: true,
-                total: 0,
-                migrated: 0,
-                failed: 0,
-                errors: []
-            };
-        }
-
-        let completed = 0;
-        let failed = 0;
-
-        // Migrate each file
-        for (const id of mediaIds) {
-            try {
-                const result = await migrateSingleMedia(id, (currentId) => {
-                    if (onProgress) {
-                        onProgress({
-                            total,
-                            completed,
-                            failed,
-                            current: currentId
-                        });
-                    }
-                });
-
-                migrations.push({
-                    oldId: result.id,
-                    newId: result.mediaId,
-                    downloadUrl: result.downloadUrl
-                });
-                // Record the mapping before removing the original, so records that
-                // still hold the old id resolve to the server copy (indexedDB.ts getUrl)
-                saveMigrationMapping(migrations);
-
-                completed++;
-
-                // The server copy read back with the same size, so the local original can go
-                await mediaStorage.delete(id);
-
-            } catch (error: any) {
-                console.error(`Failed to migrate ${id}:`, error);
-                errors.push({
-                    id,
-                    error: error.message || 'Unknown error'
-                });
-                failed++;
-            }
-
-            // Update progress
-            if (onProgress) {
-                onProgress({
-                    total,
-                    completed,
-                    failed,
-                    current: id
-                });
+/** Snapshot history rows live inside one raw singleton, rather than collection APIs. */
+async function repairAdvancedParents(parents: MediaParent[], ids: Set<number>, target: PendingMediaUpload, owner: MediaOwner): Promise<void> {
+    const history = parents.filter(parent => advancedLists[parent.section]);
+    if (!history.length) return;
+    const saved = await request('/api/data/advanced_assets', owner);
+    if (saved?.id == null) throw new Error('The saved record changed. Your browser copy is ready to save separately.');
+    for (const [section, field] of Object.entries(advancedLists)) {
+        const required = history.filter(parent => parent.section === section);
+        if (!required.length) continue;
+        const raw = saved[field];
+        let rows: unknown;
+        try { rows = typeof raw === 'string' ? JSON.parse(raw) : null; } catch { rows = null; }
+        if (!Array.isArray(rows)) throw new Error('The saved record changed. Your browser copy is ready to save separately.');
+        const objectRow = (row: unknown): row is Record<string, unknown> => !!row && typeof row === 'object' && !Array.isArray(row);
+        // Match export's fallback identity without inserting synthetic ids into saved rows.
+        const idOf = (row: Record<string, unknown>, index: number) => row.id == null || row.id === ''
+            ? `${saved.id}:${field}:${index}` : String(row.id);
+        for (const parent of required) {
+            const row = rows.find((row, index) => objectRow(row) && idOf(row, index) === parent.id);
+            if (!objectRow(row) || ![...mediaReferences(section, row).ids].some(mid => ids.has(mid))) {
+                throw new Error('The saved record changed. Your browser copy is ready to save separately.');
             }
         }
-
-
-        return {
-            success: failed === 0,
-            total,
-            migrated: completed,
-            failed,
-            errors
-        };
-
-    } catch (error: any) {
-        console.error('Migration failed:', error);
-        return {
-            success: false,
-            total: 0,
-            migrated: 0,
-            failed: 0,
-            errors: [{ id: 'migration', error: error.message }]
-        };
+        let changed = false;
+        const next = rows.map(row => {
+            if (!objectRow(row)) return row;
+            const { updates } = mediaReferences(section, row, { ids, target });
+            if (!Object.keys(updates).length) return row;
+            changed = true;
+            return { ...row, ...updates };
+        });
+        if (changed) await request(`/api/data/advanced_assets/${encodeURIComponent(saved.id)}`, owner, {
+            data: { [field]: JSON.stringify(next) }, if_unchanged: { [field]: raw },
+        });
     }
+}
+async function exactCopy(id: number, original: Blob, owner: MediaOwner): Promise<boolean> {
+    const verified = await verifyMediaRetrieval(id, original, owner.session);
+    requireMediaOwner(owner);
+    return verified;
+}
+async function recoverFile(id: string, owner: MediaOwner): Promise<void> {
+    const pending = await mediaStorage.getPending(id, owner);
+    requireMediaOwner(owner);
+    if (!pending?.uploads.length) throw new Error('Save a copy, then add it to the record you choose.');
+    const sourceIds = new Set(pending.uploads.map(u => u.id));
+    const initial = await snapshot(owner);
+    const parents = Object.entries(initial.sections).flatMap(([section, rows]) => rows
+        .filter(row => [...mediaReferences(section, row).ids].some(mid => sourceIds.has(mid)))
+        .map(row => ({ section, id: rowId(section, row) })));
+    if (!parents.length) throw new Error('Save a copy, then add it to the record you choose.');
+
+    let target: PendingMediaUpload | undefined;
+    for (const upload of [...pending.uploads].reverse()) {
+        if (await exactCopy(upload.id, pending.blob, owner)) { target = upload; break; }
+    }
+    if (!target) {
+        const info = fileInfo(id, pending.blob);
+        target = await uploadMediaDirect(new File([pending.blob], pending.uploads[0].filename, { type: pending.blob.type }),
+            info.module, info.referenceId, undefined, undefined, owner.session);
+        requireMediaOwner(owner);
+        // Remember the returned identity before any parent write. A retry reuses it even
+        // if a previous parent PUT committed but its response was interrupted.
+        await mediaStorage.rememberUpload(id, target, owner);
+        sourceIds.add(target.id);
+        if (!(await exactCopy(target.id, pending.blob, owner))) throw new Error('The browser original is kept while its account copy waits to read back.');
+    }
+    await repairAdvancedParents(parents, sourceIds, target, owner);
+    for (const parent of parents) {
+        if (advancedLists[parent.section]) continue;
+        const path = collectionPath(parent.section);
+        const collection = await request(path, owner);
+        const rows = Array.isArray(collection) ? collection : [collection];
+        const fresh = rows.find(row => row && rowId(parent.section, row) === parent.id);
+        if (!fresh || ![...mediaReferences(parent.section, fresh).ids].some(mid => sourceIds.has(mid))) {
+            throw new Error('The saved record changed. Your browser copy is ready to save separately.');
+        }
+        const { updates } = mediaReferences(parent.section, fresh, { ids: sourceIds, target });
+        if (Object.keys(updates).length) await request(parent.section === 'medical_profiles' ? path : `${path}/${encodeURIComponent(parent.id)}`, owner, updates);
+    }
+    const verified = await snapshot(owner);
+    // A second record can acquire an old reference during this run. Keep the original
+    // for another pass, including references in author text that we never rewrite.
+    if ([...verified.attachments, ...verified.missing_attachments].some(a => sourceIds.has(a.media_id) && a.media_id !== target.id)) {
+        throw new Error('The browser original is kept while its other saved record links are checked.');
+    }
+    for (const parent of parents) {
+        const row = verified.sections[parent.section]?.find(row => rowId(parent.section, row) === parent.id);
+        const refs = row && mediaReferences(parent.section, row).ids;
+        if (!refs?.has(target.id) || [...refs].some(mid => sourceIds.has(mid) && mid !== target.id)
+            || !verified.attachments.some(a => a.media_id === target!.id && a.records.some(r => r.section === parent.section && String(r.id) === parent.id))) {
+            throw new Error('The browser original is kept while its saved record waits to read back.');
+        }
+    }
+    if (!(await exactCopy(target.id, pending.blob, owner))) throw new Error('The browser original is kept while its account copy waits to read back.');
+    requireMediaOwner(owner);
+    saveMigrationMapping([{ oldId: id, newId: target.id, downloadUrl: target.download_url }], owner);
+    await mediaStorage.delete(id, owner);
+}
+export async function migrateAllMedia(onProgress?: (progress: MigrationProgress) => void, owner = requireMediaOwner()): Promise<MigrationResult> {
+    const errors: MigrationResult['errors'] = [];
+    const ids = await mediaStorage.keys(owner);
+    let migrated = 0;
+    for (const id of ids) {
+        requireMediaOwner(owner);
+        onProgress?.({ total: ids.length, completed: migrated, failed: errors.length, current: id });
+        try { await recoverFile(id, owner); migrated++; }
+        catch (error) {
+            if (error instanceof SessionChangedError) throw error;
+            errors.push({ id, error: error instanceof Error ? error.message : 'The browser original is kept. Please try again.' });
+        }
+    }
+    requireMediaOwner(owner);
+    return { success: errors.length === 0, total: ids.length, migrated, failed: errors.length, errors };
 }
 
 /** Merge new entries into the stored mapping (earlier runs are kept). */
-function saveMigrationMapping(entries: Array<{ oldId: string; newId: number; downloadUrl: string }>): void {
+function saveMigrationMapping(entries: Array<{ oldId: string; newId: number; downloadUrl: string }>, owner: MediaOwner): void {
+    requireMediaOwner(owner);
     let existing: Array<{ oldId: string; newId: number; downloadUrl: string }> = [];
     try {
-        existing = JSON.parse(localStorage.getItem('media_migration_mapping') || '[]');
+        existing = JSON.parse(browserStorage.getItem(mediaMappingKey(owner)) || '[]');
         if (!Array.isArray(existing)) existing = [];
     } catch {
         existing = [];
     }
     const byOld = new Map(existing.map((m) => [m.oldId, m]));
     for (const m of entries) byOld.set(m.oldId, m);
-    localStorage.setItem('media_migration_mapping', JSON.stringify([...byOld.values()]));
+    requireMediaOwner(owner);
+    browserStorage.setItem(mediaMappingKey(owner), JSON.stringify([...byOld.values()]));
 }
 
 /**
  * Get migration mapping from localStorage
  * Returns map of oldId -> { newId, downloadUrl }
  */
-export function getMigrationMapping(): Record<string, { newId: number; downloadUrl: string }> {
-    const mapping = localStorage.getItem('media_migration_mapping');
+export function getMigrationMapping(owner = captureMediaOwner()): Record<string, { newId: number; downloadUrl: string }> {
+    if (!owner) return {};
+    requireMediaOwner(owner);
+    const mapping = browserStorage.getItem(mediaMappingKey(owner));
     if (!mapping) return {};
 
     try {
@@ -273,18 +231,12 @@ export function getMigrationMapping(): Record<string, { newId: number; downloadU
 /**
  * Clear migration mapping after successful reference updates
  */
-export function clearMigrationMapping(): void {
-    localStorage.removeItem('media_migration_mapping');
+export function clearMigrationMapping(owner = requireMediaOwner()): void {
+    requireMediaOwner(owner);
+    browserStorage.removeItem(mediaMappingKey(owner));
 }
 
-/**
- * Check if migration is needed (IndexedDB has media)
- */
-export async function needsMigration(): Promise<boolean> {
-    try {
-        const mediaIds = await getAllMediaIds();
-        return mediaIds.length > 0;
-    } catch {
-        return false;
-    }
+export async function needsMigration(owner = captureMediaOwner()): Promise<boolean> {
+    if (!owner) return false;
+    try { return (await mediaStorage.keys(owner)).length > 0; } catch { return false; }
 }

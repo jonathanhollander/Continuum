@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { aiJobId, aiSourceFacts } from "$lib/services/aiCapabilities";
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, fly, slide, scale } from "svelte/transition";
@@ -39,7 +41,7 @@
 
     let parsedCustomAttributes = $state<Record<string, any>>({});
     let isLoading = $state(true);
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('timeline'));
 
     onMount(async () => {
         await timelineStore.sync?.();
@@ -50,16 +52,21 @@
     // LifeEvent imported from store
 
     let getContactById = $derived((id: string | number | undefined) =>
-        familyStore.members.find((m) => m.id === id),
+        // The server keeps the contact id as text; contact ids are numbers.
+        id == null ? undefined : familyStore.members.find((m) => String(m.id) === String(id)),
     );
 
     let showMemento = $state(false);
-    let birthYear = $state(1990);
     let currentYear = new Date().getFullYear();
-    let lifeExpectancy = $state(85);
 
     // Use store directly
     let lifeEvents = $derived(timelineStore.items);
+
+    // A schematic timeline of recorded years, with current-year planning space.
+    let eventYears = $derived(
+        lifeEvents.map((e) => Number(e.year)).filter((y) => Number.isInteger(y) && y > 0),
+    );
+    let startYear = $derived(Math.min(currentYear, ...eventYears));
 
     let showAddModal = $state(false);
     let newEvent: Partial<LifeEvent> = $state({
@@ -74,25 +81,49 @@
         date: undefined,
     });
 
-    function saveEvent() {
-        if (!newEvent.label || !newEvent.year) return;
-
-        const eventData = {
-            ...newEvent,
+    let saving = $state(false);
+    const saveVersions = new WeakMap<object, number>();
+    const recoveryIds = new WeakMap<object, string>();
+    async function saveEvent() {
+        if (saving || !newEvent.label || !newEvent.year) return;
+        const form = newEvent;
+        const eventData: Partial<LifeEvent> = JSON.parse(JSON.stringify({
+            ...form,
             custom_attributes: JSON.stringify(parsedCustomAttributes),
+        }));
+        const version = (saveVersions.get(form) ?? 0) + 1;
+        saveVersions.set(form, version);
+        let completed = false;
+        const attempt = async () => {
+            if (saving || completed || saveVersions.get(form) !== version) return;
+            saving = true;
+            try {
+                const saved = eventData.id
+                    ? await timelineStore.updateEvent(eventData.id, eventData, attempt, recoveryIds.get(form))
+                    : await timelineStore.addEvent(eventData, attempt, recoveryIds.get(form));
+                completed = true;
+                recoveryIds.delete(form);
+                if (newEvent === form) {
+                    const current = { ...newEvent, custom_attributes: JSON.stringify(parsedCustomAttributes) };
+                    if (JSON.stringify(current) === JSON.stringify(eventData)) resetForm();
+                    else newEvent.id = saved.id; // newer typing stays open and continues this same record
+                }
+            } catch (e) {
+                if (e && typeof e === "object" && "recoveryId" in e && typeof e.recoveryId === "string") recoveryIds.set(form, e.recoveryId);
+                // The manager keeps the submitted operation for Retry; this editor keeps its words.
+            } finally {
+                saving = false;
+            }
         };
-
-        if (newEvent.id) {
-            timelineStore.updateEvent(newEvent.id, eventData);
-        } else {
-            timelineStore.addEvent(eventData);
-        }
-
-        resetForm();
+        await attempt();
     }
 
     function editEvent(event: LifeEvent) {
-        newEvent = { ...event };
+        // The contact select's option values are text, matching the id the server keeps.
+        newEvent = {
+            ...event,
+            assignedContactId: event.assignedContactId == null ? undefined : String(event.assignedContactId),
+        };
         parsedCustomAttributes = readCustom(event);
         showAddModal = true;
     }
@@ -112,34 +143,48 @@
         parsedCustomAttributes = {};
     }
 
-    function removeEvent(id: string | number) {
-        if (!confirm("Remove this event from your timeline?")) return;
+    async function removeEvent(id: string | number) {
+        if (!(await askConfirm("Remove this event from your timeline?"))) return;
         timelineStore.removeEvent(id);
     }
 
-    // Memento Mori Calculation
-    let weeksLived = (currentYear - birthYear) * 52;
+    // The weekly overview uses 52 schematic squares per year, rather than calendar dates.
+    let earlierCells = $derived(Math.max(0, (currentYear - startYear) * 52));
 
-    // Dynamic Grid Sizing: Furthest event OR Current Year + 3
+    // Exclusive upper boundary includes the entire latest recorded year.
     let maxEventYear = $derived(
-        lifeEvents.length > 0
-            ? Math.max(...lifeEvents.map((e) => e.year))
-            : currentYear,
+        eventYears.length > 0 ? Math.max(...eventYears) : currentYear,
     );
-    let endYear = $derived(Math.max(maxEventYear, currentYear + 3));
-    let totalWeeks = $derived((endYear - birthYear) * 52);
+    let endYear = $derived(Math.max(maxEventYear + 1, currentYear + 3));
+    let totalCells = $derived((endYear - startYear) * 52);
 
     // Zoom State
-    let pixelsPerYear = 20;
+    let pixelsPerYear = $state(20);
+    // Room either side so the first and last labels sit fully on the track
+    const TRACK_PAD = 80;
+    let trackWidth = $derived(TRACK_PAD * 2 + (endYear - startYear) * pixelsPerYear);
 
     function getPosition(year: number) {
-        return (year - birthYear) * pixelsPerYear;
+        return TRACK_PAD + (year - startYear) * pixelsPerYear;
     }
 
-    // Reactively calculate Memento Mori Grid Data
-    let hoveredWeek: any = null;
-    let tooltipX = 0;
-    let tooltipY = 0;
+    // One colour per event type, shared by the dots and the legend
+    const TYPE_STYLES: { type: LifeEvent["type"]; label: string; dot: string }[] = [
+        { type: "milestone", label: "Milestone", dot: "bg-purple-500" },
+        { type: "education", label: "Education", dot: "bg-blue-500" },
+        { type: "work", label: "Work", dot: "bg-emerald-500" },
+        { type: "relationship", label: "Relationship", dot: "bg-rose-500" },
+        { type: "accomplishment", label: "Accomplishment", dot: "bg-amber-700" },
+    ];
+    function dotClass(type: string) {
+        if (type === "future") return "bg-slate-400";
+        return TYPE_STYLES.find((t) => t.type === type)?.dot ?? "bg-purple-500";
+    }
+
+    // Events are grouped in their recorded year's first square.
+    let hoveredWeek: any = $state(null);
+    let tooltipX = $state(0);
+    let tooltipY = $state(0);
 
     function handleMouseMove(e: MouseEvent) {
         const tooltipWidth = 260; // Approx width of our w-64 tooltip + padding
@@ -160,21 +205,19 @@
         }
     }
 
-    let weeksData = $derived(
-        Array.from({ length: totalWeeks }, (_, i) => {
-            const isLived = i < weeksLived;
+    let weeklyCells = $derived(
+        Array.from({ length: totalCells }, (_, i) => {
+            const isEarlier = i < earlierCells;
 
-            // Find events that happened in this week (approximate)
-            // We broadly map events to the specific week index corresponding to the start of their year
+            // Preserve every record in its year's group; no week or birth date is inferred.
             const weekEvents = lifeEvents.filter((e) => {
-                const eventWeekStart = (e.year - birthYear) * 52;
-                // Match if the current week index 'i' is the one we calculated for this event's year
-                return Math.floor(eventWeekStart) === i;
+                const year = Number(e.year);
+                return Number.isInteger(year) && year > 0 && (year - startYear) * 52 === i;
             });
 
             return {
                 index: i,
-                isLived,
+                isEarlier,
                 events: weekEvents,
                 hasEvent: weekEvents.length > 0,
             };
@@ -199,24 +242,16 @@
     }
 </script>
 
-{#if isLoading}
-    <div class="flex items-center justify-center py-12">
-        <Loader2 class="w-8 h-8 animate-spin text-primary" />
-    </div>
-{:else}
-<div class="max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
-    <!-- Header -->
-    <LivingBlueprintHeader
+<LivingBlueprintHeader
         title="The Life Timeline"
-        subtitle="Your story isn't just a list of assets. It's a series of moments."
-        tier="legacy"
-        detailedDescription="Document the milestones, accomplishments, and meaningful moments that shaped your life. Create a visual narrative that helps your family understand who you were and what mattered to you."
-        whyMatters="Your life story deserves to be told. Without these memories preserved, the context of your journey may be lost. Your timeline becomes a gift of understanding for future generations."
+        subtitle="Events, accomplishments, and the stories behind them"
+        detailedDescription="Add a recognizable title, a year or date, and what happened. Explain who was involved and why the event matters to you. Mark an event as Accomplishment to include it in the Journal's accomplishments gallery."
+        whyMatters="Putting events in order gives your family the context around a memory, a relationship, or a turning point in your life."
     >
         <div class="flex items-center gap-3">
-            <DataViewToggle module="timeline" onchange={(mode) => viewMode = mode} />
+            <DataViewToggle module="timeline" />
             <button
-                class="px-4 py-2 rounded-lg text-sm font-bold bg-[#4A7C74] text-white shadow-md flex items-center gap-2 hover:bg-[#3b635d]"
+                class="px-4 py-2 rounded-lg text-sm font-bold bg-primary text-primary-foreground shadow-md flex items-center gap-2 hover:bg-primary-hover"
                 onclick={() => (showAddModal = true)}
             >
                 <Plus size={16} /> Add Event
@@ -224,45 +259,53 @@
         </div>
     </LivingBlueprintHeader>
 
+{#if isLoading}
+    <div class="flex items-center justify-center py-12">
+        <Loader2 class="w-8 h-8 animate-spin text-primary" />
+    </div>
+{:else}
+<div class="max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
 
     <!-- Add Modal -->
     {#if showAddModal}
-        <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: resetForm }}
+        <div role="dialog" aria-modal="true" aria-labelledby="timeline-dialog-title" use:focusTrap={{ onEscape: resetForm }}
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             transition:fade
         >
             <div
-                class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+                class="bg-card rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
                 in:scale
             >
                 <div
-                    class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50"
+                    class="p-4 border-b border-border flex justify-between items-center bg-muted"
                 >
-                    <h3 class="font-bold text-[#304743]">New Life Event</h3>
+                    <h3 id="timeline-dialog-title" class="font-bold text-primary-deep dark:text-primary-hover">{newEvent.id ? "Update this event" : "New Life Event"}</h3>
                     <button aria-label="Close" onclick={resetForm}
                         ><X
                             size={20}
-                            class="text-gray-400 hover:text-gray-600"
+                            class="text-muted-foreground hover:text-foreground"
                         /></button
                     >
                 </div>
                 <div class="p-6 space-y-4">
                     <div class="space-y-1">
-                        <label class="text-xs font-bold uppercase text-gray-400"
+                        <label for="timeline-label" class="text-xs font-bold uppercase text-muted-foreground"
                             >Label</label
                         >
                         <input
+                            id="timeline-label"
                             bind:value={newEvent.label}
-                            class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none"
+                            class="w-full p-2 rounded-lg border border-border focus:ring-2 ring-primary outline-none bg-card text-foreground"
                             placeholder="e.g. Started Business"
                         />
                     </div>
 
                     <div class="space-y-1">
                         <SmartTextarea
+                            job={{job_id:aiJobId("timeline", newEvent, newEvent.id)+":description",document_title:newEvent.label,source_facts:aiSourceFacts({label:newEvent.label,type:newEvent.type,year:newEvent.year,date:newEvent.date,assignedContactId:newEvent.assignedContactId})}}
                             bind:value={newEvent.description}
                             context="timeline"
-                            placeholder="Share the memory..."
+                            placeholder="What happened, who was involved, and why does this moment matter to you?"
                             label="Details"
                             minHeight="80px"
                         />
@@ -271,10 +314,12 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
                             <label
-                                class="text-xs font-bold uppercase text-gray-400"
+                                for="timeline-date"
+                                class="text-xs font-bold uppercase text-muted-foreground"
                                 >Date</label
                             >
                             <input
+                                id="timeline-date"
                                 type="date"
                                 value={newEvent.date ||
                                     (newEvent.year
@@ -284,22 +329,22 @@
                                     const val = e.currentTarget.value;
                                     newEvent.date = val;
                                     if (val) {
-                                        newEvent.year = new Date(
-                                            val,
-                                        ).getFullYear();
+                                        newEvent.year = Number(val.slice(0, 4));
                                     }
                                 }}
-                                class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none"
+                                class="w-full p-2 rounded-lg border border-border focus:ring-2 ring-primary outline-none bg-card text-foreground"
                             />
                         </div>
                         <div class="space-y-1">
                             <label
-                                class="text-xs font-bold uppercase text-gray-400"
+                                for="timeline-type"
+                                class="text-xs font-bold uppercase text-muted-foreground"
                                 >Type</label
                             >
                             <select
+                                id="timeline-type"
                                 bind:value={newEvent.type}
-                                class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none bg-white"
+                                class="w-full p-2 rounded-lg border border-border focus:ring-2 ring-primary outline-none bg-card text-foreground"
                             >
                                 <option value="milestone">Milestone</option>
                                 <option value="education">Education</option>
@@ -316,16 +361,17 @@
                     </div>
 
                     <div class="space-y-1">
-                        <label class="text-xs font-bold uppercase text-gray-400"
+                        <label for="timeline-contact" class="text-xs font-bold uppercase text-muted-foreground"
                             >Designated Contact</label
                         >
                         <select
+                            id="timeline-contact"
                             bind:value={newEvent.assignedContactId}
-                            class="w-full p-2 rounded-lg border focus:ring-2 ring-[#4A7C74] outline-none bg-white text-sm"
+                            class="w-full p-2 rounded-lg border border-border focus:ring-2 ring-primary outline-none bg-card text-foreground text-sm"
                         >
-                            <option value={undefined}>No one assigned</option>
+                            <option value={undefined}>Choose someone from your contacts</option>
                             {#each familyStore.members as member}
-                                <option value={member.id}
+                                <option value={String(member.id)}
                                     >{member.name} ({member.role})</option
                                 >
                             {/each}
@@ -334,16 +380,18 @@
 
                     {#if newEvent.type === "accomplishment"}
                         <div
-                            class="space-y-4 pt-2 border-t border-stone-100 animate-in fade-in slide-in-from-top-2 duration-300"
+                            class="space-y-4 pt-2 border-t border-border animate-in fade-in slide-in-from-top-2 duration-300"
                         >
                             <div class="space-y-1">
                                 <label
-                                    class="text-xs font-bold uppercase text-gray-400"
+                                    for="timeline-category"
+                                    class="text-xs font-bold uppercase text-muted-foreground"
                                     >Category</label
                                 >
                                 <select
+                                    id="timeline-category"
                                     bind:value={newEvent.category}
-                                    class="w-full p-2 rounded-lg border focus:ring-2 ring-amber-400 outline-none bg-white"
+                                    class="w-full p-2 rounded-lg border border-border focus:ring-2 ring-primary outline-none bg-card text-foreground"
                                 >
                                     <option value="Personal">Personal</option>
                                     <option value="Career">Career</option>
@@ -357,6 +405,7 @@
                             </div>
                             <div class="space-y-1">
                                 <SmartTextarea
+                            job={{job_id:aiJobId("timeline", newEvent, newEvent.id)+":reflection",document_title:newEvent.label,source_facts:aiSourceFacts({label:newEvent.label,type:newEvent.type,year:newEvent.year,date:newEvent.date,assignedContactId:newEvent.assignedContactId})}}
                                     bind:value={newEvent.reflection}
                                     context="storytelling"
                                     placeholder="What does this achievement mean to you?"
@@ -368,7 +417,7 @@
                     {/if}
 
                     <!-- Custom Fields -->
-                    <div class="pt-4 mt-4 border-t border-gray-100">
+                    <div class="pt-4 mt-4 border-t border-border">
                         <CustomFieldsManager
                             entityType="timeline"
                             bind:data={parsedCustomAttributes}
@@ -377,9 +426,11 @@
 
                     <button
                         onclick={saveEvent}
-                        class="w-full py-3 bg-[#4A7C74] text-white rounded-xl font-bold mt-2"
+                        disabled={saving}
+                        aria-busy={saving}
+                        class="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold mt-2 disabled:opacity-50"
                     >
-                        {newEvent.id ? "Update Event" : "Add to Timeline"}
+                        {saving ? "Saving..." : newEvent.id ? "Update Event" : "Add to Timeline"}
                     </button>
                 </div>
             </div>
@@ -391,23 +442,23 @@
         <div class="flex flex-col items-end gap-4">
             <div class="flex gap-4">
                 <div
-                    class="flex items-center gap-2 bg-white p-1 rounded-xl border border-gray-100 shadow-sm"
+                    class="flex items-center gap-2 bg-card p-1 rounded-xl border border-border shadow-sm"
                 >
                     <button
                         class="px-4 py-2 rounded-lg text-sm font-bold transition-all {showMemento
-                            ? 'text-gray-500 hover:bg-gray-50'
-                            : 'bg-stone-100 text-stone-800'}"
+                            ? 'text-muted-foreground hover:bg-muted'
+                            : 'bg-muted text-foreground'}"
                         onclick={() => (showMemento = false)}
                     >
                         Timeline
                     </button>
                     <button
                         class="px-4 py-2 rounded-lg text-sm font-bold transition-all {showMemento
-                            ? 'bg-purple-600 text-white shadow-md'
-                            : 'text-gray-500 hover:bg-gray-50'}"
+                            ? 'bg-primary text-primary-foreground shadow-md'
+                            : 'text-muted-foreground hover:bg-muted'}"
                         onclick={() => (showMemento = true)}
                     >
-                        Memento Mori
+                        Weekly overview
                     </button>
                 </div>
             </div>
@@ -417,18 +468,13 @@
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
         context="heirlooms"
-        prompts={[
-            "Help me capture a milestone from my life...",
-            "Draft a reflection on a major life event...",
-            "Describe the meaning of this accomplishment...",
-            "Write about a turning point in my story..."
-        ]}
+        promptSource="routes/modules/timeline/+page.svelte:prompts"
     />
 
     <!-- Empty State with GhostRow Samples -->
     {#if lifeEvents.length === 0 && !showMemento}
         <div class="mb-8" in:fade>
-            <div class="border border-amber-200 bg-amber-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-amber-800">
+            <div class="border border-gold/30 bg-gold/10 rounded-xl p-4 mb-4 flex items-center gap-3 text-foreground">
                 <Sparkles size={20} />
                 <p class="text-sm font-medium">
                     Concierge Mode: Showing example life events to inspire you.
@@ -453,7 +499,7 @@
                         }}
                     >
                         {#snippet icon()}
-                            <SampleIcon size={20} class="text-slate-400" />
+                            <SampleIcon size={20} class="text-muted-foreground" />
                         {/snippet}
                     </GhostRow>
                 {/each}
@@ -461,7 +507,7 @@
             <div class="flex justify-center mt-4">
                 <button
                     onclick={() => (showAddModal = true)}
-                    class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                    class="text-sm font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                 >
                     <Plus size={14} /> Add Your First Life Event
                 </button>
@@ -473,9 +519,9 @@
     {#if !showMemento && lifeEvents.some((e) => e.type === "accomplishment")}
         <div class="mb-12" in:slide>
             <div class="flex items-center gap-2 mb-4">
-                <Trophy class="text-amber-500" size={20} />
+                <Trophy class="text-gold-text" size={20} />
                 <h3
-                    class="font-bold text-[#304743] uppercase tracking-widest text-sm"
+                    class="font-bold text-primary-deep dark:text-primary-hover uppercase tracking-widest text-sm"
                 >
                     Trophy Case
                 </h3>
@@ -483,8 +529,16 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {#each lifeEvents.filter((e) => e.type === "accomplishment") as trophy}
                     <div
-                        class="bg-white border border-amber-100 p-6 rounded-2xl relative group cursor-pointer hover:shadow-xl hover:border-amber-300 transition-all flex flex-col h-full"
+                        class="bg-card border border-gold/30 p-6 rounded-2xl relative group cursor-pointer hover:shadow-xl hover:border-gold transition-all flex flex-col h-full"
+                        role="button"
+                        tabindex="0"
                         onclick={() => editEvent(trophy)}
+                        onkeydown={(e) => {
+                            if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                                e.preventDefault();
+                                editEvent(trophy);
+                            }
+                        }}
                     >
                         <div
                             class="absolute top-4 right-4 flex gap-2"
@@ -495,7 +549,7 @@
                                     editEvent(trophy);
                                 }}
                                 aria-label="Edit Event"
-                                class="p-2 bg-amber-50 text-amber-600 rounded-full hover:bg-amber-100"
+                                class="p-2 bg-gold/15 text-gold-text rounded-full hover:bg-gold/25"
                             >
                                 <Pencil size={14} />
                             </button>
@@ -503,25 +557,25 @@
 
                         <div class="flex items-center gap-2 mb-4">
                             <div
-                                class="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-tighter rounded-full border border-amber-100"
+                                class="px-3 py-1 bg-gold/10 text-gold-text text-[10px] font-black uppercase tracking-tighter rounded-full border border-gold/30"
                             >
-                                {trophy.category || "General"}
+                                {trophy.category || "Personal"}
                             </div>
                             <div
-                                class="text-xs font-bold text-stone-400 capitalize"
+                                class="text-xs font-bold text-muted-foreground capitalize"
                             >
                                 {trophy.year}
                             </div>
                         </div>
 
                         <h4
-                            class="font-serif font-bold text-xl text-[#304743] mb-2 group-hover:text-amber-700 transition-colors"
+                            class="font-serif font-bold text-xl text-primary-deep dark:text-primary-hover mb-2 group-hover:text-primary-hover transition-colors"
                         >
                             {trophy.label}
                         </h4>
 
                         {#if trophy.description}
-                            <p class="text-sm text-stone-500 mb-4 line-clamp-2">
+                            <p class="text-sm text-muted-foreground mb-4 line-clamp-2">
                                 {trophy.description}
                             </p>
                         {/if}
@@ -531,11 +585,11 @@
                                 trophy.assignedContactId,
                             )}
                             <div
-                                class="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between"
+                                class="mt-4 pt-4 border-t border-border flex items-center justify-between"
                             >
                                 <div class="flex items-center gap-2">
                                     <div
-                                        class="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center overflow-hidden border border-stone-200"
+                                        class="w-6 h-6 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border"
                                     >
                                         {#if contact?.avatar}
                                             <img
@@ -545,7 +599,7 @@
                                             />
                                         {:else}
                                             <span
-                                                class="text-[8px] font-bold text-stone-400"
+                                                class="text-[8px] font-bold text-muted-foreground"
                                                 >{contact?.name
                                                     ?.slice(0, 2)
                                                     .toUpperCase() ||
@@ -555,11 +609,11 @@
                                     </div>
                                     <div class="flex flex-col">
                                         <span
-                                            class="text-[10px] font-bold text-stone-600 leading-tight"
+                                            class="text-[10px] font-bold text-muted-foreground leading-tight"
                                             >{contact?.name || "Unknown"}</span
                                         >
                                         <span
-                                            class="text-[8px] text-stone-400 leading-tight capitalize"
+                                            class="text-[8px] text-muted-foreground leading-tight capitalize"
                                             >{contact?.role || "Contact"}</span
                                         >
                                     </div>
@@ -569,11 +623,13 @@
                                     <button
                                         onclick={(e) => {
                                             e.stopPropagation();
-                                            alert(
-                                                `Mock Notification: Email sent to ${contact.email} regarding "${trophy.label}"`,
-                                            );
+                                            // Opens the person's own mail app, prefilled; nothing is sent from here.
+                                            const body = [trophy.label, trophy.year, trophy.description]
+                                                .filter(Boolean)
+                                                .join("\n\n");
+                                            window.location.href = `mailto:${contact.email}?subject=${encodeURIComponent(trophy.label)}&body=${encodeURIComponent(body)}`;
                                         }}
-                                        class="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors shadow-sm"
+                                        class="p-2 bg-primary-soft text-primary-hover rounded-full hover:bg-primary/20 transition-colors shadow-sm"
                                         title="Notify via Email"
                                     >
                                         <Mail size={12} />
@@ -583,9 +639,9 @@
                         {/if}
 
                         {#if trophy.reflection}
-                            <div class="mt-4 pt-4 border-t border-stone-100">
+                            <div class="mt-4 pt-4 border-t border-border">
                                 <p
-                                    class="text-xs text-stone-400 italic line-clamp-3"
+                                    class="text-xs text-muted-foreground italic line-clamp-3"
                                 >
                                     "{trophy.reflection}"
                                 </p>
@@ -598,46 +654,63 @@
     {/if}
 
     {#if showMemento}
-        <!-- Memento Mori Grid -->
+        <!-- Schematic weekly overview of the displayed timeline range -->
         <div
-            class="bg-white rounded-2xl border border-border shadow-sm p-8"
+            class="bg-card rounded-2xl border border-border shadow-sm p-8"
             in:fade
         >
             <div
-                class="flex items-start gap-4 mb-8 bg-purple-50 p-4 rounded-xl text-purple-900 border border-purple-100"
+                class="flex items-start gap-4 mb-8 bg-primary-soft p-4 rounded-xl text-foreground border border-primary/20"
             >
                 <Hourglass class="shrink-0 mt-1" />
                 <div>
-                    <h3 class="font-bold">Weeks of Your Life</h3>
+                    <h3 class="font-bold">Timeline in weekly squares</h3>
                     <p class="text-sm opacity-90">
-                        Each square represents one week. Filled squares are the
-                        past. Empty squares are the future.
+                        This view uses 52 squares for each year from {startYear}
+                        through {endYear - 1}. Filled squares mark years before
+                        {currentYear}; unfilled squares provide space for the current
+                        year and future plans. Events appear in their year's first square.
                     </p>
+                    {#if eventYears.length === 0}
+                        <p class="mt-2 text-sm">Add an event with a year to place your story here. This empty planning range begins with {currentYear}.</p>
+                    {/if}
                 </div>
                 <div class="ml-auto text-right hidden md:block">
                     <div class="text-2xl font-bold">
-                        {Math.floor(weeksLived)}
+                        {Math.floor(earlierCells)}
                     </div>
-                    <div class="text-xs uppercase opacity-75">Weeks Lived</div>
+                    <div class="text-xs uppercase opacity-75">Earlier-year squares</div>
                 </div>
             </div>
 
+            <!-- Hover reveals the week details; the Life Events list holds the same entries for keyboard use. -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 class="flex flex-wrap gap-1 justify-center max-h-[600px] overflow-y-auto p-4 custom-scrollbar relative"
+                data-testid="weekly-timeline"
+                data-start-year={startYear}
+                data-end-year-exclusive={endYear}
+                data-total-cells={totalCells}
+                data-earlier-cells={earlierCells}
                 onmouseleave={() => (hoveredWeek = null)}
                 onmousemove={handleMouseMove}
             >
-                {#each weeksData as week (week.index)}
+                {#each weeklyCells as week (week.index)}
+                    <!-- Hover reveals the week details; the Life Events list holds the same entries for keyboard use. -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
                     <div
+                        data-week-index={week.index}
+                        data-year={startYear + Math.floor(week.index / 52)}
+                        data-event-ids={week.events.map((event) => String(event.id)).join(",")}
                         class="w-2 h-2 rounded-[1px] transition-colors cursor-pointer relative group
                         {week.hasEvent
-                            ? 'bg-amber-400 hover:bg-amber-500 ring-2 ring-amber-200 z-10'
+                            ? 'bg-gold hover:bg-gold-muted ring-2 ring-gold/40 z-10'
                             : ''}
-                        {!week.hasEvent && week.isLived
-                            ? 'bg-[#304743]/80 hover:bg-[#304743]'
+                        {!week.hasEvent && week.isEarlier
+                            ? 'bg-primary-deep/80 hover:bg-primary-deep'
                             : ''}
-                        {!week.hasEvent && !week.isLived
-                            ? 'bg-gray-100 hover:bg-purple-200'
+                        {!week.hasEvent && !week.isEarlier
+                            ? 'bg-muted hover:bg-primary/30'
                             : ''}"
                         onmouseenter={() => (hoveredWeek = week)}
                     ></div>
@@ -648,50 +721,50 @@
             <!-- Permanent Legend -->
             <div class="mt-8 flex justify-center gap-8 text-sm opacity-60">
                 <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 bg-[#304743]/80 rounded-[1px]"></div>
-                    <span class="text-gray-600">Lived</span>
+                    <div class="w-3 h-3 bg-primary-deep/80 rounded-[1px]"></div>
+                    <span class="text-muted-foreground">Earlier years</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 bg-amber-400 rounded-[1px]"></div>
-                    <span class="text-gray-600">Event</span>
+                    <div class="w-3 h-3 bg-gold rounded-[1px]"></div>
+                    <span class="text-muted-foreground">Recorded events</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <div
-                        class="w-2 h-2 rounded-[1px] bg-gray-100 rounded-[1px]"
+                        class="w-2 h-2 rounded-[1px] bg-muted rounded-[1px]"
                     ></div>
-                    <span class="text-gray-600">Remaining</span>
+                    <span class="text-muted-foreground">Current &amp; future years</span>
                 </div>
             </div>
 
             <!-- Floating Tooltip -->
             {#if hoveredWeek && hoveredWeek.hasEvent}
                 <div
-                    class="fixed z-50 bg-white/95 backdrop-blur shadow-xl border border-stone-200 rounded-xl p-4 pointer-events-none w-64 animate-in fade-in zoom-in-95 duration-150"
+                    class="fixed z-50 bg-card/95 backdrop-blur shadow-xl border border-border rounded-xl p-4 pointer-events-none w-64 animate-in fade-in zoom-in-95 duration-150"
                     style="top: {tooltipY}px; left: {tooltipX}px;"
                 >
                     <div
-                        class="text-xs uppercase tracking-widest text-[#304743]/60 font-bold mb-2 pb-2 border-b border-stone-100"
+                        class="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-2 pb-2 border-b border-border"
                     >
-                        Week {hoveredWeek.index + 1} | {birthYear +
+                        Square {hoveredWeek.index + 1} | {startYear +
                             Math.floor(hoveredWeek.index / 52)}
                     </div>
 
                     {#each hoveredWeek.events as event}
+                        {@const Icon = getIcon(event.type)}
                         <div class="flex items-start gap-2 mb-2 last:mb-0">
-                            <svelte:component
-                                this={getIcon(event.type)}
+                            <Icon
                                 size={16}
-                                class="text-amber-500 shrink-0 mt-1"
+                                class="text-gold-text shrink-0 mt-1"
                             />
                             <div>
                                 <div
-                                    class="text-[#304743] font-bold leading-tight"
+                                    class="text-primary-deep dark:text-primary-hover font-bold leading-tight"
                                 >
                                     {event.label}
                                 </div>
                                 {#if event.description}
                                     <p
-                                        class="text-xs text-stone-500 italic mt-0.5 line-clamp-2"
+                                        class="text-xs text-muted-foreground italic mt-0.5 line-clamp-2"
                                     >
                                         {event.description}
                                     </p>
@@ -702,18 +775,68 @@
                 </div>
             {/if}
         </div>
+    {:else if viewMode === 'table' && lifeEvents.length > 0}
+        <!-- Table View -->
+        <div class="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-muted border-b border-border">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Year</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Label</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Type</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Details</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    {#each [...lifeEvents].sort((a, b) => a.year - b.year) as event (event.id)}
+                        <tr class="hover:bg-muted transition-colors">
+                            <td class="px-4 py-3 text-sm font-bold text-muted-foreground">{event.year}</td>
+                            <td class="px-4 py-3 font-medium text-foreground">{event.label}</td>
+                            <td class="px-4 py-3 text-sm text-muted-foreground">
+                                <span class="inline-flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full {dotClass(event.type)}"></span>
+                                    {TYPE_STYLES.find((t) => t.type === event.type)?.label ?? "Future Plan"}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-muted-foreground max-w-xs truncate">{event.description || ''}</td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <button
+                                        onclick={() => editEvent(event)}
+                                        class="p-1.5 text-muted-foreground hover:text-primary transition-colors"
+                                        title="Edit Event"
+                                        aria-label="Edit Event"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                    <button
+                                        onclick={() => removeEvent(event.id)}
+                                        class="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                                        title="Delete Event"
+                                        aria-label="Delete Event"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+        </div>
     {:else}
         <!-- Timeline View -->
         <div
-            class="bg-white rounded-2xl shadow-xl border border-stone-100 p-8 overflow-hidden relative"
+            class="bg-card rounded-2xl shadow-xl border border-border p-8 overflow-hidden relative"
         >
             <!-- Controls -->
             <div class="flex justify-between items-center mb-6">
                 <!-- Zoom Control -->
                 <div
-                    class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100"
+                    class="flex items-center gap-3 bg-muted px-4 py-2 rounded-xl border border-border"
                 >
-                    <span class="text-xs font-bold text-gray-400 uppercase"
+                    <span class="text-xs font-bold text-muted-foreground uppercase"
                         >Zoom Level</span
                     >
                     <input
@@ -722,63 +845,57 @@
                         max="100"
                         bind:value={pixelsPerYear}
                         aria-label="Zoom Level"
-                        class="w-32 accent-[#4A7C74] cursor-pointer"
+                        class="w-32 accent-primary cursor-pointer"
                     />
-                    <span class="text-xs text-gray-400 font-mono w-8"
+                    <span class="text-xs text-muted-foreground font-mono w-8"
                         >{pixelsPerYear}px</span
                     >
                 </div>
 
-                <div class="flex gap-4 text-sm text-gray-400">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-purple-500"></div>
-                        <span>Milestone</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <span>Education</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                        <span>Work</span>
-                    </div>
+                <div class="flex flex-wrap justify-end gap-4 text-sm text-muted-foreground">
+                    {#each TYPE_STYLES as t (t.type)}
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full {t.dot}"></div>
+                            <span>{t.label}</span>
+                        </div>
+                    {/each}
                 </div>
             </div>
 
             <div
-                class="overflow-x-auto pb-12 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent"
+                class="overflow-x-auto pb-12 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent"
             >
                 <!-- Line -->
                 <div
-                    class="absolute top-32 left-0 right-0 h-0.5 bg-gradient-to-r from-stone-200 via-stone-300 to-stone-200"
+                    class="absolute top-32 left-0 right-0 h-0.5 bg-gradient-to-r from-border via-slate-300 to-border"
                 ></div>
 
                 <!-- Events -->
                 <div
                     class="relative h-64 transition-all duration-300"
-                    style="width: {(lifeExpectancy + 10) * pixelsPerYear}px"
+                    style="width: {trackWidth}px"
                 >
                     <!-- events logic -->
                     {#each lifeEvents as event, i (event.id)}
+                        {@const Icon = getIcon(event.type)}
                         <div
                             class="absolute top-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer w-12 -ml-6 z-10 hover:z-50 transition-all duration-200"
-                            style="left: {(event.year - birthYear) *
-                                pixelsPerYear}px"
+                            style="left: {getPosition(event.year)}px"
                             in:fly={{ y: 20, delay: i * 50 }}
                         >
                             <!-- Top Label (Alternating) -->
                             {#if i % 2 === 0}
                                 <div
-                                    class="mb-6 opacity-60 group-hover:opacity-100 transition-all -translate-y-1 group-hover:translate-y-0 text-center w-32"
+                                    class="mb-6 opacity-80 group-hover:opacity-100 transition-all -translate-y-1 group-hover:translate-y-0 text-center w-32"
                                 >
                                     <div
-                                        class="text-sm font-bold text-[#304743]"
+                                        class="text-sm font-bold text-primary-deep dark:text-primary-hover"
                                     >
                                         {event.label}
                                     </div>
                                     {#if event.assignedContactId}
                                         <div
-                                            class="text-[9px] font-bold text-stone-400 uppercase tracking-tighter truncate px-2"
+                                            class="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter truncate px-2"
                                         >
                                             Assigned: {getContactById(
                                                 event.assignedContactId,
@@ -793,11 +910,10 @@
                                 <div
                                     class="relative z-10 w-12 h-12 rounded-full border-4 border-white shadow-lg flex items-center justify-center transition-transform group-hover:scale-110
                                 {event.year > currentYear
-                                        ? 'bg-gray-100 text-gray-400 border-dashed border-gray-300'
-                                        : 'bg-[#304743] text-white'}"
+                                        ? 'bg-muted text-muted-foreground border-dashed border-slate-300'
+                                        : `${dotClass(event.type)} text-white`}"
                                 >
-                                    <svelte:component
-                                        this={getIcon(event.type)}
+                                    <Icon
                                         size={18}
                                     />
                                 </div>
@@ -811,7 +927,7 @@
                                             editEvent(event);
                                         }}
                                         aria-label="Edit Event"
-                                        class="bg-blue-100 text-blue-500 p-1 rounded-full hover:scale-110 shadow-sm"
+                                        class="bg-primary-soft text-primary-hover p-1 rounded-full hover:scale-110 shadow-sm"
                                         title="Edit Event"
                                     >
                                         <Pencil size={12} />
@@ -821,7 +937,7 @@
                                             e.stopPropagation();
                                             removeEvent(event.id);
                                         }}
-                                        class="bg-red-100 text-red-500 p-1 rounded-full hover:scale-110 shadow-sm"
+                                        class="bg-muted text-muted-foreground hover:text-foreground p-1 rounded-full hover:scale-110 shadow-sm"
                                         title="Delete Event"
                                     >
                                         <Trash2 size={12} />
@@ -831,7 +947,7 @@
 
                             <!-- Year -->
                             <div
-                                class="mt-3 text-xs font-bold text-gray-400 group-hover:text-[#304743] transition-colors"
+                                class="mt-3 text-xs font-bold text-muted-foreground group-hover:text-primary-deep dark:group-hover:text-primary-hover transition-colors"
                             >
                                 {event.year}
                             </div>
@@ -839,16 +955,16 @@
                             <!-- Bottom Label (Alternating) -->
                             {#if i % 2 !== 0}
                                 <div
-                                    class="mt-6 opacity-60 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 text-center w-32"
+                                    class="mt-6 opacity-80 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 text-center w-32"
                                 >
                                     <div
-                                        class="text-sm font-bold text-[#304743]"
+                                        class="text-sm font-bold text-primary-deep dark:text-primary-hover"
                                     >
                                         {event.label}
                                     </div>
                                     {#if event.assignedContactId}
                                         <div
-                                            class="text-[9px] font-bold text-stone-400 uppercase tracking-tighter truncate px-2"
+                                            class="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter truncate px-2"
                                         >
                                             Assigned: {getContactById(
                                                 event.assignedContactId,
@@ -866,12 +982,12 @@
                         style="left: {getPosition(currentYear)}px"
                     >
                         <div
-                            class="absolute -top-16 text-xs font-bold uppercase tracking-widest text-[#4A7C74]"
+                            class="absolute -top-16 text-xs font-bold uppercase tracking-widest text-primary"
                         >
                             Today
                         </div>
                         <div
-                            class="w-0.5 h-32 bg-[#4A7C74]/50 border-l-2 border-dashed border-[#4A7C74]"
+                            class="w-0.5 h-32 bg-primary/50 border-l-2 border-dashed border-primary"
                         ></div>
                     </div>
                 </div>

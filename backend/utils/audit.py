@@ -22,7 +22,8 @@ def log_audit(
     resource_id: Optional[str] = None,
     success: bool = True,
     error_message: Optional[str] = None,
-    details: Optional[str] = None
+    details: Optional[str] = None,
+    commit: bool = True
 ) -> None:
     """
     Log an audit event to the database.
@@ -38,6 +39,8 @@ def log_audit(
         success: Whether the action succeeded
         error_message: Error message if action failed
         details: Additional context as JSON string
+        commit: False adds the row to the session only; the caller's own commit
+            writes it together with the change it records (one transaction).
     """
     try:
         audit = AuditLog(
@@ -53,7 +56,8 @@ def log_audit(
             details=details
         )
         session.add(audit)
-        session.commit()
+        if commit:
+            session.commit()
     except Exception as e:
         # Don't fail the main operation if audit logging fails
         logger.error(f"Audit logging failed for action '{action}': {e}")
@@ -64,9 +68,10 @@ def log_auth_success(
     request: Request,
     user_id: int,
     user_email: str,
-    auth_method: str
+    auth_method: str,
+    commit: bool = True
 ) -> None:
-    """Log successful authentication."""
+    """Log successful authentication. commit=False: the caller's next commit writes it."""
     log_audit(
         session=session,
         request=request,
@@ -74,7 +79,8 @@ def log_auth_success(
         user_id=user_id,
         user_email=user_email,
         resource_type="authentication",
-        success=True
+        success=True,
+        commit=commit
     )
 
 
@@ -103,9 +109,10 @@ def log_deletion(
     user_id: int,
     user_email: str,
     resource_type: str,
-    resource_id: int
+    resource_id: int,
+    commit: bool = True
 ) -> None:
-    """Log data deletion."""
+    """Log data deletion. commit=False: the caller's commit writes it with the delete."""
     log_audit(
         session=session,
         request=request,
@@ -114,7 +121,8 @@ def log_deletion(
         user_email=user_email,
         resource_type=resource_type,
         resource_id=str(resource_id),
-        success=True
+        success=True,
+        commit=commit
     )
 
 

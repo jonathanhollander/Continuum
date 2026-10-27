@@ -1,11 +1,9 @@
 <script lang="ts">
-    import { page } from "$app/stores";
     import { onMount } from "svelte";
     import { fade, fly, scale } from "svelte/transition";
     import {
         Users,
         ArrowRight,
-        Heart,
         Shield,
         Check,
         Sparkles,
@@ -13,16 +11,15 @@
     import logo from "$lib/assets/logo.png";
     import { goto } from "$app/navigation";
     import { auth } from "$lib/stores/auth";
-    import { notifications } from "$lib/stores/notificationStore";
 
     let ready = $state(false);
     let showSuccess = $state(false);
 
-    // Get user's first name for personalization
-    let firstName = $derived(() => {
-        const name = $auth.user?.email?.split("@")[0] || "there";
-        return name.charAt(0).toUpperCase() + name.slice(1);
-    });
+    // /auth/me returns the saved onboarding display name; never derive a name from email.
+    let displayName = $derived(
+        ($auth.user as (NonNullable<typeof $auth.user> & { display_name?: string | null }) | null)
+            ?.display_name?.trim() || "",
+    );
 
     onMount(() => {
         setTimeout(() => {
@@ -46,15 +43,15 @@
 </script>
 
 <div
-    class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/30 flex flex-col items-center justify-center p-6 relative overflow-hidden"
+    class="min-h-screen bg-gradient-to-br from-background via-card to-primary-soft/30 flex flex-col items-center justify-center p-6 relative overflow-hidden"
 >
     <!-- Subtle Background Pattern -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
         <div
-            class="absolute top-1/4 -left-12 w-64 h-64 bg-teal-200 rounded-full blur-3xl"
+            class="absolute top-1/4 -left-12 w-64 h-64 bg-primary/30 rounded-full blur-3xl"
         ></div>
         <div
-            class="absolute bottom-1/4 -right-12 w-64 h-64 bg-indigo-200 rounded-full blur-3xl"
+            class="absolute bottom-1/4 -right-12 w-64 h-64 bg-primary/30 rounded-full blur-3xl"
         ></div>
     </div>
 
@@ -73,63 +70,62 @@
 
             <!-- Welcome Message -->
             <div class="space-y-3" in:fly={{ y: 20, delay: 200 }}>
-                <h1 class="text-3xl md:text-4xl font-serif font-bold text-slate-800">
-                    Welcome, {firstName()}
+                <h1 class="text-3xl md:text-4xl font-serif font-bold text-foreground">
+                    {displayName ? `Welcome, ${displayName}` : "Welcome to Continuum"}
                 </h1>
-                <p class="text-lg text-slate-600 leading-relaxed">
-                    Let's start with something gentle.
+                <p class="text-lg text-muted-foreground leading-relaxed">
+                    Start with a person you want to keep informed.
                 </p>
             </div>
 
             <!-- Main Action Card -->
             <div
-                class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden"
+                class="bg-card rounded-2xl shadow-xl shadow-slate-900/5 border border-border overflow-hidden"
                 in:fly={{ y: 30, delay: 400 }}
             >
                 <!-- Card Header -->
-                <div class="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-5 text-white">
+                <div class="bg-primary-deep px-6 py-5 text-white">
                     <div class="flex items-center gap-3">
                         <div class="p-2 bg-white/20 rounded-xl">
                             <Users class="w-6 h-6" />
                         </div>
                         <div class="text-left">
-                            <h2 class="font-bold text-lg">Your First Step</h2>
-                            <p class="text-teal-100 text-sm">Takes about 2 minutes</p>
+                            <h2 class="font-bold text-lg text-white">Your First Step</h2>
                         </div>
                     </div>
                 </div>
 
                 <!-- Card Body -->
                 <div class="p-6 space-y-5">
-                    <p class="text-slate-700 text-left leading-relaxed">
-                        <strong>Who should have access</strong> if something happens to you?
-                        Adding even one trusted person is the most impactful thing you can do today.
+                    <p class="text-foreground text-left leading-relaxed">
+                        <strong>Who should your family contact?</strong>
+                        Record a trusted person’s name, relationship and contact details.
                     </p>
 
                     <!-- Benefits -->
                     <div class="space-y-3 text-left">
                         <div class="flex items-start gap-3">
-                            <div class="p-1 bg-green-100 rounded-lg mt-0.5">
-                                <Check class="w-4 h-4 text-green-600" />
+                            <div class="p-1 bg-success/10 rounded-lg mt-0.5">
+                                <Check class="w-4 h-4 text-success" />
                             </div>
-                            <p class="text-sm text-slate-600">
-                                They'll know who to contact and what to do
+                            <p class="text-sm text-muted-foreground">
+                                Add how to reach them and what they can help with
                             </p>
                         </div>
                         <div class="flex items-start gap-3">
-                            <div class="p-1 bg-green-100 rounded-lg mt-0.5">
-                                <Check class="w-4 h-4 text-green-600" />
+                            <div class="p-1 bg-success/10 rounded-lg mt-0.5">
+                                <Check class="w-4 h-4 text-success" />
                             </div>
-                            <p class="text-sm text-slate-600">
-                                You can give them specific access levels later
+                            <p class="text-sm text-muted-foreground">
+                                Create their recipient link when you are ready to share
                             </p>
                         </div>
                         <div class="flex items-start gap-3">
-                            <div class="p-1 bg-green-100 rounded-lg mt-0.5">
-                                <Check class="w-4 h-4 text-green-600" />
+                            <div class="p-1 bg-success/10 rounded-lg mt-0.5">
+                                <Check class="w-4 h-4 text-success" />
                             </div>
-                            <p class="text-sm text-slate-600">
-                                Your family will thank you for this step
+                            <p class="text-sm text-muted-foreground">
+                                Preview that link to review the records it includes
                             </p>
                         </div>
                     </div>
@@ -137,7 +133,7 @@
                     <!-- Primary CTA -->
                     <button
                         onclick={goToContacts}
-                        class="w-full flex items-center justify-center gap-3 py-4 px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-slate-900/20"
+                        class="w-full flex items-center justify-center gap-3 py-4 px-6 bg-primary hover:bg-primary-hover text-primary-foreground font-bold rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
                     >
                         <span>Add your first trusted person</span>
                         <ArrowRight class="w-5 h-5" />
@@ -149,14 +145,14 @@
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2" in:fade={{ delay: 600 }}>
                 <button
                     onclick={skipForNow}
-                    class="text-slate-500 hover:text-slate-700 text-sm font-medium transition-colors underline underline-offset-4 decoration-slate-300 hover:decoration-slate-500"
+                    class="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors underline underline-offset-4 decoration-border hover:decoration-muted-foreground"
                 >
                     I'll explore on my own
                 </button>
-                <span class="hidden sm:block text-slate-300">|</span>
+                <span class="hidden sm:block text-border" aria-hidden="true">|</span>
                 <button
                     onclick={goToGuided}
-                    class="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 text-sm font-medium transition-colors"
+                    class="flex items-center gap-2 text-primary hover:text-primary-hover text-sm font-medium transition-colors"
                 >
                     <Sparkles class="w-4 h-4" />
                     <span>Use AI Guide instead</span>
@@ -164,9 +160,9 @@
             </div>
 
             <!-- Trust Badge -->
-            <div class="flex items-center justify-center gap-2 text-slate-400 text-xs pt-4" in:fade={{ delay: 800 }}>
+            <div class="flex items-center justify-center gap-2 text-muted-foreground text-xs pt-4" in:fade={{ delay: 800 }}>
                 <Shield class="w-4 h-4" />
-                <span>Your data is private and encrypted</span>
+                <span>Your information stays private to your account</span>
             </div>
         </div>
     {:else}

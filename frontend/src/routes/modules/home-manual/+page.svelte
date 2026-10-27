@@ -1,11 +1,13 @@
 <script lang="ts">
-    import { focusTrap } from "$lib/actions/focusTrap";
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { fade, slide } from "svelte/transition";
+    import Modal from "$lib/components/ui/Modal.svelte";
     import {
         Hammer,
         Phone,
         Key,
         Wifi,
+        Plug,
         Droplets,
         Zap,
         Pencil,
@@ -16,13 +18,12 @@
         Thermometer,
         MapPin,
         Shield,
-        X,
         Save,
         Loader2,
+        Mail,
+        Globe,
     } from "lucide-svelte";
-    import { fly } from "svelte/transition";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
@@ -33,9 +34,31 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
+    function utilityIcon(t: string | null | undefined) {
+        switch ((t || "").trim().toLowerCase()) {
+            case "water": return Droplets;
+            case "electric":
+            case "electricity": return Zap;
+            case "gas": return Thermometer;
+            case "internet":
+            case "wifi":
+            case "wi-fi": return Wifi;
+            default: return Plug;
+        }
+    }
+    /** A vendor website as a link: http(s) kept, a bare domain given https, anything else left unlinked. */
+    function siteHref(v: string) {
+        const s = v.trim();
+        if (/^https?:\/\//i.test(s)) return s;
+        return /^[\w.-]+\.[a-z]{2,}(\/\S*)?$/i.test(s) ? `https://${s}` : undefined;
+    }
+    function utilityLabel(t: string | null | undefined) {
+        const v = (t || "").trim();
+        return v ? v.charAt(0).toUpperCase() + v.slice(1).toLowerCase() : "Utility";
+    }
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
 
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('home-manual'));
 
     // One sync manager per endpoint: the stores own the keys (vendors, home_access, utilities)
     // and the mappers, so records keep their server ids across reloads.
@@ -59,39 +82,72 @@
     let editingCodeId = $state<number | null>(null);
     let editingUtilityId = $state<number | null>(null);
 
+    // The shared modal's field, label and footer styles (UI standards 1.7, 2.1).
+    const labelClass = "block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1 mb-1.5";
+    const inputClass = "w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground";
+    const footerClass = "-mx-6 -mb-6 px-6 py-4 bg-background border-t border-border flex justify-end gap-3 mt-6";
+    const cancelClass = "px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-border transition-colors whitespace-nowrap";
+    const saveClass = "px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap";
+
     // Form States
-    let vendorForm = $state({ category: "", name: "", phone: "" });
+    let vendorForm = $state({ category: "", name: "", phone: "", email: "", website: "", notes: "" });
     let codeForm = $state({ location: "", code: "", instructions: "" });
-    let utilityForm = $state({ service_type: "", provider: "", location: "" });
+    let utilityForm = $state({ service_type: "", provider: "", location: "", account_number: "", support_phone: "" });
 
     // Handlers
     function openVendorModal() {
         editingVendorId = null;
-        vendorForm = { category: "", name: "", phone: "" };
+        vendorForm = { category: "", name: "", phone: "", email: "", website: "", notes: "" };
         showVendorModal = true;
     }
 
     function editVendor(vendor: Vendor) {
         editingVendorId = vendor.id ?? null;
-        vendorForm = { category: vendor.category, name: vendor.name, phone: vendor.phone || "" };
+        vendorForm = {
+            category: vendor.category,
+            name: vendor.name,
+            phone: vendor.phone || "",
+            email: vendor.email || "",
+            website: vendor.website || "",
+            notes: vendor.notes || "",
+        };
         showVendorModal = true;
     }
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveVendor() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveVendorOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveVendorOnce() {
         if (!vendorForm.category || !vendorForm.name) return;
         const fields = {
             category: vendorForm.category,
             name: vendorForm.name,
             phone: vendorForm.phone,
+            email: vendorForm.email,
+            website: vendorForm.website,
+            notes: vendorForm.notes,
         };
-        if (editingVendorId != null) await vendorSync.update(editingVendorId, fields);
-        else await vendorSync.create(fields);
-        showVendorModal = false;
+        try {
+            if (editingVendorId != null) await vendorSync.update(editingVendorId, fields);
+            else await vendorSync.create(fields);
+            showVendorModal = false;
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     async function deleteVendor(id: number | undefined) {
         if (id == null) return;
-        if (!confirm("Remove this item? You can add it back anytime.")) return;
+        if (!(await askConfirm("Remove this item? You can add it back anytime."))) return;
         await vendorSync.delete(id);
     }
 
@@ -112,26 +168,40 @@
     }
 
     async function saveCode() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveCodeOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveCodeOnce() {
         if (!codeForm.location) return;
         const fields = {
             location: codeForm.location,
             code_encrypted: codeForm.code,
             instructions: codeForm.instructions,
         };
-        if (editingCodeId != null) await accessSync.update(editingCodeId, fields);
-        else await accessSync.create(fields);
-        showCodeModal = false;
+        try {
+            if (editingCodeId != null) await accessSync.update(editingCodeId, fields);
+            else await accessSync.create(fields);
+            showCodeModal = false;
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     async function deleteCode(id: number | undefined) {
         if (id == null) return;
-        if (!confirm("Remove this item? You can add it back anytime.")) return;
+        if (!(await askConfirm("Remove this item? You can add it back anytime."))) return;
         await accessSync.delete(id);
     }
 
     function openUtilityModal() {
         editingUtilityId = null;
-        utilityForm = { service_type: "", provider: "", location: "" };
+        utilityForm = { service_type: "", provider: "", location: "", account_number: "", support_phone: "" };
         showUtilityModal = true;
     }
 
@@ -141,25 +211,43 @@
             service_type: item.service_type,
             provider: item.provider,
             location: item.location || "",
+            account_number: item.account_number ?? "",
+            support_phone: item.support_phone ?? "",
         };
         showUtilityModal = true;
     }
 
     async function saveUtility() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveUtilityOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveUtilityOnce() {
         if (!utilityForm.service_type) return;
         const fields = {
             service_type: utilityForm.service_type,
-            provider: utilityForm.provider || "Unknown",
+            provider: utilityForm.provider || "",
             location: utilityForm.location,
+            account_number: utilityForm.account_number,
+            support_phone: utilityForm.support_phone,
         };
-        if (editingUtilityId != null) await utilitySync.update(editingUtilityId, fields);
-        else await utilitySync.create(fields);
-        showUtilityModal = false;
+        try {
+            if (editingUtilityId != null) await utilitySync.update(editingUtilityId, fields);
+            else await utilitySync.create(fields);
+            showUtilityModal = false;
+        } catch {
+            // The manager already showed the one gentle message; the form stays open with the draft.
+        }
     }
 
     async function deleteUtility(id: number | undefined) {
         if (id == null) return;
-        if (!confirm("Remove this item? You can add it back anytime.")) return;
+        if (!(await askConfirm("Remove this item? You can add it back anytime."))) return;
         await utilitySync.delete(id);
     }
 </script>
@@ -170,278 +258,234 @@
     </div>
 {:else}
 <!-- Vendor Modal -->
-{#if showVendorModal}
-    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showVendorModal = false) }}
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
-        transition:fade
-    >
-        <div
-            class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
-            in:fly={{ y: 20 }}
-        >
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 class="font-serif font-bold text-xl text-[#304743]">
-                    {editingVendorId != null ? "Update" : "Add"} Trusted Vendor
-                </h3>
-                <button aria-label="Close"
-                    onclick={() => (showVendorModal = false)}
-                    class="text-slate-400 hover:text-slate-600"
-                >
-                    <X size={20} />
-                </button>
+<Modal bind:open={showVendorModal} title="{editingVendorId != null ? 'Update' : 'Add'} Trusted Vendor" maxWidth="max-w-lg">
+    <div class="space-y-4">
+        <div>
+            <label for="vendor-category" class={labelClass}>Vendor Role</label>
+            <input
+                id="vendor-category"
+                type="text"
+                bind:value={vendorForm.category}
+                placeholder="e.g. Plumber, Electrician, HVAC"
+                class={inputClass}
+            />
+        </div>
+
+        <div>
+            <label for="vendor-name" class={labelClass}>Name / Company</label>
+            <input
+                id="vendor-name"
+                type="text"
+                bind:value={vendorForm.name}
+                placeholder="e.g. Joe's Plumbing"
+                class={inputClass}
+            />
+        </div>
+
+        <div>
+            <label for="vendor-phone" class={labelClass}>Phone Number</label>
+            <input
+                id="vendor-phone"
+                type="tel"
+                bind:value={vendorForm.phone}
+                placeholder="(555) 123-4567"
+                class={inputClass}
+            />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="vendor-email" class={labelClass}>Email</label>
+                <input
+                    id="vendor-email"
+                    type="email"
+                    bind:value={vendorForm.email}
+                    placeholder="e.g. office@joesplumbing.com"
+                    class={inputClass}
+                />
             </div>
-
-            <div class="p-6 space-y-4">
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Vendor Role
-                    </label>
-                    <input
-                        type="text"
-                        bind:value={vendorForm.category}
-                        placeholder="e.g. Plumber, Electrician, HVAC"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Name / Company
-                    </label>
-                    <input
-                        type="text"
-                        bind:value={vendorForm.name}
-                        placeholder="e.g. Joe's Plumbing"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Phone Number
-                    </label>
-                    <input
-                        type="tel"
-                        bind:value={vendorForm.phone}
-                        placeholder="(555) 123-4567"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
-            </div>
-
-            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                <button
-                    onclick={() => (showVendorModal = false)}
-                    class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
-                >
-                    Cancel
-                </button>
-                <button
-                    onclick={saveVendor}
-                    disabled={!vendorForm.category || !vendorForm.name}
-                    class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-                >
-                    <Save size={16} /> Save Vendor
-                </button>
+            <div>
+                <label for="vendor-website" class={labelClass}>Website</label>
+                <input
+                    id="vendor-website"
+                    type="url"
+                    bind:value={vendorForm.website}
+                    placeholder="e.g. joesplumbing.com"
+                    class={inputClass}
+                />
             </div>
         </div>
+
+        <div>
+            <label for="vendor-notes" class={labelClass}>Notes</label>
+            <textarea
+                id="vendor-notes"
+                bind:value={vendorForm.notes}
+                rows="3"
+                placeholder="e.g. Ask for Sam; he knows the house"
+                class="{inputClass} resize-none"
+            ></textarea>
+        </div>
     </div>
-{/if}
+
+    <div class={footerClass}>
+        <button onclick={() => (showVendorModal = false)} class={cancelClass}>Maybe later</button>
+        <button
+            onclick={saveVendor}
+            disabled={!vendorForm.category || !vendorForm.name || saving}
+            aria-busy={saving}
+            class={saveClass}
+        >
+            <Save size={16} /> {saving ? "Saving..." : "Save my helper"}
+        </button>
+    </div>
+</Modal>
 
 <!-- Access Code Modal -->
-{#if showCodeModal}
-    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showCodeModal = false) }}
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
-        transition:fade
-    >
-        <div
-            class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
-            in:fly={{ y: 20 }}
-        >
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 class="font-serif font-bold text-xl text-[#304743]">
-                    {editingCodeId != null ? "Update" : "Add"} Access Code
-                </h3>
-                <button aria-label="Close"
-                    onclick={() => (showCodeModal = false)}
-                    class="text-slate-400 hover:text-slate-600"
-                >
-                    <X size={20} />
-                </button>
-            </div>
+<Modal bind:open={showCodeModal} title="{editingCodeId != null ? 'Update' : 'Add'} Access Code" maxWidth="max-w-lg">
+    <div class="space-y-4">
+        <div>
+            <label for="code-location" class={labelClass}>Code Label</label>
+            <input
+                id="code-location"
+                type="text"
+                bind:value={codeForm.location}
+                placeholder="e.g. Gate, Garage, Alarm"
+                class={inputClass}
+            />
+        </div>
 
-            <div class="p-6 space-y-4">
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Code Label
-                    </label>
-                    <input
-                        type="text"
-                        bind:value={codeForm.location}
-                        placeholder="e.g. Gate, Garage, Alarm"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
+        <div>
+            <label for="code-value" class={labelClass}>Code</label>
+            <input
+                id="code-value"
+                type="text"
+                bind:value={codeForm.code}
+                placeholder="e.g. 1234"
+                class="{inputClass} font-mono text-lg tracking-widest"
+            />
+        </div>
 
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Code
-                    </label>
-                    <input
-                        type="text"
-                        bind:value={codeForm.code}
-                        placeholder="e.g. 1234"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-mono text-lg tracking-widest"
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Instructions
-                    </label>
-                    <textarea
-                        bind:value={codeForm.instructions}
-                        rows="3"
-                        placeholder="e.g. Enter the code, then press # within ten seconds"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    ></textarea>
-                </div>
-            </div>
-
-            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                <button
-                    onclick={() => (showCodeModal = false)}
-                    class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
-                >
-                    Cancel
-                </button>
-                <button
-                    onclick={saveCode}
-                    disabled={!codeForm.location}
-                    class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-                >
-                    <Save size={16} /> Save Code
-                </button>
-            </div>
+        <div>
+            <label for="code-instructions" class={labelClass}>Instructions</label>
+            <textarea
+                id="code-instructions"
+                bind:value={codeForm.instructions}
+                rows="3"
+                placeholder="e.g. Enter the code, then press # within ten seconds"
+                class="{inputClass} resize-none"
+            ></textarea>
         </div>
     </div>
-{/if}
+
+    <div class={footerClass}>
+        <button onclick={() => (showCodeModal = false)} class={cancelClass}>Maybe later</button>
+        <button
+            onclick={saveCode}
+            disabled={!codeForm.location || saving}
+            aria-busy={saving}
+            class={saveClass}
+        >
+            <Save size={16} /> {saving ? "Saving..." : "Save my access code"}
+        </button>
+    </div>
+</Modal>
 
 <!-- Utility Modal -->
-{#if showUtilityModal}
-    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showUtilityModal = false) }}
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
-        transition:fade
-    >
-        <div
-            class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
-            in:fly={{ y: 20 }}
-        >
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 class="font-serif font-bold text-xl text-[#304743]">
-                    {editingUtilityId != null ? "Update" : "Add"} Utility Shutoff
-                </h3>
-                <button aria-label="Close"
-                    onclick={() => (showUtilityModal = false)}
-                    class="text-slate-400 hover:text-slate-600"
-                >
-                    <X size={20} />
-                </button>
-            </div>
+<Modal bind:open={showUtilityModal} title="{editingUtilityId != null ? 'Update' : 'Add'} Utility Shutoff" maxWidth="max-w-lg">
+    <div class="space-y-4">
+        <div>
+            <label for="utility-type" class={labelClass}>Utility Type</label>
+            <select id="utility-type" bind:value={utilityForm.service_type} class={inputClass}>
+                <option value="">Select type...</option>
+                <option value="Water">Water</option>
+                <option value="Gas">Gas</option>
+                <option value="Electric">Electric</option>
+                <option value="Internet">Internet</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
 
-            <div class="p-6 space-y-4">
-                <div class="space-y-2">
-                    <label for="utility-type" class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Utility Type
-                    </label>
-                    <select
-                        id="utility-type"
-                        bind:value={utilityForm.service_type}
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    >
-                        <option value="">Select type...</option>
-                        <option value="Water">Water</option>
-                        <option value="Gas">Gas</option>
-                        <option value="Electric">Electric</option>
-                        <option value="Internet">Internet</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
+        <div>
+            <label for="utility-provider" class={labelClass}>Provider Name</label>
+            <input
+                id="utility-provider"
+                type="text"
+                bind:value={utilityForm.provider}
+                placeholder="e.g. City Water Dept, PG&E"
+                class={inputClass}
+            />
+        </div>
 
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Provider Name
-                    </label>
-                    <input
-                        type="text"
-                        bind:value={utilityForm.provider}
-                        placeholder="e.g. City Water Dept, PG&E"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
+        <div>
+            <label for="utility-account-number" class={labelClass}>Account number</label>
+            <input
+                id="utility-account-number"
+                type="text"
+                bind:value={utilityForm.account_number}
+                class={inputClass}
+            />
+        </div>
 
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">
-                        Shutoff Location
-                    </label>
-                    <input
-                        type="text"
-                        bind:value={utilityForm.location}
-                        placeholder="e.g. Front yard, by the meter"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
-                    />
-                </div>
-            </div>
+        <div>
+            <label for="utility-support-phone" class={labelClass}>Support phone</label>
+            <input
+                id="utility-support-phone"
+                type="tel"
+                bind:value={utilityForm.support_phone}
+                class={inputClass}
+            />
+        </div>
 
-            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                <button
-                    onclick={() => (showUtilityModal = false)}
-                    class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
-                >
-                    Cancel
-                </button>
-                <button
-                    onclick={saveUtility}
-                    disabled={!utilityForm.service_type}
-                    class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-                >
-                    <Save size={16} /> Save Utility
-                </button>
-            </div>
+        <div>
+            <label for="utility-location" class={labelClass}>Shutoff Location</label>
+            <input
+                id="utility-location"
+                type="text"
+                bind:value={utilityForm.location}
+                placeholder="e.g. Beside the front-yard meter; instructions in the household folder"
+                class={inputClass}
+            />
         </div>
     </div>
-{/if}
+
+    <div class={footerClass}>
+        <button onclick={() => (showUtilityModal = false)} class={cancelClass}>Maybe later</button>
+        <button
+            onclick={saveUtility}
+            disabled={!utilityForm.service_type || saving}
+            aria-busy={saving}
+            class={saveClass}
+        >
+            <Save size={16} /> {saving ? "Saving..." : "Save my utility details"}
+        </button>
+    </div>
+</Modal>
 
 <div class="max-w-6xl mx-auto p-6 md:p-8 animate-in fade-in duration-500">
     <!-- Header -->
     <LivingBlueprintHeader
         title="The Home Operating Manual"
-        subtitle="The instruction manual for your physical house"
-        tier="preparation"
-        detailedDescription="Document your trusted vendors, access codes, and utility shutoff locations. Don't leave your family guessing how to turn off the water or who to call when something breaks."
-        whyMatters="In a crisis, your family needs immediate access to critical home information. Without these details, simple tasks become overwhelming challenges during an already difficult time."
+        subtitle="People to call, ways in, and equipment locations"
+        detailedDescription="Use Trusted Vendors for the people who know your home, Access Codes for entry details, and Utilities &amp; Shutoffs for equipment locations and provider contacts. Include landmarks and where the actual equipment instructions are kept."
+        whyMatters="Specific locations, working contact details, and familiar routines help the person looking after your home find the right information."
     />
 
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
         context="home-manual"
-        prompts={[
-            "Help me document my home's maintenance schedule...",
-            "Write instructions for shutting off my home's water, gas and power...",
-            "Draft a guide to my home security system...",
-            "What should my family know about the vendors who care for my home?"
-        ]}
+        promptSource="routes/modules/home-manual/+page.svelte:prompts"
     />
 
     <!-- Navigation Tabs -->
-    <div class="flex items-center justify-between mb-8 border-b border-slate-200 pb-1">
+    <div class="flex items-center justify-between mb-8 border-b border-border pb-1">
         <div class="flex gap-2">
             <button
                 onclick={() => (activeTab = "vendors")}
                 class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
                 {activeTab === 'vendors'
-                    ? 'border-primary text-primary bg-primary/10'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
+                    ? 'border-primary text-primary-hover bg-primary/10'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-background'}"
             >
                 Trusted Vendors
             </button>
@@ -449,8 +493,8 @@
                 onclick={() => (activeTab = "access")}
                 class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
                 {activeTab === 'access'
-                    ? 'border-primary text-primary bg-primary/10'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
+                    ? 'border-primary text-primary-hover bg-primary/10'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-background'}"
             >
                 Access Codes
             </button>
@@ -458,13 +502,13 @@
                 onclick={() => (activeTab = "utilities")}
                 class="px-5 py-2.5 font-bold text-sm rounded-t-xl transition-all border-b-2
                 {activeTab === 'utilities'
-                    ? 'border-primary text-primary bg-primary/10'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}"
+                    ? 'border-primary text-primary-hover bg-primary/10'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-background'}"
             >
                 Utilities & Shutoffs
             </button>
         </div>
-        <DataViewToggle module="home-manual" onchange={(mode) => viewMode = mode} />
+        <DataViewToggle module="home-manual" />
     </div>
 
     <!-- Tab Content -->
@@ -474,7 +518,7 @@
                 {#if vendorSync.items.length === 0}
                     <EmptyState
                         title="The people who keep your home running"
-                        whyMatters="<strong>When something breaks, your family won't know who to call.</strong> The plumber you trust, the electrician who knows your wiring, the HVAC tech who's serviced your system for years—these relationships took time to build.<br/><br/>Documenting your trusted vendors means your family won't have to start from scratch during a crisis. They'll have the direct numbers, the names to ask for, and the context of your history with each provider."
+                        whyMatters="<strong>When something breaks, your family will know exactly who to call.</strong> The plumber you trust, the electrician who knows your wiring, the HVAC tech who's serviced your system for years—these relationships took time to build.<br/><br/>Documenting your trusted vendors gives your family a head start. They'll have the direct numbers, the names to ask for, and the context of your history with each provider."
                         encouragement="Start with whoever you'd call in an emergency—plumber, electrician, or handyman."
                         icon={Phone}
                         iconClass="text-primary"
@@ -484,8 +528,8 @@
 
                     <!-- Sample Data GhostRows -->
                     <div class="mt-8">
-                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {#each getSmartSamples($language).homeManual?.vendors || [] as sample}
                                 <GhostRow
                                     name={sample.name}
@@ -496,13 +540,16 @@
                                         vendorForm = {
                                             category: sample.category,
                                             name: sample.name,
-                                            phone: sample.phone
+                                            phone: sample.phone,
+                                            email: "",
+                                            website: "",
+                                            notes: ""
                                         };
                                         showVendorModal = true;
                                     }}
                                 >
                                     {#snippet icon()}
-                                        <Phone size={20} class="text-slate-400" />
+                                        <Phone size={20} class="text-muted-foreground" />
                                     {/snippet}
                                 </GhostRow>
                             {/each}
@@ -511,8 +558,8 @@
                 {:else}
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
-                            <h2 class="font-bold text-slate-700 text-lg">
-                                Who To Call
+                            <h2 class="font-bold text-foreground text-lg">
+                                Who to turn to
                             </h2>
                             <button
                                 onclick={openVendorModal}
@@ -528,20 +575,20 @@
                             >
                                 {#each vendorSync.items as vendor}
                                     <div
-                                        class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-orange-200 transition-all group"
+                                        class="bg-card p-5 rounded-xl border border-border shadow-sm hover:border-primary/30 transition-all group"
                                     >
                                         <div
                                             class="flex justify-between items-start mb-3"
                                         >
                                             <span
-                                                class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase rounded-md tracking-wider"
+                                                class="px-2 py-1 bg-primary/10 text-primary-hover text-[10px] font-bold uppercase rounded-md tracking-wider"
                                                 >{vendor.category}</span
                                             >
                                             <div class="flex items-center gap-2">
                                                 <button
                                                     onclick={() => editVendor(vendor)}
                                                     aria-label="Update {vendor.name}"
-                                                    class="text-slate-300 hover:text-primary"
+                                                    class="text-muted-foreground hover:text-primary"
                                                 >
                                                     <Pencil size={14} />
                                                 </button>
@@ -549,29 +596,45 @@
                                                     onclick={() =>
                                                         deleteVendor(vendor.id)}
                                                     aria-label="Remove {vendor.name}"
-                                                    class="text-slate-300 hover:text-red-500"
+                                                    class="text-muted-foreground hover:text-danger"
                                                 >
-                                                    &times;
+                                                    <Trash2 size={14} />
                                                 </button>
                                             </div>
                                         </div>
                                         <h3
-                                            class="font-bold text-slate-800 text-lg"
+                                            class="font-bold text-foreground text-lg"
                                         >
                                             {vendor.name}
                                         </h3>
                                         <div class="mb-4"></div>
 
-                                        <div
-                                            class="flex items-center gap-2 text-slate-600 font-mono bg-slate-50 p-2 rounded-lg mb-3"
-                                        >
-                                            <Phone size={14} />
-                                            {vendor.phone}
-                                        </div>
+                                        {#if vendor.phone}
+                                            <div
+                                                class="flex items-center gap-2 text-muted-foreground font-mono bg-background p-2 rounded-lg mb-3"
+                                            >
+                                                <Phone size={14} />
+                                                {vendor.phone}
+                                            </div>
+                                        {/if}
+
+                                        {#if vendor.email}
+                                            <a href="mailto:{vendor.email}" class="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary break-all mb-2">
+                                                <Mail size={14} class="shrink-0" />
+                                                {vendor.email}
+                                            </a>
+                                        {/if}
+
+                                        {#if vendor.website}
+                                            <a href={siteHref(vendor.website)} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary break-all mb-3">
+                                                <Globe size={14} class="shrink-0" />
+                                                {vendor.website}
+                                            </a>
+                                        {/if}
 
                                         {#if vendor.notes}
                                             <p
-                                                class="text-xs text-slate-400 italic"
+                                                class="text-xs text-muted-foreground italic"
                                             >
                                                 "{vendor.notes}"
                                             </p>
@@ -582,7 +645,7 @@
                                 <!-- Empty State Add -->
                                 <button
                                     onclick={openVendorModal}
-                                    class="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-slate-300 hover:bg-slate-50 transition-all min-h-[200px]"
+                                    class="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center text-muted-foreground hover:border-slate-300 hover:bg-background transition-all min-h-[200px]"
                                 >
                                     <Plus size={24} class="mb-2" />
                                     <span class="font-bold text-sm"
@@ -592,40 +655,40 @@
                             </div>
                         {:else}
                             <!-- Table View -->
-                            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                            <div class="bg-card rounded-xl border border-border overflow-hidden">
                                 <table class="w-full">
-                                    <thead class="bg-slate-50 border-b border-slate-200">
+                                    <thead class="bg-background border-b border-border">
                                         <tr>
-                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Name</th>
-                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Category</th>
-                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Phone</th>
-                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Notes</th>
-                                            <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Name</th>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Category</th>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Phone</th>
+                                            <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Notes</th>
+                                            <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-100">
+                                    <tbody class="divide-y divide-border">
                                         {#each vendorSync.items as vendor}
-                                            <tr class="hover:bg-slate-50 transition-colors group">
-                                                <td class="px-4 py-3 font-medium text-slate-800">{vendor.name}</td>
+                                            <tr class="hover:bg-background transition-colors group">
+                                                <td class="px-4 py-3 font-medium text-foreground">{vendor.name}</td>
                                                 <td class="px-4 py-3">
-                                                    <span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium">
+                                                    <span class="px-2 py-1 bg-primary/10 text-primary-hover rounded text-xs font-medium">
                                                         {vendor.category}
                                                     </span>
                                                 </td>
-                                                <td class="px-4 py-3 text-slate-600 font-mono">{vendor.phone || '-'}</td>
-                                                <td class="px-4 py-3 text-slate-500 text-sm max-w-[150px] truncate">{vendor.notes || '-'}</td>
+                                                <td class="px-4 py-3 text-muted-foreground font-mono">{vendor.phone || '-'}</td>
+                                                <td class="px-4 py-3 text-muted-foreground text-sm max-w-[150px] truncate">{vendor.notes || '-'}</td>
                                                 <td class="px-4 py-3 text-right">
                                                     <button
                                                         onclick={() => editVendor(vendor)}
                                                         aria-label="Update {vendor.name}"
-                                                        class="text-slate-300 hover:text-primary transition-opacity mr-2"
+                                                        class="text-muted-foreground hover:text-primary transition-opacity mr-2"
                                                     >
                                                         <Pencil size={16} />
                                                     </button>
                                                     <button
                                                         onclick={() => deleteVendor(vendor.id)}
                                                         aria-label="Remove {vendor.name}"
-                                                        class="text-slate-300 hover:text-red-500 transition-opacity"
+                                                        class="text-muted-foreground hover:text-danger transition-opacity"
                                                     >
                                                         <Trash2 size={16} />
                                                     </button>
@@ -644,8 +707,8 @@
                 {#if accessSync.items.length === 0}
                     <EmptyState
                         title="Keys to your kingdom"
-                        whyMatters="<strong>Alarm codes, garage door combinations, WiFi passwords, safe combinations—these are the invisible barriers that could lock your family out of their own home.</strong><br/><br/>Documenting access codes ensures your family can enter the house, disable alarms without triggering a police response, and access secured areas. It's one less thing for them to figure out during an already overwhelming time."
-                        encouragement="Start with your most critical code—the alarm system or front door."
+                        whyMatters="<strong>Alarm codes, garage door combinations, WiFi passwords, safe combinations—these details open the door for your family and let them settle in with ease.</strong><br/><br/>Documenting access codes gives your family a calm way into the house, past the alarm, and into secured areas."
+                        encouragement="Start with the code you use most, the alarm or front door."
                         icon={Key}
                         iconClass="text-primary"
                         ctaLabel="Share your first code"
@@ -654,8 +717,8 @@
 
                     <!-- Sample Data GhostRows -->
                     <div class="mt-8">
-                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {#each getSmartSamples($language).homeManual?.accessCodes || [] as sample}
                                 <GhostRow
                                     name={sample.location}
@@ -672,7 +735,7 @@
                                     }}
                                 >
                                     {#snippet icon()}
-                                        <Key size={20} class="text-slate-400" />
+                                        <Key size={20} class="text-muted-foreground" />
                                     {/snippet}
                                 </GhostRow>
                             {/each}
@@ -681,7 +744,7 @@
                 {:else}
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
-                            <h2 class="font-bold text-slate-700 text-lg">
+                            <h2 class="font-bold text-foreground text-lg">
                                 Codes & Keys
                             </h2>
                             <button
@@ -695,23 +758,23 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {#each accessSync.items as item}
                                 <div
-                                    class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between"
+                                    class="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between"
                                 >
                                     <div class="flex items-center gap-4">
                                         <div
-                                            class="p-3 bg-indigo-50 text-indigo-600 rounded-lg"
+                                            class="p-3 bg-primary-soft text-primary-hover rounded-lg"
                                         >
                                             <Key size={20} />
                                         </div>
                                         <div>
                                             <h3
-                                                class="font-bold text-slate-700"
+                                                class="font-bold text-foreground"
                                             >
                                                 {item.location}
                                             </h3>
                                             {#if item.code_encrypted}
                                                 <div
-                                                    class="font-mono text-xl tracking-widest text-slate-900 bg-slate-100 px-2 py-0.5 rounded inline-block mt-1"
+                                                    class="font-mono text-xl tracking-widest text-foreground bg-muted px-2 py-0.5 rounded inline-block mt-1"
                                                 >
                                                     {item.code_encrypted}
                                                 </div>
@@ -720,7 +783,7 @@
                                     </div>
                                     {#if item.instructions}
                                         <div
-                                            class="text-xs text-slate-400 max-w-[150px] text-right"
+                                            class="text-xs text-muted-foreground max-w-[150px] text-right"
                                         >
                                             {item.instructions}
                                         </div>
@@ -729,16 +792,16 @@
                                         <button
                                             onclick={() => editCode(item)}
                                             aria-label="Update {item.location}"
-                                            class="text-slate-300 hover:text-primary p-2"
+                                            class="text-muted-foreground hover:text-primary p-2"
                                         >
                                             <Pencil size={14} />
                                         </button>
                                         <button
                                             onclick={() => deleteCode(item.id)}
                                             aria-label="Remove {item.location}"
-                                            class="text-slate-300 hover:text-red-500 p-2"
+                                            class="text-muted-foreground hover:text-danger p-2"
                                         >
-                                            &times;
+                                            <Trash2 size={14} />
                                         </button>
                                     </div>
                                 </div>
@@ -751,9 +814,9 @@
             <div in:fade class="h-full">
                 {#if utilitySync.items.length === 0}
                     <EmptyState
-                        title="When seconds matter"
-                        whyMatters="<strong>A burst pipe at 2am. A gas leak. A tripped breaker during a storm.</strong> In emergencies, knowing exactly where to find the water shutoff, gas valve, or electrical panel can prevent thousands in damage—or even save lives.<br/><br/>Documenting these critical locations means your family won't be searching frantically in a crisis. They'll know exactly where to go and what to do."
-                        encouragement="Start with your water main shutoff—it's the most common emergency need."
+                        title="Where to find the shutoffs"
+                        whyMatters="Record where the equipment is, which provider to contact, and where to find the manufacturer's or professional's instructions. A recognizable landmark helps another person locate the right place."
+                        encouragement="Start with one utility. Add its location, provider, account reference, and support number when you have them."
                         icon={Droplets}
                         iconClass="text-primary"
                         ctaLabel="Share your first shutoff"
@@ -762,11 +825,11 @@
 
                     <!-- Sample Data GhostRows -->
                     <div class="mt-8">
-                        <p class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4 text-center">Example entries to inspire you</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
+                        <p class="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-4 text-center">Example entries to inspire you</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {#each getSmartSamples($language).homeManual?.utilities || [] as sample}
                                 <GhostRow
-                                    name={`${sample.service_type} Shutoff`}
+                                    name={`${utilityLabel(sample.service_type)} Shutoff`}
                                     subtitle={sample.location}
                                     type="Utility"
                                     onClick={() => {
@@ -774,19 +837,16 @@
                                         utilityForm = {
                                             service_type: sample.service_type,
                                             provider: sample.provider,
-                                            location: sample.location || ""
+                                            location: sample.location || "",
+                                            account_number: sample.account_number ?? "",
+                                            support_phone: sample.support_phone ?? "",
                                         };
                                         showUtilityModal = true;
                                     }}
                                 >
                                     {#snippet icon()}
-                                        {#if sample.service_type === 'Water'}
-                                            <Droplets size={20} class="text-slate-400" />
-                                        {:else if sample.service_type === 'Gas'}
-                                            <Thermometer size={20} class="text-slate-400" />
-                                        {:else}
-                                            <Zap size={20} class="text-slate-400" />
-                                        {/if}
+                                        {@const SampleIcon = utilityIcon(sample.service_type)}
+                                        <SampleIcon size={20} class="text-muted-foreground" />
                                     {/snippet}
                                 </GhostRow>
                             {/each}
@@ -795,8 +855,8 @@
                 {:else}
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
-                            <h2 class="font-bold text-slate-700 text-lg">
-                                Critical Shutoffs
+                            <h2 class="font-bold text-foreground text-lg">
+                                Important Shutoffs
                             </h2>
                             <button
                                 onclick={openUtilityModal}
@@ -808,59 +868,71 @@
 
                         <div class="grid grid-cols-1 gap-4">
                             {#each utilitySync.items as item}
+                                {@const UtilIcon = utilityIcon(item.service_type)}
                                 <div
-                                    class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 items-start relative group"
+                                    class="bg-card p-6 rounded-xl border border-border shadow-sm flex flex-col md:flex-row gap-6 items-start relative group"
                                 >
                                     <div class="absolute top-4 right-4 flex items-center gap-2">
                                         <button
                                             onclick={() => editUtility(item)}
                                             aria-label="Update {item.service_type} shutoff"
-                                            class="text-slate-300 hover:text-primary"
+                                            class="text-muted-foreground hover:text-primary"
                                         >
                                             <Pencil size={14} />
                                         </button>
                                         <button
                                             onclick={() => deleteUtility(item.id)}
                                             aria-label="Remove {item.service_type} shutoff"
-                                            class="text-slate-300 hover:text-red-500"
+                                            class="text-muted-foreground hover:text-danger"
                                         >
-                                            &times;
+                                            <Trash2 size={14} />
                                         </button>
                                     </div>
                                     <div
-                                        class="p-4 bg-primary/5 text-primary rounded-2xl shrink-0"
+                                        class="p-4 bg-primary/5 text-primary-hover rounded-2xl shrink-0"
                                     >
-                                        {#if item.service_type === "Water"}
-                                            <Droplets size={32} />
-                                        {:else if item.service_type === "Electric"}
-                                            <Zap size={32} />
-                                        {:else if item.service_type === "Gas"}
-                                            <Thermometer size={32} />
-                                        {:else}
-                                            <Wifi size={32} />
-                                        {/if}
+                                        <UtilIcon size={32} />
                                     </div>
 
                                     <div class="flex-1 space-y-4">
                                         <div>
                                             <h3
-                                                class="font-bold text-xl text-slate-800"
+                                                class="font-bold text-xl text-foreground"
                                             >
-                                                {item.service_type} Shutoff
+                                                {utilityLabel(item.service_type)} Shutoff
                                             </h3>
-                                            <p class="text-slate-500 text-sm">
-                                                Provider: {item.provider}
-                                            </p>
+                                            {#if item.provider}
+                                                <p class="text-muted-foreground text-sm">
+                                                    Provider: {item.provider}
+                                                </p>
+                                            {/if}
                                         </div>
 
+                                        {#if item.account_number || item.support_phone}
+                                            <dl class="grid grid-cols-2 gap-4 text-sm">
+                                                {#if item.account_number}
+                                                    <div class="min-w-0">
+                                                        <dt class="text-xs font-bold uppercase text-muted-foreground mb-1">Account number</dt>
+                                                        <dd class="font-mono text-foreground break-all">{item.account_number}</dd>
+                                                    </div>
+                                                {/if}
+                                                {#if item.support_phone}
+                                                    <div class="min-w-0">
+                                                        <dt class="text-xs font-bold uppercase text-muted-foreground mb-1">Support phone</dt>
+                                                        <dd class="font-mono text-foreground break-all">{item.support_phone}</dd>
+                                                    </div>
+                                                {/if}
+                                            </dl>
+                                        {/if}
+
                                         {#if item.location}
-                                            <div class="bg-slate-50 p-4 rounded-lg">
+                                            <div class="bg-background p-4 rounded-lg">
                                                 <div
-                                                    class="text-xs font-bold uppercase text-slate-400 mb-1 flex items-center gap-1"
+                                                    class="text-xs font-bold uppercase text-muted-foreground mb-1 flex items-center gap-1"
                                                 >
                                                     <MapPin size={10} /> Location
                                                 </div>
-                                                <div class="font-medium text-slate-700">
+                                                <div class="font-medium text-foreground">
                                                     {item.location}
                                                 </div>
                                             </div>

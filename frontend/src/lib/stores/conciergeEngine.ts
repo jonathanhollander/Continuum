@@ -1,25 +1,12 @@
 import { writable, get } from 'svelte/store';
 import { aiConciergeService } from '../services/aiConciergeService';
 import { overwhelmDetector } from '../services/overwhelmDetection';
-import { activeAccountId } from './keyringStore';
+import { auth } from './auth';
+import { captureSession, isCurrentSession, type SessionOwnership } from '../services/sessionOwnership';
 import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
+import { loadAIConfig, aiAsset, renderAIAsset, currentAIJob, type AIWritingJob } from '../services/aiCapabilities';
 import { navGroups } from '../config/navigation';
-
-// Keyed by the navigation label (navigation.ts), which setContext uses as the context name.
-const PIVOT_GREETINGS: Record<string, string> = {
-    'Property & Real Estate': "We've moved to your properties. Taking care of your home—the place where so many memories are made—is a beautiful way to protect your legacy. Where shall we start?",
-    'Financial Accounts': "Securing your financial resources is a vital act of protection for those you love. Which account shall we document first to ensure they're provided for?",
-    'Document Vault': "Legal foundations bring such peace of mind to a family. Do you have a copy of your Will or Trust ready to secure here?",
-    'Health & Medical': "These decisions are about your dignity and care. It takes courage to think through these. Have you designated a healthcare proxy?",
-    'Family & Contacts': "Legacy is, above all, about the people we love. Who is the first person you'd like to include in your circle of trust?",
-    'Legacy Correspondence': "Your voice is a gift that will last forever. These letters will mean so much. Who would you like to speak to first?",
-    'The Life Timeline': "Every life is a profound story. Which milestone should we honor first on your timeline?",
-    'Insurance Portfolio': "Insurance is a safety net you've built for your family's future. Do you have any active policies we should record so they're always easy to find?",
-    'Digital Guardian': "Your digital life is part of your story. Let's make sure your family has the keys they'll need. Do you have a password manager we should record the location of?",
-    'Wellness Check-in': "The Pulse system is like a steady hand, making sure you're okay. Who would you trust most to respond first when a check-in needs attention?",
-    'Heirlooms & Treasures': "Objects carry the stories of our lives. What's a cherished heirloom you'd like to protect today?"
-};
 
 export interface Message {
     id: string;
@@ -27,6 +14,10 @@ export interface Message {
     content: string;
     timestamp: number;
     isDictated?: boolean;
+    source?: 'user' | 'model' | 'app';
+    status?: boolean;
+    historyContent?: string;
+    job_id?: string;
     resources?: Array<{
         title: string;
         description: string;
@@ -36,6 +27,11 @@ export interface Message {
 }
 
 interface ConciergeState {
+    accountId: number | null;
+    accountEpoch: number;
+    composerDraft: string;
+    writingJob?: AIWritingJob;
+    writingJobSource?: string;
     isOpen: boolean;
     messages: Message[];
     isThinking: boolean;
@@ -48,12 +44,16 @@ interface ConciergeState {
     hasPendingContextSwitch: boolean;
     isPoppedOut: boolean;
     floatingPosition: { x: number; y: number } | null;
+    floatingPositionV?: number;
     floatingSize: { width: number; height: number } | null;
     popOutMode: 'pip' | 'floating' | null;
 }
 
 function createConciergeEngine() {
     const initialState: ConciergeState = {
+        accountId: null,
+        accountEpoch: 0,
+        composerDraft: "",
         isOpen: false,
         messages: [],
         isThinking: false,
@@ -66,144 +66,150 @@ function createConciergeEngine() {
         hasPendingContextSwitch: false,
         isPoppedOut: false,
         popOutMode: null,
-        floatingPosition: { x: 50, y: 50 }, // Default top-right-ish
+        floatingPosition: null, // null = default spot, chosen by ConciergePanel
+        floatingPositionV: 2,
         floatingSize: { width: 340, height: 580 }
     };
 
-    // Load from localStorage if browser
-    let savedState = initialState;
-    if (browser) {
-        const saved = localStorage.getItem('continuum_concierge_state');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                savedState = {
-                    ...initialState,
-                    ...parsed,
-                    isOpen: false,
-                    isPoppedOut: false,
-                    popOutMode: null
-                };
-            } catch (e) {
-                console.error("Failed to load concierge state:", e);
-            }
-        }
-    }
-
-    const { subscribe, set, update } = writable<ConciergeState>(savedState);
-
+    const { subscribe, set, update: updateStore } = writable<ConciergeState>({ ...initialState });
+    let accountId: number | null = null;
+    let accountSession: SessionOwnership | null = null;
+    let accountEpoch = 0;
+    let conversationEpoch = 0;
     let syncChannel: BroadcastChannel | null = null;
+    const stateKey = (id: number) => `continuum_concierge_state:user:${id}`;
 
-    const broadcastState = (state: ConciergeState) => {
-        if (browser) {
-            localStorage.setItem('continuum_concierge_state', JSON.stringify(state));
-        }
-        if (syncChannel) {
-            syncChannel.postMessage({ type: 'STATE_UPDATE', state });
+    // The old unscoped key has no owner metadata. Keep it on disk, but never assign its
+    // conversation to whichever person happens to sign in next.
+    const loadState = (id: number): ConciergeState => {
+        try {
+            const saved = localStorage.getItem(stateKey(id));
+            const parsed = saved ? JSON.parse(saved) : {};
+            const p = parsed?.floatingPosition;
+            const legacyDefault = parsed?.floatingPositionV !== 2 && p?.x === 50 && p?.y === 50;
+            return {
+                ...initialState,
+                ...parsed,
+                accountId: id,
+                accountEpoch,
+                messages: Array.isArray(parsed?.messages) ? parsed.messages.map((message: Message) => ({...message,source:message.source ?? (message.role === 'user' ? 'user' : message.id === '1' ? 'app' : 'model')})) : [],
+                composerDraft: typeof parsed?.composerDraft === "string" ? parsed.composerDraft : "",
+                floatingPosition: legacyDefault ? null : (parsed?.floatingPosition ?? null),
+                floatingPositionV: 2,
+                isOpen: false,
+                isThinking: false,
+                isListening: false,
+                isSpeaking: false,
+                isPoppedOut: false,
+                popOutMode: null
+            };
+        } catch (e) {
+            console.error("Failed to load concierge state:", e);
+            return { ...initialState, accountId: id, accountEpoch };
         }
     };
 
-    if (browser) {
-        syncChannel = new BroadcastChannel('continuum-concierge');
-        syncChannel.onmessage = (event) => {
+    const persistState = (state: ConciergeState) => {
+        if (!browser || accountId === null || state.accountId !== accountId
+            || !accountSession || !isCurrentSession(accountSession)) return;
+        try {
+            localStorage.setItem(stateKey(accountId), JSON.stringify(state));
+        } catch (e) {
+            console.error("Failed to keep concierge state on this device:", e);
+        }
+    };
+
+    // Every local change is kept for its authenticated owner. Replies and unconfirmed
+    // extracted details therefore survive a reload just like the account's own thread.
+    const update = (change: (state: ConciergeState) => ConciergeState) => updateStore(state => {
+        if (accountId !== null && (!accountSession || !isCurrentSession(accountSession))) return state;
+        const next = change(state);
+        persistState(next);
+        syncChannel?.postMessage({ type: 'STATE_UPDATE', accountId, state: next });
+        return next;
+    });
+
+    const followAccount = (session: { isAuthenticated: boolean; user: { id: number } | null }) => {
+        const owner = captureSession();
+        const nextId = owner.ready && session.isAuthenticated && session.user ? session.user.id : null;
+        if (nextId === accountId && (nextId === null || owner.generation === accountSession?.generation)) return;
+        persistState(get({ subscribe }));
+        accountEpoch++;
+        conversationEpoch++;
+        syncChannel?.close();
+        syncChannel = null;
+        accountId = nextId;
+        accountSession = nextId === null ? null : owner;
+        set(nextId === null ? { ...initialState, accountEpoch } : loadState(nextId));
+        if (nextId === null) return;
+
+        const channel = new BroadcastChannel(`continuum-concierge:user:${nextId}`);
+        const epoch = accountEpoch;
+        syncChannel = channel;
+        channel.onmessage = event => {
+            if (epoch !== accountEpoch || channel !== syncChannel || event.data?.accountId !== accountId
+                || !accountSession || !isCurrentSession(accountSession)) return;
             const { type, state: remoteState } = event.data;
-            if (type === 'STATE_UPDATE') {
-                update(s => {
-                    const newState = { ...s, ...remoteState };
-                    // Persist locally too
-                    localStorage.setItem('continuum_concierge_state', JSON.stringify(newState));
-                    return newState;
+            if (type === 'STATE_UPDATE' && remoteState?.accountId === accountId) {
+                updateStore(state => {
+                    const next = { ...state, ...remoteState, accountId, accountEpoch };
+                    persistState(next);
+                    return next;
                 });
             } else if (type === 'POPUP_CLOSED') {
-                update(s => {
-                    const newState = { ...s, isPoppedOut: false, isOpen: true };
-                    broadcastState(newState);
-                    return newState;
-                });
+                update(state => ({ ...state, isPoppedOut: false, isOpen: true }));
             }
         };
+    };
+    if (browser) {
+        auth.subscribe(followAccount);
+        window.addEventListener('storage', event => {
+            if (event.key === 'continuum_auth_token' || event.key === null) followAccount(get(auth));
+        });
     }
 
-    const updateInitialGreeting = () => {
-        const state = get({ subscribe });
-        if (state.messages.length > 0) return;
-
-        const contextName = state.currentContextName || 'Continuum Dashboard';
-        const isHome = contextName === 'Continuum Dashboard' || contextName === 'Marketing' || contextName === 'Continuum';
-
-        // Proactive Contextual Greetings
-        const contextGreetings: Record<string, string> = {
-            'Property & Real Estate': "I'm here to help you catalog your assets. Your home is the foundation of so much family history—where shall we begin?",
-            'Financial Accounts': "Let's secure your financial legacy. Thinking ahead about these resources is such a kind thing to do for your family. Which account is most important to record first?",
-            'Document Vault': "Building a solid legal foundation is an act of great care. Do you have a copy of your Will or Trust ready to upload?",
-            'Health & Medical': "Medical clarity ensures your wishes are honored with dignity. Have you designated a healthcare proxy or created a living will?",
-            'Family & Contacts': "Legacy is all about the people you care for. Who is the first person you'd like to include in your circle of trust?",
-            'Legacy Correspondence': "Your voice is a treasure for those you leave behind. Who would you like to write your first legacy letter to?",
-            'The Life Timeline': "Your life is a story worth telling. What is a major life milestone we should honor first on your timeline?",
-            'Insurance Portfolio': "Protection brings peace of mind. Do you have any active life or property insurance policies we should track to make sure your family is secure?",
-            'Digital Guardian': "Your digital legacy is vital. Let's make sure your loved ones can reach the accounts that matter. Do you have a list of priority digital accounts to secure?",
-            'Wellness Check-in': "The Pulse system is here to watch over you. Who should be your primary responder, the person you trust most to check in on you?",
-            'Heirlooms & Treasures': "Every object has a story and a connection. What's a meaningful heirloom you'd like to register today?"
-        };
-
-        let prefix = "";
-        if (!state.hasInteracted) {
-            prefix = "Welcome to Continuum. I'm here to help you secure your legacy. ";
-        } else {
-            prefix = "Ready to continue. ";
-        }
-
-        const greetingBody = contextGreetings[contextName] ||
-            (isHome ? "To begin, we need to secure your legacy by identifying your circle of trust. Who is your primary emergency contact?" : `What's the first detail we should record here in ${contextName}?`);
-
-        const newGreeting = `${prefix}${greetingBody}`;
-
-        update(s => ({
-            ...s,
-            messages: [{
-                id: '1',
-                role: 'assistant',
-                content: newGreeting,
-                timestamp: Date.now()
-            }],
-            // Mark as interacted once they've seen the first greeting
-            hasInteracted: true
-        }));
+    const addConfiguredGreeting = async (pivot = false) => {
+        const owner = captureSession(), epoch = conversationEpoch;
+        const contextName = get({subscribe}).currentContextName;
+        try {
+            await loadAIConfig({purpose:'concierge.chat'});
+            if (!isCurrentSession(owner) || epoch !== conversationEpoch || contextName !== get({subscribe}).currentContextName) return;
+            const state = get({subscribe});
+            if (!pivot && state.messages.length) return;
+            const asset = <T>(name: string) => aiAsset<T>(`lib/stores/conciergeEngine.ts:${name}`, {purpose:'concierge.chat'});
+            const render = (name: string, values: Record<string,string>) => renderAIAsset(asset<string>(name) ?? '', values);
+            let content: string;
+            if (pivot) {
+                const lead = asset<Record<string,string>>('PIVOT_GREETINGS')?.[contextName] ?? render('pivot_fallback', {context_name:contextName});
+                content = render('pivot_join', {context_name:contextName,lead_question:lead});
+            } else {
+                const home = ['Continuum Dashboard','Marketing','Continuum'].includes(contextName);
+                const body = asset<Record<string,string>>('contextGreetings')?.[contextName] ?? (home ? asset<string>('greeting_home') ?? '' : render('greeting_other', {context_name:contextName}));
+                content = render('greeting_join', {prefix:asset<string>(state.hasInteracted ? 'greeting_prefix_return' : 'greeting_prefix_first') ?? '',body});
+            }
+            if (!content) return;
+            update(state => ({...state, messages:[...state.messages,{id:crypto.randomUUID(),role:'assistant',source:'app',content,timestamp:Date.now()}],hasInteracted:true,hasPendingContextSwitch:false}));
+        } catch { /* Configuration is required; keep the existing thread available for retry. */ }
     };
+    const updateInitialGreeting = () => { void addConfiguredGreeting(); };
 
     return {
         subscribe,
+        setComposerDraft: (composerDraft: string) => update(state => ({ ...state, composerDraft })),
         toggle: () => update(s => {
             const newState = { ...s, isOpen: !s.isOpen };
-            broadcastState(newState);
             return newState;
         }),
         open: () => {
             update(s => {
                 const newState = { ...s, isOpen: true };
-                broadcastState(newState);
                 return newState;
             });
 
             // Check for pending context switch (Delayed Pivot)
             const state = get({ subscribe });
             if (state.hasPendingContextSwitch) {
-                const contextName = state.currentContextName;
-                const leadQuestion = PIVOT_GREETINGS[contextName] || `Shall we start securing the details for ${contextName}?`;
-                const pivotMsg = `We've moved into ${contextName}. ${leadQuestion}`;
-
-                const assistantMsg: Message = {
-                    id: Math.random().toString(36).substring(7),
-                    role: 'assistant',
-                    content: pivotMsg,
-                    timestamp: Date.now()
-                };
-
-                update(s => ({
-                    ...s,
-                    messages: [...s.messages, assistantMsg],
-                    hasPendingContextSwitch: false
-                }));
+                void addConfiguredGreeting(true);
             } else {
                 updateInitialGreeting();
             }
@@ -211,7 +217,6 @@ function createConciergeEngine() {
         close: () => {
             update(s => {
                 const newState = { ...s, isOpen: false };
-                broadcastState(newState);
                 return newState;
             });
         },
@@ -227,10 +232,9 @@ function createConciergeEngine() {
                 const newState = {
                     ...s,
                     isPoppedOut: true,
-                    popOutMode: hasPiP ? 'pip' : 'floating',
+                    popOutMode: hasPiP ? ('pip' as const) : ('floating' as const),
                     isOpen: true
                 };
-                broadcastState(newState);
                 return newState;
             });
         },
@@ -238,7 +242,6 @@ function createConciergeEngine() {
         setFloatingPosition: (pos: { x: number; y: number }) => {
             update(s => {
                 const newState = { ...s, floatingPosition: pos };
-                broadcastState(newState);
                 return newState;
             });
         },
@@ -246,7 +249,6 @@ function createConciergeEngine() {
         setFloatingSize: (size: { width: number; height: number }) => {
             update(s => {
                 const newState = { ...s, floatingSize: size };
-                broadcastState(newState);
                 return newState;
             });
         },
@@ -254,7 +256,6 @@ function createConciergeEngine() {
         popIn: () => {
             update(s => {
                 const newState = { ...s, isPoppedOut: false, popOutMode: null, isOpen: true };
-                broadcastState(newState);
                 return newState;
             });
         },
@@ -265,7 +266,7 @@ function createConciergeEngine() {
         setContext: (route: string) => {
             const allItems = navGroups.flatMap(g => g.items);
             const item = allItems.find(i => i.href === route);
-            const contextName = item ? item.label : (route === '/' ? 'Marketing' : (route.startsWith('/modules') ? route.split('/').pop()?.replace('-', ' ') : 'Continuum'));
+            const contextName = item ? item.label : (route === '/' ? 'Marketing' : (route.startsWith('/modules') ? (route.split('/').pop() ?? '').replace('-', ' ') : 'Continuum'));
 
             const state = get({ subscribe });
             const oldContext = state.currentContextName;
@@ -276,23 +277,13 @@ function createConciergeEngine() {
                     currentRoute: route,
                     currentContextName: contextName
                 };
-                broadcastState(newState);
                 return newState;
             });
 
             // Proactive Pivot: If panel is open and context changes, interject
             if (oldContext !== contextName && state.messages.length >= 1) {
                 if (state.isOpen) {
-                    const leadQuestion = PIVOT_GREETINGS[contextName] || `Shall we start securing the details for ${contextName}?`;
-                    const pivotMsg = `We've moved into ${contextName}. ${leadQuestion}`;
-
-                    const assistantMsg: Message = {
-                        id: Math.random().toString(36).substring(7),
-                        role: 'assistant',
-                        content: pivotMsg,
-                        timestamp: Date.now()
-                    };
-                    update(s => ({ ...s, messages: [...s.messages, assistantMsg] }));
+                    void addConfiguredGreeting(true);
                 } else {
                     // Panel is closed, mark for pending pivot on next open
                     update(s => ({ ...s, hasPendingContextSwitch: true }));
@@ -303,9 +294,23 @@ function createConciergeEngine() {
         },
 
         sendMessage: async (content: string, isDictated: boolean = false) => {
+            const owner = accountId;
+            const session = captureSession();
+            const epoch = conversationEpoch;
+            if (owner === null || !isCurrentSession(session)) return null;
+            const before = get({subscribe});
+            const selectedJob = currentAIJob();
+            // Svelte fields may be proxies; persist/broadcast an immutable plain job snapshot.
+            const activeJob: AIWritingJob | undefined = selectedJob ? {...JSON.parse(JSON.stringify(selectedJob)),current_draft_source:selectedJob.current_draft_source ?? 'edited'} : undefined;
+            const jobSource = JSON.stringify(selectedJob);
+            const job = activeJob && jobSource !== before.writingJobSource
+                ? {...activeJob,job_brief:activeJob.job_brief ?? (activeJob.job_id === before.writingJob?.job_id ? before.writingJob?.job_brief : undefined) ?? content}
+                : before.writingJob ?? activeJob;
             const userMsg: Message = {
                 id: Math.random().toString(36).substring(7),
                 role: 'user',
+                source: 'user',
+                job_id: job?.job_id,
                 content,
                 timestamp: Date.now(),
                 isDictated
@@ -315,71 +320,32 @@ function createConciergeEngine() {
                 const newState = {
                     ...s,
                     messages: [...s.messages, userMsg],
+                    writingJob: job,
+                    writingJobSource: activeJob ? jobSource : s.writingJobSource,
                     isThinking: true,
                     hasInteracted: true
                 };
-                broadcastState(newState);
                 return newState;
             });
 
             try {
                 const state = get({ subscribe });
-                const response = await aiConciergeService.chat(content, state.messages, state.currentContextName);
+                const response = await aiConciergeService.chat(content, state.messages.filter(message => !message.status && message.job_id === job?.job_id).map(message => ({...message,source:message.source ?? (message.role === 'user' ? 'user' : 'model')})), state.currentContextName, undefined, {purpose:'concierge.chat'}, job);
+                if (accountId !== owner || conversationEpoch !== epoch || !isCurrentSession(session)) return null;
+                if (currentAIJob() && JSON.stringify(currentAIJob()) !== jobSource) { update(state => ({...state,isThinking:false})); return null; }
 
-                // Parse response if it's JSON
-                let displayContent = response.content;
-                let extractedDataFromResponse: any | null = response.extractedData || null;
-                let resources: any[] = []; // Declare output variable here
-
-                if (response.content.includes('{') && (response.content.includes('message') || response.content.includes('extractedData'))) {
-                    try {
-                        // Strip markdown code blocks if present
-                        const cleanJson = response.content.replace(/```json|```/g, '').trim();
-                        const parsed = JSON.parse(cleanJson);
-                        displayContent = parsed.message || displayContent;
-
-                        if (parsed.extractedData) {
-                            extractedDataFromResponse = parsed.extractedData;
-                        }
-
-                        if (parsed.resources) {
-                            resources = parsed.resources;
-                        }
-
-                        // Contextual Navigation & Actions
-                        if (browser && parsed.intent) {
-                            if (parsed.intent === 'suggest_break') {
-                                console.log(`[Concierge] Triggering break suggestion based on intent`);
-                                overwhelmDetector.triggerOverwhelm(['AI_SUGGESTION'], 'The AI guide suggested a pause.');
-                            } else {
-                                const intentMap: Record<string, string> = {
-                                    'add_contact': '/modules/contacts',
-                                    'add_property': '/modules/property',
-                                    'add_financial': '/modules/financial-accounts',
-                                    'add_insurance': '/modules/insurance',
-                                    'add_healthcare': '/modules/medical',
-                                    'add_digital': '/modules/digital-guardian'
-                                };
-
-                                const targetRoute = intentMap[parsed.intent];
-                                if (targetRoute && window.location.pathname !== targetRoute) {
-                                    console.log(`[Concierge] Navigating to ${targetRoute} based on intent: ${parsed.intent}`);
-                                    goto(targetRoute);
-                                }
-                            }
-                        }
-                    } catch (e) {
-                        console.error("Failed to parse AI JSON response:", e);
-                    }
-                } else if (response.resources) {
-                    // Handle case where resources come directly from response object not in JSON content string
-                    resources = response.resources;
-                }
+                // chat() has already parsed the envelope. Display text is never parsed as another action.
+                const resources = response.resources || [];
+                const extractedDataFromResponse = response.extractedData || null;
 
                 const assistantMsg: Message = {
                     id: Math.random().toString(36).substring(7),
                     role: 'assistant',
-                    content: displayContent,
+                    source: response.failed ? undefined : 'model',
+                    status: response.failed === true,
+                    job_id: job?.job_id,
+                    content: response.content,
+                    historyContent: response.historyContent,
                     timestamp: new Date().getTime(),
                     resources: resources.length > 0 ? resources : undefined
                 };
@@ -389,14 +355,33 @@ function createConciergeEngine() {
                         ...s,
                         messages: [...s.messages, assistantMsg],
                         isThinking: false,
-                        lastExtractedData: extractedDataFromResponse
+                        lastExtractedData: extractedDataFromResponse,
+                        writingJob: job && !response.failed ? {...job,current_draft:response.content,current_draft_source:'proposed' as const} : job
                     };
-                    broadcastState(newState);
                     return newState;
                 });
 
+                // Only the normalized action is consumed, once, after the ownership check above.
+                if (browser && !response.failed && response.intent) {
+                    if (response.intent === 'suggest_break') {
+                        overwhelmDetector.triggerOverwhelm(['AI_SUGGESTION'], 'The AI guide suggested a pause.');
+                    } else {
+                        const intentMap: Partial<Record<NonNullable<typeof response.intent>, string>> = {
+                            add_contact: '/modules/contacts',
+                            add_property: '/modules/property',
+                            add_financial: '/modules/financial-accounts',
+                            add_insurance: '/modules/insurance',
+                            add_healthcare: '/modules/medical',
+                            add_digital: '/modules/digital-guardian'
+                        };
+                        const targetRoute = intentMap[response.intent];
+                        if (targetRoute && window.location.pathname !== targetRoute) goto(targetRoute);
+                    }
+                }
+
                 return response;
             } catch (error) {
+                if (accountId !== owner || conversationEpoch !== epoch || !isCurrentSession(session)) return null;
                 console.error('Concierge Error:', error);
                 update(s => ({ ...s, isThinking: false }));
                 return null;
@@ -404,10 +389,15 @@ function createConciergeEngine() {
         },
 
         confirmExtractedData: () => {
+            const owner = accountId;
+            const session = captureSession();
+            const epoch = conversationEpoch;
+            if (owner === null || !isCurrentSession(session)) return;
             const data = get({ subscribe }).lastExtractedData;
             if (!data) return;
 
             import('./persistence').then(({ setStored }) => {
+                if (accountId !== owner || conversationEpoch !== epoch || !isCurrentSession(session)) return;
                 Object.entries(data).forEach(([key, value]) => {
                     setStored(key, value);
                 });
@@ -417,7 +407,8 @@ function createConciergeEngine() {
         },
 
         clearHistory: () => {
-            update(s => ({ ...s, messages: [], lastExtractedData: null }));
+            conversationEpoch++; // a reply from the conversation being cleared stays with that conversation
+            update(s => ({ ...s, messages: [], writingJob: undefined, writingJobSource: undefined, lastExtractedData: null, isThinking: false }));
             updateInitialGreeting();
         },
 

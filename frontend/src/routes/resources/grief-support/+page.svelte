@@ -1,4 +1,8 @@
 <script lang="ts">
+    import { auth } from "$lib/stores/auth";
+    import { aiRuntimeAssets, aiAssets, observeAIConfig, type AIHistoryMessage } from "$lib/services/aiCapabilities";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
+    import { onDestroy } from "svelte";
     import { onMount } from "svelte";
     import { fade, fly } from "svelte/transition";
     import {
@@ -24,6 +28,7 @@
         type Hotline,
     } from "$lib/services/hotlineService";
     import { aiGriefService } from "$lib/services/aiGriefService";
+    import { handleFetchError } from "$lib/services/errorHandler";
     import {
         supportService,
         type SearchResult,
@@ -39,17 +44,25 @@
     let isSearching = $state(false);
     let searchResults = $state<SearchResult[]>([]);
     let showDiscovery = $state(false);
+    let discoveryError = $state("");
+    let chatError = $state("");
 
     // Chat State
     let chatInput = $state("");
     let isTyping = $state(false);
-    let chatHistory = $state<{ role: string; content: string }[]>([
-        {
-            role: "assistant",
-            content:
-                "I'm here. If you'd like to talk, or just need a quiet place to reflect, I'm sitting with you.",
-        },
-    ]);
+    let chatHistory = $state<(AIHistoryMessage & {historyContent?:string})[]>([]);
+    let chatOwner = captureSession();
+    let chatVersion = 0;
+    $effect(() => observeAIConfig({purpose:'grief.chat'}));
+    $effect(() => {
+        $auth;
+        if (!isCurrentSession(chatOwner)) {
+            chatOwner = captureSession(); chatVersion++; chatHistory = []; chatInput = ''; chatError = ''; isTyping = false;
+        }
+        const greeting = aiAssets({purpose:'grief.chat'}, $aiRuntimeAssets)['routes/resources/grief-support/+page.svelte:greeting'];
+        if (isCurrentSession(chatOwner) && !chatHistory.length && typeof greeting === 'string' && greeting) chatHistory = [{role:'assistant',source:'app',content:greeting}];
+    });
+    onDestroy(() => { chatVersion++; });
 
     // Guide Viewer State
     let selectedGuide = $state<Guide | null>(null);
@@ -127,25 +140,40 @@
     async function handleChat() {
         if (!chatInput.trim() || isTyping) return;
 
+        const owner = captureSession(), version = ++chatVersion;
+        if (!isCurrentSession(owner)) return;
         const userMsg = chatInput;
         chatInput = "";
-        chatHistory = [...chatHistory, { role: "user", content: userMsg }];
+        chatHistory = [...chatHistory, { role: "user", source: "user", content: userMsg }];
 
         isTyping = true;
+        chatError = "";
         try {
             const response = await aiGriefService.chat(userMsg, chatHistory);
+            if (version !== chatVersion || !isCurrentSession(owner)) return;
+            if (response.failed) {
+                // Keep the thread and the draft intact so Try again resends it once.
+                chatHistory = chatHistory.slice(0, -1);
+                chatInput = userMsg;
+                chatError = response.content;
+                return;
+            }
             chatHistory = [
                 ...chatHistory,
-                { role: "assistant", content: response.content },
+                { role: "assistant", source: "model", content: response.content, historyContent:response.historyContent },
             ];
 
             if (response.suggestAction === "hotline") {
                 // Focus sidebar or highlight hotlines? Maybe later.
             }
         } catch (e) {
-            console.error(e);
+            if (version !== chatVersion || !isCurrentSession(owner)) return;
+            // Take the unsent message back out of the thread and into the box so retry resends it once.
+            chatHistory = chatHistory.slice(0, -1);
+            chatInput = userMsg;
+            chatError = handleFetchError(e).message;
         } finally {
-            isTyping = false;
+            if (version === chatVersion && isCurrentSession(owner)) isTyping = false;
         }
     }
 
@@ -154,12 +182,16 @@
 
         isSearching = true;
         showDiscovery = true;
+        discoveryError = "";
         try {
             const response =
                 await supportService.discoverLocalSupport(searchLocation);
             searchResults = response.results;
         } catch (e) {
-            console.error(e);
+            searchResults = [];
+            discoveryError = e instanceof Error && !(e instanceof TypeError)
+                ? e.message
+                : handleFetchError(e).message;
         } finally {
             isSearching = false;
         }
@@ -173,9 +205,10 @@
         if (selectedCountry) refreshHotlines();
     });
 
-    // JSON imports type `type` as string; the file only holds these four kinds.
+    // JSON imports `type` and `tone` as string; the file only holds these values.
     type GriefResource = (typeof griefResources)[number] & {
         type: "article" | "video" | "external" | "guide";
+        tone: "primary" | "gold";
     };
     const resources = griefResources as GriefResource[];
 
@@ -191,7 +224,7 @@
 </svelte:head>
 
 <div
-    class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 p-6 md:p-12"
+    class="surface-dark min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-foreground p-6 md:p-12"
 >
     {#if mounted}
         <div in:fade={{ duration: 800 }} class="grief-sanctuary max-w-6xl mx-auto">
@@ -200,30 +233,91 @@
                 <div
                     class="inline-flex items-center justify-center p-3 mb-6 bg-white/5 rounded-2xl backdrop-blur-xl border border-white/10 shadow-2xl"
                 >
-                    <LucideHeart class="w-8 h-8 text-rose-400 animate-pulse" />
+                    <LucideHeart class="w-8 h-8 text-primary animate-pulse" />
                 </div>
                 <h1
-                    class="text-4xl md:text-6xl font-serif font-light mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-rose-100 to-slate-300"
+                    class="text-4xl md:text-6xl font-serif font-light mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-primary-hover to-slate-300"
                 >
                     Grief Support Sanctuary
                 </h1>
                 <p
-                    class="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed"
+                    class="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
                 >
                     A quiet space for reflection, guidance, and discovery. You
-                    don't have to carry the weight alone.
+                    can lean on others as you carry this.
                 </p>
             </header>
 
             <!-- Main Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-                <!-- Library Section -->
+                <!-- Checklist -->
                 <div class="lg:col-span-2 space-y-8">
                     <!-- Gentle Guidance Checklist -->
                     <div in:fade={{ delay: 200, duration: 800 }}>
                         <GriefChecklist />
                     </div>
 
+                </div>
+
+                <!-- Crisis Center Sidebar -->
+                <aside
+                    in:fly={{ x: 20, delay: 600, duration: 600 }}
+                    class="p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 h-fit sticky top-8"
+                >
+                    <div class="flex items-center justify-between gap-3 mb-8">
+                        <div class="flex items-center gap-3">
+                            <LucidePhone class="w-6 h-6 text-primary" />
+                            <h2 class="text-xl font-medium text-slate-100">Crisis Center</h2>
+                        </div>
+
+                        <select
+                            aria-label="Country"
+                            bind:value={selectedCountry}
+                            class="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                        >
+                            {#each countries as country}
+                                <option value={country.code}
+                                    >{country.code}</option
+                                >
+                            {/each}
+                        </select>
+                    </div>
+
+                    <div class="space-y-6">
+                        {#each emergencyNumbers as item}
+                            <div
+                                class="p-5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+                            >
+                                <p
+                                    class="text-xs text-muted-foreground uppercase tracking-widest mb-1"
+                                >
+                                    {item.label}
+                                </p>
+                                <p
+                                    class="text-2xl font-mono text-white tracking-wider"
+                                >
+                                    {item.number}
+                                </p>
+                            </div>
+                        {/each}
+                    </div>
+
+                    <div
+                        class="mt-8 p-6 rounded-2xl bg-primary/10 border border-primary/20"
+                    >
+                        <p
+                            class="text-sm text-primary-hover italic leading-relaxed"
+                        >
+                            "If you are in danger or facing a medical
+                            emergency, please reach out to your local emergency
+                            services right away."
+                        </p>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- Library Section (full width below the checklist and Crisis Center) -->
+            <div class="space-y-8 mb-16">
                     <!-- Filter Bar -->
                     <div
                         class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide"
@@ -234,7 +328,7 @@
                                 class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border {selectedCategory ===
                                 category
                                     ? 'bg-white/10 border-white/20 text-white shadow-lg'
-                                    : 'bg-transparent border-white/5 text-slate-500 hover:border-white/10 hover:text-slate-300'}"
+                                    : 'bg-transparent border-white/5 text-muted-foreground hover:border-white/10 hover:text-slate-300'}"
                             >
                                 {category}
                             </button>
@@ -242,13 +336,13 @@
                     </div>
 
                     <!-- Resources Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {#each filteredResources as resource, i (resource.id)}
                             {#if resource.type === "guide"}
                                 <button
                                     onclick={() =>
                                         handleResourceClick(resource)}
-                                    class="text-left w-full"
+                                    class="grid text-left w-full"
                                 >
                                     <GriefResourceCard
                                         {...resource}
@@ -268,15 +362,13 @@
                         <!-- Local Search Discovery -->
                         <div
                             in:fly={{ y: 20, delay: 500, duration: 600 }}
-                            class="p-8 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-rose-500/10 backdrop-blur-xl border border-white/10 flex flex-col items-start text-left group transition-all duration-500 {showDiscovery
-                                ? 'md:col-span-2'
-                                : ''}"
+                            class="p-8 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-xl border border-white/10 flex flex-col items-start text-left group transition-all duration-500 md:col-span-2 lg:col-span-3"
                         >
                             <div
                                 class="flex items-start justify-between w-full mb-6"
                             >
                                 <LucideMapPin
-                                    class="w-10 h-10 text-indigo-400"
+                                    class="w-10 h-10 text-primary"
                                 />
                                 {#if showDiscovery}
                                     <button
@@ -284,7 +376,7 @@
                                             showDiscovery = false;
                                             searchResults = [];
                                         }}
-                                        class="text-xs text-slate-500 hover:text-slate-300"
+                                        class="text-xs text-muted-foreground hover:text-slate-300"
                                     >
                                         Done for now
                                     </button>
@@ -294,7 +386,7 @@
                             <h3 class="text-2xl font-medium mb-3 text-slate-100">
                                 Find Local Help
                             </h3>
-                            <p class="text-slate-400 mb-6 max-w-md">
+                            <p class="text-muted-foreground mb-6 max-w-md">
                                 Discover therapists, support groups, and
                                 practitioners in your area who specialize in
                                 bereavement care.
@@ -303,19 +395,21 @@
                             <div
                                 class="flex w-full max-w-md flex-col items-start gap-3 group mb-8"
                             >
+                                <label for="grief-city-search" class="sr-only">City or zip code</label>
                                 <input
+                                    id="grief-city-search"
                                     type="text"
                                     bind:value={searchLocation}
                                     placeholder="Enter your city or zip code..."
                                     onkeydown={(e) =>
                                         e.key === "Enter" && handleDiscovery()}
-                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all placeholder:text-slate-600"
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-muted-foreground"
                                 />
                                 <button
                                     onclick={handleDiscovery}
                                     disabled={!searchLocation.trim() ||
                                         isSearching}
-                                    class="px-4 py-2 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-all disabled:opacity-30 text-sm font-medium"
+                                    class="px-4 py-2 rounded-xl bg-primary/20 text-primary-hover hover:bg-primary/30 transition-all disabled:opacity-30 text-sm font-medium"
                                 >
                                     {isSearching
                                         ? "Searching..."
@@ -323,41 +417,52 @@
                                 </button>
                             </div>
 
+                            {#if discoveryError}
+                                <div role="alert" class="w-full mb-4 p-4 rounded-2xl bg-white/5 border border-white/10 text-sm text-slate-300">
+                                    <p>{discoveryError}</p>
+                                    <button
+                                        onclick={handleDiscovery}
+                                        class="mt-2 px-3 py-1.5 rounded-xl bg-primary/20 text-primary-hover hover:bg-primary/30 transition-all text-xs font-medium"
+                                    >
+                                        Try again
+                                    </button>
+                                </div>
+                            {/if}
+
                             {#if showDiscovery && searchResults.length > 0}
                                 <div class="w-full space-y-4" in:fade>
                                     {#each searchResults as result}
                                         <a
                                             href={result.url}
                                             target="_blank"
-                                            class="block p-5 rounded-2xl bg-white/5 border border-white/5 hover:border-indigo-500/30 hover:bg-white/10 transition-all"
+                                            class="block p-5 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/30 hover:bg-white/10 transition-all"
                                         >
                                             <div
                                                 class="flex justify-between items-start mb-2"
                                             >
                                                 <h4
-                                                    class="font-medium text-indigo-100"
+                                                    class="font-medium text-primary-hover"
                                                 >
                                                     {result.title}
                                                 </h4>
                                                 <LucideArrowRight
-                                                    class="w-4 h-4 text-indigo-400"
+                                                    class="w-4 h-4 text-primary"
                                                 />
                                             </div>
                                             <p
-                                                class="text-sm text-slate-400 line-clamp-2"
+                                                class="text-sm text-muted-foreground line-clamp-2"
                                             >
                                                 {result.content}
                                             </p>
                                         </a>
                                     {/each}
                                 </div>
-                            {:else if showDiscovery && !isSearching}
+                            {:else if showDiscovery && !isSearching && !discoveryError}
                                 <div
-                                    class="w-full p-8 border border-dashed border-white/10 rounded-2xl text-center text-slate-500 italic"
+                                    class="w-full p-8 border border-dashed border-white/10 rounded-2xl text-center text-muted-foreground italic"
                                 >
-                                    We haven't found support in that area yet.
-                                    You might try a nearby city, or reach out to
-                                    us for help finding resources.
+                                    A nearby city may have more support. We're
+                                    glad to help you find resources.
                                 </div>
                             {/if}
                         </div>
@@ -373,17 +478,17 @@
                         >
                             <div class="flex items-center gap-4 mb-4">
                                 <div
-                                    class="w-12 h-12 rounded-2xl bg-rose-500/20 flex items-center justify-center border border-rose-500/20"
+                                    class="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/20"
                                 >
                                     <LucideHeart
-                                        class="w-6 h-6 text-rose-400"
+                                        class="w-6 h-6 text-primary"
                                     />
                                 </div>
                                 <div>
                                     <h3 class="text-xl font-medium text-slate-100">
                                         Bespoke Support
                                     </h3>
-                                    <p class="text-sm text-slate-500 italic">
+                                    <p class="text-sm text-muted-foreground italic">
                                         "I'm sitting with you."
                                     </p>
                                 </div>
@@ -401,7 +506,7 @@
                                         <div
                                             class="max-w-[85%] p-4 rounded-2xl {msg.role ===
                                             'user'
-                                                ? 'bg-indigo-500/20 border border-indigo-500/20 text-indigo-100 rounded-tr-none'
+                                                ? 'bg-primary/20 border border-primary/20 text-foreground rounded-tr-none'
                                                 : 'bg-white/5 border border-white/10 text-slate-300 rounded-tl-none'}"
                                         >
                                             <p class="text-sm leading-relaxed">
@@ -417,13 +522,13 @@
                                         >
                                             <div class="flex gap-1">
                                                 <div
-                                                    class="w-1.5 h-1.5 bg-rose-400/50 rounded-full animate-bounce"
+                                                    class="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce"
                                                 ></div>
                                                 <div
-                                                    class="w-1.5 h-1.5 bg-rose-400/50 rounded-full animate-bounce [animation-delay:0.2s]"
+                                                    class="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:0.2s]"
                                                 ></div>
                                                 <div
-                                                    class="w-1.5 h-1.5 bg-rose-400/50 rounded-full animate-bounce [animation-delay:0.4s]"
+                                                    class="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:0.4s]"
                                                 ></div>
                                             </div>
                                         </div>
@@ -431,14 +536,28 @@
                                 {/if}
                             </div>
 
+                            {#if chatError}
+                                <div role="alert" class="p-4 rounded-2xl bg-white/5 border border-white/10 text-sm text-slate-300">
+                                    <p>{chatError}</p>
+                                    <button
+                                        onclick={handleChat}
+                                        class="mt-2 px-3 py-1.5 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all text-xs font-medium"
+                                    >
+                                        Try again
+                                    </button>
+                                </div>
+                            {/if}
+
                             <div class="relative group">
+                                <label for="grief-chat-input" class="sr-only">Share what's on your heart</label>
                                 <input
+                                    id="grief-chat-input"
                                     type="text"
                                     bind:value={chatInput}
                                     placeholder="Share what's on your heart..."
                                     onkeydown={(e) =>
                                         e.key === "Enter" && handleChat()}
-                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-rose-500/30 transition-all placeholder:text-slate-600 italic font-serif"
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-muted-foreground italic font-serif"
                                 />
                                 <button aria-label="Send"
                                     onclick={handleChat}
@@ -451,63 +570,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Crisis Center Sidebar -->
-                <aside
-                    in:fly={{ x: 20, delay: 600, duration: 600 }}
-                    class="p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 h-fit sticky top-8"
-                >
-                    <div class="flex items-center justify-between gap-3 mb-8">
-                        <div class="flex items-center gap-3">
-                            <LucidePhone class="w-6 h-6 text-rose-400" />
-                            <h2 class="text-xl font-medium text-slate-100">Crisis Center</h2>
-                        </div>
-
-                        <select
-                            aria-label="Country"
-                            bind:value={selectedCountry}
-                            class="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500/50"
-                        >
-                            {#each countries as country}
-                                <option value={country.code}
-                                    >{country.code}</option
-                                >
-                            {/each}
-                        </select>
-                    </div>
-
-                    <div class="space-y-6">
-                        {#each emergencyNumbers as item}
-                            <div
-                                class="p-5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
-                            >
-                                <p
-                                    class="text-xs text-slate-500 uppercase tracking-widest mb-1"
-                                >
-                                    {item.label}
-                                </p>
-                                <p
-                                    class="text-2xl font-mono text-white tracking-wider"
-                                >
-                                    {item.number}
-                                </p>
-                            </div>
-                        {/each}
-                    </div>
-
-                    <div
-                        class="mt-8 p-6 rounded-2xl bg-rose-500/10 border border-rose-500/20"
-                    >
-                        <p
-                            class="text-sm text-rose-200/80 italic leading-relaxed"
-                        >
-                            "If you are in immediate danger or experiencing a
-                            medical emergency, please call your local emergency
-                            services immediately."
-                        </p>
-                    </div>
-                </aside>
-            </div>
         </div>
     {/if}
 

@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:be825a0f69181b92278d506e55748af7b5482469bbc4cb034c0446f5f66168b4",
+  "pageVersion": "sha256:d52ebdb0aead7e12decad910891d08945fa6bfd39fcdd1a13f78165f7be1b3d0",
   "claims": [
     {
       "id": "claim_6156412ee43047089df50c0cd0f831c9",
       "statement": "User, RefreshToken and Estate tables are defined in backend/database.py; Estate stores a server-readable transparent_data JSON string and an encrypted_vault byte blob per user.",
       "evidence": [
         {
-          "resource": "repo://backend/database.py#L7-L55",
-          "version": "repo-lines-v1:sha256:13274b3379659eef1164e0facd80a45c1d1bf631d88016a7bb3a18df6dfea120:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzZmE0MmU1N2VjNjE1YmMwZTY5YTBlY2FiMjVhMDQ3MWY4MTI2ZGY0M2FlOWJjY2RiOGJkYTk2YmQwNTU2N2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0NTUxOGQzN2YzNzhlMGFhZmI5NDliZTg2NDg4YmUyMmM4ZWIwZTEyZWE2ODQ5NGUwMTZkMDk1MjBlNzlhOTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhN2QzODkxMDg4Nzc1ZDYxYzEzMTI1ODUyNDk2MjExYzhkY2Y4ZjU0YWFmNGJhZWI3Zjg4MjIzNWM5YWQ1MDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmMjM3ZWEyMTRkMDY3YzhiY2QyYzA1ZGM3YTliYTViYjZiNzg4NmU0NjZmZmI0NGQyY2VkZTFlZTg1OGJiOTkifQ"
+          "resource": "repo://backend/database.py#L9-L74",
+          "version": "repo-lines-v1:sha256:8638dd3bd65b621c9a6565603f1137cb363999d6bd19fe1695cff167415df51d:eyJzZWxlY3RlZExpbmVDb3VudCI6NjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzZmE0MmU1N2VjNjE1YmMwZTY5YTBlY2FiMjVhMDQ3MWY4MTI2ZGY0M2FlOWJjY2RiOGJkYTk2YmQwNTU2N2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4NzUwZTg0OWVkZGYzMzQ0OWIyMzM1ODhkYjBlZjQ2NGY2N2ZkN2Y4ZTdiMjYwYTc2NDAyZTNjZDMxYjkzM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhN2QzODkxMDg4Nzc1ZDYxYzEzMTI1ODUyNDk2MjExYzhkY2Y4ZjU0YWFmNGJhZWI3Zjg4MjIzNWM5YWQ1MDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmMjM3ZWEyMTRkMDY3YzhiY2QyYzA1ZGM3YTliYTViYjZiNzg4NmU0NjZmZmI0NGQyY2VkZTFlZTg1OGJiOTkifQ"
         }
       ]
     },
@@ -17,26 +17,30 @@
       "statement": "The estate profile is stored under the estate_profile key of Estate.transparent_data by the /api/estate/profile endpoints.",
       "evidence": [
         {
-          "resource": "repo://backend/main.py#L407-L438",
-          "version": "repo-lines-v1:sha256:d9e967b295c4c38c7535996fb3a8fe3bb66d39ace395a31932ee1f8155b4200d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwMTU5NjI2YjkwYjAwMTZlYzAxZmY1YjFlNzQ4OTMwZGYxYzAyODcwZWI2NDY1ZTM0YWJlNGU4MTlhZDU0YjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1NjMxZTJiZTUxZGI3OTk5OWE4YjFhYzZhN2NlY2FmNTliZWQ4MmZjYTg2NzNkYjUxMWU0MjAxOGE5MGIyOTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE0NDQ5NzBiMmZhMmU4NTY1Y2I5ZmFkNjQyM2Y4MzFiMDlmM2YyNDBhZWI4OGFkYTk1MjAwYjc2YmVkNjBhZjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk4MDVkOWQyZmRmN2ZjMzBiY2I4ZDhjOWUyYjFlNzdiNmI5ZmE4OGE0NWNhNWY3Y2FlOTZmODBhOTMyZDI1YTEifQ"
+          "resource": "repo://backend/estate_persistence.py#L167-L182",
+          "version": "repo-lines-v1:sha256:ce8d1701183bc57b70c14118d439bef94c0d7da9c05e04d1e86ea4a81ab251ef:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1YmE4ZTk2NmM0YTdhN2E1OTJlMzhiOGYzZTQ0ZGE5NmE1Mzc0N2M2YWNhNjliODAyNjkwZTA1ODgyMmMyZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3MjE1ODE2NDg3YTEwNGMyOGM0NTM0ZDY2Nzg4OTU2NDYxMGM0MTQwZTFiMjFkMWUwZDUyMjFkOTdmMjExMDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5MzUzYmU1NGZjNzBlZmQ5NDdlMmIwMWVlNTMzMDA3OTdlNTc4N2Y2M2FlMWE0YWU0YWJmOGQwNWExYmYwMDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://backend/main.py#L419-L438",
+          "version": "repo-lines-v1:sha256:4118e5de0a29cdbcf191632406bd148985ee2f47058a57375c065a47c1c77955:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwMTU5NjI2YjkwYjAwMTZlYzAxZmY1YjFlNzQ4OTMwZGYxYzAyODcwZWI2NDY1ZTM0YWJlNGU4MTlhZDU0YjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE0NDQ5NzBiMmZhMmU4NTY1Y2I5ZmFkNjQyM2Y4MzFiMDlmM2YyNDBhZWI4OGFkYTk1MjAwYjc2YmVkNjBhZjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJhNWIwY2FhNWZkNWEyZjAxY2NjMGM0MjM0YmVmM2UyZDdhNTk4MGJiOGRhMzYxYjZjYjAyMjAzMTk5Yzc1ZWYifQ"
         }
       ]
     },
     {
       "id": "claim_2ce3d8e354e647019c8eddf0991ed5a0",
-      "statement": "A separate Heirloom model and heirlooms table back the dedicated heirlooms router, while the generic API also maps heirlooms onto the Asset table.",
+      "statement": "The active generic API maps heirlooms to category-filtered Asset rows; the historical dedicated heirlooms router is not mounted by the application.",
       "evidence": [
         {
-          "resource": "repo://backend/estate_models.py#L65-L77",
-          "version": "repo-lines-v1:sha256:a4d94962804d3b063831300ddb941bf5fe46d3643d79aec21884c89790da64e1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkZWQxZDE1MTYxOGZlNTUzODU3YjM2ZjA1NzQzYTRiY2NkZTE5MmQ2MWI1Y2M3YTZiYzIzY2M2YWZkMGNiNWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjZjk1NTg1NWFmMjBiYjI5MDhmNGYxMDA3ZTU2MjE5NGI1ZjdjZmFmZDJjYmU1MTQyZDJhZDM0NGE3ZTM3MjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzYTA3MDExYzUwZDNmMTZmMzUwMDVmYTViODIzMDYzNzQwOWI3OTU3Yzc3MGJkNWRkYzRjMDQzOTJlZDVhOGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE0OTJjNGYxNThkYzYxZTAyMGU4M2UxOWQ2YzUwYzVkNDExZGM3ZmQ1NmQxNWIzOTM1ZDI0OWEyMjExYzNmOGYifQ"
+          "resource": "repo://backend/main.py#L172-L186",
+          "version": "repo-lines-v1:sha256:99994921243e83fdb00bf9698e98c4cd6140225fbee67d5f4f810bb173a5dcbc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExZTk1M2ZiMmU5Yzk5NDQ0ZWYxN2ZkNGJhOGNmNjU3NTA2ZDQyZDcwNjRhNDY4MmRlMGM2NTFjYzRkMWUwZTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5ZDZkYWJmZTc4OTE4YWUxMjg5OGI1MWE2N2RjNDk4MmRjNmQxYjRjYjEyNDVlZTI5YTAwNDgzZDBkMzUxYzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFjMWJlYTkyZWRiODZlMzVlNzU5OGRlZDg2MTk3MmViZmVmZjM0ZDliNDA5ZTI3NWJjNmEyYTJlN2Y4ZDgyM2EifQ"
         },
         {
-          "resource": "repo://backend/routers/estate_data.py#L111-L114",
-          "version": "repo-lines-v1:sha256:7ec57bd4931e3d787a545b96970cbbfaa9a948a9f1fb6c46229508aaf930cd46:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmM1ZjZkZmY2NzdiNGU4YmY2MDBmZDA2NmVmOTE3OWJhOTYwYmVmMWIzZmM0OGMyZjkwZjRhNWQxY2Q3NmFiYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjUzYjYxMjVkNmQwMTVlMjU4YWZkMDQzZDFkZDljYmUyMzUxYjFkN2JhYzI2NjAzM2Q4YzU4ODFiYTRmMzE4YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODE0ZGEwYjljOTUwYzc1MTY3MmQ2YTJmZjM0NzM3MWM5MWJjOTI2ZWE2MDNjYzU0YzZhYjY4NWE2MjJjZGM5NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWFhZDY5ODliZTkyNjE1NTk5YmNkYmQ2YTgzOGUwMjhjMzYwZDc2ZjQyZWQyMTk5YWRjYjc0MzVjZjY1YzVhYyJ9"
+          "resource": "repo://backend/routers/estate_data.py#L110-L150",
+          "version": "repo-lines-v1:sha256:63547b5ec5884f31b90319f3e35c80fdef15f52110baf55ed24ce2aa7977d55a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyOTljNzdiM2VkNjU3NzMzZjc5MDFjODk0ZTk2ODMyY2RjZThhODc2MzY2YTUwODMyYWIxNjljNjYxNjFiN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkOGMzMDJmYzJlZWI3ZDdkNzRkODRmYTcxOGE3NjkyNjcxMmI0ZTllMjc2M2ZhOTQwZjdlMjFmNzI5NTZmMzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwOWY4NzA1ZTYxZDljMWUxZGViYTVmZDRhZmFjMTk1NTlmZmE3OGFkNTgwOTc4ODFmYTdjNDNiNTE1N2Q2NWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJkNjBjMTQ0YjhiYWU1YjI1OGUzNTc2OTNiOWVmNjZkZmRiZGYyNTFiYWM1MDljMjUzNWY1ODM2NzM5YTBmNjcifQ"
         },
         {
-          "resource": "repo://backend/routers/heirlooms.py#L6-L14",
-          "version": "repo-lines-v1:sha256:b125b6eed6a78696c5c5307108c8ba5a60c5cbd3d2a45fa47246751f5392457c:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjEzZjdhMWU2NWVjY2U1ODBhYTkwNTFhZTY4M2U2ZjY2OTI4NWIxMTY5ZThlN2ZhOGU3YTJkM2IyMDE5YmVhMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDU2MDI0MDAwZjY0MWU4YWJhOTlhODVmM2I3YmVjMjg5NGRiODYwYTFiZDMzZTI3ZjRiZDE0Yjg3NzA1NzcwYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTg3MDUwMDExMTY1N2QzMzc5MjVkNWEyYjdlYjU4ZWMxZTIxN2UyYjFmNmMyMDc3ZGFlMWIzYTlmNTc4NjZkZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGY0MTFjMzczNDFkMGQ1M2YwZDQyM2ZkODcyMTU2YjJiMGFhYWM3MTQ4NmM2ZWRiYWQ4OTQzNzdkN2NkMmUxMSJ9"
+          "resource": "repo://backend/routers/estate_data.py#L182-L212",
+          "version": "repo-lines-v1:sha256:89a3fce491bd242850578a0e174e38122ed9aa48c2fae5dcb65312fb894f6683:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhZDVkNTI3MzMyNjMzY2ViMGZhOTlmZGQ0NDVmZGE4YzAyODE3YTg1NTkwNzViOGZlYjE1NWM5NGNhYTcxYjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0NzM3ZDMzOWI4MTEzMjM0NTQxMDUxZTgwNDI0M2UxMDgwMzVlZTk3YjAwNDA0OWNlYWUxN2M5MWNmNzY1ZGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUxZDA5NGRjZjBhMTlhNmZmOWY2YzdiNTc1Nzk4YmMzYjE2OGRjNmZmN2E4OTBlZDI3YjY4ZTJkOTVjZTg5YzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyM2M4NjEzYWVkY2ZkOGU5YzM0Yjc0MWUzOTYyNTBhZTY1YjlkMzZkYjdkZWYwYjczMTk3ZTkxN2NiMjlhNTMifQ"
         }
       ]
     },
@@ -45,11 +49,11 @@
       "statement": "The database engine uses the configured pool size for PostgreSQL URLs and forces sslmode=require, with pool_pre_ping and a one-hour pool_recycle.",
       "evidence": [
         {
-          "resource": "repo://backend/config.py#L231-L237",
+          "resource": "repo://backend/config.py#L258-L264",
           "version": "repo-lines-v1:sha256:d6690e57a73a2b3b643c4fe7acca5ec42f6891ede1dab85700503dcb8b22cc64:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGRjNTIwMDQ1OTBjNWFkY2ZkZTVhM2EwMzE5NzM5YjAzMzU0NTMzYmVkNDFlY2NkNTcxM2FhZDJiMDMxNGYyYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDE1NTQ1OTNjMTM0MjQ4MGE2MzE1M2Y2ODQxYjAwM2UzNjA1Mjg4YzU5ZWRkY2I3Mzk2OTI1MzRjODVhNWViNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWY5M2I0NjNjYTE2MzQ2NzdkYjExOWRiOWU2ZTk4MzA3ZjAxNmU4OTRmMDI1NTYzNGZhMjIwNDQzM2UzOTUwYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmFiNGYxODYxNjlmMWJmZmQxNDI3MGRkZTZjMGI0ZjIwZWJkM2Y5NzI4ZjRjYzYxNjM2NWE2Y2RhMjA1ZWYxNiJ9"
         },
         {
-          "resource": "repo://backend/database.py#L66-L78",
+          "resource": "repo://backend/database.py#L85-L97",
           "version": "repo-lines-v1:sha256:8df675ab12d50d123b01ac99a2772e0e9ad63b27d66f464d79a85a623fa28021:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmMDMwZDJmNWFhNGI5MzI1ZjdmMDIwNDRjOGY2ZTYyODUxYzgyMDg1NzQxYmY3YTk3OTExYTEwZDJlY2YyNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJiOTJhNzUxMDRjNTJkYTQ4MGVhYWI0MTliNjQyZTdjMDRkOTdmMDZjNmNlNzg0ZTE3ZjgzMDc0YWQwNDFiNmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhjODUzZGY1YjdiYTI5ZTdjMTFmMjY5YjIzOTZlNzdjNjA2YWM0YmE0YzBmMDE3NjAyZWU1MGM3OTU5NjY5YWMifQ"
         }
       ]
@@ -59,7 +63,7 @@
       "statement": "At startup create_db_and_tables runs SQLModel.metadata.create_all and migrate_db, retrying the connection up to five times three seconds apart.",
       "evidence": [
         {
-          "resource": "repo://backend/database.py#L87-L101",
+          "resource": "repo://backend/database.py#L106-L120",
           "version": "repo-lines-v1:sha256:5fc4d7e6344c011c48e9b5cd39cdde8550e41ae354d2487a7cffa886cf8cd259:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmM2UzN2IwOGQ4ZmUyNzJmNWExMWYxN2I2Nzc0NWY2OTk5NmQ5MzY0ZTU2ZWY0ZTMwNjg1MzJlNmNhNjc4Y2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwY2ZlNDdiYTAzMWE4NDg5NmYxMjVjOGFkOTFiYzZhZDZhOWQyYmQ5OWJlYzI5MzQ3NjI2MzNmZjkzOTNjYWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwMWIwMGZjNmQxYjgyZDkzNWMwOTQ3N2JkNjNjMjZhNWMzNmU2ZTBkNDE5NjM0OGFkODQ5MzgwYWRmZTY5ODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjNDMwZmJmNDQ5YzIwNmQ4MmE4NmUzYzM5NmNmMDNmMzJhYjdhMDQ1ZTQ1M2FlODNhYjMyYTI1ODc3YTIxNGIifQ"
         }
       ]
@@ -69,22 +73,22 @@
       "statement": "migrate_db adds a hard-coded list of possibly missing columns to users, assets, subscriptions, documents, utilities, pulse_settings and pulse_contacts with ALTER TABLE ADD COLUMN, logging and rolling back failures instead of raising.",
       "evidence": [
         {
-          "resource": "repo://backend/database.py#L103-L289",
-          "version": "repo-lines-v1:sha256:c434d0939ed129df7135ff2549ab302663691bf0efe292785b3d176e5bbb8fc0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTg3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0NTdmMzQzY2Y5YmE5MmM2YWU5YzhiNzE3NjBjNTE4NGZjMjA2MzVhNzkzZGZlMmQxZTA4ZmFlOTBhZTMzNWIyIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI5ZWI1M2IwYTEyMmJkNWJkZjViNmQ5OTBkYWFmMGVhZjMwMWUyYzJmOGQ0MmUwYTNlZTcyMmMzNGI2MDBhOTI0IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIzNzcwYjYxNGM0ZTA2MDU2YmJkZTA4M2Y5NWI2MjNmOTEwZjhmODBkMGQ2ZGEzZmI0ZDg5YzM3NGYwNmI3ZmJhIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJiOGNjNmEyYTA2YzNhMzkwNzNiODc5MWFjNDY0NmI2MjcyYWI2YmYxMzEyNzZiNmUxZDY5ZjRjZGUzZWZlOGU0In0"
+          "resource": "repo://backend/database.py#L122-L309",
+          "version": "repo-lines-v1:sha256:649931b5258c9d8381edfb2e79caf2f8c8078298ccfbecf29a35947746977cba:eyJzZWxlY3RlZExpbmVDb3VudCI6MTg4LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0NTdmMzQzY2Y5YmE5MmM2YWU5YzhiNzE3NjBjNTE4NGZjMjA2MzVhNzkzZGZlMmQxZTA4ZmFlOTBhZTMzNWIyIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI2NjU3MTYxNDkzNGQwY2YwNzFjM2FlYzY4YWZlNDg1ODk1MmJiMTc1MmYxOWU0YTlkZWZjM2VhZmEzNTEwYWExIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIzNzcwYjYxNGM0ZTA2MDU2YmJkZTA4M2Y5NWI2MjNmOTEwZjhmODBkMGQ2ZGEzZmI0ZDg5YzM3NGYwNmI3ZmJhIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI1ODc3MmE1N2M2OTRjYTJjZjQ5YWI2OWJjODhmNDg4MDdiZTc0OTIxNjU3MzM1NDNkMjc3NDNkNTQzYTA5MzkwIn0"
         }
       ]
     },
     {
       "id": "claim_709a16f7b4924246ae55984636beb373",
-      "statement": "migrate_db adds users.user_role with default 'owner', while the User model defaults user_role to 'planning'.",
+      "statement": "migrate_db and the User model both default a newly added user_role to planning.",
       "evidence": [
         {
-          "resource": "repo://backend/database.py#L114-L118",
-          "version": "repo-lines-v1:sha256:7d5b6a34b1a7b7b6654256ec6c86154c0220719b54ae7c482e15a508e4902e3d:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWE0NTUzOWU1YjdhZGM0NTI2ZjljMGE1MDUzYmJhYjUzODQ5ZDAyZDhlMWVlOWI0N2I4ODgzNGExZjI5ODQ4NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmI3YjM5OWFlNzdmMjE5NGRhNmE4Yjc0MjA4M2FmZTljODQwNTRjN2JiYjdjMmFiNjJmYjg3Y2M5ZWRiZDZiNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmE5NjNjZjhjNTRmYTNlYWY1NTYyNzAwMDVhNjAwNjAwMTk0ZjE1YzcwNmY4ODc5MzdkN2IyNDI5NWYzYTY4ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWMyMTYyZGNiNjU0NjBhYmYyNGVjMGVkYTAzZjM3M2IzYmE3YjRiYWExOGYwODE4YjQ4YWQyYzdhMWRlZmU2YiJ9"
+          "resource": "repo://backend/database.py#L138-L142",
+          "version": "repo-lines-v1:sha256:3e542e4a01a89faa20635db1c0d6f39739569b85088854908fe9cf4301f3f9be:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWE0NTUzOWU1YjdhZGM0NTI2ZjljMGE1MDUzYmJhYjUzODQ5ZDAyZDhlMWVlOWI0N2I4ODgzNGExZjI5ODQ4NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmI3YjM5OWFlNzdmMjE5NGRhNmE4Yjc0MjA4M2FmZTljODQwNTRjN2JiYjdjMmFiNjJmYjg3Y2M5ZWRiZDZiNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmE5NjNjZjhjNTRmYTNlYWY1NTYyNzAwMDVhNjAwNjAwMTk0ZjE1YzcwNmY4ODc5MzdkN2IyNDI5NWYzYTY4ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWMyMTYyZGNiNjU0NjBhYmYyNGVjMGVkYTAzZjM3M2IzYmE3YjRiYWExOGYwODE4YjQ4YWQyYzdhMWRlZmU2YiJ9"
         },
         {
-          "resource": "repo://backend/database.py#L16-L17",
-          "version": "repo-lines-v1:sha256:7704f068059e1f4420d7cfcde61c44200b2b00fb1e24a8c027ed26a37ddf13c0:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGU2MWVlN2QyOGQ2Yjg0NzNlNDQ4ZjY3MTkzNzI1YzA2ZmY0MzM1ZDcxYTljMGI1OTZjNjdhOGU0NGI2NWU3OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDc3NzkzYzk0MDZhZmQ4ZWY2Y2E3ZTZjYmNhZTdlYWVhYjBmYzY0YjYzNzgyZTM5YjYxMGQ0MzIwZmQ4ZDA4ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2JhYjZiNjIzNGZkNWM5NjQyZTM2ODM5MGM3NWUwODhhNDliMGZjNmY2MjYxMTVlYzMwYjkyZDJhNTMzYWE0YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjY0ODUzMmI1YmJjYmE1Yjk0NWQ0MjA3YTg0YTdhM2Q4OTZhMTlmMjdiOTk3YzBmMDZlNjJmMGJmZjg0YTYzNSJ9"
+          "resource": "repo://backend/database.py#L19-L20",
+          "version": "repo-lines-v1:sha256:7704f068059e1f4420d7cfcde61c44200b2b00fb1e24a8c027ed26a37ddf13c0:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGU2MWVlN2QyOGQ2Yjg0NzNlNDQ4ZjY3MTkzNzI1YzA2ZmY0MzM1ZDcxYTljMGI1OTZjNjdhOGU0NGI2NWU3OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDc3NzkzYzk0MDZhZmQ4ZWY2Y2E3ZTZjYmNhZTdlYWVhYjBmYzY0YjYzNzgyZTM5YjYxMGQ0MzIwZmQ4ZDA4ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzFkNWZlOGJlYjEzNzM1NTQzOTIyMGM2NTRmNWQ4ZDU3MWY2NmQ0ZThjMjg2OGJmN2E3Y2MzZjY2NzY0ODc0MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjY0ODUzMmI1YmJjYmE1Yjk0NWQ0MjA3YTg0YTdhM2Q4OTZhMTlmMjdiOTk3YzBmMDZlNjJmMGJmZjg0YTYzNSJ9"
         }
       ]
     },
@@ -93,14 +97,14 @@
       "statement": "Alembic env.py imports every model module explicitly, uses SQLModel.metadata as target_metadata and overrides the database URL with settings.DATABASE_URL.",
       "evidence": [
         {
-          "resource": "repo://backend/alembic/env.py#L1-L78",
-          "version": "repo-lines-v1:sha256:64a20a1e4bbf586ac1eb1ee4c07d6e2a690814650e5b2efc993830accb20d1e7:eyJzZWxlY3RlZExpbmVDb3VudCI6NzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyZWRjNGVhODFiZDY0YTY3MjJmZDcwYjMyMTQ1ZjFhZWQ5MzY3N2EwZTgzNGUxZDMzN2Q1M2VjZTkzNjEyMzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzNWY2MjNkODkzMmY3N2ZkNTliZWFlNWMzNWYyYzQ1M2I2N2NkOTdjMzIxNjMwYzhkZTZjMGYxNjRlNzg4MTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlNGE4Nzg5YjViODQxYzBjNjk2ODczN2VkZmVkODdlNGVhYWMwY2RlNGNlZGJmMDIwNDY5NDYzNzc2OGM4MWEifQ"
+          "resource": "repo://backend/alembic/env.py#L15-L81",
+          "version": "repo-lines-v1:sha256:74e24ae186c8e490d9228c16a91436e5e7b286c07816c52cd742777cd926d204:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1MDRkODE1MjBhZTUyMTM4ZDEyZWVmMzg5ODM2NzMyZWFlZjlhNjc2NzBjNWQyNjI5NDYyYTlhMzc1YzMyYjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzNWY2MjNkODkzMmY3N2ZkNTliZWFlNWMzNWYyYzQ1M2I2N2NkOTdjMzIxNjMwYzhkZTZjMGYxNjRlNzg4MTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzMWU4YmQzMTU4NDQwODJlM2FjNjAyNGMwNjIxN2RiMzg4MmE3YjFhOTY1MmE4NTdlM2YyZmJmMDE3ZDU0NmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlNGE4Nzg5YjViODQxYzBjNjk2ODczN2VkZmVkODdlNGVhYWMwY2RlNGNlZGJmMDIwNDY5NDYzNzc2OGM4MWEifQ"
         }
       ]
     },
     {
       "id": "claim_fd72d1f563f94866b246115b19f33f80",
-      "statement": "The head Alembic revision a7c1b0e3d9f4 idempotently adds any table or column present in SQLModel.metadata but missing from the database, never dropping or altering existing objects.",
+      "statement": "Alembic revision a7c1b0e3d9f4 idempotently adds any table or column present in SQLModel.metadata but missing from the database, never dropping or altering existing objects.",
       "evidence": [
         {
           "resource": "repo://backend/alembic/versions/a7c1b0e3d9f4_add_model_columns_missing_from_schema.py#L1-L23",
@@ -110,25 +114,55 @@
     },
     {
       "id": "claim_3b5780a327cb48c58bf32c36cb126e65",
-      "statement": "Migration 817c6b026811 adds users.view_preferences and the /api/auth/me/preferences endpoints read and write current_user.view_preferences, but the User model declares no view_preferences field.",
+      "statement": "User.view_preferences is a nullable JSON field; /api/auth/me/preferences reads it and PATCH merges module view preferences into the saved dictionary.",
       "evidence": [
         {
-          "resource": "repo://backend/alembic/versions/817c6b026811_add_view_preferences_to_users.py#L1-L30",
-          "version": "repo-lines-v1:sha256:91b35a4e2b0e9d054ee410949f626977622fc85bef5a7723cf4fee2dcd1a281c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmN2Y5NmFhMzQxOTQxOTJmMTBiNGFjMGE4YmI0OWJhMzU2MjI4YTNlNDQwZjBjZTFiOTgxYzY5ODhlMGUxODciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5NTNjN2ExYTU0YjdlNTZiYjIzMzBhNmJmZDUzNmZlOGEzMWM2NDIxOWNjZDU3N2U0NDcwZjk3NTBjOTljZTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiNTM4OWMzN2JiYmUzYjMwMTRlYmM4Nzg3NzU2MjM0ZjViYzM0NTQ3MWQyM2U4YjcwMjUyNjdhNDU3N2FhZDkifQ"
+          "resource": "repo://backend/database.py#L32-L33",
+          "version": "repo-lines-v1:sha256:48f1f5268913e45a929e6465e9ee012aca860e0963a244d89c24c0617eafa98f:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGY3ZmFlNjQ5MTI3NzI0MWY2OTQxODMwOTBjZjZlNjY5MDVmMzY2ZTY2ZjA3NDMzNzk5ZjMwMzIzZmY3MmY3NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGFhODRiNDJkNGJlMGUyNGJlMGYyMDgxZjZhOTQ2MmY2MDYwMjkxMThlYjg3YjBkOWU3ZDhmODM4NDcxZmIxMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDVkNTI0YTlmMDk0MDI5ZGZmMTQwZTMwZDBlNmUzOWNlYWU5NjE4YTA2ZDNlZWMxM2NmYzVkM2Q2NjhmNGE1NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTg1MTU3MjU3NGZhODViMDRiMGQzZjljZDM2ZWY1NjUxNjZmOGMyMDQ4YzU1MTkyOTJjZjk2OWU2MWU0N2M1YiJ9"
         },
         {
-          "resource": "repo://backend/database.py#L7-L28",
-          "version": "repo-lines-v1:sha256:2dc447b67dc5ec49ced97357bb24567ad85b9ac038e4df91f4dbd3bbee20c3c1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzZmE0MmU1N2VjNjE1YmMwZTY5YTBlY2FiMjVhMDQ3MWY4MTI2ZGY0M2FlOWJjY2RiOGJkYTk2YmQwNTU2N2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZmZiMzc5OWIzOTdkZWZiZGM4YmU0ZDM1YThmMGZjYWNjYzM0YzA0MDQ1NGFjMDk5YzM5YWY0YWE3MTY2MjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhN2QzODkxMDg4Nzc1ZDYxYzEzMTI1ODUyNDk2MjExYzhkY2Y4ZjU0YWFmNGJhZWI3Zjg4MjIzNWM5YWQ1MDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE4NTE1NzI1NzRmYTg1YjA0YjBkM2Y5Y2QzNmVmNTY1MTY2ZjhjMjA0OGM1NTE5MjkyY2Y5NjllNjFlNDdjNWIifQ"
+          "resource": "repo://backend/routers/auth.py#L875-L910",
+          "version": "repo-lines-v1:sha256:2b9213ecc6be57093f4771e04b72b19a50520de2f4f7430dae3d8298959e4485:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzOGU0NTJkMjE3MDNiYmU0YTFjZDc2M2Q5YTkwNzY1NzE1OGMzNjYwYzE2YmY4YzgyOWJjN2UxZTYyZWYwMDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5OWJkZWZlZWFjYTYzNDBlMDI5MGRjODZlODg5Yzg5ZDVlMTg5YWE1YmE0NGI1ODViM2I3MDczNGY0YTYyZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhmZjc2ODEyYTAxNGFkMWIwNGMzNzhlZjA0NDRkODI2MDVkYWM0N2EwMTRkOTJjODEzZWY2NmQ2ZTVhMDJjM2EifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_591477f1e794476ab50204fb73dbfb39",
+      "statement": "Estate rows are unique per user; duplicate roots are reconciled keeping the lowest ID canonical and retaining original raw data and encrypted vaults in EstateRecoveryCopy.",
+      "evidence": [
+        {
+          "resource": "repo://backend/database.py#L49-L74",
+          "version": "repo-lines-v1:sha256:cf92ea8e55d68f68e07313a12ff30612feade8881c4731b39719e9c9ca589420:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1ZjZiNzRkYWY1YzI3MWQyODU4M2Y4YWM3NDRkODk2ZTc3N2NlNDE5M2VjYzcyOWVhNzIyNTU3NmJhMzYwYmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4NzUwZTg0OWVkZGYzMzQ0OWIyMzM1ODhkYjBlZjQ2NGY2N2ZkN2Y4ZTdiMjYwYTc2NDAyZTNjZDMxYjkzM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZjM2JhMzE0MDM1Mjg3YTVkYjMxZjkwZDRmMzc4Y2RiZWUzMGNkOWU0YTFkNTQ5NjFjYTg4NGRmZjI2ZjAzZjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmMjM3ZWEyMTRkMDY3YzhiY2QyYzA1ZGM3YTliYTViYjZiNzg4NmU0NjZmZmI0NGQyY2VkZTFlZTg1OGJiOTkifQ"
         },
         {
-          "resource": "repo://backend/routers/auth.py#L764-L798",
-          "version": "repo-lines-v1:sha256:021bc82642109b21dab9cca1d6bed5e526b0b46097b4c66d04bbe32c23cec52d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzOGU0NTJkMjE3MDNiYmU0YTFjZDc2M2Q5YTkwNzY1NzE1OGMzNjYwYzE2YmY4YzgyOWJjN2UxZTYyZWYwMDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkMjAzZTdmZjBjYzhkYzA0MTUyNGJhOTkyNDVmN2NmZmFkZmZiZjE5ZjdkNzU0NWMwYjYwOTIyODQ5OWEyYzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5OWJkZWZlZWFjYTYzNDBlMDI5MGRjODZlODg5Yzg5ZDVlMTg5YWE1YmE0NGI1ODViM2I3MDczNGY0YTYyZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkifQ"
+          "resource": "repo://backend/estate_persistence.py#L88-L147",
+          "version": "repo-lines-v1:sha256:cecb3d1bec215bc4fdf7fa87018acc953218912ea743d4412bb3adb4a1ddc0fb:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5ZTM2YTJmZGNkNjRhZTk2Y2MzYzg1ZGM1YTc5MWY5MzlkOGNlYmRlZDYyMWVjNzUwMzdkOTVmZDJkNGNkODkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhMmY1NzJkYTg4MmZmYTdhMTAyYWYxNDFjMWRiZDE3ZmQxYjllYWQzNDlkOGQzMjhlY2I3NjM5YzcxMWNiMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0YTNiYWNjMWEyMzI1ODFlMGI4YTE2NzJhZjI3NDA0ZGY2NjE3MmVkYjlmMzRiNmU1NzJiMGYyZTBjZmZkZjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhiOGU3NDkxMWNmMTI2YWUyMGJjZWNjNzQ4ZDI1OWZlZmIwZDU4ZDExMmZlMzdkNTMwZTM0ZjQxNDE0NWZhNDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a736b612bd314b729e6fb9d9af3caaf6",
+      "statement": "Profile writes serialize through an account-row lock, merge against the latest estate_profile, remove keys posted as null and commit the merged root.",
+      "evidence": [
+        {
+          "resource": "repo://backend/estate_persistence.py#L150-L182",
+          "version": "repo-lines-v1:sha256:da7499904fb75d488dcbbfce9844f71977331280a90e19cf46fc28138f91d911:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3M2VmZDA2ZDNlMjA4N2JlYjBhMzU2ODM2MTEzMmMwNWQ2NWJjM2QxNmI5MDhmNTEwNDBhOTdkNTE1OWE1YWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3MjE1ODE2NDg3YTEwNGMyOGM0NTM0ZDY2Nzg4OTU2NDYxMGM0MTQwZTFiMjFkMWUwZDUyMjFkOTdmMjExMDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlZDZlNGRhNzMyMmM2YzM3YmUzYzkxZDhiOTczYmIzMzRmNDFkOTZmY2U4OTlkNDZiYWFkZDZmMjQ3YzIzYTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_390ee58feb50470ca96788d9d2a9c69a",
+      "statement": "Alembic revision e0f2a4c6b8d0 adds nullable ai_settings.request_config only when missing and preserves administrator-authored instructions on downgrade.",
+      "evidence": [
+        {
+          "resource": "repo://backend/alembic/versions/e0f2a4c6b8d0_complete_ai_request_config.py#L1-L22",
+          "version": "repo-lines-v1:sha256:35aec7b4adc2658532e95f71bdb04b7c422478a2f2cc0ad7d7784a912161a9fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwZWQwZDNlZGNhZTUxZmVmNjUwMWFjMDVjZmU1YjMxZWYxOTJlOTM1NDUxYzMzMjUwMmE1MTVjNGFkMmRmZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0NDVlMTdhZGVkMzA5NzQ1ZmZkYTMyOWZjZDY1ODYyZDUyOTZjNGVkN2IwZmVjZWIzMzA0NzVmNmUyNzRjNjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-10-26T04:52:34.633Z"
+    "at": "2026-10-27T00:41:19.118Z"
   }
 }

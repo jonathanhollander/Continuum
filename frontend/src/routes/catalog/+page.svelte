@@ -54,10 +54,9 @@
     <LivingBlueprintHeader
         title={text("catalog", selfItem?.label ?? "")}
         subtitle={selfItem?.tooltip}
-        tier="preparation"
     />
 
-    <div class="container mx-auto px-6 py-12">
+    <div class="container mx-auto px-8 py-12">
         <!-- Controls -->
         <div
             class="flex flex-col md:flex-row gap-4 justify-between items-center mb-10"
@@ -69,8 +68,9 @@
                 <input
                     type="text"
                     bind:value={searchQuery}
+                    aria-label="Find what you need"
                     placeholder="Find what you need..."
-                    class="w-full bg-card border border-border rounded pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+                    class="w-full bg-card border border-border rounded pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
                 />
             </div>
 
@@ -120,7 +120,7 @@
                                         <div
                                             class="size-10 mb-4 rounded bg-primary/5 flex items-center justify-center text-primary"
                                         >
-                                            <svelte:component this={item.icon} size={20} />
+                                            <item.icon size={20} />
                                         </div>
                                         <h3
                                             class="text-lg font-serif mb-2 group-hover:text-primary transition-colors"
@@ -130,7 +130,7 @@
                                         {#if item.isPreview}
                                             <span
                                                 class="inline-block mb-2 text-xs font-medium px-2 py-0.5 rounded-md bg-secondary/10 text-muted-foreground"
-                                                data-testid="preview-tag">Early preview</span
+                                                data-testid="preview-tag">{$dict.earlyPreview}</span
                                             >
                                         {/if}
                                         {#if item.tooltip}
@@ -154,7 +154,7 @@
                                     <div
                                         class="size-8 rounded bg-primary/5 flex items-center justify-center text-primary"
                                     >
-                                        <svelte:component this={item.icon} size={16} />
+                                        <item.icon size={16} />
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <h3
@@ -165,7 +165,7 @@
                                         {#if item.isPreview}
                                             <span
                                                 class="inline-block mt-0.5 text-xs font-medium px-2 py-0.5 rounded-md bg-secondary/10 text-muted-foreground"
-                                                data-testid="preview-tag">Early preview</span
+                                                data-testid="preview-tag">{$dict.earlyPreview}</span
                                             >
                                         {/if}
                                         {#if item.tooltip}

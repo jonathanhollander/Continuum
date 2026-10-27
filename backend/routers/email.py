@@ -12,9 +12,11 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from backend.database import get_session, User
 from backend.auth import get_current_user
+from backend.admin import require_admin
 from backend.models.email_log import EmailLog
 from backend.utils.logger import get_logger
 from backend.config import settings
+from backend.utils.clock import utc_now
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/emails", tags=["emails"])
@@ -67,10 +69,8 @@ def get_email_status(
     """
     query = select(EmailLog)
 
-    # Security: Non-admins can only see their own emails
-    # Note: Add is_admin field to User model for production
-    # For now, assume user_id=1 is admin (dev user)
-    is_admin = current_user.id == 1  # TODO: Replace with proper admin check
+    # Account designations govern the shared admin views too.
+    is_admin = current_user.is_admin
 
     if not is_admin:
         # Regular users can only see their own emails
@@ -140,7 +140,7 @@ def get_email_by_id(
         )
 
     # Security check
-    is_admin = current_user.id == 1  # TODO: Replace with proper admin check
+    is_admin = current_user.is_admin
     if not is_admin and email_log.user_id != current_user.id:
         logger.warning(
             f"Unauthorized access attempt to email log {email_log_id}",
@@ -161,7 +161,7 @@ def get_email_by_id(
 @router.post("/resend/{email_log_id}")
 def resend_email(
     email_log_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
     session: Session = Depends(get_session)
 ):
     """
@@ -170,18 +170,6 @@ def resend_email(
     Only admins can resend emails.
     This is useful for debugging and recovering from transient failures.
     """
-    is_admin = current_user.id == 1  # TODO: Replace with proper admin check
-
-    if not is_admin:
-        logger.warning(
-            f"Non-admin user attempted to resend email {email_log_id}",
-            extra={"context": {"user_id": current_user.id, "email_log_id": email_log_id}}
-        )
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can resend emails"
-        )
-
     email_log = session.get(EmailLog, email_log_id)
 
     if not email_log:
@@ -197,7 +185,7 @@ def resend_email(
         )
         return {
             "status": "already_sent",
-            "message": "This email was already sent successfully"
+            "message": "An email provider has already accepted this email for sending."
         }
 
     # Attempt resend: rebuild the payload from the log row (send_email takes only payload=).
@@ -254,23 +242,28 @@ def resend_email(
         )
         return gentle_failure
 
-    if result.status == "failed":
+    if result.delivery_state == "failed":
         logger.error(
             f"Resend of email {email_log_id} failed: {result.error}",
             extra={"context": {"email_log_id": email_log_id, "error": result.error}}
         )
         return gentle_failure
 
-    # The resend wrote its own log row; mark the original so it isn't offered again.
-    email_log.status = "resent"
+    # Preparation in the local outbox remains available for an explicit later resend.
+    # Only external provider acceptance marks the original as resent.
+    email_log.status = "resent" if result.provider_accepted else "saved_local"
+    email_log.provider = result.provider
+    email_log.provider_message_id = result.message_id
+    email_log.sent_at = utc_now() if result.provider_accepted else None
     session.add(email_log)
     if tier_contact is not None:
         # Same Pulse message row as send_notification: the owner's messages page shows it and
-        # pulse_logic.retry_failed_tier_sends sees a delivered alert, so it sends nothing more.
-        from backend.pulse_logic import tier_sent_text
+        # retry decisions and guardian access use the same explicit outcome as normal sends.
+        from backend.pulse_logic import tier_result_text
         from backend.pulse_models import PulseMessage
         session.add(PulseMessage(user_id=tier_contact.user_id, contact_id=tier_contact.id,
-                                 direction="user_to_contact", message=tier_sent_text(tier_number)))
+                                 direction="user_to_contact",
+                                 message=tier_result_text(result, tier_number, tier_contact.name)))
     session.commit()
 
     logger.info(
@@ -278,7 +271,9 @@ def resend_email(
         extra={"context": {"email_log_id": email_log_id, "status": result.status,
                            "message_id": result.message_id}}
     )
-    return {"status": "resent", "message": "This email is on its way again."}
+    if result.provider_accepted:
+        return {"status": "resent", "message": "An email provider accepted this email for sending."}
+    return {"status": "saved_local", "message": "This email is prepared in the local outbox."}
 
 
 # Postmark webhook models
@@ -446,7 +441,7 @@ async def postmark_bounce_webhook(
 @router.get("/bounces", response_model=List[EmailStatusResponse])
 def get_bounced_emails(
     limit: int = Query(50, ge=1, le=100, description="Maximum number of results"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
     session: Session = Depends(get_session)
 ):
     """
@@ -454,14 +449,6 @@ def get_bounced_emails(
 
     Admin only. Useful for monitoring email deliverability.
     """
-    is_admin = current_user.id == 1  # TODO: Replace with proper admin check
-
-    if not is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can view bounce reports"
-        )
-
     query = select(EmailLog).where(
         EmailLog.status.in_(["bounced", "spam_complaint", "unsubscribed"])
     ).order_by(EmailLog.created_at.desc()).limit(limit)

@@ -1,176 +1,129 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
+    import { onMount, onDestroy } from "svelte";
     import { Sparkles, ArrowRight, Loader2, Copy } from "lucide-svelte";
     import { logInteraction } from "$lib/stores/conciergeStore.svelte";
+    import { auth } from "$lib/stores/auth";
     import { aiConciergeService } from "$lib/services/aiConciergeService";
+    import { aiRuntimeAssets, aiAssets, aiConfigStates, aiConfigState, loadAIConfig, assetStrings, observeAIConfig, currentAIJob, aiJobChanges, type AIModuleVariant, type AIWritingJob, type AIHistoryMessage } from "$lib/services/aiCapabilities";
+    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
 
-    export let context:
-        | "obituary"
-        | "letters"
-        | "executor"
-        | "heirlooms"
-        | "legal_explainer"
-        | "contacts"
-        | "medical"
-        | "pets"
-        | "property"
-        | "insurance"
-        | "digital-guardian"
-        | "visual-memories"
-        | "financial"
-        | "activity-log"
-        | "subscriptions"
-        | "advanced-registry"
-        | "qr-codes"
-        | "home-manual"
-        | "calendar" = "obituary";
-    // A page's own chips replace the context defaults below.
-    export let prompts: string[] = [];
-    // Page-specific ideas; three are shown at a time and can be reshuffled.
-    export let promptPool: string[] = [];
-
+    export let context: AIModuleVariant = "obituary";
+    export let promptSource = "";
+    export let promptPoolSource = "";
+    export let job: AIWritingJob | undefined = undefined;
+    export let onUseDraft: ((text: string, ownsResult: () => boolean) => void | Promise<void>) | undefined = undefined;
     let prompt = "";
     let isGenerating = false;
     let result = "";
-    let isNotice = false; // gentle unavailable message: plain text, no draft framing
+    let isNotice = false;
+    let responsePrompt = "";
+    let responseOwner = captureSession();
+    let responseSource = "";
+    let isUsing = false;
     let copyStatus: "" | "copied" | "failed" = "";
-
-    const quickPrompts: Record<string, string[]> = {
-        obituary: [
-            "Draft a standard obituary based on these notes...",
-            "Write a warm, humorous eulogy...",
-            "Create a short death notice for the newspaper...",
-        ],
-        letters: [
-            "Help me start a letter to my daughter...",
-            "Write a note of forgiveness...",
-            "Draft an 'ethical will' listing my values...",
-        ],
-        executor: [
-            "Summarize the immediate next steps...",
-            "Draft an email to the bank...",
-            "How do I get a death certificate?",
-        ],
-        heirlooms: [
-            "Help me describe why this means so much...",
-            "Draft a letter to accompany this gift...",
-            "Explain the history of this item...",
-        ],
-        legal_explainer: [
-            "Explain what a Living Will is...",
-            "Summarize the role of a Healthcare Proxy...",
-            "What is a Power of Attorney?",
-        ],
-        contacts: [
-            "Help me organize my emergency contact list...",
-            "Draft a message to notify loved ones...",
-            "Who should be in my inner circle?",
-        ],
-        medical: [
-            "Explain advance healthcare directives...",
-            "Help me document my medical wishes...",
-            "What should my healthcare proxy know?",
-        ],
-        pets: [
-            "Help me write care instructions for my pet...",
-            "Draft a letter to my pet's future guardian...",
-            "What details should I include about my pet?",
-        ],
-        property: [
-            "Help me document property ownership details...",
-            "What information do executors need about real estate?",
-            "Draft a property description for my records...",
-        ],
-        insurance: [
-            "Help me organize my insurance policies...",
-            "What insurance information should I document?",
-            "Explain how beneficiaries claim insurance...",
-        ],
-        "digital-guardian": [
-            "Help me document my digital accounts...",
-            "What happens to online accounts when I pass?",
-            "How do I set up a digital legacy contact?",
-        ],
-        "visual-memories": [
-            "Help me organize my photo archives...",
-            "How should I document my memory locations?",
-            "Draft notes about my photo collection...",
-        ],
-        financial: [
-            "What should my family know about my accounts?",
-            "How do beneficiary designations work on bank accounts?",
-            "Help me write a note about where my accounts are held...",
-        ],
-        "activity-log": [
-            "How can a record of changes help my executor?",
-            "How often should I revisit my estate plan?",
-            "Which life events are a good time to update my plan?",
-        ],
-        subscriptions: [
-            "How can my executor cancel my subscriptions?",
-            "What should I record about each subscription?",
-            "How do automatic renewals work after someone passes away?",
-        ],
-        "advanced-registry": [
-            "What details belong in a record of a home or car purchase?",
-            "Help me plan a yearly home maintenance schedule...",
-            "How does an executor follow up on an open insurance claim?",
-        ],
-        "qr-codes": [
-            "Explain how QR access codes work for my estate...",
-            "Help me set up secure access for my family...",
-            "Where can I keep printed QR codes safe at home?",
-        ],
-        "home-manual": [
-            "Help me document my home's maintenance schedule...",
-            "Write instructions for shutting off my home's water, gas and power...",
-            "Which home details help my family most?",
-        ],
-        calendar: [
-            "Suggest meaningful ways my family could mark my birthday",
-            "What are some unique ways to be remembered on holidays?",
-            "Help me write a message for a future anniversary...",
-        ],
-    };
-
-    function pickIdeas(pool: string[], current: string[] = []): string[] {
-        const fresh = pool.filter((p) => !current.includes(p));
-        const source = fresh.length >= 3 ? fresh : pool;
-        return [...source].sort(() => Math.random() - 0.5).slice(0, 3);
+    let history: AIHistoryMessage[] = [];
+    let workingDraft = "";
+    let owner = captureSession();
+    let identity = "";
+    let contextSource = "";
+    let sequence = 0;
+    let alive = true;
+    let poolIdeas: string[] = [];
+    let mounted = false;
+    let stopConfig: (() => void) | undefined;
+    const currentJob = () => job ?? currentAIJob();
+    const jobKey = () => JSON.stringify([context, typeof location === 'undefined' ? '' : location.pathname, currentJob()?.job_id ?? '']);
+    function followJob() {
+        const key = jobKey();
+        const source = JSON.stringify(currentJob()) ?? "";
+        if (key === identity && isCurrentSession(owner)) {
+            if (source !== contextSource) {
+                contextSource = source;
+                sequence++;
+                workingDraft = result = responsePrompt = "";
+                isGenerating = false;
+                copyStatus = "";
+            }
+            return;
+        }
+        contextSource = source;
+        identity = key;
+        owner = captureSession();
+        sequence++;
+        history = [];
+        workingDraft = result = prompt = responsePrompt = "";
+        responseSource = "";
+        isGenerating = false;
+        copyStatus = "";
     }
-
-    $: poolIdeas = pickIdeas(promptPool);
-    $: chips =
-        prompts.length > 0 || promptPool.length > 0
-            ? prompts
-            : quickPrompts[context] || [];
-
+    $: { $aiJobChanges; if (typeof window !== 'undefined' && (context || job)) followJob(); }
+    onMount(() => {
+        mounted = true;
+        const stopAuth = auth.subscribe(followJob);
+        return () => { mounted = false; stopAuth(); };
+    });
+    $: if (mounted) observeContext(context);
+    function observeContext(variant: AIModuleVariant) {
+        stopConfig?.();
+        stopConfig = observeAIConfig({ purpose: 'concierge.module_prompt', variant });
+    }
+    onDestroy(() => { alive = false; sequence++; stopConfig?.(); });
+    $: configState = aiConfigState({purpose:'concierge.module_prompt',variant:context}, $aiConfigStates);
+    function retryConfig() {
+        void loadAIConfig({purpose:'concierge.module_prompt',variant:context}, true).catch(() => {});
+    }
+    $: assets = aiAssets({purpose:'concierge.module_prompt',variant:context}, $aiRuntimeAssets);
+    $: chips = promptPoolSource ? [] : assetStrings(promptSource ? assets[promptSource] : (assets['lib/components/concierge/AIPromptBar.svelte:quickPrompts'] as Record<string, unknown> | undefined)?.[context]);
+    $: pool = assetStrings(promptPoolSource ? assets[promptPoolSource] : []);
+    $: poolIdeas = pickIdeas(pool);
+    function pickIdeas(values: string[], current: string[] = []): string[] {
+        const fresh = values.filter((p) => !current.includes(p));
+        return [...(fresh.length >= 3 ? fresh : values)].sort(() => Math.random() - 0.5).slice(0, 3);
+    }
     async function runPrompt(text: string) {
+        followJob();
+        if (isGenerating || !text.trim() || !isCurrentSession(owner)) return;
+        const startedBy = owner, key = identity, version = ++sequence;
+        const record = currentJob();
+        const fingerprint = JSON.stringify(record) ?? "";
         prompt = text;
         isGenerating = true;
         copyStatus = "";
         logInteraction("AI Prompt", `Context: ${context} | Prompt: ${text}`);
-
+        const current: AIWritingJob = { ...record, job_id: record?.job_id ?? key,
+            job_brief: record?.job_brief ?? history.find((m) => m.role === 'user')?.content ?? text,
+            current_draft: workingDraft || record?.current_draft || "",
+            current_draft_source: workingDraft ? 'proposed' : 'edited' };
         try {
-            // chat() never throws; on failure it sets `failed` and returns a gentle notice.
-            const response = await aiConciergeService.chat(text, [], context);
+            const response = await aiConciergeService.modulePrompt(text, context, history, current);
+            if (!alive || version !== sequence || key !== jobKey() || !isCurrentSession(startedBy) || fingerprint !== (JSON.stringify(currentJob()) ?? "")) return;
             isNotice = response.failed === true;
-            result = isNotice
-                ? response.content
-                : `[Draft based on: "${text}"]\n\n${response.content}`;
-        } finally {
-            isGenerating = false;
-        }
+            result = response.content;
+            responsePrompt = text;
+            responseOwner = startedBy;
+            responseSource = fingerprint;
+            if (!response.failed) {
+                history = [...history, { role: 'user', content: text, source: 'user' }, { role: 'assistant', content: response.historyContent ?? response.content, source: 'model' }];
+                workingDraft = response.content;
+            }
+        } finally { if (alive && version === sequence && isCurrentSession(startedBy)) isGenerating = false; }
     }
-
+    function startOver() { sequence++; history = []; workingDraft = result = responsePrompt = ""; responseSource = ""; copyStatus = ""; isGenerating = false; }
+    function editResult(event: Event) { result = (event.currentTarget as HTMLTextAreaElement).value; workingDraft = result; }
+    async function useDraft() {
+        if (!onUseDraft || isUsing || isNotice || !result.trim()) return;
+        const text = result, version = sequence, source = responseSource, startedBy = responseOwner;
+        const ownsResult = () => alive && version === sequence && result === text && source === responseSource
+            && source === (JSON.stringify(currentJob()) ?? "") && isCurrentSession(startedBy);
+        if (!ownsResult()) return;
+        isUsing = true;
+        try { await onUseDraft(text, ownsResult); }
+        finally { if (alive) isUsing = false; }
+    }
     async function copyResult() {
-        try {
-            await navigator.clipboard.writeText(result);
-            copyStatus = "copied";
-            logInteraction("AI Copy", context);
-        } catch {
-            copyStatus = "failed";
-        }
+        try { await navigator.clipboard.writeText(result); copyStatus = "copied"; logInteraction("AI Copy", context); }
+        catch { copyStatus = "failed"; }
     }
 </script>
 
@@ -182,13 +135,15 @@
         <span>Concierge Drafting Assistant</span>
     </div>
 
+    {#if job?.document_title || job?.recipient_name}<p class="mb-3 text-xs text-muted-foreground">Working with: {job.document_title || "Current letter"}{#if job.recipient_name} · For {job.recipient_name}{/if}</p>{/if}
     <!-- Input Area -->
     <div class="relative">
         <input
             type="text"
             bind:value={prompt}
+            aria-label="Ask the Concierge Drafting Assistant"
             placeholder="Ask me to draft, summarize, or explain..."
-            class="w-full p-4 pr-14 rounded-xl border transition-all shadow-sm border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary"
+            class="w-full p-4 pr-14 rounded-xl border transition-all shadow-sm bg-card text-foreground placeholder:text-muted-foreground border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary"
             on:keydown={(e) => e.key === "Enter" && runPrompt(prompt)}
         />
 
@@ -209,12 +164,23 @@
         </div>
     </div>
 
+    {#if configState === 'loading' || configState === 'error'}
+        <div class="flex items-center gap-3 mt-3 text-xs text-muted-foreground" role="status">
+            {#if configState === 'loading'}
+                <span>Loading writing ideas...</span>
+            {:else}
+                <span>Choose Try Again to load writing ideas.</span>
+                <button type="button" class="font-semibold text-primary-hover underline" aria-label="Retry writing ideas" on:click={retryConfig}>Try Again</button>
+            {/if}
+        </div>
+    {/if}
+
     <!-- Quick Prompts -->
     {#if !result && !isGenerating}
         <div class="flex flex-wrap gap-2 mt-4" transition:slide>
             {#each chips as qp}
                 <button
-                    class="px-3 py-1.5 bg-white text-xs font-medium text-primary-700 rounded-full border border-primary-100 hover:border-primary-300 hover:bg-primary-50 transition-colors"
+                    class="px-3 py-1.5 bg-card text-xs font-medium text-primary-hover rounded-full border border-primary/20 hover:border-primary/40 hover:bg-primary-soft transition-colors"
                     on:click={() => runPrompt(qp)}
                 >
                     {qp}
@@ -222,16 +188,16 @@
             {/each}
             {#each poolIdeas as idea}
                 <button
-                    class="px-3 py-1.5 bg-white text-xs font-medium text-primary-700 rounded-full border border-primary-100 hover:border-primary-300 hover:bg-primary-50 transition-colors"
+                    class="px-3 py-1.5 bg-card text-xs font-medium text-primary-hover rounded-full border border-primary/20 hover:border-primary/40 hover:bg-primary-soft transition-colors"
                     on:click={() => runPrompt(idea)}
                 >
                     {idea}
                 </button>
             {/each}
-            {#if promptPool.length > 3}
+            {#if pool.length > 3}
                 <button
-                    class="px-3 py-1.5 text-xs text-primary-400 hover:text-primary-600 hover:underline"
-                    on:click={() => (poolIdeas = pickIdeas(promptPool, poolIdeas))}
+                    class="px-3 py-1.5 text-xs text-primary-hover hover:underline"
+                    on:click={() => (poolIdeas = pickIdeas(pool, poolIdeas))}
                 >
                     Show other ideas
                 </button>
@@ -242,17 +208,20 @@
     <!-- Result Area -->
     {#if result}
         <div
-            class="mt-4 bg-white rounded-xl p-4 border border-primary-100 shadow-sm relative group"
+            class="mt-4 bg-card rounded-xl p-4 border border-primary/20 shadow-sm relative group"
             transition:slide
         >
-            <div
-                class="text-sm text-gray-700 whitespace-pre-wrap {isNotice ? '' : 'font-mono'}"
-            >
-                {result}
-            </div>
+            {#if isNotice}
+                <p class="text-sm text-foreground whitespace-pre-wrap" role="status">{result}</p>
+            {:else}
+                <p class="text-xs text-muted-foreground mb-2">Response to: {responsePrompt}</p>
+                <textarea aria-label="Assistant response" bind:value={result} on:input={editResult}
+                    class="w-full min-h-64 bg-card border border-border rounded-lg p-3 text-sm text-foreground leading-relaxed" rows="10"></textarea>
+            {/if}
             {#if !isNotice}
+                {#if onUseDraft}<button type="button" class="mt-3 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50" disabled={isUsing || !result.trim()} on:click={useDraft}>Use in letter editor</button>{/if}
                 <button
-                    class="absolute top-2 right-2 p-2 bg-gray-100 text-gray-500 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity hover:bg-primary-100 hover:text-primary-600"
+                    class="absolute top-2 right-2 p-2 bg-muted text-muted-foreground rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity hover:bg-primary-soft hover:text-primary-hover"
                     on:click={copyResult}
                     title="Copy to clipboard"
                     aria-label="Copy to clipboard"
@@ -260,19 +229,16 @@
                     <Copy size={16} />
                 </button>
                 {#if copyStatus}
-                    <p class="mt-2 text-xs text-gray-500" role="status">
+                    <p class="mt-2 text-xs text-muted-foreground" role="status">
                         {copyStatus === "copied"
                             ? "Copied."
-                            : "We couldn't copy that just now. You can select the text and copy it yourself."}
+                            : "Selecting the text will let you copy it yourself."}
                     </p>
                 {/if}
             {/if}
             <button
-                class="block w-full text-center text-xs text-primary-400 mt-4 hover:text-primary-600 hover:underline"
-                on:click={() => {
-                    result = "";
-                    copyStatus = "";
-                }}
+                class="block w-full text-center text-xs text-primary-hover mt-4 hover:underline"
+                on:click={startOver}
             >
                 Start Over
             </button>

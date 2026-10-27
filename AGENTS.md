@@ -1,6 +1,6 @@
 # Continuum — instructions for coding agents
 
-**Last Updated:** 2026-10-26 01:09 EST
+**Last Updated:** 2026-10-26 EDT
 
 ## Purpose and current priority
 
@@ -42,14 +42,15 @@ Use calm, direct language and familiar labels. Explain the next action with a sh
 - `legacy_nextjs_archive/` is historical Next.js code. The old root README was a Next.js template; the current documentation index is `docs/README.md`. Root `npm` commands do not run the active application.
 - Former `continuum-agents/` and `agents/` specifications are now under `docs/agent-specs/`; historical plans/reports are in `docs/archive/`. These and `.agent/`/`.claude/` reference material do not authorize launching agents or replacing the current owner priorities.
 
-## Locate code before changing it
+## Locate code with the existing knowledge indexes
 
-If a `.codegraph/` directory exists at the repository root, use CodeGraph **before** grep/find or source reads to locate or understand code:
+Use the repository's OpenWiki, CodeGraph and graphify indexes before broad searches or repeated file reads. Check which indexes exist once, choose the route that answers the task, and reuse the results. Do not repeat the same discovery through all three tools when it is already answered.
 
-- MCP `codegraph_explore`, with this repository's absolute `projectPath` and a query naming the feature, file, or symbol.
-- Shell fallback: `codegraph explore "<symbols or question>"`.
+- **System or workflow orientation:** start with [OpenWiki quickstart](openwiki/quickstart.md), then the relevant topic page. Follow its source references into the implementation instead of searching the whole repository. Read only the relevant pages; unrelated wiki pages are not required startup reading.
+- **Symbols, implementation and call paths:** when `.codegraph/` exists, use CodeGraph **before** grep/find or source reads. Call MCP `codegraph_explore` with this repository's absolute `projectPath` and the feature, file or symbol; shell fallback: `codegraph explore "<symbols or question>"`. Its line-numbered source is already read: do not immediately reread those files or reconstruct its call paths with grep.
+- **Architecture, concepts and relationships:** when `graphify-out/graph.json` exists, use `graphify query "<relationship or concept>"`, `graphify path` or `graphify explain`. The overview is [Graphify report](graphify-out/GRAPH_REPORT.md). The installed package is `graphifyy`; its CLI is `graphify`.
 
-CodeGraph returns line-numbered source and call paths; use that source without immediately re-reading the same files. If the directory is absent, skip CodeGraph and use `rg` / `rg --files`. Do not initialize an index; indexing is the owner's decision.
+Use narrow `rg` or targeted source reads only for a specific gap, unindexed content, an omitted body or a stale-source warning. If output is clipped, retrieve the missing symbol or range rather than starting another broad search. Source code and tests remain authoritative when a wiki or graph is stale. If an index/tool is unavailable, continue with targeted fallback tools; do not install, initialize or refresh it unless requested. Routine discovery must not call external LLM providers.
 
 ## Persistence and feature invariants
 

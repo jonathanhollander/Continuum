@@ -2,9 +2,13 @@
     /**
      * SyncBadge - Displays sync status with compassionate, non-anxiety-inducing colors and labels.
      *
-     * Colors intentionally avoid harsh red - using muted amber/orange for attention states.
+     * Colours come from the app.css status tokens: success (kept safe), info (saving) and the
+     * gentle warning for "needs attention". "On this device" and "Ready" use a quiet slate dot;
+     * the label uses the theme's muted-foreground token, matching the tile text around it.
      * Labels use positive, supportive language appropriate for end-of-life planning context.
      */
+
+    import { dict } from "$lib/stores/conciergeStore.svelte";
 
     export type CompassionateSyncStatus = "safe" | "saving" | "local" | "attention-needed" | "ready";
 
@@ -16,29 +20,29 @@
         pulseClass?: string;
     }> = {
         safe: {
-            color: "bg-emerald-400",
-            bgColor: "bg-emerald-400/20",
+            color: "bg-success",
+            bgColor: "bg-success/20",
             label: "Kept safe",
             tooltip: "Your thoughts are safely saved"
         },
         saving: {
-            color: "bg-amber-400",
-            bgColor: "bg-amber-400/20",
+            color: "bg-info",
+            bgColor: "bg-info/20",
             label: "Saving...",
             tooltip: "We're keeping this safe for you...",
             pulseClass: "animate-pulse"
         },
         local: {
-            color: "bg-sky-400",
-            bgColor: "bg-sky-400/20",
+            color: "bg-slate-400",
+            bgColor: "bg-slate-400/20",
             label: "On this device",
             tooltip: "Stored here - we'll save to your account when ready"
         },
         "attention-needed": {
-            color: "bg-orange-400",
-            bgColor: "bg-orange-400/20",
+            color: "bg-warning",
+            bgColor: "bg-warning/20",
             label: "Needs attention",
-            tooltip: "We couldn't save just now. Your words are still here."
+            tooltip: "Everything you've saved is safe. We can try again whenever you're ready."
         },
         ready: {
             color: "bg-slate-400",
@@ -56,7 +60,12 @@
 
     let { status = "ready", showLabel = false, size = "sm" }: Props = $props();
 
-    let config = $derived(statusConfig[status]);
+    // Label and tooltip in the active language (X244); English stays above as the fallback.
+    let config = $derived.by(() => {
+        const base = statusConfig[status];
+        const text = ($dict.syncBadge as Record<string, { label: string; tip: string }> | undefined)?.[status];
+        return text ? { ...base, label: text.label, tooltip: text.tip } : base;
+    });
     let sizeClasses = $derived({
         sm: "w-2 h-2",
         md: "w-2.5 h-2.5",
@@ -71,12 +80,12 @@
 >
     <span
         class="rounded-full {config.color} {sizeClasses} {config.pulseClass || ''} shadow-sm"
-        style="box-shadow: 0 0 4px {status === 'safe' ? 'rgb(52 211 153 / 0.4)' : status === 'saving' ? 'rgb(251 191 36 / 0.4)' : 'transparent'};"
+        style="box-shadow: 0 0 4px {status === 'safe' ? 'color-mix(in srgb, var(--color-success) 40%, transparent)' : status === 'saving' ? 'color-mix(in srgb, var(--color-info) 40%, transparent)' : 'transparent'};"
         title={config.tooltip}
     ></span>
 
     {#if showLabel}
-        <span class="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
+        <span class="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
             {config.label}
         </span>
     {/if}

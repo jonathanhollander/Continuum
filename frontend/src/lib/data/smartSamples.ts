@@ -4,7 +4,7 @@ import type { InsurancePolicy } from "$lib/stores/insuranceStore.svelte";
 import type { PropertyItem } from "$lib/stores/propertyStore.svelte";
 import { digitalAssetsStore, type DigitalAccount } from "$lib/stores/digitalAssetsStore.svelte";
 import type { Heirloom } from "$lib/stores/heirloomStore.svelte";
-import type { MedicalDirective } from "$lib/stores/medicalStore.svelte";
+import type { MedicalDirective, MedicalProfile } from "$lib/stores/medicalStore.svelte";
 import type { PetEntry } from "$lib/stores/petStore.svelte";
 
 // Common Financial Asset Type (matches AssetManager)
@@ -27,7 +27,7 @@ export interface SmartSampleCollection {
     family: FamilyMember[];
     digital: DigitalAccount[];
     heirlooms: Heirloom[];
-    medical: MedicalDirective[];
+    medical: (MedicalDirective & Partial<MedicalProfile>)[];
     pets: PetEntry[];
     subscriptions: any[]; // Subscriptions use a simpler generic structure often
     contacts: any[];
@@ -381,7 +381,7 @@ export const getSmartSamples = (locale: string = 'en'): SmartSampleCollection =>
                 id: commonId('fam-1'),
                 name: dict.family.doc,
                 role: 'professional',
-                relationToOwner: dict.family.relation_doc,
+                relation: dict.family.relation_doc,
                 isExecutor: false,
                 isBeneficiary: false,
                 isEmergencyContact: true,
@@ -391,7 +391,7 @@ export const getSmartSamples = (locale: string = 'en'): SmartSampleCollection =>
                 id: commonId('fam-2'),
                 name: dict.family.lawyer,
                 role: 'professional',
-                relationToOwner: dict.family.relation_lawyer,
+                relation: dict.family.relation_lawyer,
                 isExecutor: false,
                 isBeneficiary: false,
                 isEmergencyContact: false,

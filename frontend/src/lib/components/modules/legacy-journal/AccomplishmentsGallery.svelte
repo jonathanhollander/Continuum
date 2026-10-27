@@ -53,8 +53,8 @@
                     onclick={() => (activeCategory = cat)}
                     class="px-4 py-1.5 rounded-full text-sm font-bold transition-all border
                     {activeCategory === cat
-                        ? 'bg-amber-600 border-amber-600 text-white shadow-sm'
-                        : 'bg-white border-stone-200 text-stone-500 hover:border-amber-200'}"
+                        ? 'bg-primary border-primary text-primary-foreground shadow-sm'
+                        : 'bg-card border-border text-muted-foreground hover:border-primary/40'}"
                 >
                     {cat}
                 </button>
@@ -65,13 +65,14 @@
         <div class="relative w-full md:w-64">
             <Search
                 size={16}
-                class="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <input
                 type="text"
                 bind:value={searchTerm}
+                aria-label="Search accomplishments"
                 placeholder="Search accomplishments..."
-                class="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-0 text-sm bg-white"
+                class="w-full pl-10 pr-4 py-2 rounded-xl border border-border focus:border-primary focus:ring-0 text-sm bg-card"
             />
         </div>
     </div>
@@ -95,13 +96,13 @@
                 {#if !searchTerm && activeCategory === "All"}
                     <a
                         href="/modules/timeline"
-                        class="inline-block px-6 py-2 bg-amber-600 text-white font-bold rounded-full hover:bg-amber-700 transition-colors shadow-lg"
+                        class="inline-block px-6 py-2 bg-primary text-primary-foreground font-bold rounded-full hover:bg-primary-hover transition-colors shadow-lg"
                     >
-                        Go to Timeline to Add
+                        Add on your Timeline
                     </a>
                 {:else}
-                    <p class="text-stone-400 text-sm">
-                        No matches found. Try clearing filters.
+                    <p class="text-muted-foreground text-sm">
+                        Clear the filters to see everything you've gathered.
                     </p>
                 {/if}
             </div>
@@ -111,46 +112,46 @@
             {#each filteredAccomplishments as acc (acc.id)}
                 <div
                     in:scale={{ duration: 300, start: 0.95 }}
-                    class="group bg-white rounded-2xl p-6 border border-stone-200 shadow-sm hover:shadow-xl hover:border-amber-200 transition-all flex flex-col h-full overflow-hidden relative"
+                    class="group bg-card rounded-2xl p-6 border border-border shadow-sm hover:shadow-xl hover:border-primary/40 transition-all flex flex-col h-full overflow-hidden relative"
                 >
                     <!-- Golden accent top -->
                     <div
-                        class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                        class="absolute top-0 left-0 w-full h-1 bg-gold opacity-0 group-hover:opacity-100 transition-opacity"
                     ></div>
 
                     <div class="flex justify-between items-start mb-4">
                         <div
-                            class="px-2.5 py-1 rounded-md bg-amber-50 text-[10px] font-black text-amber-600 tracking-wider uppercase border border-amber-100"
+                            class="px-2.5 py-1 rounded-md bg-primary-soft text-[10px] font-black text-primary-hover tracking-wider uppercase border border-primary/20"
                         >
                             {acc.category || "Personal"}
                         </div>
-                        <span class="text-xs font-bold text-stone-300">
+                        <span class="text-xs font-bold text-muted-foreground">
                             {acc.year}
                         </span>
                     </div>
 
                     <h3
-                        class="text-xl font-serif font-bold text-[#304743] mb-3 leading-tight group-hover:text-amber-700 transition-colors"
+                        class="text-xl font-serif font-bold text-primary-deep dark:text-primary-hover mb-3 leading-tight group-hover:text-primary-hover transition-colors"
                     >
                         {acc.label}
                     </h3>
 
                     <p
-                        class="text-stone-500 text-sm leading-relaxed mb-6 flex-grow line-clamp-3"
+                        class="text-muted-foreground text-sm leading-relaxed mb-6 flex-grow line-clamp-3"
                     >
-                        {acc.description || "No description provided."}
+                        {acc.description || ""}
                     </p>
 
                     {#if acc.reflection}
-                        <div class="mt-auto pt-4 border-t border-stone-50">
+                        <div class="mt-auto pt-4 border-t border-border">
                             <div class="flex items-center gap-2 mb-2">
                                 <span
-                                    class="text-[10px] font-black text-stone-300 uppercase tracking-widest"
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest"
                                     >The Story</span
                                 >
                             </div>
                             <p
-                                class="text-xs text-stone-400 italic line-clamp-4 leading-relaxed"
+                                class="text-xs text-muted-foreground italic line-clamp-4 leading-relaxed"
                             >
                                 "{acc.reflection}"
                             </p>
@@ -160,7 +161,7 @@
                     <div class="mt-6 flex justify-end">
                         <a
                             href="/modules/timeline"
-                            class="text-[10px] font-black text-amber-600 uppercase tracking-widest hover:underline"
+                            class="text-[10px] font-black text-primary-hover uppercase tracking-widest hover:underline"
                             >Edit in Timeline →</a
                         >
                     </div>

@@ -1,3 +1,4 @@
+import { browserStorage } from "$lib/services/browserStorage";
 /**
  * Overwhelm Detector Service
  * Implements Issue #17 - Proactive support for users during difficult planning moments
@@ -57,7 +58,7 @@ class OverwhelmDetector {
     constructor() {
         // Initial state from localStorage (fallback)
         if (typeof window !== 'undefined') {
-            this.isMuted = localStorage.getItem('continuum_overwhelm_muted') === 'true';
+            this.isMuted = browserStorage.getItem('continuum_overwhelm_muted') === 'true';
         }
 
         this.state = writable({
@@ -268,14 +269,14 @@ class OverwhelmDetector {
     public async mutePermanently() {
         this.isMuted = true;
         if (typeof window !== 'undefined') {
-            localStorage.setItem('continuum_overwhelm_muted', 'true');
+            browserStorage.setItem('continuum_overwhelm_muted', 'true');
         }
         this.state.update((s: OverwhelmState) => ({ ...s, isPermanentlyMuted: true, isOverwhelmed: false }));
         logger.info('Overwhelm support permanently muted by user');
 
         // Sync to backend if authenticated
         try {
-            const token = typeof window !== 'undefined' ? localStorage.getItem('continuum_auth_token') : null;
+            const token = typeof window !== 'undefined' ? browserStorage.getItem('continuum_auth_token') : null;
             if (token) {
                 const res = await fetch(`${API_BASE_URL}/api/auth/preferences`, {
                     method: 'PATCH',

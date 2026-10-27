@@ -55,6 +55,11 @@
         }
     }
 
+    function closeOffer() {
+        showModal = false;
+        dismiss();
+    }
+
     function takeBreak() {
         logger.info("User accepted full break experience", { signals });
         showBreakScreen = true;
@@ -101,7 +106,7 @@
             return "You've been on this emotionally challenging page for a while.";
         }
         if (signals.includes("rapid_navigation")) {
-            return "We noticed you've been moving through many pages quickly.";
+            return "You've been exploring a lot. A pause is always here for you.";
         }
         if (signals.includes("repeated_back_navigation")) {
             return "It looks like you're searching for something.";
@@ -121,20 +126,20 @@
 
 {#if showModal && !showBreakScreen}
     <!-- Initial Overwhelm Intervention Prompt -->
-    <div aria-modal="true" use:focusTrap
-        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+    <div aria-modal="true" use:focusTrap={{ onEscape: closeOffer }}
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
         transition:fade={{ duration: 300 }}
         role="dialog"
         aria-labelledby="overwhelm-title"
         aria-describedby="overwhelm-description"
     >
         <div
-            class="max-w-lg w-full bg-white dark:bg-zinc-900 rounded-2xl p-8 shadow-2xl border border-zinc-200 dark:border-zinc-800"
+            class="max-w-lg w-full bg-card rounded-2xl p-8 shadow-2xl border border-border"
             transition:fly={{ y: 20, duration: 400, easing: quintOut }}
         >
             <!-- Icon -->
             <div
-                class="w-16 h-16 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-full flex items-center justify-center mx-auto mb-6"
+                class="w-16 h-16 bg-primary-soft text-primary rounded-full flex items-center justify-center mx-auto mb-6"
             >
                 <Heart class="w-8 h-8" />
             </div>
@@ -142,7 +147,7 @@
             <!-- Title -->
             <h2
                 id="overwhelm-title"
-                class="text-2xl font-semibold mb-4 text-zinc-900 dark:text-zinc-100 text-center"
+                class="text-2xl font-semibold mb-4 text-foreground text-center"
             >
                 Would you like some support?
             </h2>
@@ -150,11 +155,11 @@
             <!-- Contextual message -->
             <p
                 id="overwhelm-description"
-                class="text-zinc-600 dark:text-zinc-400 mb-8 leading-relaxed text-center"
+                class="text-muted-foreground mb-8 leading-relaxed text-center"
             >
                 {getMessage()}
                 <span class="block mt-2 text-sm">
-                    Your progress is always saved. It's perfectly okay to pause.
+                    It's perfectly okay to pause. You can return when you're ready.
                 </span>
             </p>
 
@@ -163,7 +168,7 @@
                 <!-- Take a break (full experience) -->
                 <button
                     onclick={takeBreak}
-                    class="w-full py-3.5 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-medium transition-colors flex items-center justify-center gap-2"
+                    class="w-full py-3.5 px-4 bg-primary hover:bg-primary-hover text-primary-foreground rounded-2xl font-medium transition-colors flex items-center justify-center gap-2"
                 >
                     <Pause class="w-5 h-5" />
                     Take a mindful break
@@ -172,7 +177,7 @@
                 <!-- Get help -->
                 <button
                     onclick={getHelp}
-                    class="w-full py-3.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 rounded-2xl font-medium transition-colors flex items-center justify-center gap-2"
+                    class="w-full py-3.5 px-4 bg-muted hover:bg-border border border-border text-foreground rounded-2xl font-medium transition-colors flex items-center justify-center gap-2"
                 >
                     <HelpCircle class="w-5 h-5" />
                     I need some guidance
@@ -180,11 +185,8 @@
 
                 <!-- Dismiss -->
                 <button
-                    onclick={() => {
-                        showModal = false;
-                        dismiss();
-                    }}
-                    class="w-full py-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
+                    onclick={closeOffer}
+                    class="w-full py-3 text-muted-foreground hover:text-foreground transition-colors"
                 >
                     I'm okay to continue
                 </button>
@@ -195,55 +197,56 @@
                         type="checkbox"
                         id="dont-show-again"
                         bind:checked={dontShowAgain}
-                        class="w-4 h-4 text-teal-600 border-zinc-300 rounded focus:ring-teal-500"
+                        class="w-4 h-4 accent-primary border-border rounded focus:ring-primary"
                     />
                     <label
                         for="dont-show-again"
-                        class="text-xs text-zinc-500 dark:text-zinc-400 cursor-pointer select-none"
+                        class="text-xs text-muted-foreground cursor-pointer select-none"
                     >
-                        Don't show this support again
+                        Hide these notes
                     </label>
                 </div>
             </div>
         </div>
     </div>
-{:else}
+{:else if showBreakScreen}
     <!-- Full Break Experience Screen -->
-    <div role="dialog" aria-modal="true" use:focusTrap
-        class="fixed inset-0 z-[100] bg-gradient-to-br from-teal-50 via-blue-50 to-indigo-50 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 flex items-center justify-center p-6"
+    <div role="dialog" aria-modal="true" aria-labelledby="break-title" use:focusTrap={{ onEscape: endBreak }}
+        class="fixed inset-0 z-[100] bg-background bg-gradient-to-br from-primary-soft via-background to-primary-soft flex items-center justify-center p-6"
         transition:fade={{ duration: 500 }}
     >
         <div class="max-w-md w-full text-center">
             <!-- Breathing circle animation -->
             <div class="mb-12 relative h-40 flex items-center justify-center">
                 <div
-                    class="absolute w-32 h-32 rounded-full bg-teal-400/20 dark:bg-teal-500/20 animate-ping"
+                    class="absolute w-32 h-32 rounded-full bg-primary/20 animate-ping"
                     style="animation-duration: 4s;"
                 ></div>
                 <div
-                    class="absolute w-24 h-24 rounded-full bg-teal-500/30 dark:bg-teal-400/30 animate-pulse"
+                    class="absolute w-24 h-24 rounded-full bg-primary/30 animate-pulse"
                     style="animation-duration: 4s;"
                 ></div>
                 <div
-                    class="w-16 h-16 rounded-full bg-teal-600 dark:bg-teal-500 flex items-center justify-center"
+                    class="w-16 h-16 rounded-full bg-primary flex items-center justify-center"
                 >
-                    <Heart class="w-8 h-8 text-white" />
+                    <Heart class="w-8 h-8 text-primary-foreground" />
                 </div>
             </div>
 
             <h2
-                class="text-3xl font-semibold mb-4 text-zinc-900 dark:text-zinc-100"
+                id="break-title"
+                class="text-3xl font-semibold mb-4 text-foreground"
             >
                 You're taking a break
             </h2>
 
-            <p class="text-lg text-zinc-600 dark:text-zinc-400 mb-8">
-                Breathe slowly. Your work is safe and waiting for you.
+            <p class="text-lg text-muted-foreground mb-8">
+                Breathe slowly. You can return when you're ready.
             </p>
 
             <!-- Timer -->
             <div
-                class="text-5xl font-light text-teal-600 dark:text-teal-400 mb-12 font-mono"
+                class="text-5xl font-light text-primary mb-12 font-mono"
             >
                 {formatDuration(breakDuration)}
             </div>
@@ -251,10 +254,10 @@
             {#if suggestReturn}
                 <!-- Gentle suggestion to return after 3 minutes -->
                 <div
-                    class="mb-6 p-4 bg-white/60 dark:bg-zinc-800/60 backdrop-blur rounded-2xl border border-zinc-200 dark:border-zinc-700"
+                    class="mb-6 p-4 bg-card rounded-2xl border border-border"
                     transition:fly={{ y: 10, duration: 400 }}
                 >
-                    <p class="text-sm text-zinc-700 dark:text-zinc-300">
+                    <p class="text-sm text-foreground">
                         Feeling refreshed? You can return when you're ready.
                     </p>
                 </div>
@@ -263,14 +266,14 @@
             <!-- Return button -->
             <button
                 onclick={endBreak}
-                class="py-4 px-8 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-medium transition-colors inline-flex items-center gap-2"
+                class="py-4 px-8 bg-primary hover:bg-primary-hover text-primary-foreground rounded-2xl font-medium transition-colors inline-flex items-center gap-2"
             >
                 Ready to continue
                 <ChevronRight class="w-5 h-5" />
             </button>
 
             <!-- Optional: Breathing guide -->
-            <div class="mt-12 text-sm text-zinc-500 dark:text-zinc-400">
+            <div class="mt-12 text-sm text-muted-foreground">
                 <p class="italic">
                     Try breathing in for 4 counts, hold for 4, out for 4.
                 </p>

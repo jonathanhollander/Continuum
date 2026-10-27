@@ -21,7 +21,7 @@
     }>();
 
     // Support both onclick and onClick prop naming conventions
-    const handleClick = onclick || onClick;
+    const handleClick = () => (onclick || onClick)?.();
 </script>
 
 <!-- 
@@ -30,50 +30,49 @@
 -->
 <button
     onclick={handleClick}
-    class="w-full text-left group relative overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-indigo-300 transition-all duration-300"
+    class="@container w-full text-left group relative overflow-hidden rounded-xl border-2 border-dashed border-border bg-muted/50 hover:bg-muted hover:border-primary/40 transition-all duration-300"
     in:fade
 >
     <div
-        class="p-4 flex items-center gap-4 opacity-50 group-hover:opacity-80 transition-opacity"
+        class="p-4 grid grid-cols-[2.5rem_minmax(0,1fr)] @md:grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2"
     >
         <!-- Pseudo Icon Placeholder -->
         <div
-            class="w-10 h-10 rounded-full bg-slate-200 group-hover:bg-indigo-100 transition-colors flex items-center justify-center shrink-0"
+            class="w-10 h-10 rounded-full bg-border group-hover:bg-primary-soft transition-colors flex items-center justify-center shrink-0"
         >
             {#if icon}
                 {@render icon()}
             {:else}
                 <Plus
                     size={20}
-                    class="text-slate-400 group-hover:text-indigo-500"
+                    class="text-muted-foreground group-hover:text-primary-hover"
                 />
             {/if}
         </div>
 
-        <div class="flex-1 space-y-1">
+        <div class="min-w-0 space-y-1">
             {#if name}
                 <!-- Smart Sample Data -->
-                <div class="font-bold text-slate-700">{name}</div>
+                <div class="font-bold text-muted-foreground group-hover:text-foreground break-words">{name}</div>
                 {#if subtitle}
-                    <div class="text-xs text-slate-500">{subtitle}</div>
+                    <div class="text-xs text-muted-foreground break-words">{subtitle}</div>
                 {/if}
             {:else}
-                <!-- Skeleton Fallback -->
-                <div class="h-4 w-1/3 bg-slate-200 rounded animate-pulse"></div>
-                <div class="h-3 w-1/2 bg-slate-100 rounded"></div>
+                <!-- Unnamed example: the example label itself is the title -->
+                <div class="font-bold text-muted-foreground group-hover:text-foreground">Example {type}</div>
             {/if}
         </div>
 
         {#if value !== null}
             <div
-                class="font-serif font-bold text-slate-400 group-hover:text-indigo-600 transition-colors"
+                class="col-start-2 @md:col-start-auto justify-self-start @md:justify-self-end whitespace-nowrap font-serif font-bold text-muted-foreground group-hover:text-primary-hover transition-colors"
             >
                 ${value.toLocaleString()}
             </div>
-        {:else}
+        {:else if name}
             <!-- Call to Action Badge -->
             <div
-                class="px-3 py-1 rounded-full bg-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider group-hover:bg-indigo-500 group-hover:text-white transition-colors shadow-sm"
+                class="col-start-2 @md:col-start-auto justify-self-start @md:justify-self-end shrink-0 whitespace-nowrap px-3 py-1 rounded-full bg-muted text-xs font-bold text-muted-foreground uppercase tracking-wider group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-sm"
             >
                 Example {type}
             </div>
@@ -82,10 +81,10 @@
 
     <!-- Hover Overlay Text -->
     <div
-        class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/60 backdrop-blur-[1px]"
+        class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-card/80 backdrop-blur-[1px]"
     >
-        <span class="font-bold text-indigo-600 text-sm flex items-center gap-2">
-            <Plus size={16} /> Click to Add Real {type}
+        <span class="font-bold text-primary-hover text-sm flex items-center gap-2">
+            <Plus size={16} /> Add your own {type}
         </span>
     </div>
 </button>

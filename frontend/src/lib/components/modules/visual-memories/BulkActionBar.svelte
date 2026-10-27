@@ -32,7 +32,7 @@
     >
         <div class="flex items-center gap-3 border-r border-slate-700 pr-6">
             <span
-                class="bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[24px] text-center"
+                class="bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-full min-w-[24px] text-center"
             >
                 {selectedCount}
             </span>
@@ -44,12 +44,14 @@
                 <div
                     class="flex items-center gap-2 animate-in slide-in-from-right-4 fade-in"
                 >
+                    <!-- Focus moves to this field because the person just chose to add something here. -->
+                    <!-- svelte-ignore a11y_autofocus -->
                     <input
                         type="text"
                         bind:value={newTag}
                         aria-label="Tag"
-                        placeholder="Enter tag..."
-                        class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500 w-32 placeholder:text-slate-500"
+                        placeholder="Add a tag..."
+                        class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-primary w-32 placeholder:text-slate-400"
                         onkeydown={(e) => e.key === "Enter" && handleAddTag()}
                         autofocus
                     />
@@ -79,7 +81,7 @@
             {/if}
 
             <button
-                class="flex items-center gap-2 px-3 py-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg transition-colors text-sm font-medium"
+                class="flex items-center gap-2 px-3 py-2 hover:bg-slate-800 rounded-lg transition-colors text-sm font-medium"
                 onclick={() => ondelete?.()}
             >
                 <Trash2 size={16} />
@@ -90,7 +92,7 @@
         <button
             class="ml-2 hover:bg-slate-800 p-2 rounded-full transition-colors"
             onclick={() => onclear?.()}
-            title="Clear Selection"
+            title="Start over"
         >
             <X size={16} />
         </button>

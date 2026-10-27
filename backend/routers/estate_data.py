@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from backend.limiter import limiter
 from sqlmodel import Session, select, func, and_, or_
-from sqlalchemy import Integer, DateTime
+from sqlalchemy import Integer, DateTime, update
 from datetime import datetime
 from typing import List, Any, Dict, Optional
 from pydantic import BaseModel, field_validator, model_validator
@@ -21,7 +21,7 @@ from backend.models.qr_models import QRAccessPack, QRAssetLabel
 from backend.models.acceptance_models import AcceptanceTask
 from backend.models.automation_models import AutomationRule
 from backend.utils.logger import get_logger
-from backend.utils.audit import log_audit, log_deletion
+from backend.utils.audit import log_audit
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/data", tags=["estate_data"])
@@ -157,6 +157,24 @@ def _encode_singleton_json(data: Dict[str, Any]) -> None:
             data[k] = json.dumps(data[k])
 
 
+# X164: enum-like fields saved in the documented spelling (estate_models.py comments).
+# Match is case-insensitive; values outside the list are stored as sent.
+CANONICAL_VALUES = {
+    (InsurancePolicy, "insurance_type"): ["Life", "Health", "Auto", "Home", "Disability", "Other"],
+    (InsurancePolicy, "premium_frequency"): ["Monthly", "Quarterly", "Annually"],
+    (InsurancePolicy, "status"): ["Active", "Inactive", "Pending"],
+    (Utility, "service_type"): ["water", "electric", "gas"],
+}
+
+
+def _canonicalize(model, data: Dict[str, Any]) -> None:
+    """Rewrite enum-like string fields to the documented spelling (in place)."""
+    for (m, field), allowed in CANONICAL_VALUES.items():
+        value = data.get(field)
+        if m is model and isinstance(value, str):
+            data[field] = next((a for a in allowed if a.lower() == value.strip().lower()), value)
+
+
 def _has(col):
     return func.coalesce(col, "") != ""
 
@@ -227,16 +245,16 @@ def create_custom_field_definition(field_def: CustomFieldDefCreate, user: User =
         return db_def
     except Exception as e:
         logger.error(f"Failed to create custom field definition: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail="Could not create field definition")
+        raise HTTPException(status_code=400, detail="Saving that field paused; try again whenever you're ready.")
 
 @router.delete("/custom-fields/{field_id}", summary="Delete custom field definition")
 def delete_custom_field_definition(field_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """Delete a custom field definition."""
     db_def = session.get(UserCustomFieldDefinition, field_id)
     if not db_def:
-        raise HTTPException(status_code=404, detail="Field definition not found")
+        raise HTTPException(status_code=404, detail="That field may have been moved.")
     if db_def.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Not authorized")
+        raise HTTPException(status_code=403, detail="This belongs to another account.")
 
     session.delete(db_def)
     session.commit()
@@ -251,7 +269,7 @@ def get_items(data_type: str, user: User = Depends(get_current_user), session: S
     """
     model = MODEL_MAP.get(data_type)
     if not model:
-        raise HTTPException(status_code=400, detail=f"Invalid type: {data_type}")
+        raise HTTPException(status_code=400, detail="Let's pick one of the kinds this space keeps.")
     
     statement = select(model).where(model.user_id == user.id)
     if data_type in SINGLETON_TYPES:
@@ -262,7 +280,7 @@ def get_items(data_type: str, user: User = Depends(get_current_user), session: S
     return session.exec(statement).all()
 
 def _log_estate_action(session: Session, request: Request, action: str, user: User, data_type: str, resource_id: Any):
-    """Helper to centralize audit logging for estate data."""
+    """Add the audit row to the session; the caller's commit writes it with the change (X278)."""
     log_audit(
         session=session,
         request=request,
@@ -270,7 +288,8 @@ def _log_estate_action(session: Session, request: Request, action: str, user: Us
         user_id=user.id,
         user_email=user.email,
         resource_type=data_type,
-        resource_id=str(resource_id)
+        resource_id=str(resource_id),
+        commit=False,
     )
 
 @router.post("/{data_type}", summary="Create estate item")
@@ -290,7 +309,7 @@ def create_item(
     """
     model = MODEL_MAP.get(data_type)
     if not model:
-        raise HTTPException(status_code=400, detail=f"Invalid type: {data_type}")
+        raise HTTPException(status_code=400, detail="Let's pick one of the kinds this space keeps.")
 
     try:
         # Support both raw body and wrapped { data: {...} } format for backwards compatibility
@@ -313,6 +332,8 @@ def create_item(
         if "custom_attributes" in validated_data and isinstance(validated_data["custom_attributes"], dict):
             validated_data["custom_attributes"] = json.dumps(validated_data["custom_attributes"])
 
+        _canonicalize(model, validated_data)
+
         if data_type in SINGLETON_TYPES:
             _encode_singleton_json(validated_data)
             existing = session.exec(select(model).where(model.user_id == user.id).order_by(model.id)).first()
@@ -321,26 +342,24 @@ def create_item(
                     if k != "user_id" and hasattr(existing, k):
                         setattr(existing, k, v)
                 session.add(existing)
-                session.commit()
-                session.refresh(existing)
                 _log_estate_action(session, request, "update", user, data_type, existing.id)
+                session.commit()
                 session.refresh(existing)
                 return existing
 
         db_item = model.model_validate(validated_data)
         session.add(db_item)
-        session.commit()
-        session.refresh(db_item)
-
+        session.flush()  # assigns db_item.id for the audit row
         _log_estate_action(session, request, "create", user, data_type, db_item.id)
-        session.refresh(db_item)  # Re-load attributes after audit logging expired them
+        session.commit()  # the item and its audit row in one transaction
+        session.refresh(db_item)
         return db_item
     except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        logger.warning(f"Rejected {data_type} item data: {e}")
+        raise HTTPException(status_code=422, detail="A detail here needs a second look before it saves.")
     except Exception as e:
         logger.error(f"Failed to create {data_type} item: {e}", exc_info=True)
-        # Include detailed error for debugging (TODO: limit this to dev mode)
-        raise HTTPException(status_code=400, detail=f"Could not create item: {str(e)}")
+        raise HTTPException(status_code=400, detail="Saving that paused; try again whenever you're ready.")
 
 @router.put("/{data_type}/{item_id}", summary="Update estate item")
 # 600/minute per client IP (slowapi key_func=get_remote_address): a first upload of
@@ -360,19 +379,35 @@ def update_item(
     """
     model = MODEL_MAP.get(data_type)
     if not model:
-        raise HTTPException(status_code=400, detail="Invalid data type")
+        raise HTTPException(status_code=400, detail="Let's pick one of the kinds this space keeps.")
 
     try:
         db_item = session.get(model, _pk(model, item_id))
         if not db_item:
-            raise HTTPException(status_code=404, detail="Item not found")
+            raise HTTPException(status_code=404, detail="That item may have been moved.")
         if getattr(db_item, "user_id") != user.id:
-            raise HTTPException(status_code=403, detail="Not authorized")
+            raise HTTPException(status_code=403, detail="This belongs to another account.")
         if model is Asset and not _in_category(session, data_type, db_item):
-            raise HTTPException(status_code=404, detail="Item not found")
+            raise HTTPException(status_code=404, detail="That item may have been moved.")
 
-        # Support both raw body and wrapped { data: {...} } format for backwards compatibility
-        if "data" in body and isinstance(body["data"], dict) and len(body) == 1:
+        # Receipt recovery updates one current history list, only if its raw GET value
+        # is still unchanged. Other writes keep their existing raw/wrapped contract.
+        expected = None
+        if "if_unchanged" in body:
+            allowed = {"transactions", "maintenance", "claims"}
+            data = body.get("data")
+            expected = body["if_unchanged"]
+            if (data_type != "advanced_assets" or set(body) != {"data", "if_unchanged"}
+                    or not isinstance(data, dict) or not isinstance(expected, dict)
+                    or len(data) != 1 or set(data) != set(expected) or not set(data) <= allowed
+                    or any(value is not None and not isinstance(value, str) for value in expected.values())):
+                raise ValueError("Invalid conditional history update")
+            value = next(iter(data.values()))
+            parsed = json.loads(value) if isinstance(value, str) else value
+            if not isinstance(parsed, list):
+                raise ValueError("History updates require a list")
+            updates = data
+        elif "data" in body and isinstance(body["data"], dict) and len(body) == 1:
             updates = body["data"]
         else:
             updates = body
@@ -382,9 +417,25 @@ def update_item(
         if protected_found:
             raise ValueError(f"Cannot update protected fields: {protected_found}")
 
+        updates = dict(updates)
+        _canonicalize(model, updates)
         if data_type in SINGLETON_TYPES:
-            updates = dict(updates)
             _encode_singleton_json(updates)
+
+        if expected is not None:
+            field, previous = next(iter(expected.items()))
+            column = getattr(model, field)
+            result = session.execute(update(model).where(
+                model.id == db_item.id, model.user_id == user.id,
+                column.is_(None) if previous is None else column == previous,
+            ).values(**updates).execution_options(synchronize_session=False))
+            if result.rowcount != 1:
+                session.rollback()
+                raise HTTPException(status_code=409, detail="This list changed. Your browser original is kept for another try.")
+            _log_estate_action(session, request, "update", user, data_type, item_id)
+            session.commit()
+            session.refresh(db_item)
+            return db_item
 
         for key, value in updates.items():
             if key == "custom_attributes" and isinstance(value, dict):
@@ -400,19 +451,18 @@ def update_item(
                 setattr(db_item, key, value)
 
         session.add(db_item)
-        session.commit()
-        session.refresh(db_item)
-
         _log_estate_action(session, request, "update", user, data_type, item_id)
-        session.refresh(db_item)  # Re-load attributes after audit logging expired them
+        session.commit()  # the change and its audit row in one transaction
+        session.refresh(db_item)
         return db_item
     except HTTPException:
         raise
     except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        logger.warning(f"Rejected {data_type} item {item_id} update: {e}")
+        raise HTTPException(status_code=422, detail="A detail here needs a second look before it saves.")
     except Exception as e:
         logger.error(f"Failed to update {data_type} item {item_id}: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail="Could not update item")
+        raise HTTPException(status_code=400, detail="Saving that paused; try again whenever you're ready.")
 
 @router.delete("/{data_type}/{item_id}")
 # 600/minute per client IP (slowapi key_func=get_remote_address): a first upload of
@@ -424,26 +474,19 @@ def delete_item(request: Request, data_type: str, item_id: str, user: User = Dep
     """
     model = MODEL_MAP.get(data_type)
     if not model:
-        raise HTTPException(status_code=400, detail="Invalid data type")
+        raise HTTPException(status_code=400, detail="Let's pick one of the kinds this space keeps.")
     
     try:
         db_item = session.get(model, _pk(model, item_id))
         if not db_item:
-            raise HTTPException(status_code=404, detail="Item not found")
+            raise HTTPException(status_code=404, detail="That item may have been moved.")
         if getattr(db_item, "user_id") != user.id:
-            raise HTTPException(status_code=403, detail="Not authorized")
+            raise HTTPException(status_code=403, detail="This belongs to another account.")
         if model is Asset and not _in_category(session, data_type, db_item):
-            raise HTTPException(status_code=404, detail="Item not found")
+            raise HTTPException(status_code=404, detail="That item may have been moved.")
 
-        log_deletion(
-            session=session,
-            request=request,
-            user_id=user.id,
-            user_email=user.email,
-            resource_type=data_type,
-            resource_id=item_id
-        )
-
+        # Same row log_deletion wrote (action delete_<type>), committed with the delete.
+        _log_estate_action(session, request, "delete", user, data_type, item_id)
         session.delete(db_item)
         session.commit()
         return {"status": "deleted"}
@@ -451,4 +494,4 @@ def delete_item(request: Request, data_type: str, item_id: str, user: User = Dep
         raise
     except Exception as e:
         logger.error(f"Failed to delete {data_type} item {item_id}: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail="Could not delete item")
+        raise HTTPException(status_code=400, detail="Removing that paused; try again whenever you're ready.")

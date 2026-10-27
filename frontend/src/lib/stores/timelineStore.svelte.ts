@@ -30,15 +30,15 @@ export const timelineStore = {
     get items() { return timelineSync.items; },
     get status() { return timelineSync.status; },
 
-    addEvent: (item: Partial<LifeEvent>) => {
+    addEvent: (item: Partial<LifeEvent>, onRetry?: () => Promise<unknown>, recoveryId?: string) => {
         return timelineSync.create({
             ...item,
             id: crypto.randomUUID()
-        } as LifeEvent);
+        } as LifeEvent, false, false, onRetry, recoveryId);
     },
 
-    updateEvent: (id: string | number, updates: Partial<LifeEvent>) => {
-        return timelineSync.update(id, updates);
+    updateEvent: (id: string | number, updates: Partial<LifeEvent>, onRetry?: () => Promise<unknown>, recoveryId?: string) => {
+        return timelineSync.update(id, updates, true, onRetry, recoveryId);
     },
 
     removeEvent: (id: string | number) => timelineSync.delete(id),

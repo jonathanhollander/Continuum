@@ -19,7 +19,7 @@ from backend.utils.clock import utc_now
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pathlib import Path
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any, Union, Literal
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from backend.config import settings
 from sqlmodel import Session
@@ -41,12 +41,24 @@ class EmailPayload(BaseModel):
     user_id: Optional[int] = None
 
 class EmailResult(BaseModel):
-    """Schema for email delivery result."""
+    """Send outcome. `sent` means provider acceptance, rather than receipt by a person."""
     status: str
     message_id: Optional[str] = None
     provider: str
     error: Optional[str] = None
     file_path: Optional[str] = None
+
+    @property
+    def delivery_state(self) -> Literal["provider_accepted", "saved_local", "failed"]:
+        if self.status == "saved_local":
+            return "saved_local"
+        if self.status in ("sent", "resent", "delivered") and self.provider != "local":
+            return "provider_accepted"
+        return "failed"
+
+    @property
+    def provider_accepted(self) -> bool:
+        return self.delivery_state == "provider_accepted"
 
 
 def _name_from_email(to_email: Optional[str]) -> str:
@@ -170,15 +182,18 @@ class EmailService:
             else:
                 result = self._save_to_local(to_email, subject, html_body)
 
-            # Update log entry on success
+            outcome = EmailResult(**result)
+            # The actual provider can differ after fallback. A local preparation has its
+            # created_at timestamp, while sent_at records an external provider's acceptance.
             if db_session and log_entry:
-                log_entry.status = result.get("status", "sent")
-                log_entry.provider_message_id = result.get("message_id")
-                log_entry.sent_at = utc_now()
+                log_entry.status = outcome.status
+                log_entry.provider = outcome.provider
+                log_entry.provider_message_id = outcome.message_id
+                log_entry.sent_at = utc_now() if outcome.provider_accepted else None
                 db_session.add(log_entry)
                 db_session.commit()
 
-            return EmailResult(**result)
+            return outcome
 
         except Exception as e:
             logger.error(
@@ -345,7 +360,7 @@ class EmailService:
         payload = self._build_payload(
             to_email=to_email,
             recipient_name=_name_from_email(to_email),
-            subject="Your Secure Continuum Login Link",
+            subject="Your way back into Continuum",
             template_name="magic_link",
             template_context={"magic_link_url": magic_link_url}
         )
@@ -372,16 +387,16 @@ class EmailService:
         }
 
         tier_subjects = {
-            1: "Continuum Pulse: Standard Welfare Check",
-            2: "Continuum Pulse: Level 2 Escalation",
-            3: "Continuum Pulse: URGENT - Medical/Legal Release",
-            4: "Continuum Pulse: EMERGENCY - Full Vault Access"
+            1: f"A gentle check-in about {user_name}",
+            2: f"Checking in on {user_name}",
+            3: f"Shared notes from {user_name}" if context.get("available_vault_names") else f"A check-in about {user_name}",
+            4: f"Shared notes from {user_name}" if context.get("available_vault_names") else f"A note about {user_name}'s check-in",
         }
 
         payload = self._build_payload(
             to_email=to_email,
             recipient_name=recipient_name,
-            subject=tier_subjects.get(tier_number, f"Continuum Pulse: Tier {tier_number} Alert"),
+            subject=tier_subjects.get(tier_number, f"A note about {user_name}"),
             template_name=f"pulse_escalation_tier{tier_number}",
             template_context=context,
             user_id=user_id
@@ -401,7 +416,7 @@ class EmailService:
         payload = self._build_payload(
             to_email=to_email,
             recipient_name=_name_from_email(to_email),
-            subject="Welcome to Continuum - Your Digital Legacy is Protected",
+            subject="Welcome to Continuum",
             template_name="welcome",
             template_context={"dashboard_url": dashboard_url},
             user_id=user_id

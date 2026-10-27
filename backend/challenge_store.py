@@ -11,6 +11,7 @@ Usage:
     # Retrieve and remove a challenge
     data = challenge_store.pop(key)
 """
+import base64
 import json
 from abc import ABC, abstractmethod
 from typing import Any, Optional
@@ -20,6 +21,23 @@ from backend.config import settings
 from backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _encode(value: Any) -> str:
+    """JSON with bytes kept as base64 (WebAuthn challenges are bytes)."""
+    def default(o):
+        if isinstance(o, (bytes, bytearray)):
+            return {"__bytes__": base64.b64encode(bytes(o)).decode("ascii")}
+        raise TypeError(f"Object of type {o.__class__.__name__} is not JSON serializable")
+    return json.dumps(value, default=default)
+
+
+def _decode(raw: str) -> Any:
+    def hook(d):
+        if set(d) == {"__bytes__"}:
+            return base64.b64decode(d["__bytes__"])
+        return d
+    return json.loads(raw, object_hook=hook)
 
 
 class ChallengeStoreInterface(ABC):
@@ -146,7 +164,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
         from sqlmodel import text
 
         expires_at = utc_now() + timedelta(seconds=expire_seconds)
-        serialized = json.dumps(value)
+        serialized = _encode(value)
 
         # Use upsert (INSERT ... ON CONFLICT)
         with engine.connect() as conn:
@@ -182,7 +200,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
             ).fetchone()
 
             if result:
-                return json.loads(result[0])
+                return _decode(result[0])
         return None
 
     def pop(self, key: str) -> Optional[Any]:
@@ -209,7 +227,7 @@ class PostgresChallengeStore(ChallengeStoreInterface):
 
             if result:
                 logger.debug(f"Challenge retrieved and removed from PostgreSQL: {key}")
-                return json.loads(result[0])
+                return _decode(result[0])
         return None
 
     def delete(self, key: str) -> bool:

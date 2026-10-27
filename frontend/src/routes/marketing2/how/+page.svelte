@@ -124,24 +124,27 @@
             title: $m2t.howBeat1Title,
             desc: $m2t.howBeat1Desc,
             icon: Compass,
-            color: "amber",
-            iconClass: "text-amber-400/60",
+            orb: "bg-gold/10",
+            ring: "bg-gold/5",
+            iconClass: "text-gold-text/70",
         },
         {
             num: "02",
             title: $m2t.howBeat2Title,
             desc: $m2t.howBeat2Desc,
             icon: Layers,
-            color: "teal",
-            iconClass: "text-teal-400/60",
+            orb: "bg-primary/10",
+            ring: "bg-primary/5",
+            iconClass: "text-primary/70",
         },
         {
             num: "03",
             title: $m2t.howBeat3Title,
             desc: $m2t.howBeat3Desc,
             icon: Bell,
-            color: "rose",
-            iconClass: "text-rose-400/60",
+            orb: "bg-primary/10",
+            ring: "bg-primary/5",
+            iconClass: "text-primary/70",
         },
     ]);
     const grainBg = `background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%" height="100%" filter="url(%23noise)"/%3E%3C/svg%3E');`;
@@ -161,7 +164,7 @@
 <svelte:window bind:scrollY bind:innerHeight bind:innerWidth />
 
 <div
-    class="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden"
+    class="surface-dark min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden"
     dir={$isRTL ? "rtl" : "ltr"}
 >
     <!-- Cursor Glow Effect (Desktop only) -->
@@ -169,7 +172,7 @@
         <div
             class="pointer-events-none fixed z-50 w-96 h-96 rounded-full opacity-20 blur-3xl"
             style="
-                background: radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
+                background: radial-gradient(circle, color-mix(in srgb, var(--color-gold) 15%, transparent) 0%, transparent 70%);
                 left: {$cursorGlow.x - 192}px;
                 top: {$cursorGlow.y - 192}px;
             "
@@ -178,7 +181,7 @@
 
     <!-- Scroll Progress Indicator -->
     <div
-        class="fixed top-0 left-0 h-[2px] bg-gradient-to-r from-amber-500 via-teal-500 to-rose-500 z-[100] origin-left"
+        class="fixed top-0 left-0 h-[2px] bg-primary z-[100] origin-left"
         style="transform: scaleX({$scrollProgress})"
     ></div>
 
@@ -187,7 +190,7 @@
         <div
             class="absolute w-[600px] h-[600px] rounded-full opacity-20 blur-[100px] animate-float-slow"
             style="
-                background: radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
+                background: radial-gradient(circle, color-mix(in srgb, var(--color-gold) 10%, transparent) 0%, transparent 70%);
                 top: 10%;
                 left: -15%;
                 transform: translateY({floatOffset1}px);
@@ -196,7 +199,7 @@
         <div
             class="absolute w-[500px] h-[500px] rounded-full opacity-15 blur-[80px] animate-float-medium"
             style="
-                background: radial-gradient(circle, rgba(20, 184, 166, 0.1) 0%, transparent 70%);
+                background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 10%, transparent) 0%, transparent 70%);
                 bottom: 10%;
                 right: -10%;
                 transform: translateY({-floatOffset2}px);
@@ -267,6 +270,7 @@
 
                 <div class="relative">
                     <button
+                        aria-label="Language"
                         onclick={() => (langMenuOpen = !langMenuOpen)}
                         class="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm group"
                     >
@@ -300,7 +304,7 @@
                                         )}
                                     class="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-all duration-200 {$m2Language ===
                                     lang.code
-                                        ? 'text-amber-400'
+                                        ? 'text-gold-text'
                                         : 'text-white/70'}"
                                     style="animation: slideIn 0.2s ease {i *
                                         0.05}s both"
@@ -314,7 +318,7 @@
 
                 <a
                     href="/login"
-                    class="text-sm px-4 py-2 rounded-full border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all duration-300 hover:shadow-[0_0_20px_rgba(251,191,36,0.2)]"
+                    class="text-sm px-4 py-2 rounded-full border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all duration-300 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--color-gold)_20%,transparent)]"
                 >
                     {$m2t.navLogin}
                 </a>
@@ -350,7 +354,7 @@
             <div class="max-w-3xl mx-auto text-center">
                 <a
                     href="/marketing2"
-                    class="inline-flex items-center gap-2 text-white/40 hover:text-white/60 transition-all duration-300 text-sm mb-8 group"
+                    class="inline-flex items-center gap-2 text-white/70 hover:text-white/90 transition-all duration-300 text-sm mb-8 group"
                     in:fade={{ duration: 300, delay: 100 }}
                 >
                     {#if $isRTL}
@@ -392,7 +396,7 @@
             <!-- Animated vertical line connecting beats -->
             <div class="absolute left-1/2 top-0 bottom-0 w-px hidden md:block">
                 <div
-                    class="w-full bg-gradient-to-b from-amber-500/30 via-teal-500/30 to-rose-500/30 origin-top"
+                    class="w-full bg-gradient-to-b from-gold/30 via-primary/30 to-primary/30 origin-top"
                     style="height: 100%; transform: scaleY({connectorProgress})"
                 ></div>
             </div>
@@ -410,6 +414,7 @@
                                 class={i % 2 === 0 ? "order-2 md:order-1" : ""}
                             >
                                 <div
+                                    aria-hidden="true"
                                     class="text-6xl font-serif text-white/10 mb-4 number-reveal"
                                     style="animation: numberPop 0.6s ease {i *
                                         0.2}s both"
@@ -435,18 +440,17 @@
                                     : "flex justify-center"}
                             >
                                 <div
-                                    class="icon-orb w-32 h-32 rounded-full bg-{beat.color}-500/10 flex items-center justify-center relative"
+                                    class="icon-orb w-32 h-32 rounded-full {beat.orb} flex items-center justify-center relative"
                                     use:iconAnimate
                                 >
                                     <!-- Animated rings -->
                                     <div
-                                        class="icon-ring icon-ring-1 bg-{beat.color}-500/10"
+                                        class="icon-ring icon-ring-1 {beat.orb}"
                                     ></div>
                                     <div
-                                        class="icon-ring icon-ring-2 bg-{beat.color}-500/5"
+                                        class="icon-ring icon-ring-2 {beat.ring}"
                                     ></div>
-                                    <svelte:component
-                                        this={beat.icon}
+                                    <beat.icon
                                         size={48}
                                         class={beat.iconClass}
                                     />
@@ -473,7 +477,7 @@
                 class="max-w-3xl mx-auto text-center reveal-section"
                 use:reveal
             >
-                <div class="quote-marks text-6xl text-white/5 font-serif mb-4">
+                <div class="quote-marks text-6xl text-white/5 font-serif mb-4" aria-hidden="true">
                     "
                 </div>
                 <p
@@ -482,7 +486,7 @@
                     {$m2t.pulseGift}
                 </p>
                 <div
-                    class="w-16 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent mx-auto animate-pulse-glow"
+                    class="w-16 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent mx-auto animate-pulse-glow"
                 ></div>
             </div>
         </section>
@@ -490,12 +494,12 @@
         <!-- CTA -->
         <section class="py-20 px-6">
             <div class="max-w-xl mx-auto text-center reveal-section" use:reveal>
-                <p class="text-lg text-white/40 mb-8">
+                <p class="text-lg text-white/70 mb-8">
                     {$m2t.invitationDesc}
                 </p>
                 <a
                     href="/marketing2"
-                    class="inline-flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-white/80 transition-all duration-300 group hover:shadow-[0_0_30px_rgba(251,191,36,0.2)]"
+                    class="inline-flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-white/80 transition-all duration-300 group hover:shadow-[0_0_30px_color-mix(in_srgb,var(--color-gold)_20%,transparent)]"
                 >
                     {$m2t.ctaPrimary}
                     <ArrowRight
@@ -510,25 +514,25 @@
     <!-- Footer -->
     <footer class="py-12 px-6 border-t border-white/5">
         <div class="max-w-4xl mx-auto">
-            <nav class="flex justify-center gap-8 mb-8 text-sm text-white/40">
+            <nav class="flex justify-center gap-8 mb-8 text-sm text-white/70">
                 <a href="/marketing2/how" class="text-white/60">{$m2t.navHow}</a
                 >
                 <a
                     href="/marketing2/features"
-                    class="hover:text-white/60 transition-colors duration-300"
+                    class="hover:text-white/90 transition-colors duration-300"
                     >{$m2t.navFeatures}</a
                 >
                 <a
                     href="/marketing2#security"
-                    class="hover:text-white/60 transition-colors duration-300"
+                    class="hover:text-white/90 transition-colors duration-300"
                     >{$m2t.navSecurity}</a
                 >
             </nav>
             <div class="text-center space-y-4">
-                <p class="text-xs text-white/30">
+                <p class="text-xs text-white/70">
                     {$m2t.footerDisclaimer}
                 </p>
-                <p class="text-sm text-white/20 font-serif italic">
+                <p class="text-sm text-white/60 font-serif italic">
                     {$m2t.footerTagline}
                 </p>
             </div>
@@ -564,8 +568,8 @@
         height: 1px;
         background: linear-gradient(
             90deg,
-            rgba(251, 191, 36, 0.5),
-            rgba(20, 184, 166, 0.5)
+            color-mix(in srgb, var(--color-gold) 50%, transparent),
+            color-mix(in srgb, var(--color-primary) 50%, transparent)
         );
         transition: width 0.3s ease;
     }
@@ -642,11 +646,11 @@
         0%,
         100% {
             opacity: 0.3;
-            box-shadow: 0 0 10px rgba(251, 191, 36, 0.1);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--color-gold) 10%, transparent);
         }
         50% {
             opacity: 0.6;
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+            box-shadow: 0 0 20px color-mix(in srgb, var(--color-gold) 30%, transparent);
         }
     }
 
@@ -716,8 +720,11 @@
         }
     }
 
-    .animate-spin-slow {
-        animation: spinSlow 10s linear infinite;
+    /* Globe in the language button (lucide child, group-hover variant) */
+    @media (prefers-reduced-motion: no-preference) {
+        :global(.group:hover .group-hover\:animate-spin-slow) {
+            animation: spinSlow 10s linear infinite;
+        }
     }
 
     @keyframes spinSlow {
@@ -763,7 +770,7 @@
 
     :global(a:focus-visible),
     :global(button:focus-visible) {
-        outline: 2px solid rgba(251, 191, 36, 0.5);
+        outline: 2px solid color-mix(in srgb, var(--color-gold) 50%, transparent);
         outline-offset: 4px;
     }
 </style>

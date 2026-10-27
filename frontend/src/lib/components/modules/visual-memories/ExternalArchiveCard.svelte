@@ -28,22 +28,23 @@
             return Cloud;
         return ExternalLink;
     }
+    const Icon = $derived(getIcon(archive.platform));
 </script>
 
 <div
-    class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md transition-all group relative"
+    class="bg-card rounded-xl border border-border p-6 hover:shadow-md transition-all group relative"
 >
     <div class="flex items-start justify-between mb-4">
         <div class="flex items-center gap-3">
             <div
-                class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"
+                class="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground"
             >
-                <svelte:component this={getIcon(archive.platform)} size={20} />
+                <Icon size={20} />
             </div>
             <div>
-                <h3 class="font-bold text-slate-800">{archive.platform}</h3>
+                <h3 class="font-bold text-foreground">{archive.platform}</h3>
                 <div
-                    class="text-xs font-medium text-slate-400 uppercase tracking-wider"
+                    class="text-xs font-medium text-muted-foreground uppercase tracking-wider"
                 >
                     External Archive
                 </div>
@@ -52,18 +53,20 @@
 
         <!-- Actions -->
         <div
-            class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            class="flex gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
         >
             <button
-                class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-[#4A7C74] transition-colors"
+                class="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 title="Edit"
+                aria-label="Edit {archive.platform}"
                 onclick={() => onedit?.(archive)}
             >
                 <Edit2 size={16} />
             </button>
             <button
-                class="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
+                class="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 title="Remove"
+                aria-label="Remove {archive.platform}"
                 onclick={() => ondelete?.(archive.id)}
             >
                 <Trash2 size={16} />
@@ -77,15 +80,15 @@
                 href={archive.access_url || archive.accessUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="flex items-center gap-2 text-sm text-[#4A7C74] font-medium hover:underline"
+                class="flex items-center gap-2 text-sm text-primary font-medium hover:underline"
             >
                 <ExternalLink size={14} /> Open Location
             </a>
         {/if}
 
-        <div class="bg-slate-50 rounded-lg p-3 text-sm text-slate-600">
+        <div class="bg-muted rounded-lg p-3 text-sm text-muted-foreground">
             <div
-                class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase mb-1"
+                class="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase mb-1"
             >
                 <Key size={12} /> Access Instructions
             </div>

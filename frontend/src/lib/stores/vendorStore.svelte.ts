@@ -12,13 +12,13 @@ export interface Vendor {
 }
 
 // Runs on server records, local records and outgoing payloads alike: keep the server id.
-const mapper = (data: any): Vendor => {
+const mapper = (data: Record<string, unknown>): Vendor => {
     const { role, ...rest } = data;
     return {
         ...rest,
         id: typeof data.id === 'string' && data.id.length > 10 ? undefined : Number(data.id) || data.id,
-        category: data.category || role || 'Other', // server requires a category
-    };
+        category: (data.category || role || 'Other') as string, // server requires a category
+    } as Vendor;
 };
 
 const manager = registerSync<Vendor>('vendors', 'vendors', mapper, '/api/data')

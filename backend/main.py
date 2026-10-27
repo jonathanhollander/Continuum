@@ -12,13 +12,16 @@ from pydantic import BaseModel
 from sqlmodel import Session
 from backend.config import settings
 from backend.database import engine, create_db_and_tables, get_session, User, Estate
+from backend.estate_persistence import estate_for_write, merge_profile, profile_of, recovery_summary
+from backend.utils.clock import utc_now
 from backend.security import verify_registration, get_authentication_options, verify_authentication
 from backend.auth import create_access_token, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
 from backend.pulse_scheduler import start_scheduler, stop_scheduler
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
 from datetime import timedelta
-from backend.routers import pulse, contacts, estate_data, medical, memories, auth as auth_router, media, email, support, ai_proxy, export, recipient
+from backend.routers import pulse, contacts, estate_data, medical, memories, auth as auth_router, media, email, support, ai_proxy, export, recipient, admin_users, ai_settings
+from backend.models.ai_settings import AISetting
 
 from backend.errors import ContinuumException, handle_exception
 from slowapi import _rate_limit_exceeded_handler
@@ -27,6 +30,7 @@ from backend.limiter import limiter
 from secure import Secure, ContentSecurityPolicy, StrictTransportSecurity, ReferrerPolicy
 from backend.utils.logger import get_logger, setup_logging
 from backend.csrf import CSRFMiddleware, get_csrf_token_endpoint
+from backend.private_access import enforce_private_access
 
 def setup_app_documentation(app: FastAPI):
     """Configure OpenAPI tags and documentation for the app."""
@@ -145,7 +149,9 @@ def _connect_sources():
 csp = (
     ContentSecurityPolicy()
     .default_src("'self'")
-    .script_src("'self'", *_inline_script_sources())
+    # Cloudflare Web Analytics: Cloudflare injects its beacon script at the edge and it reports
+    # back to cloudflareinsights.com. Exact hosts only.
+    .script_src("'self'", *_inline_script_sources(), "https://static.cloudflareinsights.com")
     .style_src("'self'", "'unsafe-inline'", "https://fonts.googleapis.com")
     .font_src("'self'", "https://fonts.gstatic.com")
     # blob: so stored photos, recordings and videos (fetched with the auth header
@@ -154,7 +160,7 @@ csp = (
     .media_src("'self'", "blob:")
     # The export preview shows the generated PDF in an iframe from a blob: URL.
     .frame_src("'self'", "blob:")
-    .connect_src(*_connect_sources())
+    .connect_src(*_connect_sources(), "https://cloudflareinsights.com")
     .base_uri("'self'")
     .frame_ancestors("'none'")
     .object_src("'none'")
@@ -166,6 +172,7 @@ referrer = ReferrerPolicy().no_referrer()
 secure_headers = Secure(csp=csp, hsts=hsts, referrer=referrer)
 
 app.include_router(auth_router.router)
+app.include_router(admin_users.router)
 app.include_router(email.router)
 app.include_router(pulse.router)
 app.include_router(contacts.router)
@@ -175,6 +182,7 @@ app.include_router(memories.router)
 app.include_router(media.router)
 app.include_router(support.router)
 app.include_router(ai_proxy.router)
+app.include_router(ai_settings.router)
 app.include_router(export.router)
 app.include_router(recipient.router)
 
@@ -226,6 +234,7 @@ app.add_middleware(
 # In production, rejects requests without valid CSRF token
 # In development, logs warning but allows (for easier testing)
 app.add_middleware(CSRFMiddleware)
+app.middleware("http")(enforce_private_access)
 
 # HTTPS Enforcement for Production
 if settings.is_production():
@@ -242,13 +251,28 @@ if settings.is_production():
 
 # --- Global Exception Handlers ---
 
+# The technical message stays in the logs. The browser receives it only on a local
+# development run: ENVIRONMENT defaults to "development", and production on Railway
+# leaves it unset, so a Railway run counts as deployed whatever ENVIRONMENT says (X227).
+SEND_TECHNICAL_TO_BROWSER = settings.is_development() and not settings.RAILWAY_ENVIRONMENT
+
+
+def _error_json(request: Request, error_response) -> dict:
+    body = error_response.to_dict()
+    technical = body.get("_technical") or error_response.message
+    logger.info(f"{request.method} {request.url.path} -> {error_response.status_code}: {technical}")
+    if not SEND_TECHNICAL_TO_BROWSER:
+        body.pop("_technical", None)
+    return body
+
+
 @app.exception_handler(ContinuumException)
 async def continuum_exception_handler(request: Request, exc: ContinuumException):
     """Handle all ContinuumException errors with consistent formatting."""
     error_response = exc.to_error_response()
     return JSONResponse(
         status_code=exc.status_code,
-        content=error_response.to_dict()
+        content=_error_json(request, error_response)
     )
 
 
@@ -258,7 +282,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     error_response = handle_exception(exc, context=f"{request.method} {request.url.path}")
     return JSONResponse(
         status_code=exc.status_code,
-        content=error_response.to_dict()
+        content=_error_json(request, error_response)
     )
 
 
@@ -268,7 +292,7 @@ async def general_exception_handler(request: Request, exc: Exception):
     error_response = handle_exception(exc, context=f"{request.method} {request.url.path}")
     return JSONResponse(
         status_code=error_response.status_code,
-        content=error_response.to_dict()
+        content=_error_json(request, error_response)
     )
 
 # --- Models ---
@@ -379,25 +403,18 @@ async def health_check(session: Session = Depends(get_session)):
 
 @app.get("/api/estate")
 def get_estate(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
-    if not estate:
-        # Create empty estate for new user
-        estate = Estate(user_id=user.id)
-        session.add(estate)
-        session.commit()
-        session.refresh(estate)
+    estate = estate_for_write(session, user.id)
+    session.commit()
+    session.refresh(estate)
     return estate
 
 @app.post("/api/estate")
 def save_estate(estate_data: EstateDataPayload, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     """Save estate data with Pydantic validation (P1-High Security)."""
-    estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
-    if not estate:
-        estate = Estate(user_id=user.id)
-        session.add(estate)
-
+    estate = estate_for_write(session, user.id)
     estate.transparent_data = estate_data.transparent_data
     estate.encrypted_vault = estate_data.encrypted_vault
+    estate.updated_at = utc_now()
     session.commit()
     return {"status": "saved"}
 
@@ -406,15 +423,12 @@ def get_estate_profile(user: User = Depends(get_current_user), session: Session 
     estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
     if not estate:
         return {}
-    try:
-        td = json.loads(estate.transparent_data or "{}")
-        # Handle cases where td is the profile itself or contains estate_profile
-        if isinstance(td, dict) and "estate_profile" in td:
-            td = td["estate_profile"]
-        return td if isinstance(td, dict) else {}  # the UI always receives an object
-    except Exception as e:
-        logger.debug(f"Failed to parse estate profile: {e}")
-        return {}
+    return profile_of(estate)
+
+@app.get("/api/estate/recovery")
+def get_estate_recovery(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Preserved original profiles and source-linked alternatives for this owner only."""
+    return recovery_summary(session, user.id)
 
 @app.post("/api/estate/profile")
 def save_estate_profile(body: Dict[str, Any] = Body(...), user: User = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -422,31 +436,7 @@ def save_estate_profile(body: Dict[str, Any] = Body(...), user: User = Depends(g
     A key posted as null is removed from the profile."""
     updates = body["data"] if set(body) == {"data"} and isinstance(body["data"], dict) else body
     updates = EstateProfilePayload(data=updates).data  # size validation
-    estate = session.exec(select(Estate).where(Estate.user_id == user.id)).first()
-    if not estate:
-        estate = Estate(user_id=user.id)
-        session.add(estate)
-
-    try:
-        td = json.loads(estate.transparent_data or "{}")
-    except Exception as e:
-        logger.debug(f"Transparent data parse failure in save_profile: {e}")
-        td = {}
-    if not isinstance(td, dict):
-        td = {}
-
-    # An older row keeps the profile at the top level (GET reads it there); carry those keys over.
-    current = td.get("estate_profile") if "estate_profile" in td else td
-    merged = dict(current) if isinstance(current, dict) else {}
-    for k, v in updates.items():
-        if v is None:
-            merged.pop(k, None)
-        else:
-            merged[k] = v
-    td["estate_profile"] = merged
-    estate.transparent_data = json.dumps(td)
-    session.commit()
-    return td["estate_profile"]
+    return merge_profile(session, user.id, updates)
 
 
 # --- SPA Static File Serving ---
@@ -485,7 +475,7 @@ async def serve_spa(full_path: str):
     # If the path starts with api, it should have been caught by the routes above.
     # If we are here, it means the API route doesn't exist.
     if full_path == "api" or full_path.startswith("api/"):
-        raise HTTPException(status_code=404, detail="API endpoint not found")
+        raise HTTPException(status_code=404, detail="That address may have moved.")
 
     # P1-High: Path traversal protection
     # Define the base directory for static files
@@ -508,7 +498,7 @@ async def serve_spa(full_path: str):
     # Compare whole path components so a sibling like "dist-other" cannot pass a plain prefix test.
     if os.path.commonpath([resolved_path, base_dir]) != base_dir:
         logger.warning(f"Blocked path traversal attempt: '{full_path}' resolved to '{resolved_path}'")
-        raise HTTPException(status_code=403, detail="Access denied")
+        raise HTTPException(status_code=403, detail="That page is kept private.")
 
     if os.path.isfile(resolved_path):
         return FileResponse(resolved_path)

@@ -10,7 +10,6 @@
      */
     import { LayoutGrid, Table } from "lucide-svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
-    import { onMount } from "svelte";
 
     interface Props {
         /** Module identifier for preference storage (e.g., "contacts", "medical") */
@@ -24,13 +23,7 @@
     // Local state that syncs with store
     let viewMode = $state<ViewMode>('card');
 
-    // Initialize store and sync local state
-    onMount(async () => {
-        await userPreferencesStore.init();
-        viewMode = userPreferencesStore.getViewMode(module);
-    });
-
-    // Keep local state in sync with store
+    // The layout loads saved preferences at sign-in (card X230); follow the store.
     $effect(() => {
         if (userPreferencesStore.isInitialized) {
             viewMode = userPreferencesStore.getViewMode(module);
@@ -44,11 +37,11 @@
     }
 </script>
 
-<div class="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+<div class="flex items-center gap-1 p-1 bg-muted border border-border rounded-xl">
     <button
         onclick={() => setViewMode('card')}
         class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
-               {viewMode === 'card' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}"
+               {viewMode === 'card' ? 'bg-card text-foreground shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}"
         title="Card view"
         aria-pressed={viewMode === 'card'}
     >
@@ -58,7 +51,7 @@
     <button
         onclick={() => setViewMode('table')}
         class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
-               {viewMode === 'table' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}"
+               {viewMode === 'table' ? 'bg-card text-foreground shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}"
         title="Table view"
         aria-pressed={viewMode === 'table'}
     >

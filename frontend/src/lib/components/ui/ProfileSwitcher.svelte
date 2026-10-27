@@ -27,6 +27,9 @@
             $profiles[0] || { name: "User" },
     );
 
+    // The owner's own profile is stored as "Me"; it shows in the active language (X232).
+    const shownName = (name: string) => (name === "Me" ? $dict.profileMe : name);
+
     function toggleDropdown() {
         isOpen = !isOpen;
         isCreating = false;
@@ -62,22 +65,6 @@
         isOpen = false;
     }
 
-    // Helper to generate a consistent color from name
-    function getAvatarColor(name: string) {
-        const colors = [
-            "bg-blue-500",
-            "bg-green-500",
-            "bg-purple-500",
-            "bg-yellow-500",
-            "bg-pink-500",
-            "bg-indigo-500",
-        ];
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return colors[Math.abs(hash) % colors.length];
-    }
 </script>
 
 <div class="relative w-full">
@@ -93,25 +80,23 @@
         >
             <!-- Avatar -->
             <div
-                class="w-10 h-10 rounded-full {getAvatarColor(
-                    activeProfile.name,
-                )} flex items-center justify-center shadow-lg text-white font-bold shrink-0"
+                class="w-10 h-10 rounded-full bg-white/15 ring-1 ring-white/25 flex items-center justify-center shadow-lg text-white font-bold shrink-0"
             >
-                {activeProfile.name.charAt(0).toUpperCase()}
+                {shownName(activeProfile.name).charAt(0).toUpperCase()}
             </div>
 
             <!-- Info -->
             <div class="flex-1 min-w-0 text-left">
                 <p
-                    class="text-xs text-slate-400 font-medium uppercase tracking-wider"
+                    class="text-xs text-white/70 font-medium uppercase tracking-wider"
                 >
                     {activeProfile.name === "Me" ||
                     activeProfile.name === "New User"
-                        ? "Secure Your Legacy"
+                        ? $dict.secureLegacy
                         : $dict.planningFor}
                 </p>
                 <p class="text-sm font-bold text-white truncate">
-                    {activeProfile.name}
+                    {shownName(activeProfile.name)}
                 </p>
             </div>
         </button>
@@ -120,9 +105,9 @@
         <button
             onclick={() => goto("/settings")}
             class="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-            title="Settings"
+            title={$dict.settings}
         >
-            <Settings size={16} class="text-slate-400 hover:text-white" />
+            <Settings size={16} class="text-white/70 hover:text-white" />
         </button>
 
         <!-- Dropdown toggle icon -->
@@ -134,7 +119,7 @@
         >
             <ChevronDown
                 size={16}
-                class="text-slate-500 transition-transform duration-300 {isOpen
+                class="text-white/70 transition-transform duration-300 {isOpen
                     ? 'rotate-180'
                     : ''}"
             />
@@ -154,7 +139,7 @@
         >
             <div class="p-2 space-y-1">
                 <div
-                    class="px-3 py-2 text-xs font-bold text-slate-500 uppercase tracking-widest"
+                    class="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest"
                 >
                     {$dict.familyCircle || "Family Circles"}
                 </div>
@@ -166,23 +151,21 @@
                         onclick={() => selectProfile(profile.id)}
                     >
                         <div
-                            class="w-8 h-8 rounded-full {getAvatarColor(
-                                profile.name,
-                            )} flex items-center justify-center text-xs text-white font-bold"
+                            class="w-8 h-8 rounded-full bg-white/15 ring-1 ring-white/25 flex items-center justify-center text-xs text-white font-bold"
                         >
-                            {profile.name.charAt(0)}
+                            {shownName(profile.name).charAt(0)}
                         </div>
                         <div class="text-left flex-1">
                             <div
                                 class="text-sm font-medium text-slate-200 group-hover:text-white transition-colors"
                             >
-                                {profile.name}
+                                {shownName(profile.name)}
                             </div>
                         </div>
                         {#if $currentProfileId === profile.id}
                             <Check
                                 size={16}
-                                class="text-primary shadow-primary/20"
+                                class="text-white"
                             />
                         {/if}
                     </button>
@@ -193,10 +176,12 @@
                     <div
                         class="mt-2 p-2 bg-slate-900/50 rounded-lg border border-slate-700/50 animate-in fade-in"
                     >
+                        <!-- Focus moves to this field because the person just chose to add something here. -->
+                        <!-- svelte-ignore a11y_autofocus -->
                         <input
                             bind:value={newProfileName}
-                            placeholder="Name (e.g. Spouse)"
-                            class="w-full bg-transparent text-sm text-white placeholder:text-slate-600 outline-none mb-2"
+                            placeholder={$dict.placeholderProfileName}
+                            class="w-full bg-transparent text-sm text-white placeholder:text-slate-400 outline-none mb-2"
                             autofocus
                             onkeydown={(e) =>
                                 e.key === "Enter" && createProfile()}
@@ -204,21 +189,21 @@
                         <div class="flex gap-2">
                             <button
                                 onclick={createProfile}
-                                class="flex-1 py-1 bg-primary hover:opacity-90 transition-all shadow-lg"
+                                class="flex-1 py-1 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary-hover transition-all shadow-lg"
                             >
-                                Create
+                                {$dict.btnCreate}
                             </button>
                             <button
                                 onclick={() => (isCreating = false)}
                                 class="px-2 py-1 text-xs text-slate-400 hover:text-white"
                             >
-                                Cancel
+                                {$dict.maybeLater}
                             </button>
                         </div>
                     </div>
                 {:else}
                     <button
-                        class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors mt-2 border-t border-slate-700/50"
+                        class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors mt-2 border-t border-slate-700/50"
                         onclick={() => {
                             isCreating = true;
                             tick().then(() =>
@@ -232,7 +217,7 @@
                             <Plus size={14} />
                         </div>
                         <span class="text-sm font-medium"
-                            >Add Family Member</span
+                            >{$dict.addFamilyMember}</span
                         >
                     </button>
                 {/if}
@@ -248,7 +233,7 @@
                     >
                         <Settings size={14} class="text-slate-400" />
                     </div>
-                    <span class="text-sm font-medium">Settings</span>
+                    <span class="text-sm font-medium">{$dict.settings}</span>
                 </a>
             </div>
         </div>
@@ -260,7 +245,7 @@
             class="fixed inset-0 z-40 bg-black/20 cursor-default"
             onclick={toggleDropdown}
             transition:fade
-            aria-label="Close dropdown"
+            aria-label={$dict.closeDropdown}
         ></button>
     {/if}
 </div>

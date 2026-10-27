@@ -26,26 +26,34 @@
     let timerInterval: any;
     let error: string | null = null;
     let isSaving = false;
+    let cameraReady = false;
+    let destroyed = false;
 
     async function startCamera() {
+        cameraReady = false;
         try {
             stream = await navigator.mediaDevices.getUserMedia({
                 video: true,
                 audio: true,
             });
+            if (destroyed) {
+                stream.getTracks().forEach((track) => track.stop());
+                return;
+            }
             if (videoPreview) {
                 videoPreview.srcObject = stream;
                 videoPreview.muted = true; // Avoid feedback loop
             }
             error = null;
+            cameraReady = true;
         } catch (err) {
             console.error("Camera access denied:", err);
-            error = "Camera access denied. Please verify permissions.";
+            error = "The camera is waiting for your permission. You can turn it on in your browser settings.";
         }
     }
 
     function startRecording() {
-        if (!stream) return;
+        if (!stream || !cameraReady) return;
         chunks = [];
         mediaRecorder = new MediaRecorder(stream);
 
@@ -54,7 +62,9 @@
         };
 
         mediaRecorder.onstop = () => {
-            recordedBlob = new Blob(chunks, { type: "video/webm" });
+            // The browser's own format (Safari and iPhone record MP4, Chrome and Firefox WebM).
+            const type = mediaRecorder?.mimeType || chunks[0]?.type || "video/webm";
+            recordedBlob = new Blob(chunks, { type });
             recordedUrl = URL.createObjectURL(recordedBlob);
             if (videoPreview) {
                 videoPreview.srcObject = null;
@@ -111,7 +121,9 @@
     function handleSave() {
         if (!recordedBlob) return;
         isSaving = true;
-        dispatch("save", { blob: recordedBlob, duration });
+        // The parent uploads; it calls done() when that finishes (card X223), so a failed
+        // upload leaves the recording here with Save Memory ready to try again.
+        dispatch("save", { blob: recordedBlob, duration, done: () => (isSaving = false) });
     }
 
     onMount(() => {
@@ -119,6 +131,7 @@
     });
 
     onDestroy(() => {
+        destroyed = true;
         stopTimer();
         stream?.getTracks().forEach((track) => track.stop());
         if (recordedUrl) URL.revokeObjectURL(recordedUrl);
@@ -145,12 +158,12 @@
             class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 text-white p-6 text-center"
             in:fade
         >
-            <CircleAlert size={48} class="text-rose-500 mb-4" />
-            <h3 class="font-bold text-xl mb-2">Camera Error</h3>
+            <CircleAlert size={48} class="text-slate-300 mb-4" />
+            <h3 class="font-bold text-xl mb-2 text-white">Your camera needs a moment</h3>
             <p class="text-slate-400">{error}</p>
             <button
                 on:click={startCamera}
-                class="mt-6 px-6 py-2 bg-indigo-600 rounded-full font-bold hover:bg-indigo-700 transition"
+                class="mt-6 px-6 py-2 bg-primary text-primary-foreground rounded-full font-bold hover:bg-primary-hover transition"
                 >Try Again</button
             >
         </div>
@@ -165,7 +178,9 @@
                 <div
                     class="w-2 h-2 rounded-full {isRecording
                         ? 'bg-rose-500 animate-pulse'
-                        : 'bg-emerald-500'}"
+                        : cameraReady
+                          ? 'bg-emerald-500'
+                          : 'bg-slate-400'}"
                 ></div>
                 <span class="text-white font-mono font-bold tracking-widest"
                     >{formatTime(duration)}</span
@@ -176,7 +191,9 @@
                 <button
                     on:click={startRecording}
                     aria-label="Start Recording"
-                    class="w-16 h-16 rounded-full border-[6px] border-white/30 flex items-center justify-center hover:scale-105 transition-all group/rec"
+                    disabled={!cameraReady}
+                    aria-busy={!cameraReady}
+                    class="w-16 h-16 rounded-full border-[6px] border-white/30 flex items-center justify-center hover:scale-105 transition-all group/rec disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                     <div
                         class="w-12 h-12 bg-rose-500 rounded-full group-hover/rec:scale-90 transition-all"
@@ -223,12 +240,12 @@
                 disabled={isSaving}
             >
                 <RefreshCw size={18} />
-                Retake
+                Record again
             </button>
 
             <button
                 on:click={handleSave}
-                class="px-8 py-3 bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition flex items-center gap-2"
+                class="px-8 py-3 bg-primary text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/30 hover:bg-primary-hover transition flex items-center gap-2"
                 disabled={isSaving}
             >
                 {#if isSaving}

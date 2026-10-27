@@ -4,11 +4,19 @@
     import { onMount, onDestroy } from "svelte";
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
+    import { captureSession, assertCurrentSession, SessionChangedError } from "$lib/services/sessionOwnership";
     import {
         createPDFBlob,
         fetchSnapshot,
         buildDownloadCopy,
+        buildPacket,
+        fileCoverage,
+        fileCoverageLabel,
+        fileFieldLabel,
+        packetRecordId,
+        downloadCopyStatus,
         saveBlob,
+        type FileCoverage,
         type ExportScope,
         type Snapshot,
     } from "$lib/services/exportService";
@@ -21,6 +29,9 @@
     let blob = $state<Blob | null>(null);
     let snapshot = $state<Snapshot | null>(null);
     let packing = $state(false);
+    let copyNote = $state<string | null>(null);
+    let copyCoverage = $state<FileCoverage | null>(null);
+    const copyFiles = new Map<string, Blob>();
 
     const SCOPE_LABELS: Record<ExportScope, string> = {
         full: "Everything",
@@ -38,6 +49,9 @@
     async function generate() {
         loading = true;
         note = null;
+        copyNote = null;
+        copyCoverage = null;
+        copyFiles.clear();
         try {
             snapshot = await fetchSnapshot();
             blob = await createPDFBlob(scope, includeImages, (m) => (progress = m), snapshot);
@@ -45,7 +59,7 @@
             pdfUrl = URL.createObjectURL(blob);
         } catch (e) {
             console.error(e);
-            note = (e as Error)?.message || "Your packet is taking a moment to prepare. You can try again shortly.";
+            note = (e as Error)?.message || "Your records are safe in your account. You can prepare your packet again whenever you're ready.";
         } finally {
             loading = false;
         }
@@ -64,39 +78,45 @@
 
     async function downloadCopy() {
         if (!snapshot) return;
+        const owner = captureSession();
         packing = true;
         try {
-            saveBlob(await buildDownloadCopy(snapshot, (m) => (progress = m)), `Continuum_download_copy_${day()}.zip`);
+            const copy = await buildDownloadCopy(snapshot, (m) => (copyNote = m), copyFiles, undefined, owner);
+            assertCurrentSession(owner);
+            copyCoverage = fileCoverage(snapshot, buildPacket(snapshot, "full"), copyFiles);
+            saveBlob(copy, `Continuum_download_copy_${day()}.zip`);
+            copyNote = downloadCopyStatus(copyCoverage);
         } catch (e) {
-            note = (e as Error)?.message || "The download copy is taking a moment. You can try again shortly.";
+            copyNote = e instanceof SessionChangedError ? "The account changed. Open the packet from the account you want to use."
+                : (e as Error)?.message || "Your packet is right here. You can save a download copy again whenever you're ready.";
         } finally {
             packing = false;
         }
     }
 </script>
 
-<div class="flex flex-col h-screen bg-slate-50">
-    <header class="bg-white border-b px-6 py-4 flex items-center justify-between shadow-sm z-10">
+<div class="flex flex-col h-[calc(100vh-5rem)] bg-muted">
+    <header class="bg-card border-b border-border px-6 py-4 flex items-center justify-between shadow-sm z-10">
         <div class="flex items-center gap-4">
             <button
                 onclick={() => goto("/")}
-                class="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
+                class="p-2 hover:bg-muted rounded-full text-muted-foreground transition-colors"
                 title="Back to Dashboard"
                 aria-label="Back to Dashboard"
             >
                 <ArrowLeft size={20} />
             </button>
             <div>
-                <h1 class="font-serif text-xl text-slate-800">Packet preview</h1>
-                <p class="text-xs text-slate-500">
-                    {SCOPE_LABELS[scope]}{includeImages ? " · with photos" : ""}
+                <h1 class="font-serif text-xl text-foreground">Packet preview</h1>
+                <p class="text-xs text-muted-foreground">
+                    PDF: {SCOPE_LABELS[scope]}{includeImages ? " · with photos" : ""}
                 </p>
             </div>
         </div>
 
         <div class="flex items-center gap-3">
             {#if loading}
-                <div class="flex items-center gap-2 text-slate-400 text-sm">
+                <div class="flex items-center gap-2 text-muted-foreground text-sm">
                     <Loader2 size={16} class="animate-spin" />
                     {progress}
                 </div>
@@ -104,14 +124,14 @@
                 <button
                     onclick={downloadCopy}
                     disabled={packing}
-                    class="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors disabled:opacity-60"
+                    class="flex items-center gap-2 bg-card border border-border text-foreground px-4 py-2 rounded-lg font-medium hover:bg-muted transition-colors disabled:opacity-60"
                 >
                     {#if packing}<Loader2 size={18} class="animate-spin" />{:else}<Archive size={18} />{/if}
-                    Download copy
+                    {copyCoverage?.issues.length ? "Retry files and download full record" : "Download full record and files"}
                 </button>
                 <button
                     onclick={downloadPDF}
-                    class="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+                    class="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary-hover transition-colors shadow-sm"
                 >
                     <Download size={18} />
                     Download PDF
@@ -120,20 +140,41 @@
         </div>
     </header>
 
+    <p class="bg-card border-b border-border px-6 py-3 text-sm text-muted-foreground">The PDF uses the scope shown above. The ZIP always includes the full record and available original files. Extract it, open <code>packet.html</code> and keep the <code>files</code> folder beside it. It also includes <code>packet.pdf</code> and a file list.</p>
+
+    {#if copyNote}
+        <section class="bg-card border-b border-border px-6 py-4 max-h-64 overflow-y-auto text-sm space-y-2" data-testid="preview-download-status" aria-label="Download status">
+            <p role="status">{copyNote}</p>
+            {#if copyCoverage?.issues.length}
+                <p class="font-semibold">{fileCoverageLabel(copyCoverage)}</p>
+                <ul class="space-y-2">
+                    {#each copyCoverage.issues as issue (issue.key)}
+                        <li>
+                            <p class="font-semibold">{issue.filename}</p>
+                            {#each issue.records as record (`${record.section}:${record.id}:${record.field}`)}
+                                <a class="block text-primary-hover underline" href={`/binder#${packetRecordId(record.section, record.id)}`}>{record.title} · {fileFieldLabel(record.field)}</a>
+                            {/each}
+                        </li>
+                    {/each}
+                </ul>
+            {/if}
+        </section>
+    {/if}
+
     <main class="flex-1 relative overflow-hidden">
         {#if loading}
-            <div class="absolute inset-0 flex items-center justify-center bg-slate-50">
+            <div class="absolute inset-0 flex items-center justify-center bg-muted">
                 <div class="text-center">
-                    <Loader2 size={40} class="animate-spin text-emerald-500 mx-auto mb-4" />
-                    <p class="text-slate-500 font-medium">Preparing your packet...</p>
-                    <p class="text-slate-400 text-sm mt-1">The pages are put together here in your browser.</p>
+                    <Loader2 size={40} class="animate-spin text-primary mx-auto mb-4" />
+                    <p class="text-muted-foreground font-medium">Preparing your packet...</p>
+                    <p class="text-muted-foreground text-sm mt-1">The pages are put together here in your browser.</p>
                 </div>
             </div>
         {:else if note}
             <div class="absolute inset-0 flex items-center justify-center">
-                <div class="bg-white p-8 rounded-xl shadow-lg border border-slate-200 max-w-lg text-center">
-                    <p class="text-slate-700 mb-6">{note}</p>
-                    <button onclick={generate} class="text-emerald-700 font-semibold underline">Try again</button>
+                <div class="bg-card p-8 rounded-xl shadow-lg border border-border max-w-lg text-center">
+                    <p class="text-foreground mb-6">{note}</p>
+                    <button onclick={generate} class="text-primary-hover font-semibold underline">Try again</button>
                 </div>
             </div>
         {:else if pdfUrl}

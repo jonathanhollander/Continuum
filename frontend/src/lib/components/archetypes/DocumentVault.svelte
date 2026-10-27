@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, onDestroy, tick } from "svelte";
     import {
         CloudUpload,
         FileText,
@@ -24,103 +24,35 @@
     } from "lucide-svelte";
     import JargonSlayer from "$lib/components/modules/legal-documents/JargonSlayer.svelte";
     import { slide, scale, fade, fly } from "svelte/transition";
-    import FileUploader from "$lib/components/ui/FileUploader.svelte";
+    import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
+    import Modal from "$lib/components/ui/Modal.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { userPreferencesStore } from "$lib/stores/userPreferencesStore.svelte";
-    import { downloadMedia, mediaIdFromRef } from "$lib/services/mediaService";
+    import { downloadMedia, mediaIdFromRef, removeUnusedMedia } from "$lib/services/mediaService";
+    import { documentSync, type Document, type DocType } from "$lib/stores/documentStore.svelte";
     import { notifications } from "$lib/stores/notificationStore";
     import { pluralWord } from "$lib/utils/plural";
     import { dateWords } from "$lib/utils/dateWords";
+
+    import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
 
     let { module }: { module: { id: string; name?: string } } = $props();
     // The one Cards/Table toggle below remembers its choice in userPreferencesStore; read it from there.
     let viewMode = $derived(userPreferencesStore.getViewMode("legal-documents"));
 
-    type DocType =
-        | "Will"
-        | "Trust"
-        | "Deed"
-        | "Insurance"
-        | "Tax"
-        | "ID"
-        | "Other";
-
-    // UI shape. Other pages read name/type/location from the "docs_<id>" store, so those stay.
-    interface Doc {
-        id: string;
-        name: string;
-        type: DocType;
-        location: string; // where the original is kept
-        witnesses?: string;
-        signedDate?: string;
-        nextReviewDate?: string;
-        status: "verified" | "pending" | "needs_review";
-        notes?: string;
-        filePath?: string; // stored copy: "/api/media/12/download" (or an older data URL)
-        mediaId?: number | null;
-        customAttributes?: Record<string, any>;
-    }
-
-    /**
-     * Doc <-> Document row (backend/estate_models.py), used both ways by SyncManager.
-     * UI fields win over their column twins, so an edit to `name` beats a stale `title`.
-     */
-    function docMapper(d: any): any {
-        const name = d.name || d.title || "";
-        const type = d.type || d.category || "Other";
-        const location = d.location ?? d.locationPhysical ?? "";
-        const filePath = d.filePath || d.fileData || ""; // fileData: older device-only copies
-        let custom = d.customAttributes;
-        if (typeof custom === "string") {
-            try { custom = JSON.parse(custom); } catch { custom = {}; }
-        }
-        return {
-            id: d.id,
-            name,
-            title: name,
-            type,
-            category: type,
-            location,
-            locationPhysical: location,
-            witnesses: d.witnesses ?? "",
-            signedDate: d.signedDate ?? "",
-            nextReviewDate: d.nextReviewDate ?? "",
-            status: d.status || "verified",
-            notes: d.notes ?? "",
-            filePath,
-            mediaId: d.mediaId ?? mediaIdFromRef(filePath),
-            isDigitized: !!filePath,
-            customAttributes: custom && typeof custom === "object" ? custom : {},
-        };
-    }
-
-    import {
-        registerSync,
-        type SyncManager,
-    } from "$lib/services/sync.svelte";
-
-    let docSync = $state<SyncManager<Doc> | null>(null);
-    let docs = $derived(docSync?.items || []);
+    // The one /api/data/documents manager (documentStore); the dashboard and Settings › Data read it too.
+    type Doc = Document;
+    const docSync = documentSync;
+    let docs = $derived(docSync.items);
     // A gentle cue until the first server answer, unless this device already holds documents.
     let isLoading = $derived(
-        !docSync || (docSync.lastSync === null && docSync.status !== "error" && docs.length === 0),
+        docSync.lastSync === null && docSync.status !== "error" && docs.length === 0,
     );
-
-    $effect(() => {
-        if (module?.id) {
-            // docs_{id} -> /api/data/documents (all verbs go through routers/estate_data.py)
-            docSync = registerSync<Doc>(
-                `docs_${module.id}`,
-                "documents",
-                docMapper,
-            ).setAffirmationContext("documents");
-        }
-    });
 
     let showUpload = $state(false);
     let showWizard = $state(false);
@@ -146,70 +78,125 @@
     });
 
     let newDoc = $state<DocDraft>(emptyDoc());
+    let titleMissing = $state(false);
 
-    async function saveDoc() {
-        if (!newDoc.name || !docSync) return;
+    // When the form opens (or the assistant step hands over to it), the cursor waits in the title field.
+    $effect(() => {
+        if (showUpload && !(showWizard && wizardStep === 1)) {
+            tick().then(() => document.getElementById("doc-title")?.focus());
+        }
+    });
 
-        const fields = {
-            name: newDoc.name,
-            type: (newDoc.type as DocType) || "Other",
-            location: newDoc.location || "",
-            witnesses: newDoc.witnesses || "",
-            signedDate: newDoc.signedDate || "",
-            nextReviewDate: newDoc.nextReviewDate || "",
-            filePath: newDoc.filePath || "",
-            mediaId: newDoc.filePath ? (newDoc.mediaId ?? null) : null,
-            customAttributes: { ...(newDoc.customAttributes || {}) },
-            status: newDoc.status || "verified",
-        };
+    type MediaDraft = {
+        owner: SessionOwnership; original: Set<number>; uploads: Set<number>; attempted: Set<number>;
+        uploadState: "idle" | "uploading" | "failed"; closed: boolean;
+    };
+    const fileIds = (doc: Partial<Doc>) => new Set([doc.mediaId, mediaIdFromRef(doc.filePath)]
+        .filter((id): id is number => typeof id === "number"));
+    const freshMediaDraft = (doc?: Partial<Doc>): MediaDraft => ({ owner: captureSession(), original: fileIds(doc || {}),
+        uploads: new Set(), attempted: new Set(), uploadState: "idle", closed: false });
+    let mediaDraft = $state<MediaDraft>(freshMediaDraft());
+    let destroyed = false;
+    const saveAttempt = formSaveAttempt(docSync);
+    let saving = $state(false);
 
+    async function clearUnused(ids: Iterable<number>, owner: SessionOwnership) {
+        for (const id of new Set(ids)) {
+            if (!isCurrentSession(owner)) return;
+            try { await removeUnusedMedia(id, owner); }
+            catch (error) {
+                if (!isCurrentSession(owner)) return;
+                notifications.showError({ message: "Clearing the unused file can finish when you are ready.",
+                    code: "NETWORK_ERROR", technicalDetails: String(error) } as any,
+                    () => { if (isCurrentSession(owner)) void clearUnused([id], owner); });
+            }
+        }
+    }
+    function abandon(form: MediaDraft) {
+        form.closed = true;
+        void clearUnused([...form.uploads].filter(id => !form.attempted.has(id)), form.owner);
+    }
+    onDestroy(() => { destroyed = true; abandon(mediaDraft); });
+
+    function fileChanged(form: MediaDraft, url: string, id?: number, uploaded?: object) {
+        if (destroyed || form.closed || mediaDraft !== form || !isCurrentSession(form.owner)) {
+            if (uploaded && id !== undefined) void clearUnused([id], form.owner);
+            return;
+        }
+        const previous = fileIds(newDoc);
+        if (uploaded && id !== undefined) form.uploads.add(id);
+        newDoc.filePath = url;
+        newDoc.mediaId = id ?? null;
+        void clearUnused([...previous].filter(old => form.uploads.has(old) && !form.attempted.has(old) && old !== id), form.owner);
+    }
+    const fieldsOf = (doc: DocDraft) => ({
+        name: doc.name, type: (doc.type as DocType) || "Other", location: doc.location || "",
+        witnesses: doc.witnesses || "", signedDate: doc.signedDate || "", nextReviewDate: doc.nextReviewDate || "",
+        filePath: doc.filePath || "", mediaId: doc.filePath ? (doc.mediaId ?? null) : null,
+        customAttributes: { ...(doc.customAttributes || {}) }, status: doc.status || "verified",
+    });
+    function logChange(action: "CREATE" | "UPDATE" | "DELETE", doc: Partial<Doc>) {
         try {
-        if (newDoc.id) {
-            // Edit Mode
-            await docSync.update(newDoc.id, fields);
-
-            // Log UPDATE
-            activityLog.logEvent({
-                module: module.name || "Document Vault",
-                action: "UPDATE",
-                entityType: "Document",
-                entityId: String(newDoc.id),
-                entityName: newDoc.name,
-                userContext: $estateProfile.ownerName || "User",
-            });
-        } else {
-            // Create Mode
-            const created = await docSync.create(fields, false, false, saveDoc);
-
-            // Log CREATE
-            activityLog.logEvent({
-                module: module.name || "Document Vault",
-                action: "CREATE",
-                entityType: "Document",
-                entityId: created.id,
-                entityName: created.name,
-                userContext: $estateProfile.ownerName || "User",
-            });
+            Promise.resolve(activityLog.logEvent({ module: module.name || "Document Vault", action, entityType: "Document",
+                entityId: String(doc.id), entityName: doc.name || "", userContext: $estateProfile.ownerName || "User" }))
+                .catch(error => console.warn("[documents] activity log paused", error));
+        } catch (error) { console.warn("[documents] activity log paused", error); }
+    }
+    async function saveDoc() {
+        const form = mediaDraft;
+        if (saving || form.uploadState !== "idle" || form.closed || !isCurrentSession(form.owner)) return;
+        if (!(newDoc.name ?? "").trim()) {
+            titleMissing = true;
+            await tick();
+            document.getElementById("doc-title")?.focus();
+            return;
         }
-
-        resetForm();
+        const fields = fieldsOf(newDoc);
+        const sent = JSON.stringify(fields);
+        const id = newDoc.id;
+        fileIds(fields).forEach(mid => form.attempted.add(mid));
+        saving = true;
+        try {
+            await saveAttempt(form, fields, async saved => {
+                const kept = fileIds(saved);
+                const current = !destroyed && !form.closed && mediaDraft === form;
+                const visible = current ? fileIds(newDoc) : new Set<number>();
+                await clearUnused([...form.original, ...form.uploads].filter(mid => !kept.has(mid) && !visible.has(mid)), form.owner);
+                if (!isCurrentSession(form.owner)) return;
+                form.original = kept;
+                kept.forEach(mid => { form.uploads.delete(mid); form.attempted.delete(mid); });
+                logChange(id ? "UPDATE" : "CREATE", saved);
+                if (destroyed || form.closed || mediaDraft !== form) return;
+                newDoc.id = saved.id;
+                if (JSON.stringify(fieldsOf(newDoc)) === sent) resetForm();
+            }, id);
         } catch {
-            // The manager already showed the one gentle message; the form stays open with the draft.
-        }
+            // Both saved and attempted files stay available with this form's exact retry.
+        } finally { if (!destroyed && mediaDraft === form) saving = false; }
     }
 
     function editDoc(doc: Doc) {
+        if (saving) return;
+        resetForm();
         newDoc = { ...doc, customAttributes: { ...(doc.customAttributes || {}) } };
-        // Skip wizard for edits, go straight to form
+        mediaDraft = freshMediaDraft(doc);
         showWizard = false;
         showUpload = true;
     }
-
     function resetForm() {
+        abandon(mediaDraft);
         newDoc = emptyDoc();
+        mediaDraft = freshMediaDraft();
+        titleMissing = false;
         showUpload = false;
         showWizard = false;
         wizardStep = 0;
+        saving = false;
+    }
+    function startDocument() {
+        if (saving) return;
+        resetForm();
+        showUpload = true;
     }
 
     async function saveCopy(doc: Doc) {
@@ -225,36 +212,28 @@
             }
         } catch (e: any) {
             notifications.showError({
-                message: "Your copy is taking a moment to open. Try again when you're ready.",
+                message: "Your document is safe in your vault. You can open your copy again whenever you're ready.",
                 code: "NETWORK_ERROR",
                 technicalDetails: e?.message || String(e),
             } as any);
         }
     }
 
-    async function removeDoc(id: string) {
-        if (
-            !confirm(
-                "Would you like to remove this document? This action is permanent.",
-            )
-        )
-            return;
-        if (!docSync) return;
+    // Remove asks in the page (shared Modal) before anything is sent.
+    let removing = $state<Doc | null>(null);
 
-        const doc = docs.find((d) => d.id === id);
-        await docSync.delete(id);
-
-        // Log DELETE only if the item is really gone (the manager rolls back and shows its message on failure)
-        if (doc && !docSync.items.some((d) => d.id === id)) {
-            activityLog.logEvent({
-                module: module.name || "Document Vault",
-                action: "DELETE",
-                entityType: "Document",
-                entityId: id,
-                entityName: doc.name,
-                userContext: $estateProfile.ownerName || "User",
-            });
-        }
+    async function confirmRemove() {
+        const doc = removing;
+        removing = null;
+        if (!doc) return;
+        const id = doc.id;
+        const owner = captureSession();
+        await docSync.delete(id, async () => {
+            if (!isCurrentSession(owner)) return;
+            await clearUnused(fileIds(doc), owner);
+            if (!isCurrentSession(owner)) return;
+            logChange("DELETE", doc);
+        });
     }
 
     // Nothing in the app sets a document's saved status, so readiness comes from its real fields:
@@ -276,10 +255,10 @@
     function getStatusColor(doc: Doc) {
         const state = docState(doc);
         if (state === "review")
-            return "bg-amber-500/10 text-amber-700 border-amber-200";
+            return "bg-warning-soft text-warning border-warning/30";
         if (state === "locate")
-            return "bg-gray-500/10 text-gray-600 border-gray-200";
-        return "bg-[#4A7C74]/10 text-[#4A7C74] border-[#4A7C74]/20";
+            return "bg-slate-500/10 text-muted-foreground border-border";
+        return "bg-primary/10 text-primary-hover border-primary/20";
     }
 
     // Vault Health Logic
@@ -302,6 +281,8 @@
 
     // Wizard Logic
     function startWizard() {
+        if (saving) return;
+        startDocument();
         showWizard = true;
         showUpload = true;
         wizardStep = 1;
@@ -326,21 +307,22 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Protection Score Card -->
         <div
-            class="glass-panel p-6 rounded-2xl relative overflow-hidden group border-[#4A7C74]/20"
+            class="bg-card/70 backdrop-blur-md border border-border shadow-sm p-6 rounded-2xl relative overflow-hidden group border-primary/20"
         >
             <div
-                class="absolute -right-4 -top-4 opacity-10 rotate-12 transition-transform group-hover:scale-110 text-[#4A7C74]"
+                class="absolute -right-4 -top-4 opacity-10 rotate-12 transition-transform group-hover:scale-110 text-primary"
+                aria-hidden="true"
             >
                 <Shield size={120} />
             </div>
             <p
-                class="text-xs font-bold text-[#4A7C74] uppercase tracking-widest flex items-center gap-2"
+                class="text-xs font-bold text-primary uppercase tracking-widest flex items-center gap-2"
             >
                 <CircleCheck size={14} /> Peace of Mind Score
             </p>
             {#if healthScore === null}
                 <div class="mt-2" data-testid="vault-score">
-                    <span class="text-2xl font-serif font-bold text-[#304743]"
+                    <span class="text-2xl font-serif font-bold text-foreground"
                         >Ready when you are</span
                     >
                 </div>
@@ -349,7 +331,7 @@
                 </p>
             {:else}
                 <div class="mt-2 flex items-baseline gap-2" data-testid="vault-score">
-                    <span class="text-4xl font-serif font-bold text-[#304743]"
+                    <span class="text-4xl font-serif font-bold text-foreground"
                         >{healthScore}%</span
                     >
                     <span class="text-sm font-medium text-muted-foreground"
@@ -360,13 +342,13 @@
                 <div class="mt-4 flex gap-1">
                     {#if readyDocs === docs.length}
                         <div
-                            class="text-xs bg-[#4A7C74]/10 text-[#4A7C74] px-2 py-1 rounded-full flex items-center gap-1 font-bold"
+                            class="text-xs bg-primary/10 text-primary-hover px-2 py-1 rounded-full flex items-center gap-1 font-bold"
                         >
                             <CircleCheck size={10} /> Every document ready
                         </div>
                     {:else}
                         <div
-                            class="text-xs bg-amber-500/10 text-amber-700 px-2 py-1 rounded-full flex items-center gap-1 font-bold"
+                            class="text-xs bg-warning-soft text-warning px-2 py-1 rounded-full flex items-center gap-1 font-bold"
                         >
                             <CircleAlert size={10} /> {readyDocs} of {docs.length} ready
                         </div>
@@ -377,24 +359,28 @@
 
         <!-- Assistant Banner -->
         <div
-            class="md:col-span-2 glass-panel p-6 rounded-2xl flex flex-col justify-center bg-gradient-to-r from-background to-[#4A7C74]/5"
+            class="md:col-span-2 bg-card/70 backdrop-blur-md border border-border shadow-sm p-6 rounded-2xl flex flex-col justify-center bg-gradient-to-r from-background to-primary/5"
         >
             <div class="flex items-center gap-6 h-full">
                 <div
-                    class="hidden md:flex bg-white p-4 rounded-full shadow-md text-[#4A7C74]"
+                    class="hidden md:flex bg-card p-4 rounded-full shadow-md text-primary"
                 >
-                    <HelpCircle size={32} />
+                    {#if !isLoading && docs.length > 0 && needsReview === 0}
+                        <CircleCheck size={32} />
+                    {:else}
+                        <HelpCircle size={32} />
+                    {/if}
                 </div>
                 <div>
-                    <h4 class="font-serif font-bold text-xl text-[#304743]">
+                    <h4 class="font-serif font-bold text-xl text-foreground">
                         {#if isLoading}
                             Gathering your documents…
                         {:else if docs.length === 0}
-                            Let's secure your first document.
+                            Let's add your first document.
                         {:else if needsReview > 0}
                             {needsReview} {pluralWord(needsReview, "item")} could use your attention.
                         {:else}
-                            Your vault is secure.
+                            Every document is ready.
                         {/if}
                     </h4>
                     <p
@@ -410,15 +396,15 @@
                             A quick look keeps each one current and easy for
                             your family to find.
                         {:else}
-                            Rest easy knowing your critical information is
-                            organized and accessible to those you trust.
+                            Each one is current, with its file or the place
+                            it's kept.
                         {/if}
                     </p>
 
                     {#if !isLoading && docs.length === 0}
                         <button
                             onclick={startWizard}
-                            class="mt-4 text-sm font-bold text-[#4A7C74] hover:underline flex items-center gap-1"
+                            class="mt-4 text-sm font-bold text-primary hover:underline flex items-center gap-1"
                         >
                             Start Vault Assistant <ArrowRight size={14} />
                         </button>
@@ -430,7 +416,7 @@
 
     <!-- Actions -->
     <div
-        class="flex justify-between items-center bg-secondary/5 p-3 rounded-2xl border border-slate-200"
+        class="flex justify-between items-center bg-secondary/5 p-3 rounded-2xl border border-border"
     >
         <div class="relative flex-1 max-w-sm ml-2">
             <Search
@@ -439,6 +425,7 @@
             />
             <input
                 bind:value={searchQuery}
+                aria-label="Search your documents"
                 placeholder="Search your peace of mind..."
                 class="w-full bg-transparent border-none outline-none pl-9 text-sm h-10 placeholder:text-muted-foreground/50"
             />
@@ -449,15 +436,13 @@
                 type="button"
                 onclick={() => (showExampleWill = true)}
                 data-testid="example-will"
-                class="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all flex items-center gap-2"
+                class="px-4 py-2.5 bg-card border border-border text-muted-foreground font-bold rounded-xl hover:bg-background transition-all flex items-center gap-2"
             >
                 <BookOpenText size={16} /> Example will, explained
             </button>
             <button
-                onclick={() => {
-                    showUpload = true;
-                    showWizard = false;
-                }}
+                onclick={startDocument}
+                disabled={saving}
                 class="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
             >
                 <CloudUpload size={16} /> Add a document
@@ -469,15 +454,15 @@
     {#if showUpload}
         <div
             transition:fly={{ y: 10 }}
-            class="glass-panel p-0 rounded-2xl border-l-4 border-l-[#4A7C74] overflow-hidden"
+            class="bg-card/70 backdrop-blur-md border border-border shadow-sm p-0 rounded-2xl border-l-4 border-l-primary overflow-hidden"
         >
             <!-- Wizard Mode -->
             {#if showWizard && wizardStep === 1}
-                <div class="p-8 bg-[#FBF9EB]/50">
+                <div class="p-8 bg-muted/50">
                     <div class="flex justify-between items-start mb-6">
                         <div>
                             <h4
-                                class="font-serif font-bold text-xl text-[#304743]"
+                                class="font-serif font-bold text-xl text-foreground"
                             >
                                 Vault Assistant
                             </h4>
@@ -486,8 +471,8 @@
                             </p>
                         </div>
                         <button
-                            onclick={() => (showUpload = false)}
-                            class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                            onclick={resetForm}
+                            class="p-2 -mr-2 text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-full transition-colors"
                             aria-label="Close"
                         >
                             <X class="w-5 h-5" />
@@ -501,10 +486,10 @@
                                     "Will",
                                     "Last Will & Testament",
                                 )}
-                            class="p-4 bg-white border border-slate-200 hover:border-[#4A7C74] rounded-2xl text-left transition-all hover:shadow-md group"
+                            class="p-4 bg-card border border-border hover:border-primary rounded-2xl text-left transition-all hover:shadow-md group"
                         >
                             <span
-                                class="block font-bold text-[#4A7C74] mb-1 group-hover:underline"
+                                class="block font-bold text-primary mb-1 group-hover:underline"
                                 >Legal Will</span
                             >
                             <span
@@ -515,10 +500,10 @@
                         <button
                             onclick={() =>
                                 selectWizardOption("Trust", "Living Trust")}
-                            class="p-4 bg-white border border-slate-200 hover:border-[#4A7C74] rounded-2xl text-left transition-all hover:shadow-md group"
+                            class="p-4 bg-card border border-border hover:border-primary rounded-2xl text-left transition-all hover:shadow-md group"
                         >
                             <span
-                                class="block font-bold text-[#4A7C74] mb-1 group-hover:underline"
+                                class="block font-bold text-primary mb-1 group-hover:underline"
                                 >Living Trust</span
                             >
                             <span
@@ -532,10 +517,10 @@
                                     "Insurance",
                                     "Life Insurance Policy",
                                 )}
-                            class="p-4 bg-white border border-slate-200 hover:border-[#4A7C74] rounded-2xl text-left transition-all hover:shadow-md group"
+                            class="p-4 bg-card border border-border hover:border-primary rounded-2xl text-left transition-all hover:shadow-md group"
                         >
                             <span
-                                class="block font-bold text-[#4A7C74] mb-1 group-hover:underline"
+                                class="block font-bold text-primary mb-1 group-hover:underline"
                                 >Insurance Policy</span
                             >
                             <span
@@ -558,12 +543,12 @@
                     <div
                         class="flex justify-between items-center mb-6 border-b border-border/50 pb-4"
                     >
-                        <h4 class="font-serif font-bold text-lg text-[#304743]">
+                        <h4 class="font-serif font-bold text-lg text-foreground">
                             Document Details
                         </h4>
                         {#if wizardStep === 2}
                             <span
-                                class="text-xs bg-[#4A7C74]/10 text-[#4A7C74] px-2 py-1 rounded-full font-bold flex items-center gap-1"
+                                class="text-xs bg-primary/10 text-primary-hover px-2 py-1 rounded-full font-bold flex items-center gap-1"
                             >
                                 <CircleCheck size={10} /> Assistant Auto-Filled
                             </span>
@@ -573,23 +558,35 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div class="space-y-1.5">
                             <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                for="doc-title"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Document Title</label
                             >
                             <input
+                                id="doc-title"
                                 bind:value={newDoc.name}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                oninput={() => (titleMissing = false)}
+                                aria-invalid={titleMissing}
+                                aria-describedby={titleMissing ? "doc-title-hint" : undefined}
+                                class="w-full px-4 py-3 rounded-xl border {titleMissing ? 'border-warning ring-2 ring-warning-soft' : 'border-border'} bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                                 placeholder="e.g. Last Will"
                             />
+                            {#if titleMissing}
+                                <p id="doc-title-hint" class="text-xs text-warning px-1">
+                                    Give this document a title and it is ready to save.
+                                </p>
+                            {/if}
                         </div>
                         <div class="space-y-1.5">
                             <label
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                for="doc-category"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Category</label
                             >
                             <select
+                                id="doc-category"
                                 bind:value={newDoc.type}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             >
                                 <option value="Will">Will</option>
                                 <option value="Trust">Trust</option>
@@ -605,64 +602,71 @@
                     </div>
 
                     <div class="mb-4">
-                        <FileUploader
-                            label="Digital Copy (Optional)"
-                            module="documents"
-                            mode="any"
-                            bind:imageUrl={newDoc.filePath}
-                            bind:mediaId={newDoc.mediaId}
-                        />
+                        {#key mediaDraft}
+                            {@const form = mediaDraft}
+                            <UniversalUploader
+                                label="Digital Copy (Optional)" module="documents" mode="any"
+                                value={newDoc.filePath} mediaId={newDoc.mediaId}
+                                disabled={saving}
+                                bind:uploadState={form.uploadState}
+                                onchange={(url, id, file) => fileChanged(form, url, id, file)}
+                                onabandoned={(file) => { void clearUnused([file.id], form.owner); }}
+                            />
+                        {/key}
+                        {#if mediaDraft.uploadState === "failed"}
+                            <p id="doc-upload-hint" class="text-xs text-warning mt-2">Choose a file again or remove the selection to continue.</p>
+                        {/if}
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div class="space-y-1.5">
                             <label
                                 for="doc-location"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Where the Original Is Kept</label
                             >
                             <input
                                 id="doc-location"
                                 bind:value={newDoc.location}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                                 placeholder="e.g. Blue fire safe in the study"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <label
                                 for="doc-witnesses"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Witnesses</label
                             >
                             <input
                                 id="doc-witnesses"
                                 bind:value={newDoc.witnesses}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                                 placeholder="Optional"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <label
                                 for="doc-signed"
-                                class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                 >Date Signed</label
                             >
                             <input
                                 id="doc-signed"
                                 type="date"
                                 bind:value={newDoc.signedDate}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                         <div class="space-y-1.5">
                             <div class="flex justify-between">
                                 <label
                                     for="doc-review"
-                                    class="block text-xs font-bold uppercase text-slate-500 tracking-wide px-1"
+                                    class="block text-xs font-bold uppercase text-muted-foreground tracking-wide px-1"
                                     >Next Review</label
                                 >
                                 <span
-                                    class="text-[10px] text-[#4A7C74] font-medium cursor-help"
+                                    class="text-[10px] text-primary font-medium cursor-help"
                                     title="A gentle date to look this over again, so it keeps reflecting your current wishes."
                                     >Why?</span
                                 >
@@ -671,13 +675,13 @@
                                 id="doc-review"
                                 type="date"
                                 bind:value={newDoc.nextReviewDate}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                             />
                         </div>
                     </div>
 
                     <!-- Custom Fields -->
-                    <div class="mb-4 pt-4 border-t border-slate-100">
+                    <div class="mb-4 pt-4 border-t border-border">
                         <CustomFieldsManager
                             entityType="legal_document"
                             bind:data={newDoc.customAttributes}
@@ -687,14 +691,18 @@
                     <div class="flex justify-end gap-3 pt-4">
                         <button
                             onclick={resetForm}
-                            class="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                            disabled={saving}
+                            class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-muted transition-colors"
                             >Not right now</button
                         >
                         <button
                             onclick={saveDoc}
+                            disabled={saving || mediaDraft.uploadState !== "idle"}
+                            aria-busy={saving || mediaDraft.uploadState === "uploading"}
+                            aria-describedby={mediaDraft.uploadState === "failed" ? "doc-upload-hint" : undefined}
                             class="px-6 py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
                         >
-                            {newDoc.id ? "Save my updates" : "Save my document"}
+                            {saving ? "Saving..." : mediaDraft.uploadState === "uploading" ? "Uploading file..." : newDoc.id ? "Save my updates" : "Save my document"}
                         </button>
                     </div>
                 </div>
@@ -707,18 +715,18 @@
         <div class="grid grid-cols-1 gap-4">
             {#each visibleDocs as doc (doc.id)}
                 <div
-                    class="group glass-card p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between hover:bg-white/80 transition-all border border-transparent hover:border-[#4A7C74]/20 gap-4"
+                    class="group bg-card/60 backdrop-blur-sm border border-border shadow-sm hover:shadow-md transition-all duration-300 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between hover:bg-card/80 transition-all border border-transparent hover:border-primary/20 gap-4"
                 >
                     <div class="flex items-start gap-5">
                         <div
-                            class="w-12 h-12 shrink-0 rounded-2xl bg-[#FBF9EB] border border-[#4A7C74]/10 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform text-[#4A7C74]"
+                            class="w-12 h-12 shrink-0 rounded-2xl bg-muted border border-primary/10 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform text-primary"
                         >
                             <FileText size={22} />
                         </div>
                         <div>
                             <div class="flex items-center gap-3 mb-1">
                                 <h4
-                                    class="font-serif font-bold text-lg leading-tight text-[#304743]"
+                                    class="font-serif font-bold text-lg leading-tight text-foreground"
                                 >
                                     {doc.name}
                                 </h4>
@@ -735,7 +743,7 @@
                                 class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground"
                             >
                                 <span
-                                    class="font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1"
+                                    class="font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1"
                                 >
                                     <Shield size={10} />
                                     {doc.type}
@@ -751,7 +759,7 @@
                                 {#if doc.nextReviewDate}
                                     <span
                                         class="flex items-center gap-1 {reviewDue(doc)
-                                            ? 'text-amber-700 font-bold'
+                                            ? 'text-warning font-bold'
                                             : ''}"
                                     >
                                         <Calendar size={10} /> Review: {dateWords(doc.nextReviewDate)}
@@ -759,7 +767,7 @@
                                 {/if}
                                 {#if doc.filePath}
                                     <span
-                                        class="flex items-center gap-1 text-emerald-600 font-bold"
+                                        class="flex items-center gap-1 text-success font-bold"
                                     >
                                         <FileCheck size={10} /> Digital Copy Stored
                                     </span>
@@ -774,10 +782,10 @@
                                 </div>
                             {/if}
                             {#if doc.customAttributes && Object.keys(doc.customAttributes).some((k) => doc.customAttributes?.[k] !== "" && doc.customAttributes?.[k] != null)}
-                                <div class="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-600">
+                                <div class="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
                                     {#each Object.entries(doc.customAttributes) as [k, v] (k)}
                                         {#if v !== "" && v != null}
-                                            <span class="bg-slate-100 px-2 py-0.5 rounded"><span class="font-semibold">{k}:</span> {v === true ? "Yes" : v === false ? "No" : v}</span>
+                                            <span class="bg-muted px-2 py-0.5 rounded"><span class="font-semibold">{k}:</span> {v === true ? "Yes" : v === false ? "No" : v}</span>
                                         {/if}
                                     {/each}
                                 </div>
@@ -792,7 +800,7 @@
                             <button
                                 type="button"
                                 onclick={() => saveCopy(doc)}
-                                class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-[#4A7C74] rounded-full transition-colors"
+                                class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-primary rounded-full transition-colors"
                                 title="Save a copy of the digital file"
                                 aria-label="Save a copy of the digital file"
                             >
@@ -801,16 +809,17 @@
                         {/if}
                         <button
                             onclick={() => editDoc(doc)}
-                            class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-[#4A7C74] rounded-full transition-colors"
+                            class="p-2 hover:bg-secondary/10 text-muted-foreground hover:text-primary rounded-full transition-colors"
                             title="Edit Details"
                             aria-label="Edit Details"
                         >
                             <Pencil size={18} />
                         </button>
                         <button
-                            onclick={() => removeDoc(doc.id)}
+                            onclick={() => (removing = doc)}
                             class="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-full transition-colors"
-                            title="Remove"
+                            title="Remove this item"
+                            aria-label="Remove this item"
                         >
                             <Trash2 size={18} />
                         </button>
@@ -819,7 +828,7 @@
             {/each}
             {#if isLoading}
                 <div class="flex flex-col items-center justify-center gap-3 py-12" role="status" data-testid="documents-loading">
-                    <Loader2 size={28} class="animate-spin text-[#4A7C74]" />
+                    <Loader2 size={28} class="animate-spin text-primary" />
                     <span class="sr-only">Gathering your documents…</span>
                 </div>
             {:else if docs.length === 0}
@@ -829,7 +838,7 @@
                 <div class="flex justify-center mt-4">
                     <button
                         onclick={startWizard}
-                        class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        class="text-sm font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Sparkles size={14} /> Start Vault Assistant
                     </button>
@@ -838,32 +847,32 @@
         </div>
     {:else}
         <!-- Table View -->
-        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="bg-card rounded-xl border border-border overflow-hidden">
             <table class="w-full">
-                <thead class="bg-slate-50 border-b border-slate-200">
+                <thead class="bg-background border-b border-border">
                     <tr>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Document</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Status</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Date Signed</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Location</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Next Review</th>
-                        <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Document</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Type</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Status</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Date Signed</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Location</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Next Review</th>
+                        <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-border">
                     {#each visibleDocs as doc (doc.id)}
-                        <tr class="hover:bg-slate-50 transition-colors group">
+                        <tr class="hover:bg-background transition-colors group">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 shrink-0 rounded-lg bg-[#FBF9EB] border border-[#4A7C74]/10 flex items-center justify-center text-[#4A7C74]">
+                                    <div class="w-8 h-8 shrink-0 rounded-lg bg-muted border border-primary/10 flex items-center justify-center text-primary">
                                         <FileText size={16} />
                                     </div>
-                                    <span class="font-medium text-slate-800">{doc.name}</span>
+                                    <span class="font-medium text-foreground">{doc.name}</span>
                                 </div>
                             </td>
                             <td class="px-4 py-3">
-                                <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
+                                <span class="px-2 py-1 bg-muted text-muted-foreground rounded text-xs font-medium">
                                     {doc.type}
                                 </span>
                             </td>
@@ -872,16 +881,16 @@
                                     {stateLabel[docState(doc)]}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-slate-600 text-sm">{dateWords(doc.signedDate) || '-'}</td>
-                            <td class="px-4 py-3 text-slate-600 text-sm">{doc.location}</td>
-                            <td class="px-4 py-3 text-slate-500 text-sm">{dateWords(doc.nextReviewDate) || '-'}</td>
+                            <td class="px-4 py-3 text-muted-foreground text-sm">{dateWords(doc.signedDate) || '-'}</td>
+                            <td class="px-4 py-3 text-muted-foreground text-sm">{doc.location}</td>
+                            <td class="px-4 py-3 text-muted-foreground text-sm">{dateWords(doc.nextReviewDate) || '-'}</td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     {#if doc.filePath}
                                         <button
                                             type="button"
                                             onclick={() => saveCopy(doc)}
-                                            class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
+                                            class="p-1 hover:bg-muted text-muted-foreground hover:text-primary rounded transition-colors"
                                             title="Save a copy"
                                             aria-label="Save a copy"
                                         >
@@ -890,15 +899,17 @@
                                     {/if}
                                     <button
                                         onclick={() => editDoc(doc)}
-                                        class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
+                                        class="p-1 hover:bg-muted text-muted-foreground hover:text-primary rounded transition-colors"
                                         title="Edit"
+                                        aria-label="Edit"
                                     >
                                         <Pencil size={14} />
                                     </button>
                                     <button
-                                        onclick={() => removeDoc(doc.id)}
-                                        class="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
-                                        title="Remove"
+                                        onclick={() => (removing = doc)}
+                                        class="p-1 hover:bg-danger-soft text-muted-foreground hover:text-danger rounded transition-colors"
+                                        title="Remove this item"
+                                        aria-label="Remove this item"
                                     >
                                         <Trash2 size={14} />
                                     </button>
@@ -910,18 +921,18 @@
             </table>
             {#if isLoading}
                 <div class="flex flex-col items-center justify-center gap-3 py-12" role="status" data-testid="documents-loading">
-                    <Loader2 size={28} class="animate-spin text-[#4A7C74]" />
+                    <Loader2 size={28} class="animate-spin text-primary" />
                     <span class="sr-only">Gathering your documents…</span>
                 </div>
             {:else if docs.length === 0}
-                <div class="p-8 text-center text-slate-500">
+                <div class="p-8 text-center text-muted-foreground">
                     <GhostRow type="Document" onclick={startWizard} />
                     <GhostRow type="Document" onclick={startWizard} />
                     <GhostRow type="Document" onclick={startWizard} />
                     <div class="flex justify-center mt-4">
                         <button
                             onclick={startWizard}
-                            class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                            class="text-sm font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                         >
                             <Sparkles size={14} /> Start Vault Assistant
                         </button>
@@ -932,6 +943,28 @@
     {/if}
 
     <!-- An example will with legal terms explained -->
+    <Modal
+        bind:open={() => removing !== null, (v) => { if (!v) removing = null; }}
+        title="Would you like to remove this document?"
+        description="This action is permanent."
+    >
+        <p class="font-serif font-bold text-foreground">{removing?.name}</p>
+        <div class="flex justify-end gap-3 pt-6">
+            <button
+                type="button"
+                onclick={() => (removing = null)}
+                class="px-6 py-2.5 rounded-xl font-semibold text-muted-foreground hover:bg-muted transition-colors"
+                >Not right now</button
+            >
+            <button
+                type="button"
+                onclick={confirmRemove}
+                class="px-6 py-2.5 rounded-xl font-semibold bg-danger text-card hover:opacity-90 transition-colors"
+                >Remove this item</button
+            >
+        </div>
+    </Modal>
+
     {#if showExampleWill}
         <JargonSlayer onclose={() => (showExampleWill = false)} />
     {/if}

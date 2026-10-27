@@ -5,11 +5,22 @@ import { getLegacy } from "$lib/stores/persistence";
 import { activeAccountId } from "$lib/stores/keyringStore";
 import { auth } from "$lib/stores/auth";
 
+// The one type list for 'calendar_events', shared by the calendar page and Important Dates.
+export const EVENT_TYPES = [
+    { value: 'birthday', label: 'Birthday' },
+    { value: 'anniversary', label: 'Anniversary' },
+    { value: 'holiday', label: 'Holiday' },
+    { value: 'passing', label: 'Passing' },
+    { value: 'ritual', label: 'Ritual' },
+    { value: 'other', label: 'Other' },
+] as const;
+export type EventType = (typeof EVENT_TYPES)[number]['value'];
+
 export interface AnniversaryEvent {
     id: string | number;
     title: string;
     date: string; // "MM-DD"/"YYYY-MM-DD" (anniversary manager) or "MMDD"/"YYYYMMDD" (calendar page)
-    type: 'birthday' | 'anniversary' | 'passing' | 'ritual'; // the calendar page also writes 'holiday' | 'other'
+    type: EventType;
     description?: string;
     ritualInstructions?: string;
     recurring: boolean;
@@ -153,11 +164,13 @@ export const calendarStore = {
     subscribe: calendarSync.subscribe.bind(calendarSync)
 };
 
-// Derived store for upcoming events (next 30 days)
+// Derived store: every event with its next date, soonest first.
 // The manager's subscribe hands out the items array itself.
 export const upcomingEvents = derived(calendarSync, (items: AnniversaryEvent[]) => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
+    // These are local calendar days: today's moment stays upcoming through the end of today.
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const currentYear = today.getFullYear();
 
     return items.map(event => {
         // Accepts "MM-DD", "YYYY-MM-DD" and the calendar page's "MMDD" / "YYYYMMDD".
@@ -167,10 +180,13 @@ export const upcomingEvents = derived(calendarSync, (items: AnniversaryEvent[]) 
         const month = Number(digits.slice(-4, -2));
         const day = Number(digits.slice(-2));
 
-        const eventDate = new Date(currentYear, month - 1, day);
+        // A one-time date with a year keeps that year (X227); a yearly date, or one saved
+        // without a year, falls in this year and rolls to next year once it has passed.
+        const savedYear = digits.length >= 8 ? Number(digits.slice(0, -4)) : NaN;
+        const year = !event.recurring && Number.isFinite(savedYear) ? savedYear : currentYear;
+        const eventDate = new Date(year, month - 1, day);
 
-        // If date has passed this year, check next year
-        if (eventDate < now && event.recurring) {
+        if (eventDate < today && event.recurring) {
             eventDate.setFullYear(currentYear + 1);
         }
 

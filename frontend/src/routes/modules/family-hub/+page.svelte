@@ -1,11 +1,11 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import {
         Heart,
         Image,
         Scroll,
         MapPin,
-        Music,
         Plus,
         X,
         Upload,
@@ -27,7 +27,13 @@
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { onMount } from "svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { familyStore } from "$lib/stores/familyStore.svelte";
+    import { timelineStore } from "$lib/stores/timelineStore.svelte";
+    import { estateExecutorName } from "$lib/stores/analyticsStore";
     import { activityLog } from "$lib/stores/activityLog.svelte";
+    import { getRegistry } from "$lib/services/sync.svelte";
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
+    import { captureSession, type SessionOwnership } from "$lib/services/sessionOwnership";
     import { t, language } from "$lib/stores/localization";
     import { getSmartSamples } from "$lib/data/smartSamples";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
@@ -35,7 +41,7 @@
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import * as registryRaw from "$lib/data/registry.json";
 
-    let dataViewMode = $state<ViewMode>('card');
+    let dataViewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('family-hub'));
 
     // Registry Data Handling
     const registryData = (registryRaw as any).default || registryRaw;
@@ -74,7 +80,7 @@
         type: "photo",
         title: "",
         desc: "",
-        image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
+        image: "",
         author: $estateProfile.ownerName || "Me",
         date: new Date().getFullYear().toString(),
     });
@@ -117,95 +123,113 @@
         },
     ];
 
-    function handleConciergeComplete(answers: Record<string, any>) {
+    let wizardSaving = $state(false);
+    let wizardRevision = 0;
+    let wizardDraft: { id?: number; version: number; recoveryId?: string } = { version: 0 };
+
+    function startWizard() {
+        wizardDraft = { version: 0 };
+        wizardRevision = 0;
+        viewMode = "concierge";
+    }
+
+    async function handleConciergeComplete(answers: Record<string, any>) {
+        if (wizardSaving) return;
         if (answers.intro === false) {
             viewMode = "dashboard";
             return;
         }
-
-        // Auto-create a memory from the concierge answer
-        if (answers.fav_memory) {
-            addFamilyMemory({
-                type: "quote",
-                title: "My Favorite Memory",
-                text: answers.fav_memory,
-                author: "Me",
-                is_favorite: false,
-            });
+        if (!answers.fav_memory) {
+            viewMode = "dashboard";
+            return;
         }
-
-        viewMode = "dashboard";
+        const form = wizardDraft;
+        const version = ++form.version;
+        const revision = wizardRevision;
+        const submitted = {
+            type: "quote" as const,
+            title: "My Favorite Memory",
+            text: String(answers.fav_memory),
+            author: "Me",
+            is_favorite: false,
+        };
+        let completed = false;
+        const attempt = async () => {
+            if (wizardSaving || completed || form.version !== version) return;
+            wizardSaving = true;
+            try {
+                const saved = form.id
+                    ? await updateFamilyMemory(form.id, submitted, attempt, form.recoveryId)
+                    : await addFamilyMemory(submitted, attempt, form.recoveryId);
+                form.id = saved.id;
+                form.recoveryId = undefined;
+                completed = true;
+                if (wizardDraft === form && wizardRevision === revision) viewMode = "dashboard";
+            } catch (e) {
+                if (e && typeof e === "object" && "recoveryId" in e && typeof e.recoveryId === "string") form.recoveryId = e.recoveryId;
+                // Keep the wizard mounted with its answers; Retry completes this same memory.
+            } finally {
+                wizardSaving = false;
+            }
+        };
+        await attempt();
     }
 
+    let savingMemory = $state(false);
+    const memoryManager = getRegistry().family_memories;
+    const saveMemoryOnce = formSaveAttempt(memoryManager);
+    const memoryRecoveries = new Map<string, { id: string; owner: SessionOwnership }>();
+    let memoryBusy = $derived(savingMemory || memoryManager.status === "syncing");
+
     async function saveMemory() {
-        if (!newMemory.title) return;
-
+        if (memoryBusy || !newMemory.title) return;
+        const form = newMemory;
+        const original = JSON.stringify($state.snapshot(form));
+        const submitted = { ...JSON.parse(original), is_favorite: form.is_favorite ?? false };
+        const id = form.id;
+        const owner = captureSession();
+        const userContext = $estateProfile.ownerName || "User";
+        const oldMemory = id ? memories.find((m) => m.id === id) : undefined;
+        const changes = oldMemory ? ["title", "desc", "text"].flatMap((field) => {
+            const key = field as "title" | "desc" | "text";
+            return oldMemory[key] !== submitted[key]
+                ? [{ field: field === "desc" ? "description" : field, oldValue: oldMemory[key], newValue: submitted[key] }]
+                : [];
+        }) : [];
+        let failureId: string | undefined;
+        savingMemory = true;
         try {
-        if (newMemory.id) {
-            // Edit Mode
-            const oldMemory = memories.find(
-                (m: Memory) => m.id === newMemory.id,
-            );
-            const changes = [];
-
-            if (oldMemory) {
-                if (oldMemory.title !== newMemory.title)
-                    changes.push({
-                        field: "title",
-                        oldValue: oldMemory.title,
-                        newValue: newMemory.title,
+            await saveMemoryOnce(form, submitted, (saved) => {
+                if (id && memoryRecoveries.get(String(id))?.id === failureId) memoryRecoveries.delete(String(id));
+                // Bookkeeping follows the confirmed write and never changes its outcome.
+                try {
+                    activityLog.logEvent({
+                        module: "Family Hub", action: id ? "UPDATE" : "CREATE", entityType: "Memory",
+                        entityId: String(saved.id), entityName: submitted.title || "Unnamed Memory", changes, userContext,
                     });
-                if (oldMemory.desc !== newMemory.desc)
-                    changes.push({
-                        field: "description",
-                        oldValue: oldMemory.desc,
-                        newValue: newMemory.desc,
-                    });
-                if (oldMemory.text !== newMemory.text)
-                    changes.push({
-                        field: "text",
-                        oldValue: oldMemory.text,
-                        newValue: newMemory.text,
-                    });
+                } catch { /* The record is already saved. */ }
+                if (newMemory === form) {
+                    if (JSON.stringify($state.snapshot(form)) === original) resetForm();
+                    else form.id = Number(saved.id);
+                }
+            }, id);
+        } catch (e) {
+            if (e && typeof e === "object" && "recoveryId" in e && typeof e.recoveryId === "string") {
+                failureId = e.recoveryId;
+                if (id) memoryRecoveries.set(String(id), { id: failureId, owner });
             }
-
-            await updateFamilyMemory(newMemory.id, newMemory as any);
-
-            // Log UPDATE
-            activityLog.logEvent({
-                module: "Family Hub",
-                action: "UPDATE",
-                entityType: "Memory",
-                entityId: String(newMemory.id),
-                entityName: newMemory.title || "Unnamed Memory",
-                changes,
-                userContext: $estateProfile.ownerName || "User",
-            });
-        } else {
-            // Create Mode
-            await addFamilyMemory({
-                ...newMemory,
-                is_favorite: false,
-            } as any, saveMemory);
-
-            // Log CREATE
-            activityLog.logEvent({
-                module: "Family Hub",
-                action: "CREATE",
-                entityType: "Memory",
-                entityId: "new",
-                entityName: newMemory.title || "Unnamed Memory",
-                userContext: $estateProfile.ownerName || "User",
-            });
-        }
-
-        resetForm();
-        } catch {
-            // The manager already showed the one gentle message; the form stays open with the draft.
+            // The shared notice keeps this immutable attempt; every visible field stays here.
+        } finally {
+            savingMemory = false;
         }
     }
 
     function editMemory(memory: Memory) {
+        const earlier = memoryRecoveries.get(String(memory.id));
+        if (earlier) {
+            memoryManager.releaseRecovery(earlier.id, earlier.owner);
+            memoryRecoveries.delete(String(memory.id));
+        }
         newMemory = { ...memory };
         showAddModal = true;
     }
@@ -218,48 +242,21 @@
             title: "",
             desc: "",
             author: $estateProfile.ownerName || "Me",
-            image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80",
+            image: "",
             date: new Date().getFullYear().toString(),
         };
     }
 
-    function deleteMemory(id: number | undefined) {
+    async function deleteMemory(id: number | undefined) {
         if (id === undefined) return;
         if (
-            !confirm(
-                "Remove this memory? It will be preserved in your activity log.",
-            )
+            !(await askConfirm(
+                "Remove this memory? You can always add it back later if needed.",
+            ))
         )
             return;
         removeFamilyMemory(id);
     }
-
-    const collections = [
-        {
-            title: "Photo Albums",
-            icon: Image,
-            color: "bg-rose-100 text-rose-600",
-            count: 12,
-        },
-        {
-            title: "Family Recipes",
-            icon: Scroll,
-            color: "bg-amber-100 text-amber-600",
-            count: 8,
-        },
-        {
-            title: "Places We Loved",
-            icon: MapPin,
-            color: "bg-emerald-100 text-emerald-600",
-            count: 5,
-        },
-        {
-            title: "Our Playlist",
-            icon: Music,
-            color: "bg-purple-100 text-purple-600",
-            count: 1,
-        },
-    ];
 
     // Slideshow Logic
     let showSlideshow = $state(false);
@@ -269,8 +266,15 @@
 
     let photoMemories = $derived(memories.filter((m) => m.type === "photo"));
 
+    // The three most recent events from The Life Timeline
+    let journeyEvents = $derived(
+        [...(timelineStore.items || [])]
+            .sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0))
+            .slice(0, 3),
+    );
+
     function startSlideshow() {
-        if (photoMemories.length === 0) return alert("Add some photos first!");
+        if (photoMemories.length === 0) return;
         showSlideshow = true;
         currentSlide = 0;
         isPlaying = true;
@@ -313,7 +317,7 @@
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
 {:else}
-<div class="min-h-screen bg-[#FDFBF7]">
+<div class="min-h-screen bg-background">
     <div class="max-w-6xl mx-auto px-8 pt-8">
     </div>
 
@@ -324,46 +328,46 @@
             transition:fade
         >
             <div
-                class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+                class="bg-card rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
                 in:scale
             >
                 <div
-                    class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50"
+                    class="p-6 border-b border-border flex justify-between items-center bg-muted"
                 >
-                    <h3 class="font-serif font-bold text-xl text-[#304743]">
+                    <h3 class="font-serif font-bold text-xl text-foreground">
                         Preserve a Memory
                     </h3>
                     <button aria-label="Close"
                         onclick={resetForm}
-                        class="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                        class="p-2 hover:bg-muted rounded-full transition-colors"
                     >
-                        <X size={20} class="text-gray-500" />
+                        <X size={20} class="text-muted-foreground" />
                     </button>
                 </div>
                 <div class="p-6 space-y-4">
                     <!-- Type Selector -->
-                    <div class="flex gap-2 p-1 bg-gray-100 rounded-lg">
+                    <div class="flex gap-2 p-1 bg-muted rounded-lg">
                         <button
                             class="flex-1 py-2 text-sm font-bold rounded-md transition-all {newMemory.type ===
                             'photo'
-                                ? 'bg-white shadow text-[#4A7C74]'
-                                : 'text-gray-500 hover:text-gray-700'}"
+                                ? 'bg-card shadow text-primary'
+                                : 'text-muted-foreground hover:text-foreground'}"
                             onclick={() => (newMemory.type = "photo")}
                             >Photo</button
                         >
                         <button
                             class="flex-1 py-2 text-sm font-bold rounded-md transition-all {newMemory.type ===
                             'recipe'
-                                ? 'bg-white shadow text-[#4A7C74]'
-                                : 'text-gray-500 hover:text-gray-700'}"
+                                ? 'bg-card shadow text-primary'
+                                : 'text-muted-foreground hover:text-foreground'}"
                             onclick={() => (newMemory.type = "recipe")}
                             >Recipe</button
                         >
                         <button
                             class="flex-1 py-2 text-sm font-bold rounded-md transition-all {newMemory.type ===
                             'quote'
-                                ? 'bg-white shadow text-[#4A7C74]'
-                                : 'text-gray-500 hover:text-gray-700'}"
+                                ? 'bg-card shadow text-primary'
+                                : 'text-muted-foreground hover:text-foreground'}"
                             onclick={() => (newMemory.type = "quote")}
                             >Quote</button
                         >
@@ -371,12 +375,12 @@
 
                     <div class="space-y-2">
                         <label
-                            class="text-xs font-bold uppercase text-gray-400"
+                            class="text-xs font-bold uppercase text-muted-foreground"
                         >
                             Title
                             <input
                                 bind:value={newMemory.title}
-                                class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] focus:ring-0 outline-none font-serif text-lg mt-1"
+                                class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none font-serif text-lg mt-1"
                                 placeholder="e.g. Summer Vacation 2005"
                             />
                         </label>
@@ -391,12 +395,12 @@
                             {#if !newMemory.image}
                                 <div class="space-y-1">
                                     <label
-                                        class="text-xs font-bold uppercase text-gray-400"
+                                        class="text-xs font-bold uppercase text-muted-foreground"
                                     >
                                         Or Paste URL
                                         <input
                                             bind:value={newMemory.image}
-                                            class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none text-sm mt-1"
+                                            class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none text-sm mt-1"
                                             placeholder="https://..."
                                         />
                                     </label>
@@ -405,12 +409,12 @@
                         </div>
                         <div class="space-y-2">
                             <label
-                                class="text-xs font-bold uppercase text-gray-400"
+                                class="text-xs font-bold uppercase text-muted-foreground"
                             >
                                 Date / Year
                                 <input
                                     bind:value={newMemory.date}
-                                    class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none mt-1"
+                                    class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none mt-1"
                                     placeholder="e.g. July 2005"
                                 />
                             </label>
@@ -418,37 +422,37 @@
                     {:else if newMemory.type === "recipe"}
                         <div class="space-y-2">
                             <label
-                                class="text-xs font-bold uppercase text-gray-400"
+                                class="text-xs font-bold uppercase text-muted-foreground"
                             >
                                 Description / Ingredients
                                 <textarea
                                     bind:value={newMemory.desc}
-                                    class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none h-24 resize-none mt-1"
-                                    placeholder="Secret ingredients..."
+                                    class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none h-24 resize-none mt-1"
+                                    placeholder="Ingredients and quantities, preparation steps, cooking time, and who taught you this recipe..."
                                 ></textarea>
                             </label>
                         </div>
                     {:else if newMemory.type === "quote"}
                         <div class="space-y-2">
                             <label
-                                class="text-xs font-bold uppercase text-gray-400"
+                                class="text-xs font-bold uppercase text-muted-foreground"
                             >
                                 Quote Text
                                 <textarea
                                     bind:value={newMemory.text}
-                                    class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none h-24 resize-none font-serif italic text-lg mt-1"
+                                    class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none h-24 resize-none font-serif italic text-lg mt-1"
                                     placeholder="'Stay hungry, stay foolish...'"
                                 ></textarea>
                             </label>
                         </div>
                         <div class="space-y-2">
                             <label
-                                class="text-xs font-bold uppercase text-gray-400"
+                                class="text-xs font-bold uppercase text-muted-foreground"
                             >
                                 Attribution
                                 <input
                                     bind:value={newMemory.author}
-                                    class="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4A7C74] outline-none mt-1"
+                                    class="w-full p-3 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 outline-none mt-1"
                                     placeholder="e.g. Grandma"
                                 />
                             </label>
@@ -457,9 +461,11 @@
 
                     <button
                         onclick={saveMemory}
-                        class="w-full py-4 bg-[#4A7C74] text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-[#3b635d] transition-all transform active:scale-95"
+                        disabled={memoryBusy}
+                        aria-busy={memoryBusy}
+                        class="w-full py-4 bg-primary text-primary-foreground rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-primary-hover transition-all transform active:scale-95"
                     >
-                        {newMemory.id ? "Update Memory" : "Save Memory"}
+                        {memoryBusy ? "Saving..." : "Save this memory"}
                     </button>
                 </div>
             </div>
@@ -470,28 +476,27 @@
         <LivingBlueprintHeader
             title={module.title}
             subtitle={module.description}
-            tier={module.role === "owner" ? "preparation" : "executor"}
         />
     {/if}
 
     <!-- Family Network Visualizer -->
-    <section class="max-w-7xl mx-auto px-6 -mt-16 relative z-30 mb-20">
+    <section class="max-w-7xl mx-auto px-8 -mt-16 relative z-30 mb-20">
         <div
-            class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100"
+            class="bg-card rounded-2xl shadow-xl overflow-hidden border border-border"
         >
             <div
-                class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50"
+                class="p-6 border-b border-border flex justify-between items-center bg-muted/50"
             >
                 <div>
-                    <h2 class="font-serif text-2xl text-slate-800">
+                    <h2 class="font-serif text-2xl text-foreground">
                         Family Network
                     </h2>
-                    <p class="text-slate-500 text-sm">
-                        Interactive map of your estate hierarchy and key roles.
+                    <p class="text-muted-foreground text-sm">
+                        People recorded in Family &amp; Contacts. Open a person to read or update their details.
                     </p>
                 </div>
             </div>
-            <div class="h-[600px] w-full bg-slate-50">
+            <div class="w-full bg-muted">
                 <FamilyTreeGraph />
             </div>
         </div>
@@ -499,36 +504,40 @@
 
     {#if viewMode === "concierge"}
         <div class="max-w-4xl mx-auto px-6 py-12" in:fade>
-            <ConciergeFlow
-                steps={wizardSteps}
-                oncomplete={handleConciergeComplete}
-            />
+            <fieldset disabled={wizardSaving} aria-busy={wizardSaving} oninput={() => wizardRevision++} class="min-w-0">
+                <ConciergeFlow
+                    steps={wizardSteps}
+                    oncomplete={handleConciergeComplete}
+                />
+            </fieldset>
+            {#if wizardSaving}<p role="status" class="text-center text-sm text-muted-foreground mt-4">Saving...</p>{/if}
             <div class="text-center mt-8">
                 <button
                     onclick={() => (viewMode = "dashboard")}
-                    class="text-slate-400 hover:text-slate-600 underline text-sm"
+                    disabled={wizardSaving}
+                    class="text-muted-foreground hover:text-foreground underline text-sm"
                 >
-                    Skip tour, go to dashboard
+                    Continue to your dashboard
                 </button>
             </div>
         </div>
     {:else}
-        <div class="max-w-6xl mx-auto px-6 pb-20 relative z-30" in:fade>
+        <div class="max-w-6xl mx-auto px-8 pb-20 relative z-30" in:fade>
+            <p class="mb-6 max-w-3xl text-muted-foreground leading-relaxed">Keep family photos, recipes, quotations, and their stories together. Family &amp; Contacts holds contact details and recipient choices; the Life Timeline holds dated events.</p>
             <!-- BLUEPRINT HEADER -->
             <div class="mb-12">
-                ...
                 <BlueprintCard
-                    title="Establish Your Family Network"
-                    description="Your estate plan relies on trusted people. Identify your key players to unlock the full power of the Continuum."
-                    timeEstimate="5 mins"
+                    title="Family records to gather"
+                    description="Record the people connected to your plan, name your executor, and add a family memory. These checks describe the records gathered here."
+                    timeEstimate="At your own pace"
                     steps={[
                         {
-                            label: "Connect 3 Family Members",
-                            completed: memories.length >= 3,
-                        } /* Using memories.length as proxy for now, but should be Family Members */,
-                        { label: "Designate an Executor", completed: false },
+                            label: "At least 3 contacts recorded",
+                            completed: familyStore.members.length >= 3,
+                        },
+                        { label: "Executor name recorded", completed: !!$estateExecutorName },
                         {
-                            label: "Upload a Shared Memory",
+                            label: "Family memory recorded",
                             completed: memories.length > 0,
                         },
                     ]}
@@ -538,39 +547,8 @@
             <!-- AI Concierge Drafting Assistant -->
             <AIPromptBar
                 context="heirlooms"
-                prompts={[
-                    "Help me capture a family memory...",
-                    "Draft a story about this family tradition...",
-                    "Write about the significance of this photo...",
-                    "Help me preserve a family recipe with its history..."
-                ]}
+                promptSource="routes/modules/family-hub/+page.svelte:prompts"
             />
-
-            <!-- Quick Access Collections -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-                {#each collections as item}
-                    <button
-                        class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group text-center"
-                    >
-                        <div
-                            class="w-12 h-12 rounded-full {item.color} flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform"
-                        >
-                            <svelte:component
-                                this={item.icon}
-                                class="w-6 h-6"
-                            />
-                        </div>
-                        <h3 class="font-bold text-slate-800 mb-1">
-                            {item.title}
-                        </h3>
-                        <div
-                            class="text-xs text-slate-400 font-medium uppercase tracking-wider"
-                        >
-                            {item.count} Items
-                        </div>
-                    </button>
-                {/each}
-            </div>
 
             <!-- Latest Memories Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -578,23 +556,23 @@
                 <div class="md:col-span-2 space-y-8">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <h2 class="font-serif text-3xl text-slate-800">
+                            <h2 class="font-serif text-3xl text-foreground">
                                 Latest Memories
                             </h2>
-                            {#if memories.length > 0}
+                            {#if photoMemories.length > 0}
                                 <button
                                     onclick={startSlideshow}
-                                    class="text-xs font-bold text-[#4A7C74] bg-[#4A7C74]/10 px-3 py-1.5 rounded-full hover:bg-[#4A7C74]/20 transition-colors flex items-center gap-1"
+                                    class="text-xs font-bold text-primary-hover bg-primary/10 px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors flex items-center gap-1"
                                 >
                                     <PlayCircle size={14} /> Slideshow
                                 </button>
                             {/if}
                         </div>
                         <div class="flex items-center gap-3">
-                            <DataViewToggle module="family-hub" onchange={(mode) => dataViewMode = mode} />
+                            <DataViewToggle module="family-hub" />
                             <button
                                 onclick={() => (showAddModal = true)}
-                                class="flex items-center gap-2 px-4 py-2 bg-rose-100 text-rose-700 rounded-full font-bold hover:bg-rose-200 transition-colors"
+                                class="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full font-bold hover:bg-primary-hover transition-colors"
                             >
                                 <Plus size={18} /> Add Memory
                             </button>
@@ -606,8 +584,8 @@
                             <!-- GHOST ROWS -->
                             <div class="col-span-full flex justify-center mb-4">
                                 <button
-                                    onclick={() => (viewMode = "concierge")}
-                                    class="text-sm font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full hover:bg-indigo-100 transition-colors flex items-center gap-2"
+                                    onclick={startWizard}
+                                    class="text-sm font-bold text-primary-hover bg-primary-soft px-4 py-2 rounded-full hover:bg-primary/20 transition-colors flex items-center gap-2"
                                 >
                                     <Pencil size={16} />
                                     {$t("wizard.start")}
@@ -635,14 +613,10 @@
                                     }}
                                 >
                                     {#snippet icon()}
-                                        <svelte:component
-                                            this={sample.type === "Recipe"
-                                                ? Scroll
-                                                : sample.type === "Quote"
-                                                  ? Plus
-                                                  : Image}
+                                        {@const Icon = sample.type === "Recipe" ? Scroll : sample.type === "Quote" ? Plus : Image}
+                                        <Icon
                                             size={20}
-                                            class="text-slate-400"
+                                            class="text-muted-foreground"
                                         />
                                     {/snippet}
                                 </GhostRow>
@@ -651,14 +625,14 @@
                             {#if dataViewMode === 'card'}
                                 {#each memories as memory (memory.id)}
                                     <div
-                                        class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative"
+                                        class="bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative"
                                         in:fade
                                     >
                                         <!-- Card actions -->
                                         <button
                                             onclick={() => editMemory(memory)}
                                             aria-label="Edit Memory"
-                                            class="absolute top-2 right-10 p-1.5 bg-white/80 rounded-full z-10 hover:bg-blue-100 text-blue-500"
+                                            class="absolute top-2 right-10 p-1.5 bg-card/80 rounded-full z-10 hover:bg-muted text-muted-foreground hover:text-primary-hover"
                                             title="Edit Memory"
                                         >
                                             <Pencil size={14} />
@@ -666,15 +640,15 @@
                                         <button
                                             onclick={() => deleteMemory(memory.id)}
                                             aria-label="Remove this item"
-                                            class="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full z-10 hover:bg-red-100 text-red-500"
-                                            title="Delete Memory"
+                                            class="absolute top-2 right-2 p-1.5 bg-card/80 rounded-full z-10 hover:bg-danger-soft text-muted-foreground hover:text-danger"
+                                            title="Remove this memory"
                                         >
                                             <X size={14} />
                                         </button>
 
                                         {#if memory.type === "photo"}
                                             <div
-                                                class="aspect-[4/3] overflow-hidden bg-gray-100"
+                                                class="aspect-[4/3] overflow-hidden bg-muted"
                                             >
                                                 <img
                                                     src={memory.image}
@@ -684,39 +658,39 @@
                                             </div>
                                             <div class="p-4">
                                                 <h3
-                                                    class="font-bold text-slate-800 text-lg leading-tight group-hover:text-rose-600 transition-colors"
+                                                    class="font-bold text-foreground text-lg leading-tight group-hover:text-primary-hover transition-colors"
                                                 >
                                                     {memory.title}
                                                 </h3>
                                                 <p
-                                                    class="text-xs text-slate-400 mt-2 font-medium tracking-wide uppercase"
+                                                    class="text-xs text-muted-foreground mt-2 font-medium tracking-wide uppercase"
                                                 >
                                                     {memory.date}
                                                 </p>
                                             </div>
                                         {:else if memory.type === "recipe"}
                                             <div
-                                                class="p-6 bg-amber-50 h-full flex flex-col"
+                                                class="p-6 bg-muted h-full flex flex-col"
                                             >
                                                 <div
-                                                    class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-4 text-amber-500 shadow-sm"
+                                                    class="w-10 h-10 bg-card rounded-full flex items-center justify-center mb-4 text-gold-text shadow-sm"
                                                 >
                                                     <Scroll class="w-5 h-5" />
                                                 </div>
                                                 <h3
-                                                    class="font-serif text-xl text-amber-900 font-bold mb-2"
+                                                    class="font-serif text-xl text-foreground font-bold mb-2"
                                                 >
                                                     {memory.title}
                                                 </h3>
                                                 <p
-                                                    class="text-sm text-amber-800/80 leading-relaxed italic"
+                                                    class="text-sm text-muted-foreground leading-relaxed italic"
                                                 >
                                                     "{memory.desc}"
                                                 </p>
                                             </div>
                                         {:else if memory.type === "quote"}
                                             <div
-                                                class="p-8 bg-slate-800 h-full flex flex-col justify-center text-center items-center"
+                                                class="p-8 bg-primary-deep h-full flex flex-col justify-center text-center items-center"
                                             >
                                                 <p
                                                     class="font-serif text-xl text-white leading-relaxed mb-4"
@@ -724,49 +698,65 @@
                                                     "{memory.text}"
                                                 </p>
                                                 <div
-                                                    class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+                                                    class="text-xs font-bold text-white/70 uppercase tracking-widest"
                                                 >
                                                     — {memory.author}
                                                 </div>
+                                            </div>
+                                        {:else}
+                                            <div class="p-6">
+                                                <h3 class="font-bold text-foreground text-lg leading-tight">
+                                                    {memory.title}
+                                                </h3>
+                                                {#if memory.desc || memory.text}
+                                                    <p class="text-sm text-muted-foreground mt-2 leading-relaxed">
+                                                        {memory.desc || memory.text}
+                                                    </p>
+                                                {/if}
+                                                {#if memory.date}
+                                                    <p class="text-xs text-muted-foreground mt-2 font-medium tracking-wide uppercase">
+                                                        {memory.date}
+                                                    </p>
+                                                {/if}
                                             </div>
                                         {/if}
                                     </div>
                                 {/each}
                             {:else}
                                 <!-- Table View -->
-                                <div class="col-span-full bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                <div class="col-span-full bg-card rounded-xl border border-border overflow-hidden">
                                     <table class="w-full">
-                                        <thead class="bg-slate-50 border-b border-slate-200">
+                                        <thead class="bg-muted border-b border-border">
                                             <tr>
-                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Title</th>
-                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
-                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Date</th>
-                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Author</th>
-                                                <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Title</th>
+                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Type</th>
+                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Date</th>
+                                                <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Author</th>
+                                                <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-slate-100">
+                                        <tbody class="divide-y divide-border">
                                             {#each memories as memory (memory.id)}
-                                                <tr class="hover:bg-slate-50 transition-colors group">
-                                                    <td class="px-4 py-3 font-medium text-slate-800">{memory.title}</td>
+                                                <tr class="hover:bg-muted transition-colors group">
+                                                    <td class="px-4 py-3 font-medium text-foreground">{memory.title}</td>
                                                     <td class="px-4 py-3">
-                                                        <span class="px-2 py-1 rounded text-xs font-medium capitalize {memory.type === 'photo' ? 'bg-blue-100 text-blue-600' : memory.type === 'recipe' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600'}">
+                                                        <span class="px-2 py-1 rounded text-xs font-medium capitalize {memory.type === 'photo' ? 'bg-info/10 text-info' : memory.type === 'recipe' ? 'bg-muted text-gold-text' : 'bg-muted text-muted-foreground'}">
                                                             {memory.type}
                                                         </span>
                                                     </td>
-                                                    <td class="px-4 py-3 text-slate-600 text-sm">{memory.date || '-'}</td>
-                                                    <td class="px-4 py-3 text-slate-500 text-sm">{memory.author || '-'}</td>
+                                                    <td class="px-4 py-3 text-muted-foreground text-sm">{memory.date || '-'}</td>
+                                                    <td class="px-4 py-3 text-muted-foreground text-sm">{memory.author || '-'}</td>
                                                     <td class="px-4 py-3 text-right">
                                                         <div class="flex items-center justify-end gap-1 transition-opacity">
                                                             <button aria-label="Edit these details"
                                                                 onclick={() => editMemory(memory)}
-                                                                class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-500"
+                                                                class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-primary-hover"
                                                             >
                                                                 <Pencil size={14} />
                                                             </button>
                                                             <button aria-label="Remove this item"
                                                                 onclick={() => deleteMemory(memory.id)}
-                                                                class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-red-500"
+                                                                class="p-1 hover:bg-muted rounded text-muted-foreground hover:text-danger"
                                                             >
                                                                 <X size={14} />
                                                             </button>
@@ -786,7 +776,7 @@
                 <div class="space-y-8">
                     <!-- Educational Resources Widget -->
                     <button
-                        class="bg-[#304743] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer text-left w-full"
+                        class="bg-primary-deep rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer text-left w-full"
                         onclick={() =>
                             document
                                 .getElementById("educational-section")
@@ -798,82 +788,59 @@
                             <PlayCircle size={120} />
                         </div>
                         <div class="relative z-10">
-                            <h3 class="font-serif font-bold text-xl mb-2">
+                            <h3 class="font-serif font-bold text-xl mb-2 text-white">
                                 Learning Center
                             </h3>
                             <p
-                                class="text-emerald-100/80 text-sm mb-4 line-clamp-2"
+                                class="text-white/80 text-sm mb-4 line-clamp-2"
                             >
-                                Watch our guide videos to understand your role
-                                in the estate plan.
+                                Written guides to help you find your way, whenever
+                                you're ready.
                             </p>
-                            <span
-                                class="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider bg-white/10 px-3 py-1 rounded-full"
-                            >
-                                5 Videos Available
-                            </span>
                         </div>
                     </button>
 
                     <div
-                        class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100"
+                        class="bg-card p-6 rounded-2xl shadow-sm border border-border"
                     >
                         <h3
-                            class="font-bold text-slate-800 mb-4 flex items-center gap-2"
+                            class="font-bold text-foreground mb-4 flex items-center gap-2"
                         >
-                            <MapPin class="w-4 h-4 text-emerald-500" />
+                            <MapPin class="w-4 h-4 text-primary" />
                             Our Journey
                         </h3>
+                        {#if journeyEvents.length > 0}
+                            <div
+                                class="space-y-6 relative pl-4 border-l-2 border-border"
+                            >
+                                {#each journeyEvents as event, i (event.id)}
+                                    <div class="relative">
+                                        <div
+                                            class="absolute -left-[21px] top-1 w-3 h-3 rounded-full border-2 border-card {i === 0
+                                                ? 'bg-primary shadow-sm'
+                                                : 'bg-border'}"
+                                        ></div>
+                                        <div
+                                            class="text-xs font-bold text-muted-foreground mb-1"
+                                        >
+                                            {event.year}
+                                        </div>
+                                        <div class="font-medium text-foreground">
+                                            {event.label}
+                                        </div>
+                                    </div>
+                                {/each}
+                            </div>
+                        {/if}
                         <div
-                            class="space-y-6 relative pl-4 border-l-2 border-slate-100"
-                        >
-                            <div class="relative">
-                                <div
-                                    class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm"
-                                ></div>
-                                <div
-                                    class="text-xs font-bold text-slate-400 mb-1"
-                                >
-                                    2024
-                                </div>
-                                <div class="font-medium text-slate-800">
-                                    Moved to Seattle
-                                </div>
-                            </div>
-                            <div class="relative">
-                                <div
-                                    class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-slate-300 border-2 border-white"
-                                ></div>
-                                <div
-                                    class="text-xs font-bold text-slate-400 mb-1"
-                                >
-                                    2018
-                                </div>
-                                <div class="font-medium text-slate-800">
-                                    Trip to Italy
-                                </div>
-                            </div>
-                            <div class="relative">
-                                <div
-                                    class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-slate-300 border-2 border-white"
-                                ></div>
-                                <div
-                                    class="text-xs font-bold text-slate-400 mb-1"
-                                >
-                                    2010
-                                </div>
-                                <div class="font-medium text-slate-800">
-                                    Bought the Cabin
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            class="mt-4 pt-4 border-t border-slate-100 text-center"
+                            class="text-center {journeyEvents.length > 0
+                                ? 'mt-4 pt-4 border-t border-border'
+                                : ''}"
                         >
                             <a
                                 href="/modules/timeline"
-                                class="text-xs font-bold text-[#4A7C74] hover:underline"
-                                >Manage Full Timeline →</a
+                                class="text-xs font-bold text-primary hover:underline"
+                                >The Life Timeline →</a
                             >
                         </div>
                     </div>
@@ -883,9 +850,9 @@
             <!-- Educational Resources Section -->
             <div
                 id="educational-section"
-                class="mt-20 pt-10 border-t border-slate-200"
+                class="mt-20 pt-10 border-t border-border"
             >
-                <h2 class="font-serif text-3xl text-slate-800 mb-8 text-center">
+                <h2 class="font-serif text-3xl text-foreground mb-8 text-center">
                     Family Learning Center
                 </h2>
                 <EducationalResources />

@@ -25,7 +25,7 @@
         title,
         whyMatters,
         encouragement = "Take your time. This will be here when you're ready.",
-        icon = Heart,
+        icon: Icon = Heart,
         iconClass = "text-primary",
         ctaLabel = "Explore this step",
         onAction,
@@ -38,14 +38,14 @@
     <!-- Icon -->
     <div class="mb-6 flex justify-center">
         <div
-            class="w-20 h-20 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl flex items-center justify-center shadow-sm"
+            class="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center shadow-sm"
         >
-            <svelte:component this={icon} size={36} class={iconClass} />
+            <Icon size={36} class={iconClass} />
         </div>
     </div>
 
     <!-- Title -->
-    <h3 class="font-serif font-bold text-2xl text-slate-800 mb-4">
+    <h3 class="font-serif font-bold text-2xl text-foreground mb-4">
         {title}
     </h3>
 
@@ -53,14 +53,14 @@
     <div class="mb-6 bg-primary/5 rounded-xl p-5 border border-primary/10">
         <div class="flex items-start gap-3 text-left">
             <Info size={20} class="text-primary shrink-0 mt-0.5" />
-            <div class="text-slate-700 leading-relaxed">
+            <div class="text-foreground leading-relaxed">
                 {@html whyMatters}
             </div>
         </div>
     </div>
 
     <!-- Encouragement -->
-    <p class="text-slate-600 mb-6 text-base leading-relaxed italic">
+    <p class="text-muted-foreground mb-6 text-base leading-relaxed italic">
         {encouragement}
     </p>
 
@@ -68,7 +68,7 @@
     {#if onAction}
         <button
             onclick={onAction}
-            class="bg-primary text-primary-foreground px-8 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 mb-4"
+            class="bg-primary text-primary-foreground px-8 py-3.5 rounded-xl font-semibold hover:bg-primary-hover transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 mb-4"
         >
             {ctaLabel}
         </button>
@@ -76,7 +76,7 @@
 
     <!-- Skip Option -->
     {#if showSkipOption}
-        <p class="text-xs text-slate-400 mt-4">
+        <p class="text-xs text-muted-foreground mt-4">
             {skipMessage}
         </p>
     {/if}

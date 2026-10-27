@@ -10,8 +10,11 @@
     import { t } from "$lib/stores/localization";
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
     import { notifications } from "$lib/stores/notificationStore";
+    import { userRole } from "$lib/stores/conciergeStore.svelte";
 
     let showWizard = $state(false);
+    // Add Asset lives beside Guided Setup; the manager below opens its form from this.
+    let showAddForm = $state(false);
     let reloadKey = $state(0);
 
     // The financial_assets store owns this registry key (and its mapper).
@@ -98,17 +101,17 @@
         );
         const failed = accounts.filter((_, i) => results[i].status === "rejected");
         if (failed.length === 0) {
-            notifications.showAffirmation("general");
+            notifications.showAffirmation("general", "create");
             return;
         }
         const reason = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
         notifications.showError(
             {
                 message:
-                    "We couldn't save that just yet. Your words are still here \u2014 try again when you're ready.",
+                    "Your words are safe here. We can save them again whenever you're ready.",
                 code: "DATABASE_ERROR",
                 technicalDetails: reason.reason?.technicalDetails || reason.reason?.message || String(reason.reason),
-            } as any,
+            },
             () => {
                 saveAccounts(failed).then(() => reloadKey++);
             },
@@ -119,8 +122,8 @@
         return {
             name,
             type,
-            value: 0,
-            location: "TBD",
+            value: null, // blank until the person adds one, so the audit asks for it
+            location: "", // blank until the person adds the institution
             notes: note,
             valueHistory: [],
             beneficiaries: "",
@@ -129,32 +132,45 @@
 </script>
 
 <Modal bind:open={showWizard} title={$t("wizard.start")} maxWidth="max-w-2xl">
+    <p class="mb-4 text-sm text-muted-foreground">Start a list of common account types. Open each new record to add your institution, identifying details and statement information. Use Add account or debt for other records.</p>
     <ConciergeFlow
         steps={wizardSteps}
         oncomplete={handleWizardComplete}
     />
 </Modal>
 
-<div class="max-w-6xl mx-auto p-8">
-    <LivingBlueprintHeader
+<LivingBlueprintHeader
         title={$t("assets")}
-        subtitle="Manage bank accounts, investments, and liabilities"
-        tier="financial"
-        detailedDescription="Gathering your financial accounts in one place isn't just about numbers—it's about ensuring your family isn't left searching for resources they might desperately need. This clarity provides immediate stability during a time of uncertainty."
-        whyMatters="Unclaimed assets and lost accounts are a common burden for grieving families. By documenting these now, you ensure resources go to supporting your loved ones rather than being lost to bureaucracy."
+        subtitle="Bank accounts, investments and debts, gathered in one place."
+        detailedDescription="Record each account and debt so your son can identify it, find a recent statement, and know which institution or adviser to contact. Use your records to describe ownership, named beneficiaries and any practical instructions."
+        whyMatters="A useful account record explains what it is, where the information comes from, and whom your family should ask about the next step."
     >
-        <button
-            onclick={() => (showWizard = true)}
-            class="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
-        >
-            <Sparkles size={16} />
-            {$t("wizard.start")}
-        </button>
+        <div class="flex items-center gap-3">
+            {#if $userRole !== "Family"}
+                <!-- Guided Setup creates accounts, so it follows the same rule as adding one. -->
+                <button
+                    onclick={() => (showWizard = true)}
+                    class="flex items-center gap-2 px-5 py-3 border border-primary/10 text-primary font-bold rounded-2xl hover:bg-primary/5 transition-colors"
+                >
+                    <Sparkles size={18} />
+                    {$t("wizard.start")}
+                </button>
+                <button
+                    onclick={() => (showAddForm = true)}
+                    class="flex items-center gap-2 px-5 py-3 border border-primary bg-primary text-primary-foreground font-bold rounded-2xl hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                >
+                    <Plus size={18} /> Add account or debt
+                </button>
+            {/if}
+        </div>
     </LivingBlueprintHeader>
+
+<div class="max-w-6xl mx-auto p-8">
 
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">
+        <p class="text-sm text-muted-foreground">Describe one account or debt for help drafting a note or questions for the institution. Review the wording, then add it to the record you save.</p>
         <AIPromptBar context="financial" />
     </div>
 
@@ -162,11 +178,11 @@
     {#if isLoading}
         <div class="flex flex-col items-center justify-center gap-3 py-16" role="status" data-testid="accounts-loading">
             <Loader2 class="w-8 h-8 animate-spin text-primary" />
-            <p class="text-sm text-slate-500">Gathering your records...</p>
+            <p class="text-sm text-muted-foreground">Gathering your records...</p>
         </div>
     {:else}
         {#key reloadKey}
-            <AssetManager module={{ id: "assets-main" }} />
+            <AssetManager module={{ id: "assets-main" }} bind:showAddForm headerAdd={false} />
         {/key}
     {/if}
 </div>

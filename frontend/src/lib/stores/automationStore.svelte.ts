@@ -8,10 +8,10 @@ export interface AutomationRule {
     type: 'notification' | 'task' | 'alert';
 }
 
-const mapper = (data: any): AutomationRule => ({
+const mapper = (data: Record<string, unknown>): AutomationRule => ({
     ...data,
     id: typeof data.id === 'string' && data.id.length > 10 ? data.id : Number(data.id) || data.id,
-});
+} as AutomationRule);
 
 const manager = registerSync<AutomationRule>('automation_rules', 'automation_rules', mapper, '/api/data')
     .setAffirmationContext('general');

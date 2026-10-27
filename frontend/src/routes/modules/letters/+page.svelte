@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { fade, fly, slide, scale } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import {
@@ -39,12 +40,14 @@
         EMOTIONAL_PROMPTS,
         type LetterTemplate,
     } from "$lib/data/letterTemplates";
-    import { onMount, tick } from "svelte";
+    import { onMount, onDestroy, tick, untrack } from "svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import LetterAssistant from "$lib/components/modules/letters/LetterAssistant.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
-    import { REFLECTION_POOLS } from "$lib/data/reflectionPools";
+    import { aiRuntimeAssets, aiAssets, aiAsset, assetStrings, loadAIConfig, observeAIConfig, renderAIAsset, registerAIJob, aiJobId, aiSourceFacts, type AIWritingJob } from "$lib/services/aiCapabilities";
+    import { auth } from "$lib/stores/auth";
+    import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
     import RefreshControl from "$lib/components/ui/RefreshControl.svelte";
     import { notifications } from "$lib/stores/notificationStore";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
@@ -55,30 +58,30 @@
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import { lettersSync, type Letter } from "$lib/stores/letterStore.svelte";
     import { contactSync } from "$lib/stores/familyStore.svelte";
+    import { milestoneLabel } from "$lib/utils/milestones";
+    import { letterReadState, letterStateLabel, type LetterReadState } from "$lib/utils/letterReadiness";
 
     // One owner for the letters table: the store's 'letters' manager.
     const letterSync = lettersSync;
     let savedLetters = $derived(letterSync.items);
     let contacts = $derived(contactSync.items);
 
-    const MILESTONE_LABELS: Record<string, string> = {
-        grad: "College Graduation",
-        wedding: "Wedding Day",
-        parent: "Becoming a Parent",
-        home: "First Home",
-    };
-
     let searchQuery = $state("");
     // A gentle cue until the first server answer, unless this device already holds letters.
     let firstSyncPending = $derived(letterSync.lastSync === null && letterSync.status !== "error");
     let isLoading = $derived(firstSyncPending && savedLetters.length === 0);
-    // Header summary, in the same words as the letter cards ("Ready to read" / "On hold").
-    // Local plural until the shared helper (card X58) reaches main.
+    // Header, cards and table use the same personal-reader readiness and drafting states.
     const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-    let heldCount = $derived(savedLetters.filter((l) => l.isLocked).length);
-    let readyCount = $derived(savedLetters.length - heldCount);
+    let readStates = $derived(new Map(savedLetters.map((letter) => [String(letter.id), letterReadState(letter, contacts)])));
+    const stateOf = (letter: Letter): LetterReadState => readStates.get(String(letter.id)) ?? 'draft';
+    let heldCount = $derived(savedLetters.filter((letter) => stateOf(letter) === 'held').length);
+    let readyCount = $derived(savedLetters.filter((letter) => stateOf(letter) === 'ready').length);
+    let draftCount = $derived(savedLetters.filter((letter) => stateOf(letter) === 'draft').length);
+    let institutionCount = $derived(savedLetters.filter((letter) => stateOf(letter) === 'institution').length);
     let letterStates = $derived(
-        [readyCount > 0 ? `${readyCount} ready to read` : "", heldCount > 0 ? `${heldCount} on hold` : ""]
+        [readyCount > 0 ? `${readyCount} ready to read` : "", heldCount > 0 ? `${heldCount} on hold` : "",
+         draftCount > 0 ? plural(draftCount, "draft", "drafts") : "",
+         institutionCount > 0 ? plural(institutionCount, "institution draft", "institution drafts") : ""]
             .filter(Boolean)
             .join(" · "),
     );
@@ -89,6 +92,8 @@
     onMount(() => {
         letterSync.init().catch(() => {});
         contactSync.init().catch(() => {});
+        // Fetched with the page's own data, so template fields can fill from it right away.
+        estateProfile.sync().catch(() => {});
     });
     let filterCategory = $state("All");
 
@@ -97,27 +102,33 @@
 
     // onMount removed
 
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveToVault() {
-        if (!generatedLetter) {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveToVaultOnce();
+        } finally {
+            saving = false;
+        }
+    }
+
+    async function saveToVaultOnce() {
+        if (!generatedLetter.trim()) {
             notifications.showError({
                 message:
-                    "The letter content appears to be empty. Please go back and try again.",
+                    "Your letter is waiting for its first words. Go back whenever you're ready.",
                 code: "EMPTY_CONTENT",
             });
             return;
         }
 
-        const title = emotionalFlow
-            ? emotionalFlow === "spouse"
-                ? "Letter to Loved One"
-                : "Ethical Will"
-            : selectedTemplate?.title || "Draft Letter";
+        const title = letterTitle();
 
-        const recipient = contacts.find((c) => String(c.id) === letterRecipientId);
         const details = {
             content: generatedLetter,
-            recipientName: recipient?.name ?? "",
-            recipientContactId: recipient ? Number(recipient.id) : null,
+            ...recipientDetails(),
             triggerDate: letterTriggerDate || null,
             triggerMilestone: letterTriggerMilestone || null,
             isLocked: letterHold,
@@ -132,14 +143,14 @@
                 ...details,
                 title: `${title} (${new Date().toLocaleDateString()})`,
                 date: new Date().toLocaleDateString(),
-                type: emotionalFlow ? "emotional" : "transactional",
+                type: currentLetterType(),
             } as Letter, false, false, saveToVault);
 
         activityLog.logEvent({
             module: "Letters",
             action: editingId !== null ? "UPDATE" : "CREATE",
             entityType: "Draft",
-            entityId: saved.id,
+            entityId: String(saved.id),
             entityName: saved.title,
             userContext: $estateProfile.ownerName || "User",
         });
@@ -152,14 +163,97 @@
         }
     }
 
+    function currentLetterType(): string {
+        if (editingId !== null) return savedLetters.find(letter => String(letter.id) === String(editingId))?.type ?? 'emotional';
+        return selectedTemplate && !emotionalFlow ? 'transactional' : 'emotional';
+    }
+
+    function letterTitle() {
+        // A reopened letter keeps its own title (its flow is only a placeholder; see viewLetter).
+        const reopened = editingId !== null
+            ? savedLetters.find((l) => String(l.id) === String(editingId))?.title
+            : undefined;
+        if (reopened) return reopened;
+        return emotionalFlow
+            ? emotionalFlow === "spouse"
+                ? "Letter to Loved One"
+                : "Ethical Will"
+            : selectedTemplate?.title || "Draft Letter";
+    }
+
+    const esc = (v: string) =>
+        v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+    // Print: the letter alone, in a hidden frame, through the browser's own print dialog.
+    function printLetter() {
+        if (!generatedLetter.trim()) return;
+        document.getElementById("letter-print-frame")?.remove();
+        const frame = document.createElement("iframe");
+        frame.id = "letter-print-frame";
+        frame.setAttribute("aria-hidden", "true");
+        frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+        frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(letterTitle())}</title><style>
+            @page { margin: 1in; }
+            body { font-family: Georgia, "Times New Roman", serif; font-size: 12pt; line-height: 1.5; color: #1e293b; margin: 0; white-space: pre-wrap; }
+        </style></head><body>${esc(generatedLetter)}</body></html>`;
+        frame.onload = () => {
+            frame.contentWindow?.focus();
+            frame.contentWindow?.print();
+        };
+        document.body.appendChild(frame);
+    }
+
+    // Download PDF: the same letter as a PDF file, written with the jsPDF library the export packet uses.
+    let pdfBusy = $state(false);
+    async function downloadLetterPDF() {
+        if (pdfBusy || !generatedLetter.trim()) return;
+        pdfBusy = true;
+        try {
+            const [{ createUnicodePDF, PDF_FONT, splitPDFText, writePDFLine }, { saveBlob }] = await Promise.all([
+                import("$lib/services/unicodePDF"),
+                import("$lib/services/exportService"),
+            ]);
+            const doc = await createUnicodePDF();
+            const W = doc.internal.pageSize.getWidth();
+            const H = doc.internal.pageSize.getHeight();
+            const M = 72;
+            const size = 11;
+            const lh = size * 1.45;
+            let y = M;
+            doc.setFont(PDF_FONT, "normal");
+            doc.setFontSize(size);
+            for (const line of splitPDFText(doc, generatedLetter, W - 2 * M)) {
+                if (y + lh > H - M) { doc.addPage(); y = M; }
+                writePDFLine(doc, line, M, y + size, W - 2 * M);
+                y += lh;
+            }
+            const file = letterTitle().replace(/[\\/:*?"<>|]+/g, " ").trim() || "Letter";
+            saveBlob(doc.output("blob"), `${file}.pdf`);
+        } finally {
+            pdfBusy = false;
+        }
+    }
+
     // Per-letter details; cleared whenever a new letter is started.
     function clearLetterDetails() {
+        selectionVersion++;
+        writingDraft = {};
+        generatedLetter = "";
+        reflections = ["", "", ""];
+        reflectionQuestions = ["", "", ""];
+        currentQuestion = "";
         editingId = null;
         letterRecipientId = "";
+        recordedRecipientName = "";
+        recordedRecipientId = null;
+        recipientChanged = false;
         letterTriggerDate = "";
         letterTriggerMilestone = "";
         letterHold = false;
         customAttributes = {};
+        templateVariables = {};
+        detectedVariables = [];
+        filledFromProfile = false;
     }
 
     function resetSelection() {
@@ -173,9 +267,9 @@
 
     async function deleteLetter(id: number | string, name: string) {
         if (
-            !confirm(
+            !(await askConfirm(
                 `Remove the letter to "${name}"? You can always start over if you feel like it later.`,
-            )
+            ))
         )
             return;
         await letterSync.delete(id);
@@ -192,11 +286,18 @@
     }
 
     function viewLetter(letter: Letter) {
+        clearLetterDetails();
+        emotionalFlow = null;
+        selectedTemplate = null;
         generatedLetter = letter.content;
         editingId = letter.id;
-        letterRecipientId = letter.recipientContactId != null
-            ? String(letter.recipientContactId)
-            : String(contacts.find((c) => c.name === letter.recipientName)?.id ?? "");
+        recordedRecipientName = letter.recipientName ?? "";
+        recordedRecipientId = letter.recipientContactId ?? null;
+        recipientChanged = false;
+        // A name-only or removed contact stays exactly as recorded until the owner chooses otherwise.
+        letterRecipientId = recordedRecipientId != null && contacts.some((c) => String(c.id) === String(recordedRecipientId))
+            ? String(recordedRecipientId)
+            : (recordedRecipientName || recordedRecipientId != null) ? RECORDED_RECIPIENT : "";
         letterTriggerDate = letter.triggerDate ?? "";
         letterTriggerMilestone = letter.triggerMilestone ?? "";
         letterHold = !!letter.isLocked;
@@ -223,27 +324,37 @@
     let mode = $state<
         | "menu"
         | "emotional_interview"
-        | "drafting"
         | "review"
         | "transactional_preview"
         | "variable_input"
     >("menu");
 
+    let letterAssets = $derived(aiAssets({purpose:'letter.draft'}, $aiRuntimeAssets));
+    type ReflectionFlow = { title: string; steps: { category: string; pool: string[]; suggestions: string[] }[] };
+    let reflectionFlows = $derived(letterAssets['lib/data/reflectionPools.ts:letters'] as Record<string, ReflectionFlow> | undefined);
+    $effect(() => observeAIConfig({ purpose: 'letter.draft' }));
     // Emotional State
     let emotionalFlow = $state<"spouse" | "ethical_will" | null>(null);
-    let emotionalReflections = $state({
-        memory: "",
-        values: "",
-        hopes: "",
-    });
+    // One answer per interview step, in the order the steps are asked (see REFLECTION_POOLS.letters).
+    let reflections = $state(["", "", ""]);
+    let reflectionQuestions = $state(["", "", ""]);
+    function recordReflection(answer: string) {
+        reflections[currentPromptIndex] = answer;
+        reflectionQuestions[currentPromptIndex] = currentQuestion;
+    }
     let currentPromptIndex = $state(0);
+    let currentSuggestions = $derived(
+        emotionalFlow
+            ? reflectionFlows?.[emotionalFlow]?.steps[currentPromptIndex]?.suggestions ?? []
+            : [],
+    );
     let currentQuestion = $state("");
 
     function refreshQuestion() {
         if (!emotionalFlow) return;
         const pool =
-            REFLECTION_POOLS.letters[emotionalFlow].steps[currentPromptIndex]
-                .pool;
+            reflectionFlows?.[emotionalFlow]?.steps[currentPromptIndex]?.pool ?? [];
+        if (!pool.length) return;
         let newQuestion = currentQuestion;
         if (pool.length > 1) {
             // helper to avoid same question twice in a row
@@ -262,55 +373,148 @@
     let selectedTemplate = $state<LetterTemplate | null>(null);
     let templateVariables = $state<Record<string, string>>({});
     let detectedVariables = $state<string[]>([]);
+    // True when the Estate Profile filled at least one field of the chosen template.
+    let filledFromProfile = $state(false);
 
     // Editor Content
     let generatedLetter = $state("");
+    let writingDraft = $state<object>({});
+
 
     // Details of the letter being written or reopened
     let editingId = $state<number | string | null>(null);
+    const RECORDED_RECIPIENT = "__recorded_recipient__";
     let letterRecipientId = $state("");
+    let recordedRecipientName = $state("");
+    let recordedRecipientId = $state<number | null>(null);
+    let recipientChanged = $state(false);
     let letterTriggerDate = $state("");
     let letterTriggerMilestone = $state("");
     let letterHold = $state(false);
 
-    function startEmotionalFlow(flow: "spouse" | "ethical_will") {
+    function recipientDetails() {
+        if (letterRecipientId === RECORDED_RECIPIENT || (editingId !== null && !recipientChanged)) {
+            return { recipientName: recordedRecipientName, recipientContactId: recordedRecipientId };
+        }
+        const recipient = contacts.find((contact) => String(contact.id) === letterRecipientId);
+        return { recipientName: recipient?.name ?? "", recipientContactId: recipient ? Number(recipient.id) : null };
+    }
+
+    const writingJob = (): AIWritingJob => {
+        const recipient = recipientDetails();
+        const person = contacts.find((contact) => String(contact.id) === String(recipient.recipientContactId));
+        return { job_id: aiJobId('letter', writingDraft, editingId), document_type: emotionalFlow || selectedTemplate?.category || 'letter',
+            document_title: editingId !== null ? savedLetters.find((letter) => String(letter.id) === String(editingId))?.title : selectedTemplate?.title,
+            current_draft: generatedLetter, recipient_name: recipient.recipientName, recipient_relationship: person?.relation,
+            notes: [...reflections],
+            field_label: mode === 'emotional_interview' ? currentQuestion : 'Your letter',
+            field_question: mode === 'emotional_interview' ? currentQuestion : '',
+            question_answers: reflections.flatMap((answer, index) => answer.trim() && reflectionQuestions[index]
+                ? [JSON.stringify({question:reflectionQuestions[index],answer})] : []),
+            source_facts: aiSourceFacts({ ...templateVariables, signature: $estateProfile.ownerName }) };
+    };
+    const retainedWritingJob = (): AIWritingJob | undefined => editingId !== null || generatedLetter.trim() || reflections.some(answer => answer.trim()) || selectedTemplate || emotionalFlow
+        ? writingJob() : undefined;
+    $effect(() => { $auth; mode; writingJob().job_id; return registerAIJob(() => mode === 'menu' ? retainedWritingJob() : writingJob()); });
+
+    let editorReadState = $derived(letterReadState({
+        ...recipientDetails(),
+        content: generatedLetter,
+        type: currentLetterType(),
+        isLocked: letterHold,
+    }, contacts));
+
+    let selectionVersion = 0;
+    let selectionAlive = true;
+    const ownsSelection = (owner: SessionOwnership, version: number) => selectionAlive && version === selectionVersion && isCurrentSession(owner);
+    onDestroy(() => { selectionAlive = false; selectionVersion++; });
+    function returnToMenu() { selectionVersion++; mode = "menu"; }
+    async function startEmotionalFlow(flow: "spouse" | "ethical_will") {
+        const owner = captureSession(), version = ++selectionVersion;
+        try { await loadAIConfig({ purpose: 'letter.draft' }, true); }
+        catch (error) { if (ownsSelection(owner, version)) notifications.showError(error instanceof Error ? error : String(error)); return; }
+        if (!ownsSelection(owner, version)) return;
         clearLetterDetails();
+        selectedTemplate = null;
         emotionalFlow = flow;
         mode = "emotional_interview";
         currentPromptIndex = 0;
-        emotionalReflections = { memory: "", values: "", hopes: "" };
+        reflections = ["", "", ""];
         refreshQuestion();
     }
 
-    function selectTransactional(template: LetterTemplate) {
+    async function useAssistantDraft(text: string, ownsResult: () => boolean) {
+        const owner = captureSession(), version = selectionVersion;
+        const source = JSON.stringify(retainedWritingJob());
+        if (!ownsResult() || !ownsSelection(owner, version)) return;
+        if (generatedLetter.trim() && generatedLetter !== text && !(await askConfirm('Use this version in your letter editor?', 'Use this version'))) return;
+        if (!ownsResult() || !ownsSelection(owner, version) || source !== JSON.stringify(retainedWritingJob())) return;
+        generatedLetter = text;
+        mode = 'review';
+        await tick();
+        if (!isCurrentSession(owner)) return;
+        document.querySelector<HTMLTextAreaElement>('[data-letter-editor] textarea')?.focus({preventScroll:true});
+    }
+
+    // Template fields the Estate Profile can fill.
+    function profileValues(): Record<string, string> {
+        const p = $estateProfile;
+        return {
+            "Account Holder Name": p.ownerName,
+            "Deceased Name": p.ownerName,
+            "Cardholder Name": p.ownerName,
+            "Borrower Name": p.ownerName,
+            "Date of Death": p.dateOfDeath,
+            "Executor/Administrator": p.executorName,
+            "Executor Name": p.executorName,
+            Spouse: p.spouseName,
+            "Primary Beneficiary": p.primaryBeneficiary,
+            SSN: p.last4SSN,
+            "Social Security Number": p.last4SSN,
+            "Last 4 digits of SSN": p.last4SSN,
+            City: p.legalCityState.split(",")[0]?.trim() || "",
+            State: p.legalCityState.split(",")[1]?.trim() || "",
+        };
+    }
+
+    // Fill the chosen template's empty fields from the profile; what the person typed stays.
+    function fillFromProfile(withDate = false) {
+        const values = profileValues();
+        if (withDate) values.Date = new Date().toLocaleDateString();
+        for (const v of detectedVariables) {
+            if (templateVariables[v] || !values[v]) continue;
+            templateVariables[v] = values[v];
+            if (v !== "Date") filledFromProfile = true;
+        }
+    }
+
+    // The profile can answer after a template is opened: fill its fields when it arrives.
+    $effect(() => {
+        $estateProfile;
+        untrack(() => {
+            if (mode === "variable_input") fillFromProfile();
+        });
+    });
+
+    async function selectTransactional(template: LetterTemplate) {
+        const owner = captureSession(), version = ++selectionVersion;
+        try {
+            await loadAIConfig({ purpose: 'letter.draft' }, true);
+            if (!ownsSelection(owner, version)) return;
+            const body = aiAsset<Record<string, string>>('lib/data/letterTemplates.ts:bodies', {purpose:'letter.draft'})?.[template.id];
+            if (typeof body !== 'string') throw new Error('Drafting template could not be loaded');
+            template = { ...template, body };
+        } catch (error) { if (ownsSelection(owner, version)) notifications.showError(error instanceof Error ? error : String(error)); return; }
         clearLetterDetails();
+        // A letter from the library is never an emotional letter, even after one was open.
+        emotionalFlow = null;
         selectedTemplate = template;
         const regex = /\[(.*?)\]/g;
         const matches = [...template.body.matchAll(regex)];
         detectedVariables = [...new Set(matches.map((m) => m[1]))];
-        templateVariables = {};
-
-        const mappingKeys: Record<string, string> = {
-            "Account Holder Name": $estateProfile.ownerName,
-            "Deceased Name": $estateProfile.ownerName,
-            "Cardholder Name": $estateProfile.ownerName,
-            "Borrower Name": $estateProfile.ownerName,
-            "Date of Death": $estateProfile.dateOfDeath,
-            "Executor/Administrator": $estateProfile.executorName,
-            "Executor Name": $estateProfile.executorName,
-            Spouse: $estateProfile.spouseName,
-            "Primary Beneficiary": $estateProfile.primaryBeneficiary,
-            SSN: $estateProfile.last4SSN,
-            "Social Security Number": $estateProfile.last4SSN,
-            "Last 4 digits of SSN": $estateProfile.last4SSN,
-            City: $estateProfile.legalCityState.split(",")[0]?.trim() || "",
-            State: $estateProfile.legalCityState.split(",")[1]?.trim() || "",
-            Date: new Date().toLocaleDateString(),
-        };
-
-        detectedVariables.forEach((v) => {
-            templateVariables[v] = mappingKeys[v] || "";
-        });
+        templateVariables = Object.fromEntries(detectedVariables.map((v) => [v, ""]));
+        filledFromProfile = false;
+        fillFromProfile(true);
 
         if (detectedVariables.length > 0) {
             mode = "variable_input";
@@ -347,27 +551,29 @@
     }
 
     function generateEmotionalDraft() {
-        mode = "drafting";
-        setTimeout(() => {
-            if (emotionalFlow === "spouse") {
-                generatedLetter = `My Dearest,\n\nI was sitting here thinking about us, and my mind drifted to that time: ${emotionalReflections.memory}. It still makes me smile.\n\nI want you to know how much I admire you. Specifically, ${emotionalReflections.values}. You have always been my rock.\n\nMy greatest wish for you is this: ${emotionalReflections.hopes}. Be happy, live fully, and know that you were loved beyond measure.\n\nForever yours,\n[Your Name]`;
-            } else {
-                generatedLetter = `To My Family,\n\nAs I look back on my life, I want to leave you with more than just things. I want to share who I was and what I believed in.\n\nMy life was guided by three core values: ${emotionalReflections.values}. I hope they serve you as well as they served me.\n\nI learned many lessons, but the most important was: ${emotionalReflections.memory}. Don't make the same mistake I did—or if you do, forgive yourself quickly.\n\nWhen times are tough, remember: ${emotionalReflections.hopes}.\n\nWith all my love,\n[Your Name]`;
-            }
-            mode = "review";
+        const templates = aiAsset<Record<string, string>>('routes/modules/letters/+page.svelte:emotional_drafts', {purpose:'letter.draft'});
+        const template = templates?.[emotionalFlow || ''];
+        if (typeof template !== 'string') return;
+        const signature = $estateProfile.ownerName?.trim() || templates?.signature_placeholder || '';
+        const [one, two, three] = reflections;
+        generatedLetter = renderAIAsset(template, { signature, memory: one, admire: two, hopes: three, values: one, lesson: two, legacy: three });
+        mode = "review";
+        // Put the keyboard straight into the new letter.
+        tick().then(() => {
+            document.querySelector<HTMLTextAreaElement>("[data-letter-editor] textarea")?.focus({ preventScroll: true });
+        });
 
-            activityLog.logEvent({
-                module: "Letters",
-                action: "GENERATE",
-                entityType: "Emotional Draft",
-                entityId: "draft-temp",
-                entityName:
-                    emotionalFlow === "spouse"
-                        ? "Letter to Loved One"
-                        : "Ethical Will",
-                userContext: $estateProfile.ownerName || "User",
-            });
-        }, 1500);
+        activityLog.logEvent({
+            module: "Letters",
+            action: "GENERATE",
+            entityType: "Emotional Draft",
+            entityId: "draft-temp",
+            entityName:
+                emotionalFlow === "spouse"
+                    ? "Letter to Loved One"
+                    : "Ethical Will",
+            userContext: $estateProfile.ownerName || "User",
+        });
     }
 
     const categories = [
@@ -398,13 +604,14 @@
     };
 
     // A writing prompt: adds one reflection question to the draft to write beneath.
-    const WRITING_PROMPTS = Object.values(REFLECTION_POOLS.letters).flatMap((flow) =>
-        flow.steps.flatMap((step) => step.pool),
-    );
-
     function addWritingPrompt() {
-        const prompt = WRITING_PROMPTS[Math.floor(Math.random() * WRITING_PROMPTS.length)];
-        generatedLetter = (generatedLetter ? generatedLetter.trimEnd() + "\n\n" : "") + prompt + "\n";
+        const prompts = Object.values(reflectionFlows ?? {}).flatMap((flow) => flow.steps.flatMap((step) => step.pool));
+        if (!prompts.length) return;
+        const prompt = prompts[Math.floor(Math.random() * prompts.length)];
+        const template = aiAsset<string>('routes/modules/letters/+page.svelte:writing_prompt_append', {purpose:'letter.draft'});
+        const separator = aiAsset<string>('routes/modules/letters/+page.svelte:writing_prompt_separator', {purpose:'letter.draft'});
+        if (typeof template !== 'string' || typeof separator !== 'string') return;
+        generatedLetter = renderAIAsset(template, { draft: generatedLetter.trimEnd(), separator: generatedLetter ? separator : '', prompt });
     }
 
     let filteredTemplates = $derived(
@@ -419,51 +626,89 @@
     );
 </script>
 
+{#snippet recipientPicker()}
+    <div class="space-y-2">
+        <label
+            for="letter-recipient"
+            class="block text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
+            >Who this letter is for</label
+        >
+        <select
+            id="letter-recipient"
+            bind:value={letterRecipientId}
+            onchange={() => { recipientChanged = true; }}
+            class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground text-sm"
+        >
+            <option value="">Choose someone from your contacts</option>
+            {#if recordedRecipientName || recordedRecipientId != null}
+                <option value={RECORDED_RECIPIENT}>Keep recorded recipient{recordedRecipientName ? `: ${recordedRecipientName}` : ""}</option>
+            {/if}
+            {#each contacts as contact (contact.id)}
+                <option value={String(contact.id)}
+                    >{contact.name}{contact.relation
+                        ? ` (${contact.relation})`
+                        : ""}</option
+                >
+            {/each}
+        </select>
+        {#if recordedRecipientName && !recipientChanged}
+            <p class="text-[11px] text-muted-foreground pl-1" data-testid="recorded-letter-recipient">Recorded recipient: {recordedRecipientName}</p>
+        {/if}
+        {#if contacts.length === 0}
+            <p class="text-[11px] text-muted-foreground pl-1">
+                People you add in <a
+                    href="/modules/contacts"
+                    class="text-primary-hover underline">Contacts</a
+                > appear here.
+            </p>
+        {/if}
+    </div>
+{/snippet}
+
 <LivingBlueprintHeader
     title="Legacy Correspondence"
     subtitle="Preserve your words for the people you love"
-    tier="legacy"
     detailedDescription="Write letters for the people you love—ethical wills sharing your values, heartfelt messages to loved ones, or formal notifications to institutions."
-    whyMatters="The words you write today will comfort, guide, and inspire your loved ones when you're no longer here to say them yourself. These letters become your voice across time, offering presence at moments you can't physically attend."
+    whyMatters="The words you write today will comfort, guide, and inspire your loved ones. These letters become your voice across time, present at the moments that matter."
 >
     <div class="flex items-center gap-4">
         {#if savedLetters.length > 0}
             <DataViewToggle module="letters" />
         {/if}
         <div
-            class="bg-[#FDFBF7] border border-stone-200 p-4 rounded-2xl flex items-center gap-6 shadow-sm"
+            class="bg-card border border-border p-4 rounded-2xl flex items-center gap-6 shadow-sm"
         >
             <div class="flex -space-x-3">
                 {#each [1, 2, 3] as i}
                     <div
-                        class="w-10 h-10 rounded-full border-2 border-[#FDFBF7] bg-stone-100 flex items-center justify-center"
+                        class="w-10 h-10 rounded-full border-2 border-card bg-muted flex items-center justify-center"
                     >
-                        <FileText size={16} class="text-stone-400" />
+                        <FileText size={16} class="text-muted-foreground" />
                     </div>
                 {/each}
             </div>
             <div>
                 <p
-                    class="text-[10px] font-black uppercase tracking-widest text-stone-400"
+                    class="text-[10px] font-black uppercase tracking-widest text-muted-foreground"
                 >
                     Your letters
                 </p>
                 {#if isLoading}
-                    <p class="text-sm font-bold text-slate-500" data-testid="letters-count">Gathering your letters…</p>
+                    <p class="text-sm font-bold text-muted-foreground" data-testid="letters-count">Gathering your letters…</p>
                 {:else if savedLetters.length > 0}
-                    <p class="text-sm font-bold text-slate-700" data-testid="letters-count">
+                    <p class="text-sm font-bold text-foreground" data-testid="letters-count">
                         {plural(savedLetters.length, "letter", "letters")}
                     </p>
-                    <p class="text-xs text-slate-500" data-testid="letters-states">{letterStates}</p>
+                    <p class="text-xs text-muted-foreground" data-testid="letters-states">{letterStates}</p>
                 {:else}
-                    <p class="text-sm font-bold text-slate-700" data-testid="letters-count">Ready when you are</p>
+                    <p class="text-sm font-bold text-foreground" data-testid="letters-count">Ready when you are</p>
                 {/if}
             </div>
             {#if savedLetters.length > 0}
                 <button
                     onclick={() => viewLetter(savedLetters[0])}
                     aria-label="Continue writing your letter"
-                    class="p-2 bg-stone-100 hover:bg-[#4A7C74] hover:text-white rounded-xl transition-all"
+                    class="p-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-xl transition-all"
                 >
                     <ArrowRight size={18} />
                 </button>
@@ -475,7 +720,7 @@
 {#if isLoading}
     <div class="flex flex-col items-center justify-center gap-3 py-16" role="status" data-testid="letters-loading">
         <Loader2 class="w-8 h-8 animate-spin text-primary" />
-        <p class="text-sm text-slate-500">Gathering your letters…</p>
+        <p class="text-sm text-muted-foreground">Gathering your letters…</p>
     </div>
 {:else}
 <div
@@ -486,12 +731,9 @@
         <!-- AI Concierge Drafting Assistant -->
         <AIPromptBar
             context="letters"
-            prompts={[
-                "Help me write a letter to my daughter...",
-                "Draft a note expressing my forgiveness...",
-                "Write an ethical will sharing my values...",
-                "Help me craft a goodbye message to my spouse..."
-            ]}
+            job={retainedWritingJob()}
+            onUseDraft={useAssistantDraft}
+            promptSource="routes/modules/letters/+page.svelte:prompts"
         />
 
         <div class="mb-12">
@@ -502,29 +744,29 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             <button
                 onclick={() => startEmotionalFlow("ethical_will")}
-                class="group relative overflow-hidden bg-white p-10 rounded-2xl border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
+                class="group relative overflow-hidden bg-card p-10 rounded-2xl border border-border shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
             >
                 <div
-                    class="absolute top-0 right-0 w-32 h-32 bg-amber-50/50 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
+                    class="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
                 ></div>
                 <div
-                    class="w-20 h-20 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-6 transition-transform"
+                    class="w-20 h-20 bg-gold/15 text-gold-text rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-6 transition-transform"
                 >
                     <PenTool size={36} />
                 </div>
                 <div>
                     <h3
-                        class="text-2xl font-black text-slate-900 mb-2 font-serif"
+                        class="text-2xl font-black text-foreground mb-2 font-serif"
                     >
                         Draft Ethical Will
                     </h3>
-                    <p class="text-slate-500 text-lg leading-snug">
+                    <p class="text-muted-foreground text-lg leading-snug">
                         Share your values, life lessons, and hopes for the next
                         generation.
                     </p>
                 </div>
                 <div
-                    class="ml-auto w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-[#4A7C74] group-hover:text-white transition-all"
+                    class="ml-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all"
                 >
                     <ArrowRight size={20} />
                 </div>
@@ -532,29 +774,29 @@
 
             <button
                 onclick={() => startEmotionalFlow("spouse")}
-                class="group relative overflow-hidden bg-white p-10 rounded-2xl border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
+                class="group relative overflow-hidden bg-card p-10 rounded-2xl border border-border shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 text-left flex gap-8 items-center"
             >
                 <div
-                    class="absolute top-0 right-0 w-32 h-32 bg-rose-50/50 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
+                    class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[5rem] -mr-8 -mt-8 group-hover:scale-110 transition-transform"
                 ></div>
                 <div
-                    class="w-20 h-20 bg-primary/10 text-primary rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:-rotate-6 transition-transform"
+                    class="w-20 h-20 bg-primary-soft text-primary-hover rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:-rotate-6 transition-transform"
                 >
                     <Heart size={36} />
                 </div>
                 <div>
                     <h3
-                        class="text-2xl font-black text-slate-900 mb-2 font-serif"
+                        class="text-2xl font-black text-foreground mb-2 font-serif"
                     >
                         Letter to Loved Ones
                     </h3>
-                    <p class="text-slate-500 text-lg leading-snug">
+                    <p class="text-muted-foreground text-lg leading-snug">
                         Leave a personal, heartfelt message for your spouse or
                         children.
                     </p>
                 </div>
                 <div
-                    class="ml-auto w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                    class="ml-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all"
                 >
                     <ArrowRight size={20} />
                 </div>
@@ -564,13 +806,13 @@
         {#if savedLetters.length > 0}
             <!-- Saved letters: reopen to keep writing -->
             <div class="space-y-4" data-testid="saved-letters">
-                <h3 class="text-xl font-black text-slate-900 font-serif">
+                <h3 class="text-xl font-black text-foreground font-serif">
                     Your letters
                 </h3>
                 {#if viewMode === "table"}
-                    <div class="overflow-x-auto bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <div class="overflow-x-auto bg-card rounded-2xl border border-border shadow-sm">
                         <table class="w-full text-left text-sm" data-testid="saved-letters-table">
-                            <thead class="text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-100">
+                            <thead class="text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b border-border">
                                 <tr>
                                     <th class="px-5 py-3">Letter</th>
                                     <th class="px-5 py-3">For</th>
@@ -581,34 +823,30 @@
                             </thead>
                             <tbody>
                                 {#each savedLetters as letter (letter.id)}
-                                    <tr class="border-b border-slate-50 last:border-0" data-testid="saved-letter-row">
-                                        <td class="px-5 py-3 font-bold text-slate-900">{letter.title}</td>
-                                        <td class="px-5 py-3 text-slate-600">{letter.recipientName}</td>
-                                        <td class="px-5 py-3 text-slate-500">
+                                    <tr class="border-b border-border last:border-0" data-testid="saved-letter-row" data-letter-id={letter.id} data-letter-state={stateOf(letter)}>
+                                        <td class="px-5 py-3 font-bold text-foreground">{letter.title}</td>
+                                        <td class="px-5 py-3 text-muted-foreground">{letter.recipientName}</td>
+                                        <td class="px-5 py-3 text-muted-foreground">
                                             {#if letter.triggerDate}
                                                 {new Date(letter.triggerDate + "T00:00:00").toLocaleDateString()}
                                             {/if}
                                             {#if letter.triggerMilestone}
-                                                {letter.triggerDate ? " · " : ""}{MILESTONE_LABELS[letter.triggerMilestone] ?? letter.triggerMilestone}
+                                                {letter.triggerDate ? " · " : ""}{milestoneLabel(letter.triggerMilestone)}
                                             {/if}
                                         </td>
                                         <td class="px-5 py-3">
-                                            {#if letter.isLocked}
-                                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-stone-100 text-stone-600">On hold</span>
-                                            {:else}
-                                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary">Ready to read</span>
-                                            {/if}
+                                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {stateOf(letter) === 'ready' ? 'bg-primary-soft text-primary-hover' : 'bg-muted text-muted-foreground'}">{letterStateLabel(stateOf(letter))}</span>
                                         </td>
                                         <td class="px-5 py-3 whitespace-nowrap text-right">
                                             <button
                                                 onclick={() => viewLetter(letter)}
-                                                class="px-3 py-1.5 rounded-lg bg-[#4A7C74] text-white text-xs font-bold hover:opacity-90"
+                                                class="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:opacity-90"
                                             >
                                                 Continue writing
                                             </button>
                                             <button
                                                 onclick={() => deleteLetter(letter.id, letter.recipientName || letter.title)}
-                                                class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-900"
+                                                class="px-3 py-1.5 rounded-lg text-xs font-bold text-muted-foreground hover:text-foreground"
                                             >
                                                 Remove this letter
                                             </button>
@@ -622,52 +860,47 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {#each savedLetters as letter (letter.id)}
                         <div
-                            class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-3"
+                            class="bg-card p-6 rounded-2xl border border-border shadow-sm flex flex-col gap-3"
                             data-testid="saved-letter"
+                            data-letter-id={letter.id}
+                            data-letter-state={stateOf(letter)}
                         >
                             <div class="flex items-start justify-between gap-3">
-                                <h4 class="font-bold text-slate-900 leading-snug">
+                                <h4 class="font-bold text-foreground leading-snug">
                                     {letter.title}
                                 </h4>
-                                {#if letter.isLocked}
-                                    <span
-                                        class="shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-stone-100 text-stone-600"
-                                        >On hold</span
-                                    >
-                                {:else}
-                                    <span
-                                        class="shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary"
-                                        >Ready to read</span
-                                    >
-                                {/if}
+                                <span
+                                    class="shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {stateOf(letter) === 'ready' ? 'bg-primary-soft text-primary-hover' : 'bg-muted text-muted-foreground'}"
+                                    >{letterStateLabel(stateOf(letter))}</span
+                                >
                             </div>
                             {#if letter.recipientName}
-                                <p class="text-sm text-slate-600">
+                                <p class="text-sm text-muted-foreground">
                                     For {letter.recipientName}
                                 </p>
                             {/if}
                             {#if letter.triggerDate}
-                                <p class="text-xs text-slate-500">
+                                <p class="text-xs text-muted-foreground">
                                     {new Date(letter.triggerDate + "T00:00:00").toLocaleDateString()}
                                     · Saved with your chosen date
                                 </p>
                             {/if}
                             {#if letter.triggerMilestone}
-                                <p class="text-xs text-slate-500">
-                                    {MILESTONE_LABELS[letter.triggerMilestone] ?? letter.triggerMilestone}
+                                <p class="text-xs text-muted-foreground">
+                                    {milestoneLabel(letter.triggerMilestone)}
                                     · Saved with your chosen milestone
                                 </p>
                             {/if}
                             <div class="flex items-center gap-1 mt-auto pt-2" data-testid="saved-letter-actions">
                                 <button
                                     onclick={() => viewLetter(letter)}
-                                    class="shrink-0 whitespace-nowrap px-4 py-2 rounded-xl bg-[#4A7C74] text-white text-sm font-bold hover:opacity-90"
+                                    class="shrink-0 whitespace-nowrap px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90"
                                 >
                                     Continue writing
                                 </button>
                                 <button
                                     onclick={() => deleteLetter(letter.id, letter.recipientName || letter.title)}
-                                    class="shrink-0 whitespace-nowrap px-3 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900"
+                                    class="shrink-0 whitespace-nowrap px-3 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground"
                                 >
                                     Remove this letter
                                 </button>
@@ -682,7 +915,7 @@
         <!-- Category Browser -->
         <div class="space-y-8">
             <div
-                class="flex flex-col md:flex-row gap-6 items-center justify-between border-b border-slate-100 pb-8"
+                class="flex flex-col md:flex-row gap-6 items-center justify-between border-b border-border pb-8"
             >
                 <div class="flex flex-wrap items-center gap-2">
                     {#each categories as cat}
@@ -690,8 +923,8 @@
                             onclick={() => (filterCategory = cat)}
                             class="px-5 py-2.5 rounded-2xl text-xs font-bold tracking-wider transition-all {filterCategory ===
                             cat
-                                ? 'bg-slate-900 text-white shadow-xl'
-                                : 'bg-white text-slate-500 hover:text-slate-900 border border-slate-200'}"
+                                ? 'bg-primary text-primary-foreground shadow-xl'
+                                : 'bg-card text-muted-foreground hover:text-foreground border border-border'}"
                         >
                             {cat}
                         </button>
@@ -700,33 +933,32 @@
 
                 <div class="relative w-full md:w-80">
                     <Search
-                        class="absolute left-4 top-3.5 text-slate-400"
+                        class="absolute left-4 top-3.5 text-muted-foreground"
                         size={18}
                     />
                     <input
                         type="text"
                         bind:value={searchQuery}
+                        aria-label="Search templates"
                         placeholder="Search templates..."
-                        class="w-full px-4 py-3 pl-12 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                        class="w-full px-4 py-3 pl-12 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                     />
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {#each filteredTemplates as template (template.id)}
+                    {@const Icon = categoryIcons[ template.category ] || FileText}
                     <button
                         onclick={() => selectTransactional(template)}
-                        class="group bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 text-left flex flex-col justify-between min-h-[160px]"
+                        class="group bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-xl transition-all duration-300 text-left flex flex-col justify-between min-h-[160px]"
                     >
                         <div>
                             <div class="flex items-center gap-3 mb-4">
                                 <div
-                                    class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-[#4A7C74] group-hover:text-white transition-all"
+                                    class="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all"
                                 >
-                                    <svelte:component
-                                        this={categoryIcons[
-                                            template.category
-                                        ] || FileText}
+                                    <Icon
                                         size={20}
                                     />
                                 </div>
@@ -736,16 +968,16 @@
                                 >
                             </div>
                             <h3
-                                class="text-xl font-bold text-slate-900 tracking-tight group-hover:text-primary transition-colors"
+                                class="text-xl font-bold text-foreground tracking-tight group-hover:text-primary transition-colors"
                             >
                                 {template.title}
                             </h3>
                         </div>
                         <div
-                            class="flex items-center justify-between mt-6 opacity-40 group-hover:opacity-100 transition-opacity"
+                            class="flex items-center justify-between mt-6"
                         >
                             <span
-                                class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter"
+                                class="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter"
                                 >Draft Template</span
                             >
                             <ArrowRight size={16} class="text-primary" />
@@ -762,43 +994,47 @@
             <div class="flex items-center justify-between">
                 <button
                     onclick={resetSelection}
-                    class="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
+                    class="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
                 >
                     <ArrowLeft size={16} /> Back to Library
                 </button>
-                <div
-                    class="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-xs font-bold"
-                >
-                    <Sparkles size={14} />
-                    <span>Auto-mapped from Estate Profile</span>
-                </div>
+                {#if filledFromProfile}
+                    <div
+                        class="flex items-center gap-2 px-4 py-2 bg-primary-soft text-primary-hover rounded-full text-xs font-bold"
+                    >
+                        <Sparkles size={14} />
+                        <span>Auto-mapped from Estate Profile</span>
+                    </div>
+                {/if}
             </div>
 
             <div
-                class="bg-white p-12 rounded-2xl border border-slate-100 shadow-2xl shadow-slate-900/5 space-y-10"
+                class="bg-card p-12 rounded-2xl border border-border shadow-2xl shadow-slate-900/5 space-y-10"
             >
                 <div class="text-center space-y-2">
-                    <h2 class="text-3xl font-black text-slate-900 font-serif">
+                    <h2 class="text-3xl font-black text-foreground font-serif">
                         Customize {selectedTemplate.title}
                     </h2>
-                    <p class="text-slate-500">
-                        Provide the specific details to populate your formal
-                        document.
+                    <p class="text-muted-foreground">
+                        Share a few details and we'll fill in your formal
+                        letter.
                     </p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {#each detectedVariables as variable}
+                    {#each detectedVariables as variable, i}
                         <div class="space-y-3">
                             <label
-                                class="block text-[11px] font-black text-slate-800 uppercase tracking-widest pl-1"
+                                for="letter-var-{i}"
+                                class="block text-[11px] font-black text-foreground uppercase tracking-widest pl-1"
                                 >{variable}</label
                             >
                             <input
+                                id="letter-var-{i}"
                                 type="text"
                                 bind:value={templateVariables[variable]}
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
-                                placeholder="Enter {variable.toLowerCase()}..."
+                                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
+                                placeholder="Share {variable.toLowerCase()}..."
                             />
                         </div>
                     {/each}
@@ -806,11 +1042,8 @@
 
                 <div class="pt-8 flex items-center justify-center gap-6">
                     <button
-                        onclick={() => {
-                            generatedLetter = selectedTemplate?.body || "";
-                            mode = "transactional_preview";
-                        }}
-                        class="text-sm font-black text-slate-400 hover:text-slate-900 uppercase tracking-widest transition-colors"
+                        onclick={applyVariables}
+                        class="text-sm font-black text-muted-foreground hover:text-foreground uppercase tracking-widest transition-colors"
                     >
                         Continue with blank fields
                     </button>
@@ -833,90 +1066,96 @@
             <div class="lg:col-span-2 space-y-8">
                 <div class="flex items-center justify-between gap-4">
                     <button aria-label="Back to Your letters"
-                        onclick={() => (mode = "menu")}
-                        class="p-4 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 transition-all"
+                        onclick={returnToMenu}
+                        class="p-4 bg-card border border-border rounded-2xl text-muted-foreground hover:text-foreground transition-all"
                     >
                         <ArrowLeft size={20} />
                     </button>
                     <div class="flex-1">
                         <h2
-                            class="text-3xl font-black text-slate-900 font-serif leading-tight"
+                            class="text-3xl font-black text-foreground font-serif leading-tight"
                         >
                             {selectedTemplate.title}
                         </h2>
                         <p
-                            class="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1"
+                            class="text-muted-foreground font-bold text-xs uppercase tracking-widest mt-1"
                         >
                             Review & Refine Draft
                         </p>
                     </div>
                     <button aria-label="Save my letter"
                         onclick={saveToVault}
-                        class="p-4 bg-[#4A7C74] text-white rounded-2xl shadow-xl shadow-[#4A7C74]/20"
+                        disabled={saving}
+                        aria-busy={saving}
+                        class="p-4 bg-primary text-primary-foreground rounded-2xl shadow-xl shadow-primary/20"
                     >
                         <ArrowRight size={20} />
                     </button>
                 </div>
 
                 <div
-                    class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-2xl flex gap-6 items-center"
+                    class="bg-primary/5 border border-primary/20 p-8 rounded-2xl flex gap-6 items-center"
                 >
                     <div
-                        class="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center shrink-0 shadow-inner"
+                        class="w-14 h-14 bg-primary-soft text-primary-hover rounded-2xl flex items-center justify-center shrink-0 shadow-inner"
                     >
                         <FileText size={28} />
                     </div>
                     <div>
                         <h4
-                            class="font-black text-indigo-900 uppercase tracking-tighter text-sm"
+                            class="font-black text-foreground uppercase tracking-tighter text-sm"
                         >
                             Audience: {selectedTemplate.audience}
                         </h4>
                         <p
-                            class="text-indigo-800/70 text-sm font-medium leading-relaxed mt-1"
+                            class="text-muted-foreground text-sm font-medium leading-relaxed mt-1"
                         >
-                            This letter is structured to satisfy typical
-                            requirements for {selectedTemplate.category?.toLowerCase() ||
-                                "general"}
-                            institutions.
+                            Review the names, facts, your role, and any documents
+                            or access instructions before sharing this draft. For
+                            an institution, confirm its current process before sending it.
                         </p>
                     </div>
                 </div>
 
-                <div
-                    class="bg-white p-12 rounded-2xl border shadow-2xl shadow-slate-900/5 font-mono text-base leading-relaxed whitespace-pre-wrap text-slate-700 h-[600px] overflow-y-auto paper-texture ring-8 ring-slate-50/50"
-                >
-                    {generatedLetter ||
-                        "(Empty draft - please go back and fill in the form)"}
+                <div class="max-w-md">
+                    {@render recipientPicker()}
                 </div>
+
+                <textarea
+                    data-template-editor
+                    bind:value={generatedLetter}
+                    aria-label="Your letter"
+                    placeholder="Your draft will appear here once you've shared a few details."
+                    class="block w-full bg-card p-12 rounded-2xl border shadow-2xl shadow-slate-900/5 font-mono text-base leading-relaxed text-slate-800 h-[600px] resize-none paper-texture ring-8 ring-muted/50 focus:outline-none focus:border-primary"
+                ></textarea>
             </div>
 
             <!-- Guidance Sidebar -->
             <div class="space-y-8 lg:pt-24">
                 {#if selectedTemplate.requiredDocs && selectedTemplate.requiredDocs.length > 0}
                     <div
-                        class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm space-y-6"
+                        class="bg-card p-8 rounded-2xl border border-border shadow-sm space-y-6"
                         in:slide
                     >
                         <h4
-                            class="font-black text-slate-900 uppercase tracking-widest text-xs flex items-center gap-3"
+                            class="font-black text-foreground uppercase tracking-widest text-xs flex items-center gap-3"
                         >
                             <span
-                                class="w-4 h-4 bg-primary/10 text-primary rounded-lg flex items-center justify-center"
+                                class="w-4 h-4 bg-primary-soft text-primary-hover rounded-lg flex items-center justify-center"
                                 ><CircleCheck size={10} /></span
                             >
-                            Required Documents
+                            Documents and details to confirm
                         </h4>
                         <ul class="space-y-4">
                             {#each selectedTemplate.requiredDocs as doc}
                                 <li
-                                    class="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100/50"
+                                    class="flex items-start gap-3 bg-muted p-4 rounded-xl border border-border/50"
                                 >
                                     <div
                                         class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"
                                     ></div>
                                     <span
-                                        class="text-sm font-bold text-slate-600 leading-snug"
+                                        class="text-sm font-bold text-muted-foreground leading-snug"
                                         >{doc}</span
                                     >
                                 </li>
@@ -927,79 +1166,72 @@
 
                 {#if selectedTemplate.followUp}
                     <div
-                        class="bg-[#FDFBF7] p-8 rounded-2xl border border-stone-200 shadow-sm space-y-4"
+                        class="bg-card p-8 rounded-2xl border border-border shadow-sm space-y-4"
                         in:slide
                     >
                         <h4
-                            class="font-black text-stone-900 uppercase tracking-widest text-xs flex items-center gap-3"
+                            class="font-black text-foreground uppercase tracking-widest text-xs flex items-center gap-3"
                         >
-                            <Sparkles size={16} class="text-amber-500" />
-                            Expert Advice
+                            <Sparkles size={16} class="text-gold-text" />
+                            Follow-up question
                         </h4>
                         <p
-                            class="text-sm text-stone-600 leading-relaxed font-medium italic"
+                            class="text-sm text-muted-foreground leading-relaxed font-medium italic"
                         >
                             "{selectedTemplate.followUp}"
                         </p>
                     </div>
                 {/if}
 
+                <div class="grid grid-cols-2 gap-3">
+                    <button
+                        onclick={printLetter}
+                        disabled={!generatedLetter.trim()}
+                        class="py-3 rounded-xl font-bold text-muted-foreground bg-card border border-border hover:bg-muted flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                    >
+                        <Printer size={16} /> Print
+                    </button>
+                    <button
+                        onclick={downloadLetterPDF}
+                        disabled={pdfBusy || !generatedLetter.trim()}
+                        aria-busy={pdfBusy}
+                        class="py-3 rounded-xl font-bold text-muted-foreground bg-card border border-border hover:bg-muted flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                    >
+                        <Download size={16} /> Download PDF
+                    </button>
+                </div>
+
                 <button
                     onclick={saveToVault}
-                    class="w-full bg-slate-900 text-white p-6 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/30 hover:scale-105 active:scale-95 transition-all"
+                    disabled={saving}
+                    aria-busy={saving}
+                    class="w-full bg-primary text-primary-foreground p-6 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                 >
-                    Save my letter <ArrowRight size={20} />
+                    {saving ? "Saving..." : "Save my letter"} <ArrowRight size={20} />
                 </button>
             </div>
         </div>
     {/if}
 
-    <!-- Emotional Drafting & Review Mode -->
-    {#if mode === "drafting"}
-        <div
-            class="flex flex-col items-center justify-center py-48 space-y-8"
-            in:fade
-        >
-            <div class="relative">
-                <div
-                    class="w-24 h-24 border-8 border-slate-100 rounded-full animate-ping opacity-20"
-                ></div>
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <PenTool size={48} class="text-primary animate-bounce" />
-                </div>
-            </div>
-            <div class="text-center space-y-2">
-                <h3 class="text-3xl font-black text-slate-900 font-serif">
-                    Compose Legacy Draft...
-                </h3>
-                <p
-                    class="text-slate-400 font-bold uppercase tracking-widest text-xs"
-                >
-                    Placing your words into a letter template
-                </p>
-            </div>
-        </div>
-    {/if}
-
     {#if mode === "review"}
-        <div class="max-w-[1400px] mx-auto space-y-8" in:fade>
+        <div class="max-w-[1400px] mx-auto space-y-8" in:fade={{ duration: 150 }}>
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <button
-                        onclick={() => (mode = "menu")}
-                        class="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-slate-900"
+                        onclick={returnToMenu}
+                        class="p-3 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground"
                         aria-label="Back to Your letters"
                     >
                         <ArrowLeft size={18} />
                     </button>
                     <div>
                         <h2
-                            class="text-3xl font-black text-slate-900 font-serif"
+                            class="text-3xl font-black text-foreground font-serif"
                         >
                             Refine Your Draft
                         </h2>
                         <p
-                            class="text-[10px] font-black text-primary uppercase tracking-[0.2em] mt-1 italic"
+                            class="text-[10px] font-black text-primary-hover uppercase tracking-[0.2em] mt-1 italic"
                         >
                             Personal Reflection in Progress
                         </p>
@@ -1011,17 +1243,34 @@
                         onclick={addWritingPrompt}
                         data-testid="writing-prompt"
                         title="Adds a reflection question to your draft"
-                        class="flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-sm transition-all bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                        class="flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-sm transition-all bg-card border border-border text-muted-foreground hover:bg-muted"
                     >
                         <Sparkles size={18} class="text-primary" />
                         A gentle prompt
                     </button>
                     <button
+                        onclick={printLetter}
+                        disabled={!generatedLetter.trim()}
+                        class="flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-sm bg-card border border-border text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
+                    >
+                        <Printer size={18} /> Print
+                    </button>
+                    <button
+                        onclick={downloadLetterPDF}
+                        disabled={pdfBusy || !generatedLetter.trim()}
+                        aria-busy={pdfBusy}
+                        class="flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-sm bg-card border border-border text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
+                    >
+                        <Download size={18} /> Download PDF
+                    </button>
+                    <button
                         onclick={saveToVault}
-                        class="flex items-center gap-2 px-8 py-3 bg-[#4A7C74] text-white rounded-xl font-black shadow-xl shadow-[#4A7C74]/20 hover:scale-105 active:scale-95 transition-all"
+                        disabled={saving}
+                        aria-busy={saving}
+                        class="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-xl font-black shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                     >
                         <Save size={18} />
-                        Save my letter
+                        {saving ? "Saving..." : "Save my letter"}
                     </button>
                 </div>
             </div>
@@ -1031,58 +1280,37 @@
                 <div class="lg:col-span-2 space-y-8">
                     <!-- Legacy Trigger Settings (New Feature) -->
                     <div
-                        class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-2xl space-y-6"
+                        class="bg-primary/5 border border-primary/20 p-8 rounded-2xl space-y-6"
                     >
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label
-                                    for="letter-recipient"
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
-                                    >Who this letter is for</label
-                                >
-                                <select
-                                    id="letter-recipient"
-                                    bind:value={letterRecipientId}
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
-                                >
-                                    <option value="">Choose someone from your contacts</option>
-                                    {#each contacts as contact (contact.id)}
-                                        <option value={String(contact.id)}
-                                            >{contact.name}{contact.relation
-                                                ? ` (${contact.relation})`
-                                                : ""}</option
-                                        >
-                                    {/each}
-                                </select>
-                                {#if contacts.length === 0}
-                                    <p class="text-[11px] text-slate-500 pl-1">
-                                        People you add in <a
-                                            href="/modules/contacts"
-                                            class="text-primary underline">Contacts</a
-                                        > appear here.
-                                    </p>
-                                {/if}
-                            </div>
+                            {@render recipientPicker()}
                             <div class="space-y-2">
                                 <span
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
+                                    class="block text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
                                     >When they can read it</span
                                 >
                                 <label
-                                    class="flex items-start gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white cursor-pointer"
+                                    class="flex items-start gap-3 px-4 py-3 rounded-xl border border-border bg-card cursor-pointer"
                                 >
                                     <input
                                         type="checkbox"
                                         bind:checked={letterHold}
-                                        class="mt-1 accent-[#4A7C74]"
+                                        class="mt-1 accent-primary"
                                         data-testid="letter-hold"
                                     />
-                                    <span class="text-sm text-slate-700">
+                                    <span class="text-sm text-foreground">
                                         <span class="font-bold">Keep on hold</span><br />
-                                        <span class="text-xs text-slate-500"
-                                            >{letterHold
+                                        <span class="text-xs text-muted-foreground"
+                                            data-testid="letter-readiness-hint"
+                                            >{editorReadState === 'held'
                                                 ? "This letter stays with you until you release it."
-                                                : "Ready for them to read in their view."}</span
+                                                : editorReadState === 'institution'
+                                                    ? "Saved as an institution draft for printing or sending when you choose."
+                                                    : editorReadState === 'ready'
+                                                        ? "Ready for them to read in their view."
+                                                        : !generatedLetter.trim()
+                                                            ? "Your letter is waiting for its first words."
+                                                            : "Choose someone from your contacts to prepare their view."}</span
                                         >
                                     </span>
                                 </label>
@@ -1092,7 +1320,7 @@
                         <div class="flex items-center gap-3">
                             <History size={20} class="text-primary" />
                             <h4
-                                class="font-bold text-slate-900 uppercase tracking-widest text-xs"
+                                class="font-bold text-foreground uppercase tracking-widest text-xs"
                             >
                                 A date or milestone that matters
                             </h4>
@@ -1101,26 +1329,26 @@
                             <div class="space-y-2">
                                 <label
                                     for="letter-release-date"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
-                                    >Specific Release Date</label
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
+                                    >Chosen date</label
                                 >
                                 <input
                                     id="letter-release-date"
                                     type="date"
                                     bind:value={letterTriggerDate}
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800"
+                                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
                                 />
                             </div>
                             <div class="space-y-2">
                                 <label
                                     for="letter-milestone"
-                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1"
-                                    >Or Lifecycle Milestone</label
+                                    class="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1"
+                                    >Or a milestone</label
                                 >
                                 <select
                                     id="letter-milestone"
                                     bind:value={letterTriggerMilestone}
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-slate-800 appearance-none"
+                                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground appearance-none"
                                 >
                                     <option value=""
                                         >Choose a milestone, if you like</option
@@ -1137,14 +1365,14 @@
                             </div>
                         </div>
                         <p
-                            class="text-[10px] text-primary/60 font-medium italic"
+                            class="text-[10px] text-muted-foreground font-medium italic"
                         >
                             Saved with your chosen date or milestone, and shown
                             with the letter.
                         </p>
 
                         <!-- Custom Fields -->
-                        <div class="pt-4 mt-4 border-t border-indigo-100">
+                        <div class="pt-4 mt-4 border-t border-primary/20">
                             <CustomFieldsManager
                                 entityType="letter"
                                 bind:data={customAttributes}
@@ -1154,13 +1382,15 @@
 
                     <div class="relative group">
                         <div
-                            class="absolute -inset-4 bg-gradient-to-r from-[#4A7C74]/5 to-blue-500/5 rounded-2xl blur-2xl opacity-50 group-hover:opacity-100 transition-opacity"
+                            class="absolute -inset-4 bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl blur-2xl opacity-50 group-hover:opacity-100 transition-opacity"
                         ></div>
                         <div
-                            class="relative bg-[#FDFBF7] p-16 rounded-2xl border border-stone-200 shadow-2xl font-serif text-xl leading-[2] text-stone-800 paper-texture ring-8 ring-stone-50/30 min-h-[700px]"
+                            data-letter-editor
+                            class="relative bg-[#FDFBF7] p-16 rounded-2xl border border-border shadow-2xl font-serif text-xl leading-[2] text-slate-800 paper-texture ring-8 ring-muted/30 min-h-[700px]"
                         >
                             <SmartTextarea
                                 bind:value={generatedLetter}
+                                job={writingJob()}
                                 label="Refine Your Draft"
                                 hideLabel
                                 placeholder="Begin typing your legacy here..."
@@ -1176,6 +1406,7 @@
                 <div class="space-y-6">
                     <LetterAssistant
                         currentContent={generatedLetter}
+                        job={writingJob()}
                         onupdate={(content: string) =>
                             (generatedLetter = content)}
                     />
@@ -1183,22 +1414,22 @@
                     <!-- Status card: what is true about where a letter is kept -->
                     <div class="space-y-4">
                         <div
-                            class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 flex gap-4"
+                            class="bg-success/10 p-6 rounded-2xl border border-success/20 flex gap-4"
                             data-testid="letter-kept-note"
                         >
                             <div
-                                class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0"
+                                class="w-10 h-10 bg-primary-soft text-primary-hover rounded-xl flex items-center justify-center shrink-0"
                             >
                                 <Save size={20} />
                             </div>
                             <div>
                                 <h4
-                                    class="font-black text-emerald-900 text-xs uppercase tracking-widest mb-1"
+                                    class="font-black text-success text-xs uppercase tracking-widest mb-1"
                                 >
                                     Kept in your account
                                 </h4>
                                 <p
-                                    class="text-[11px] text-emerald-800/70 font-medium leading-tight"
+                                    class="text-[11px] text-foreground font-medium leading-tight"
                                 >
                                     Each time you choose Save my letter, this letter is kept in your account, ready to open and continue on any device.
                                 </p>
@@ -1219,28 +1450,28 @@
                         <div
                             class="w-12 h-2 rounded-full {i <=
                             currentPromptIndex
-                                ? 'bg-[#4A7C74]'
-                                : 'bg-slate-200'} transition-all duration-500"
+                                ? 'bg-primary'
+                                : 'bg-border'} transition-all duration-500"
                         ></div>
                     {/each}
                 </div>
                 <button
                     onclick={resetSelection}
-                    class="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
+                    class="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
                 >
-                    Not right now
+                    Maybe later
                 </button>
             </div>
 
             <div class="space-y-6">
                 <p
-                    class="text-[10px] font-black uppercase tracking-[0.3em] text-[#4A7C74] text-center"
+                    class="text-[10px] font-black uppercase tracking-[0.3em] text-primary-hover text-center"
                 >
                     Step {currentPromptIndex + 1} of 3
                 </p>
                 <div class="flex flex-col items-center gap-4 px-4">
                     <h2
-                        class="text-4xl font-black text-slate-900 font-serif leading-tight text-center"
+                        class="text-4xl font-black text-foreground font-serif leading-tight text-center"
                     >
                         {currentQuestion}
                     </h2>
@@ -1253,60 +1484,25 @@
 
             <div class="relative group">
                 <div
-                    class="absolute -inset-4 bg-gradient-to-b from-[#4A7C74]/10 to-transparent rounded-2xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity"
+                    class="absolute -inset-4 bg-gradient-to-b from-primary/10 to-transparent rounded-2xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity"
                 ></div>
                 {#key currentPromptIndex}
                     <div
                         data-reflection-box
-                        class="relative w-full h-80 bg-white border-2 border-slate-100 rounded-2xl shadow-2xl focus-within:border-[#4A7C74] transition-all overflow-hidden p-8"
+                        class="relative w-full min-h-80 bg-card border-2 border-border rounded-2xl shadow-2xl focus-within:border-primary transition-all p-8"
                     >
                         <SmartTextarea
-                            bind:value={
-                                emotionalReflections[
-                                    currentPromptIndex === 0
-                                        ? "memory"
-                                        : currentPromptIndex === 1
-                                          ? "values"
-                                          : "hopes"
-                                ]
-                            }
+                            bind:value={reflections[currentPromptIndex]}
+                            job={{ ...writingJob(), job_id: `${writingJob().job_id}:reflection:${currentPromptIndex}` }}
                             context="letter"
                             label={currentQuestion}
+                            question={currentQuestion}
+                            oninput={recordReflection}
                             hideLabel
                             minimal={true}
-                            minHeight="100%"
+                            minHeight="16rem"
                             placeholder="Reflect here..."
-                            suggestions={emotionalFlow === "spouse"
-                                ? [
-                                      [
-                                          "Our first trip together",
-                                          "The day we met",
-                                          "A quiet moment shared",
-                                      ],
-                                      [
-                                          "Your kindness",
-                                          "Your strength",
-                                          "Your sense of humor",
-                                      ],
-                                      [
-                                          "Deep happiness",
-                                          "Finding peace",
-                                          "Adventure and love",
-                                      ],
-                                  ][currentPromptIndex]
-                                : [
-                                      [
-                                          "A childhood memory",
-                                          "A lesson learned the hard way",
-                                          "A moment of clarity",
-                                      ],
-                                      ["Integrity", "Compassion", "Curiosity"],
-                                      [
-                                          "To be happy",
-                                          "To find your passion",
-                                          "To be kind",
-                                      ],
-                                  ][currentPromptIndex]}
+                            suggestions={currentSuggestions}
                         />
                     </div>
                 {/key}
@@ -1315,20 +1511,14 @@
             <div class="flex items-center justify-center pt-8">
                 <button
                     onclick={nextEmotionalPrompt}
-                    disabled={!emotionalReflections[
-                        currentPromptIndex === 0
-                            ? "memory"
-                            : currentPromptIndex === 1
-                              ? "values"
-                              : "hopes"
-                    ]}
-                    class="group flex items-center gap-4 bg-[#4A7C74] text-white px-16 py-6 rounded-2xl font-black text-xl shadow-2xl shadow-[#4A7C74]/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-20 disabled:grayscale"
+                    disabled={!reflections[currentPromptIndex]}
+                    class="group flex items-center gap-4 bg-primary text-primary-foreground px-16 py-6 rounded-2xl font-black text-xl shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-20 disabled:grayscale"
                 >
                     {currentPromptIndex === 2
                         ? "Create my letter"
                         : "Continue when ready"}
                     <div
-                        class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-2 transition-transform"
+                        class="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center group-hover:translate-x-2 transition-transform"
                     >
                         <ArrowRight size={24} />
                     </div>
@@ -1343,11 +1533,6 @@
     .paper-texture {
         background-color: #fdfbf7;
         background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    }
-
-    textarea::placeholder {
-        opacity: 0.3;
-        font-style: italic;
     }
 
     ::-webkit-scrollbar {

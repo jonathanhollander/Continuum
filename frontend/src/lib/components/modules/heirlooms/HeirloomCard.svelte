@@ -1,9 +1,9 @@
 <script lang="ts">
     import { fade, scale } from "svelte/transition";
     import { Gift, Heart, QrCode, User, ZoomIn } from "lucide-svelte";
-    import { createEventDispatcher } from "svelte";
+    import HeirloomImage from "./HeirloomImage.svelte";
 
-    let { heirloom, onPrintQr } = $props<{
+    let { heirloom, onPrintQr, focused = false } = $props<{
         heirloom: {
             id: string | number;
             name: string;
@@ -11,26 +11,34 @@
             recipient: string;
             story: string;
             value?: string;
+            ownershipDetails?: string;
         };
         onPrintQr?: (id: string | number) => void;
+        // Opened from a scanned label: the story starts open.
+        focused?: boolean;
     }>();
 
     let isExpanded = $state(false);
+    $effect(() => {
+        if (focused) isExpanded = true;
+    });
 </script>
 
 <div
-    class="group bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 relative"
+    class="group bg-card rounded-2xl border border-border shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 relative {focused
+        ? 'ring-2 ring-primary'
+        : ''}"
 >
     <!-- Card Image Area -->
-    <div class="h-48 w-full bg-stone-100 relative overflow-hidden">
+    <div class="h-48 w-full bg-muted relative overflow-hidden">
         {#if heirloom.image}
-            <img
+            <HeirloomImage
                 src={heirloom.image}
                 alt={heirloom.name}
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
         {:else}
-            <div class="flex items-center justify-center h-full text-stone-300">
+            <div class="flex items-center justify-center h-full text-muted-foreground">
                 <Gift size={48} />
             </div>
         {/if}
@@ -38,7 +46,7 @@
         <!-- Recipient Badge -->
         {#if heirloom.recipient}
             <div
-                class="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-slate-900 shadow-sm flex items-center gap-1.5"
+                class="absolute bottom-3 right-3 bg-card/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-foreground shadow-sm flex items-center gap-1.5"
             >
                 <User size={12} class="text-primary" />
                 For {heirloom.recipient}
@@ -48,7 +56,7 @@
 
     <!-- Content -->
     <div class="p-6">
-        <h3 class="font-serif font-bold text-xl text-slate-900 mb-2">
+        <h3 class="font-serif font-bold text-xl text-foreground mb-2">
             {heirloom.name}
         </h3>
 
@@ -59,12 +67,22 @@
             {heirloom.story}
         </p>
 
+        {#if heirloom.ownershipDetails}
+            <p
+                class="text-xs text-muted-foreground leading-relaxed mb-4"
+                class:line-clamp-2={!isExpanded}
+            >
+                <span class="font-bold uppercase tracking-wide">Provenance:</span>
+                {heirloom.ownershipDetails}
+            </p>
+        {/if}
+
         <div
-            class="flex items-center justify-between pt-4 border-t border-stone-100"
+            class="flex items-center justify-between pt-4 border-t border-border"
         >
             <button
                 onclick={() => (isExpanded = !isExpanded)}
-                class="text-xs font-bold text-stone-400 hover:text-primary flex items-center gap-1 transition-colors"
+                class="text-xs font-bold text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
             >
                 <ZoomIn size={14} />
                 {isExpanded ? "Hide Story" : "View Story"}
@@ -73,7 +91,7 @@
             <!-- Digital Heirloom QR Trigger -->
             <button
                 onclick={() => onPrintQr?.(heirloom.id)}
-                class="p-2 bg-stone-50 rounded-lg text-stone-400 hover:text-primary hover:bg-stone-100 transition-colors"
+                class="p-2 bg-muted rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
                 title="Generate Digital Heirloom QR"
             >
                 <QrCode size={16} />
@@ -89,7 +107,7 @@
             class="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded-md shadow-lg flex items-center gap-1"
         >
             <Heart size={10} class="fill-current" />
-            SENTIMENTAL
+            TREASURED
         </div>
     </div>
 </div>

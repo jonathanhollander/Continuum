@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { onMount } from "svelte";
     import { apiGet, apiPost, apiPut, apiDelete } from "$lib/api/client";
     import {
@@ -27,9 +28,9 @@
     let listError = $state("");
 
     const tierLabels: Record<string, string> = {
-        tier_1_escalation: "Tier 1 (Immediate Partners)",
-        tier_2_escalation: "Tier 2 (Family)",
-        tier_3_escalation: "Tier 3 (Local/Emergency)",
+        tier_1_escalation: "Tier 1",
+        tier_2_escalation: "Tier 2",
+        tier_3_escalation: "Tier 3",
     };
     function tierLabel(condition: string): string {
         return tierLabels[condition] ?? condition.replaceAll("_", " ");
@@ -96,7 +97,7 @@
     }
 
     async function deleteItem(id: number) {
-        if (!confirm("Remove these instructions from the vault? This action is permanent."))
+        if (!(await askConfirm("Remove these instructions from your vault? You can add them again whenever you like.")))
             return;
         listError = "";
         try {
@@ -116,12 +117,12 @@
         <div class="flex items-center gap-4">
             <a
                 href="/modules/pulse"
-                class="p-2 hover:bg-slate-800 rounded-full transition-colors"
+                class="p-2 hover:bg-card rounded-full transition-colors"
                 aria-label="Back to Wellness Check-in"
             >
-                <ArrowLeft class="w-5 h-5 text-slate-400" />
+                <ArrowLeft class="w-5 h-5 text-muted-foreground" />
             </a>
-            <h1 class="text-2xl font-serif text-white flex items-center gap-3">
+            <h1 class="text-2xl font-serif text-foreground flex items-center gap-3">
                 <Lock class="w-6 h-6 text-indigo-400" />
                 The Vault
             </h1>
@@ -129,13 +130,13 @@
         <div
             class="bg-indigo-500/10 border border-indigo-500/30 px-3 py-1 rounded-full text-[10px] text-indigo-400 font-bold uppercase tracking-widest"
         >
-            Private to you
+            Guardian instructions
         </div>
     </div>
 
     <!-- Intro Card -->
     <div
-        class="bg-slate-900/50 border border-slate-800 rounded-2xl p-8 backdrop-blur-sm relative overflow-hidden"
+        class="bg-background/50 border border-slate-800 rounded-2xl p-8 backdrop-blur-sm relative overflow-hidden"
     >
         <div class="flex flex-col md:flex-row gap-8 items-center relative z-10">
             <div
@@ -144,17 +145,16 @@
                 <ShieldAlert class="w-10 h-10 text-indigo-400" />
             </div>
             <div class="space-y-2 text-center md:text-left">
-                <h2 class="text-xl font-medium text-white">
-                    Digital Dead-Drop Protocols
+                <h2 class="text-xl font-medium text-foreground">
+                    Notes for your guardians
                 </h2>
-                <p class="text-slate-400 text-sm leading-relaxed max-w-xl">
+                <p class="text-muted-foreground text-sm leading-relaxed max-w-xl">
                     Store sensitive instructions like <span
                         class="text-indigo-300">gate codes</span
                     >, <span class="text-indigo-300">home keys</span>, and
                     <span class="text-indigo-300">pet care steps</span>. They
-                    stay private, and are shared only with the guardians you
-                    choose, when the time comes: once an escalation reaches the
-                    tier you set for each item.
+                    are shared through guardian portals when <a href="/modules/pulse/settings" class="text-primary hover:underline">Automatic Release</a>
+                    is on and the release conditions below are met.
                 </p>
             </div>
         </div>
@@ -165,7 +165,7 @@
         class="bg-slate-950/40 border border-slate-800 rounded-2xl p-8 space-y-6"
     >
         <div class="flex items-center gap-2 mb-2">
-            <Plus class="w-4 h-4 text-teal-400" />
+            <Plus class="w-4 h-4 text-primary" />
             <h3
                 class="text-sm font-bold text-slate-300 uppercase tracking-widest"
             >
@@ -174,62 +174,70 @@
             {#if newItem.id}
                 <button
                     onclick={cancelEdit}
-                    class="ml-auto text-xs text-slate-400 hover:text-slate-200 underline"
+                    class="ml-auto text-xs text-muted-foreground hover:text-foreground underline"
                 >
-                    Stop editing
+                    Set this aside
                 </button>
             {/if}
         </div>
 
         <div class="grid md:grid-cols-2 gap-4">
             <div class="space-y-2">
-                <label for="vault-item-name" class="text-xs text-slate-500 ml-1">Name</label>
+                <label for="vault-item-name" class="text-xs text-muted-foreground ml-1">Name</label>
                 <input
                     id="vault-item-name"
                     bind:value={newItem.name}
                     placeholder="e.g. Back Gate Code"
-                    class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-indigo-500/50 outline-none"
+                    class="w-full bg-background border border-slate-800 rounded-xl px-4 py-3 text-sm text-foreground focus:border-indigo-500/50 outline-none"
                 />
             </div>
             <div class="space-y-2">
-                <label for="vault-item-unlock" class="text-xs text-slate-500 ml-1">Unlock At</label>
+                <label for="vault-item-unlock" class="text-xs text-muted-foreground ml-1">Release from stage</label>
                 <select
+                    aria-describedby="vault-release-rule"
                     id="vault-item-unlock"
                     bind:value={newItem.unlock_condition}
-                    class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-indigo-500/50 outline-none"
+                    class="w-full bg-background border border-slate-800 rounded-xl px-4 py-3 text-sm text-foreground focus:border-indigo-500/50 outline-none"
                 >
                     <option value="tier_1_escalation"
-                        >Tier 1 (Immediate Partners)</option
+                        >Tier 1</option
                     >
-                    <option value="tier_2_escalation">Tier 2 (Family)</option>
+                    <option value="tier_2_escalation">Tier 2</option>
                     <option value="tier_3_escalation"
-                        >Tier 3 (Local/Emergency)</option
+                        >Tier 3</option
                     >
                 </select>
             </div>
         </div>
 
         <div class="space-y-2">
-            <label for="vault-item-content" class="text-xs text-slate-500 ml-1">What they should know</label>
+            <label for="vault-item-content" class="text-xs text-muted-foreground ml-1">What they should know</label>
             <textarea
                 id="vault-item-content"
                 bind:value={newItem.content}
-                placeholder="The instructions to reveal..."
+                placeholder="What they should know..."
                 rows="3"
-                class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-indigo-500/50 outline-none font-mono"
+                class="w-full bg-background border border-slate-800 rounded-xl px-4 py-3 text-sm text-foreground focus:border-indigo-500/50 outline-none font-mono"
             ></textarea>
         </div>
+
+        <p class="text-sm text-muted-foreground leading-relaxed" id="vault-release-rule">
+            With Automatic Release on, a guardian whose tier has been reached can read items through the current stage.
+            A personal-wait alert accepted by the email provider can open items through that guardian's own tier earlier.
+            Your next check-in closes this access. Review the people and available items in
+            <a href="/modules/pulse/transparency" class="text-primary hover:underline">Transparency</a>.
+        </p>
 
         <button
             onclick={addItem}
             disabled={saving || !newItem.name || !newItem.content}
-            class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+            class="w-full bg-primary hover:bg-primary-hover disabled:opacity-50 text-primary-foreground font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
         >
             <Save class="w-4 h-4" /> {newItem.id ? "Save my changes" : "Save to Vault"}
         </button>
 
         {#if formError}
-            <p role="alert" class="text-sm text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
+            <p role="alert" class="text-sm text-warning bg-warning/10 border border-warning/30 rounded-xl px-4 py-3">
                 {formError}
             </p>
         {/if}
@@ -238,31 +246,31 @@
     <!-- Vault Items -->
     <div class="space-y-4 pt-4">
         <h3
-            class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1"
+            class="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1"
         >
             Your vault items ({items.length})
         </h3>
 
         {#if loadError}
-            <div role="alert" class="text-sm text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
+            <div role="alert" class="text-sm text-warning bg-warning/10 border border-warning/30 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
                 <span>{loadError}</span>
                 <button onclick={() => { loading = true; loadVault(); }} class="underline shrink-0">Try again</button>
             </div>
         {/if}
         {#if listError}
-            <p role="alert" class="text-sm text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
+            <p role="alert" class="text-sm text-warning bg-warning/10 border border-warning/30 rounded-xl px-4 py-3">
                 {listError}
             </p>
         {/if}
 
         {#each items as item (item.id)}
             <div
-                class="bg-slate-900/30 border border-slate-800/50 rounded-2xl p-6 group hover:border-slate-700/50 transition-all"
+                class="bg-background/30 border border-slate-800/50 rounded-2xl p-6 group hover:border-border/50 transition-all"
             >
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
                         <div
-                            class="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-indigo-400"
+                            class="w-8 h-8 bg-card rounded-lg flex items-center justify-center text-indigo-400"
                         >
                             {#if item.name
                                 .toLowerCase()
@@ -283,13 +291,13 @@
                             {/if}
                         </div>
                         <div>
-                            <h4 class="text-slate-200 font-medium">
+                            <h4 class="text-foreground font-medium">
                                 {item.name}
                             </h4>
                             <div
-                                class="text-[10px] text-indigo-400/70 font-bold uppercase tracking-widest"
+                                class="text-[10px] text-indigo-300 font-bold uppercase tracking-widest"
                             >
-                                Shared at {tierLabel(item.unlock_condition)}
+                                Release rule: {tierLabel(item.unlock_condition)}
                             </div>
                         </div>
                     </div>
@@ -307,7 +315,7 @@
                                 window.scrollTo({ top: 0, behavior: "smooth" });
                             }}
                             title="Edit"
-                            class="p-2 text-slate-500 hover:text-indigo-400 transition-colors"
+                            class="p-2 text-muted-foreground hover:text-indigo-400 transition-colors"
                         >
                             <span class="sr-only">Edit</span>
                             <svg
@@ -328,7 +336,7 @@
                             onclick={() =>
                                 (showSecrets[item.id] = !showSecrets[item.id])}
                             title={showSecrets[item.id] ? "Hide" : "Show"}
-                            class="p-2 text-slate-500 hover:text-white transition-colors"
+                            class="p-2 text-muted-foreground hover:text-foreground transition-colors"
                         >
                             {#if showSecrets[item.id]}
                                 <EyeOff class="w-4 h-4" />
@@ -339,7 +347,7 @@
                         <button
                             onclick={() => deleteItem(item.id)}
                             title="Remove this item"
-                            class="p-2 text-slate-500 hover:text-rose-400 transition-colors"
+                            class="p-2 text-muted-foreground hover:text-danger transition-colors"
                         >
                             <span class="sr-only">Remove this item</span>
                             <Trash2 class="w-4 h-4" />
@@ -349,14 +357,14 @@
 
                 {#if showSecrets[item.id]}
                     <div
-                        class="bg-slate-950/50 rounded-xl p-4 font-mono text-sm text-teal-400 border border-teal-500/20"
+                        class="bg-slate-950/50 rounded-xl p-4 font-mono text-sm text-primary border border-primary/20"
                         in:slide
                     >
                         {item.content}
                     </div>
                 {:else}
                     <div
-                        class="bg-slate-950/20 rounded-xl p-4 font-mono text-xs text-slate-600 italic select-none"
+                        class="bg-slate-950/20 rounded-xl p-4 font-mono text-xs text-muted-foreground italic select-none"
                     >
                         ••••••••••••••••••••••••••••
                     </div>
@@ -366,35 +374,35 @@
 
         {#if items.length === 0 && !loading && !loadError}
             <div
-                class="text-center py-16 px-8 bg-slate-900/30 border border-dashed border-slate-700 rounded-2xl max-w-2xl mx-auto"
+                class="text-center py-16 px-8 bg-background/30 border border-dashed border-border rounded-2xl max-w-2xl mx-auto"
                 in:fade
             >
                 <div class="w-20 h-20 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                     <Lock class="w-10 h-10 text-indigo-400" />
                 </div>
 
-                <h3 class="font-serif font-bold text-2xl text-slate-200 mb-4">
-                    Secrets that reveal themselves when needed
+                <h3 class="font-serif font-bold text-2xl text-foreground mb-4">
+                    Notes kept ready for when they are needed
                 </h3>
 
-                <div class="mb-6 bg-slate-800/50 rounded-xl p-5 border border-slate-700 text-left">
+                <div class="mb-6 bg-card/50 rounded-xl p-5 border border-border text-left">
                     <p class="text-slate-300 leading-relaxed">
                         <strong class="text-indigo-300">Some information is best kept for when it's truly needed.</strong>
                         Gate codes, safe combinations, pet feeding instructions, or where you keep the spare key—these are things your trusted contacts
-                        only need access to in an emergency.
+                        will be glad to have if something happens.
                     </p>
-                    <p class="text-slate-400 mt-3 leading-relaxed">
-                        The Pulse Vault keeps these private, and shares them only with the guardians you choose, when the time comes:
-                        once an escalation reaches the tier you set. It's peace of mind that the people you trust will have what they need.
+                    <p class="text-muted-foreground mt-3 leading-relaxed">
+                        Choose a release stage for each item and review Automatic Release in your check-in settings.
+                        Use <a href="/modules/pulse/transparency" class="text-primary hover:underline">Transparency</a> to see each guardian's current view.
                     </p>
                 </div>
 
-                <p class="text-slate-500 mb-6 text-sm italic">
+                <p class="text-muted-foreground mb-6 text-sm italic">
                     Start with something simple—like where you keep the house key.
                 </p>
 
-                <p class="text-xs text-slate-600 mt-4">
-                    Add protocols using the form above. They'll appear here once saved.
+                <p class="text-xs text-muted-foreground mt-4">
+                    Notes you save in the form above will appear here.
                 </p>
             </div>
         {/if}

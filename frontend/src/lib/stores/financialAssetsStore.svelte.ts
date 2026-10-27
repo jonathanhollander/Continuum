@@ -4,10 +4,17 @@ import { toCents, fromCents } from "$lib/utils/money";
 
 export type AssetType = 'Property' | 'Financial' | 'Business' | 'Vehicle' | 'Digital' | 'Debt' | 'Other';
 
-/** A row the family owes (loan, mortgage, credit card): subtracted from the estate, never added. */
-export function isDebt(a: { type?: string } | null | undefined): boolean {
-    const t = String(a?.type ?? '').trim().toLowerCase();
-    return t === 'debt' || t === 'liability';
+// Recognize saved liability labels without rewriting the author's type or amount. A present
+// current type always wins; an old account kind never reclassifies an explicit Financial row.
+const DEBT_TYPES = new Set(['debt', 'liability', 'credit', 'credit card', 'creditcard', 'loan',
+    'mortgage', 'line of credit', 'credit line']);
+const financialTypeKey = (v: unknown): string => String(v ?? '').trim().toLowerCase()
+    .replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+
+/** A row the family owes: subtracted once, whether its amount was entered positive or negative. */
+export function isDebt(a: { type?: unknown; account_type?: unknown; accountType?: unknown } | null | undefined): boolean {
+    const current = financialTypeKey(a?.type);
+    return DEBT_TYPES.has(current || financialTypeKey(a?.account_type ?? a?.accountType));
 }
 
 /** The owned share of a row's value; an unset ownership is 100%. */

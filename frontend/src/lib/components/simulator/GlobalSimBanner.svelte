@@ -17,7 +17,7 @@
 
 {#if $isSimulationActive}
     <div
-        class="bg-red-600 text-white py-3 px-6 flex items-center justify-between sticky top-0 z-[100] shadow-[0_4px_20px_rgba(220,38,38,0.4)]"
+        class="bg-primary-deep text-white py-3 px-6 flex items-center justify-between sticky top-0 z-[100] shadow-md"
         transition:slide
     >
         <div class="flex items-center gap-4">
@@ -26,11 +26,11 @@
             </div>
             <div>
                 <p class="font-bold text-sm tracking-wide uppercase">
-                    Fire Drill Active: <span class="text-red-100"
+                    Fire Drill Active: <span class="text-white/85"
                         >{$currentScenario} Passing</span
                     >
                 </p>
-                <p class="text-xs text-red-100 opacity-90 hidden md:block">
+                <p class="text-xs text-white/85 hidden md:block">
                     The system is behaving as it would for the executor during
                     this scenario.
                 </p>
@@ -40,7 +40,7 @@
         <div class="flex items-center gap-3">
             <a
                 href="/modules/executor-toolkit"
-                class="bg-white text-red-600 px-4 py-1.5 rounded-full text-xs font-bold hover:bg-red-50 transition-colors flex items-center gap-2"
+                class="bg-white text-primary-deep px-4 py-1.5 rounded-full text-xs font-bold hover:bg-white/90 transition-colors flex items-center gap-2"
             >
                 View Toolkit <ArrowRight size={14} />
             </a>

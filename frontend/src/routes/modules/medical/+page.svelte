@@ -1,4 +1,11 @@
 <script lang="ts">
+    import { directiveSync, profileSync } from "$lib/stores/medicalStore.svelte";
+    import { captureSession } from "$lib/services/sessionOwnership";
+    import { activeAccountId } from "$lib/stores/keyringStore";
+    import { currentProfileId } from "$lib/stores/profileContext";
+    import { get } from "svelte/store";
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { readCustom } from "$lib/utils/customFields";
     import { fade, slide } from "svelte/transition";
     import { onMount } from "svelte";
@@ -38,13 +45,12 @@
     import GhostRow from "$lib/components/ui/GhostRow.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
+    import { familyStore } from "$lib/stores/familyStore.svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import LegalDisclaimer from "$lib/components/common/LegalDisclaimer.svelte";
     import GriefSupportBanner from "$lib/components/GriefSupportBanner.svelte";
     import LivingBlueprintHeader from "$lib/components/LivingBlueprintHeader.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
-    import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
-    import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
 
     let showAddForm = $state(false);
     let parsedCustomAttributes = $state<Record<string, any>>({});
@@ -54,7 +60,6 @@
     let formMediaUrl = $derived(formMedia ? `/api/media/${formMedia.id}/download` : "");
     let editMode = $state(false);
     let isLoading = $state(true);
-    let viewMode = $state<ViewMode>('card');
     let newDirective: Partial<MedicalDirective> = $state({
         type: "healthcare_proxy",
         title: "",
@@ -65,6 +70,8 @@
     });
 
     let showProfileEdit = $state(false);
+    let savingProfile = $state(false);
+    const profileFailures = new Map<string, Set<string>>();
     let tempProfile = $state({
         organDonor: medicalStore.profile.organDonor,
         bloodType: medicalStore.profile.bloodType,
@@ -76,6 +83,8 @@
 
     // Sync medical data on mount and update reactive profile
     onMount(() => {
+        // Contacts fill the proxy suggestions; the page opens without waiting for them.
+        familyStore.sync().catch(() => undefined);
         medicalStore.sync().then(() => {
             isLoading = false;
         });
@@ -85,77 +94,100 @@
         });
     });
 
-    async function saveProfile() {
-        try {
-            await medicalStore.updateProfile(tempProfile);
-        } catch {
-            return; // the manager already showed the one gentle message
-        }
-        showProfileEdit = false;
-        activityLog.logEvent({
-            module: "Health & Medical",
-            action: "UPDATE",
-            entityType: "Medical Profile",
-            entityId: "profile",
-            entityName: "Health Data",
-            userContext: estateProfile.current.ownerName || "User",
-        });
+    function openProfileEdit() {
+        tempProfile = { ...medicalStore.profile };
+        showProfileEdit = true;
     }
 
-    async function saveDirective() {
-        if (!newDirective.title) return;
-
-        const { [DIRECTIVE_MEDIA_KEY]: _ignored, ...customValues } = parsedCustomAttributes;
-        const attached = formMedia;
-        const replaced = savedMedia && savedMedia.id !== attached?.id ? savedMedia : null;
-        const customJson = JSON.stringify(
-            attached ? { ...customValues, [DIRECTIVE_MEDIA_KEY]: attached } : customValues,
-        );
-        const directiveData = {
-            ...newDirective,
-            // Both spellings: the record holds the server's camel-cased copy too.
-            custom_attributes: customJson,
-            customAttributes: customJson,
-        };
-
+    async function saveProfile() {
+        if (savingProfile) return;
+        const form = tempProfile;
+        const fields = JSON.stringify(form);
+        const submitted = { ...form };
+        const ownerName = estateProfile.current.ownerName || "User";
+        const owner = captureSession();
+        const failuresKey = JSON.stringify([owner.generation, get(activeAccountId), get(currentProfileId)]);
+        savingProfile = true;
         try {
-        if (newDirective.id) {
-            await medicalStore.updateDirective(newDirective.id, directiveData);
+            // This explicit full-profile save supersedes earlier failed snapshots
+            // in the same session/namespace, including an editor that was reopened.
+            for (const id of profileFailures.get(failuresKey) || []) profileSync.releaseRecovery(id, owner);
+            profileFailures.delete(failuresKey);
+            await medicalStore.updateProfile(submitted);
+            // New typing, or a newly opened editor, still belongs to the person editing.
+            if (tempProfile === form && JSON.stringify(form) === fields) showProfileEdit = false;
             activityLog.logEvent({
                 module: "Health & Medical",
                 action: "UPDATE",
-                entityType: "Medical Directive",
-                entityId: String(newDirective.id),
-                entityName: newDirective.title || "",
-                userContext: estateProfile.current.ownerName || "User",
+                entityType: "Medical Profile",
+                entityId: "profile",
+                entityName: "Health Data",
+                userContext: ownerName,
             });
-        } else {
-            const created = await medicalStore.addDirective(
-                directiveData as Omit<MedicalDirective, "id">,
-                saveDirective,
-            );
-            if (attached) {
-                updateMediaMetadata(attached.id, undefined, String(created.id)).catch(() => undefined);
+        } catch (error) {
+            const recoveryId = (error as { recoveryId?: string } | null)?.recoveryId;
+            if (recoveryId) {
+                const failures = profileFailures.get(failuresKey) || new Set<string>();
+                failures.add(recoveryId);
+                profileFailures.set(failuresKey, failures);
             }
-            activityLog.logEvent({
-                module: "Health & Medical",
-                action: "CREATE",
-                entityType: "Medical Directive",
-                entityId: String(created.id),
-                entityName: newDirective.title || "",
-                userContext: estateProfile.current.ownerName || "User",
-            });
+            // The manager keeps the submitted draft and shows its gentle retry message.
+        } finally {
+            savingProfile = false;
         }
+    }
 
-        // The directive now holds the new file; the one it replaced goes.
-        if (replaced) {
-            deleteMedia(replaced.id).catch((e) => console.warn("[medical] file removal paused", replaced.id, e));
+    const saveAttempt = formSaveAttempt(directiveSync);
+    // A failed attempt's uploaded document remains available after its form closes or changes.
+    const keptMedia = new Set<number>();
+
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
+    async function saveDirective() {
+        if (saving) return;
+        saving = true;
+        try {
+            await saveDirectiveOnce();
+        } finally {
+            saving = false;
         }
-        savedMedia = attached;
-        resetForm();
+    }
+
+    async function saveDirectiveOnce() {
+        if (!newDirective.title) return;
+        const form = newDirective;
+        const fields = JSON.stringify([form, parsedCustomAttributes, formMedia]);
+        const id = form.id;
+        const ownerName = estateProfile.current.ownerName || "User";
+        const { [DIRECTIVE_MEDIA_KEY]: _ignored, ...customValues } = parsedCustomAttributes;
+        const attached = formMedia ? { ...formMedia } : null;
+        const replaced = savedMedia && savedMedia.id !== attached?.id ? { ...savedMedia } : null;
+        const customJson = JSON.stringify(attached ? { ...customValues, [DIRECTIVE_MEDIA_KEY]: attached } : customValues);
+        const payload = { ...form, custom_attributes: customJson, customAttributes: customJson };
+        if (attached) keptMedia.add(attached.id);
+        try {
+            await saveAttempt(form, payload, (saved) => {
+                if (attached) updateMediaMetadata(attached.id, undefined, String(saved.id)).catch(() => undefined);
+                if (replaced) deleteMedia(replaced.id).catch((e) => console.warn("[medical] file removal paused", replaced.id, e));
+                activityLog.logEvent({
+                    module: "Health & Medical", action: id ? "UPDATE" : "CREATE", entityType: "Medical Directive",
+                    entityId: String(saved.id), entityName: saved.title, userContext: ownerName,
+                });
+                if (newDirective !== form) return;
+                savedMedia = attached;
+                if (JSON.stringify([form, parsedCustomAttributes, formMedia]) === fields) resetForm();
+                else newDirective.id = saved.id;
+            }, id);
         } catch {
-            // The manager already showed the one gentle message; the form stays open with the draft.
+            // The captured attempt and its document stay available through Try Again.
         }
+    }
+
+    /** A proxy picked from contacts brings their phone along when that field is still empty. */
+    function fillProxyPhone() {
+        const name = (newDirective.primaryContact || "").trim();
+        const person = familyStore.members.find((m) => m.name === name);
+        if (person?.phone && !newDirective.contactPhone) newDirective.contactPhone = person.phone;
     }
 
     function editDirective(dir: MedicalDirective) {
@@ -168,7 +200,7 @@
 
     /** A file attached in this form but never saved on the directive. */
     function dropUnsavedFile() {
-        if (formMedia && formMedia.id !== savedMedia?.id) {
+        if (formMedia && formMedia.id !== savedMedia?.id && !keptMedia.has(formMedia.id)) {
             const id = formMedia.id;
             deleteMedia(id).catch((e) => console.warn("[medical] file removal paused", id, e));
         }
@@ -186,7 +218,7 @@
                 : { id, mime_type: file?.mime_type ?? "", filename: file?.filename ?? "", file_size: file?.file_size ?? 0 };
     }
 
-    /** The modal closes through ×, Escape, the backdrop or "Not right now"; each one drops the draft. */
+    /** The modal closes through ×, Escape, the backdrop or "Maybe later"; each one drops the draft. */
     function setFormOpen(open: boolean) {
         if (open) showAddForm = true;
         else if (showAddForm) resetForm();
@@ -208,11 +240,11 @@
         parsedCustomAttributes = {};
     }
 
-    function removeDirective(id: string | number) {
+    async function removeDirective(id: string | number) {
         if (
-            !confirm(
-                "Remove this directive? This should only be done if the document has been revoked.",
-            )
+            !(await askConfirm(
+                "Remove this directive? Do this when the document has been replaced.",
+            ))
         )
             return;
         medicalStore.removeDirective(id);
@@ -236,32 +268,24 @@
     <!-- Header -->
     <LivingBlueprintHeader
         title="Health & Medical"
-        subtitle="Your Voice at the End of Life"
-        tier="preparation"
-        detailedDescription="Your voice in healthcare decisions matters, even when you can't speak for yourself. Document your directives and medical history to guide your advocates."
-        whyMatters="Medical uncertainty places a heavy burden on families. Clear directives relieve them of agonizing guessing games and ensure your care aligns with your values."
+        subtitle="Directives, care preferences, and people to contact"
+        detailedDescription="Record the directives you have prepared, who to contact, and where the signed originals are kept. Add a readable summary of the wishes your proxy and care team should know."
+        whyMatters="Keeping the document, its location, and the contact details together helps your family find the information you intended them to use."
     >
         <button
             onclick={() => (showAddForm = true)}
             class="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-2xl font-bold hover:scale-105 transition-all shadow-lg shadow-primary/20"
         >
             <Plus size={20} />
-            Save my medical wishes
+            Add a healthcare directive
         </button>
     </LivingBlueprintHeader>
 
-    <!-- View Toggle -->
-    <div class="flex justify-end mb-4">
-        <DataViewToggle module="medical" onchange={(mode) => viewMode = mode} />
-    </div>
-
-    <div class="max-w-3xl">
-        <GriefSupportBanner compact={true} />
-    </div>
+    <GriefSupportBanner compact={true} />
 
 
     <!-- AI Prompt Bar -->
-    <div class="max-w-3xl mb-8">
+    <div class="mb-8">
         <AIPromptBar context="medical" />
     </div>
 
@@ -269,11 +293,11 @@
         <!-- Life Saving Profile -->
         <div class="lg:col-span-1 space-y-8">
             <section
-                class="bg-white rounded-2xl border border-primary/10 shadow-sm overflow-hidden"
+                class="bg-card rounded-2xl border border-primary/10 shadow-sm overflow-hidden"
             >
                 <div class="p-6 bg-primary/5 border-b border-primary/10">
                     <h2
-                        class="text-lg font-bold text-primary flex items-center gap-2"
+                        class="text-lg font-bold text-primary-hover flex items-center gap-2"
                     >
                         <Activity size={20} />
                         Emergency Profile
@@ -283,86 +307,105 @@
                     {#if !showProfileEdit}
                         <div class="space-y-4">
                             <div
-                                class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100"
+                                class="flex items-center justify-between p-4 bg-muted rounded-2xl border border-border"
                             >
                                 <div>
                                     <p
-                                        class="text-xs font-bold uppercase text-gray-400"
+                                        class="text-xs font-bold uppercase text-muted-foreground"
                                     >
                                         Blood Type
                                     </p>
-                                    <p class="text-xl font-bold text-gray-900">
-                                        {medicalStore.profile.bloodType ||
-                                            "Not Set"}
-                                    </p>
+                                    {#if medicalStore.profile.bloodType}
+                                        <p class="text-xl font-bold text-foreground">
+                                            {medicalStore.profile.bloodType}
+                                        </p>
+                                    {:else}
+                                        <button
+                                            type="button"
+                                            onclick={openProfileEdit}
+                                            class="text-sm font-semibold text-primary-hover hover:underline"
+                                        >
+                                            Add blood type
+                                        </button>
+                                    {/if}
                                 </div>
-                                <div
-                                    class="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold"
-                                >
-                                    {medicalStore.profile.bloodType?.includes(
-                                        "+",
-                                    )
-                                        ? "+"
-                                        : "-"}
-                                </div>
+                                {#if medicalStore.profile.bloodType}
+                                    <span
+                                        class="px-3 py-1 bg-primary/10 text-primary-hover rounded-full text-xs font-bold"
+                                    >
+                                        Rh {medicalStore.profile.bloodType.includes("+")
+                                            ? "positive"
+                                            : "negative"}
+                                    </span>
+                                {/if}
                             </div>
 
                             <div
-                                class="p-4 bg-orange-50 rounded-2xl border border-orange-100"
+                                class="p-4 rounded-2xl border {medicalStore.profile.allergies
+                                    ? 'bg-warning-soft border-warning/20'
+                                    : 'bg-muted border-border'}"
                             >
                                 <p
-                                    class="text-xs font-bold uppercase text-orange-400 mb-1"
+                                    class="text-xs font-bold uppercase mb-1 {medicalStore.profile.allergies
+                                        ? 'text-warning'
+                                        : 'text-muted-foreground'}"
                                 >
-                                    Critical Allergies
+                                    Allergies
                                 </p>
-                                <p class="text-sm font-medium text-orange-900">
-                                    {medicalStore.profile.allergies ||
-                                        "None reported"}
-                                </p>
+                                {#if medicalStore.profile.allergies}
+                                    <p class="text-sm font-medium text-foreground">
+                                        {medicalStore.profile.allergies}
+                                    </p>
+                                {:else}
+                                    <button
+                                        type="button"
+                                        onclick={openProfileEdit}
+                                        class="text-sm font-semibold text-primary-hover hover:underline"
+                                    >
+                                        Add any allergies
+                                    </button>
+                                {/if}
                             </div>
 
                             <div
-                                class="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100"
+                                class="flex items-center gap-3 p-4 bg-info/10 rounded-2xl border border-info/20"
                             >
                                 {#if currentProfile.organDonor}
                                     <CircleCheck
-                                        class="text-blue-600"
+                                        class="text-info"
                                         size={20}
                                     />
-                                    <p class="text-sm font-bold text-blue-900">
-                                        Organ Donor Enrollment Active
+                                    <p class="text-sm font-bold text-foreground">
+                                        Organ donor enrollment recorded
                                     </p>
                                 {:else}
                                     <CircleAlert
-                                        class="text-blue-400"
+                                        class="text-info"
                                         size={20}
                                     />
-                                    <p class="text-sm font-bold text-blue-900">
-                                        Organ Donor Status Unknown
+                                    <p class="text-sm font-bold text-foreground">
+                                        Add your donor wishes
                                     </p>
                                 {/if}
                             </div>
 
                             <button
-                                onclick={() => {
-                                    tempProfile = { ...medicalStore.profile };
-                                    showProfileEdit = true;
-                                }}
-                                class="w-full py-3 text-primary hover:bg-primary/5 rounded-xl transition-colors font-bold text-sm"
+                                onclick={openProfileEdit}
+                                class="w-full py-3 text-primary-hover hover:bg-primary/5 rounded-xl transition-colors font-bold text-sm"
                             >
-                                Update Profile
+                                Edit my profile
                             </button>
                         </div>
                     {:else}
                         <div class="space-y-4" in:slide>
                             <div>
-                                <label
-                                    class="block text-xs font-bold uppercase text-gray-500 mb-1"
+                                <label for="medical-blood-type"
+                                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                                     >Blood Type</label
                                 >
-                                <select
+                                <select id="medical-blood-type"
                                     bind:value={tempProfile.bloodType}
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                 >
                                     <option value="">Unknown</option>
                                     <option value="A+">A+</option>
@@ -376,13 +419,13 @@
                                 </select>
                             </div>
                             <div>
-                                <label
-                                    class="block text-xs font-bold uppercase text-gray-500 mb-1"
-                                    >Critical Allergies</label
+                                <label for="medical-allergies"
+                                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
+                                    >Allergies</label
                                 >
-                                <textarea
+                                <textarea id="medical-allergies"
                                     bind:value={tempProfile.allergies}
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                     rows="3"
                                     placeholder="Latex, Penicillin, Peanuts..."
                                 ></textarea>
@@ -395,20 +438,22 @@
                                 />
                                 <label
                                     for="donor-check"
-                                    class="text-sm font-medium text-gray-700"
-                                    >Enrolled Organ Donor</label
+                                    class="text-sm font-medium text-foreground"
+                                    >I have registered as an organ donor</label
                                 >
                             </div>
                             <div class="flex gap-2">
                                 <button
                                     onclick={saveProfile}
-                                    class="flex-1 py-2 bg-primary text-primary-foreground rounded-xl font-bold text-sm"
+                                    disabled={savingProfile}
+                                    aria-busy={savingProfile}
+                                    class="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold text-sm"
                                     >Save my updates</button
                                 >
                                 <button
                                     onclick={() => (showProfileEdit = false)}
-                                    class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm"
-                                    >Not right now</button
+                                    class="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-xl font-bold text-sm"
+                                    >Maybe later</button
                                 >
                             </div>
                         </div>
@@ -424,40 +469,40 @@
             >
                 <Shield class="text-primary mt-1 shrink-0" size={24} />
                 <div>
-                    <h3 class="font-bold text-primary text-lg">
-                        Your End-of-Life Voice
+                    <h3 class="font-bold text-primary-hover text-lg">
+                        Your recorded healthcare directives
                     </h3>
-                    <p class="text-sm text-primary/80 mt-1 leading-relaxed">
-                        Providing clear guidance for your medical care is a gift
-                        to your family. It removes the burden of uncertainty and
-                        ensures your wishes are honored with dignity.
+                    <p class="text-sm text-primary-hover mt-1 leading-relaxed">
+                        Keep each directive with a short summary, the person to
+                        contact, and the location of the original. Review these
+                        details with your chosen proxy and care team.
                     </p>
                 </div>
             </div>
 
             {#each medicalStore.directives as dir}
                 <div
-                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow relative group"
+                    class="bg-card rounded-2xl border border-border shadow-sm p-6 hover:shadow-md transition-shadow relative group"
                 >
                     <div class="flex items-start justify-between">
                         <div class="flex gap-4">
                             <div
-                                class="p-3 bg-gray-50 text-gray-400 rounded-2xl group-hover:bg-primary/5 group-hover:text-primary transition-colors"
+                                class="p-3 bg-muted text-muted-foreground rounded-2xl group-hover:bg-primary/5 group-hover:text-primary transition-colors"
                             >
                                 <FileText size={24} />
                             </div>
                             <div>
                                 <span
-                                    class="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-black uppercase tracking-wider"
+                                    class="px-2 py-1 bg-muted text-muted-foreground rounded-lg text-[10px] font-black uppercase tracking-wider"
                                 >
                                     {typeLabels[dir.type]}
                                 </span>
                                 <h3
-                                    class="text-xl font-bold text-gray-900 mt-1"
+                                    class="text-xl font-bold text-foreground mt-1"
                                 >
                                     {dir.title}
                                 </h3>
-                                <p class="text-sm text-gray-500 mt-1">
+                                <p class="text-sm text-muted-foreground mt-1">
                                     {dir.summary}
                                 </p>
                                 {#if directiveMedia(dir)}
@@ -477,60 +522,70 @@
                         <div class="flex gap-1">
                             <button aria-label="Edit these details"
                                 onclick={() => editDirective(dir)}
-                                class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                class="p-2 text-muted-foreground hover:text-primary-hover hover:bg-muted rounded-lg transition-all"
                             >
                                 <Pencil size={18} />
                             </button>
                             <button aria-label="Remove this item"
                                 onclick={() => removeDirective(dir.id)}
-                                class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                class="p-2 text-muted-foreground hover:text-danger hover:bg-danger-soft rounded-lg transition-all"
                             >
                                 <Trash2 size={18} />
                             </button>
                         </div>
                     </div>
 
-                    <div class="mt-6 grid grid-cols-2 gap-4">
+                    {#if dir.primaryContact || dir.contactPhone || dir.locationOfOriginal}
+                    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {#if dir.primaryContact || dir.contactPhone}
                         <div
-                            class="p-4 bg-gray-50 rounded-2xl border border-gray-100"
+                            class="p-4 bg-muted rounded-2xl border border-border"
                         >
                             <span
-                                class="text-[10px] font-black uppercase text-gray-400 block mb-1"
+                                class="text-[10px] font-black uppercase text-muted-foreground block mb-1"
                                 >Primary Contact / Proxy</span
                             >
-                            <p class="text-sm font-bold text-gray-900">
-                                {dir.primaryContact}
-                            </p>
-                            <p
-                                class="text-xs text-gray-500 flex items-center gap-1 mt-1"
-                            >
-                                <Phone size={12} />
-                                {dir.contactPhone}
-                            </p>
+                            {#if dir.primaryContact}
+                                <p class="text-sm font-bold text-foreground">
+                                    {dir.primaryContact}
+                                </p>
+                            {/if}
+                            {#if dir.contactPhone}
+                                <p
+                                    class="text-xs text-muted-foreground flex items-center gap-1 mt-1"
+                                >
+                                    <Phone size={12} />
+                                    {dir.contactPhone}
+                                </p>
+                            {/if}
                         </div>
+                        {/if}
+                        {#if dir.locationOfOriginal}
                         <div
-                            class="p-4 bg-gray-50 rounded-2xl border border-gray-100"
+                            class="p-4 bg-muted rounded-2xl border border-border"
                         >
                             <span
-                                class="text-[10px] font-black uppercase text-gray-400 block mb-1"
+                                class="text-[10px] font-black uppercase text-muted-foreground block mb-1"
                                 >Location of Original</span
                             >
-                            <p class="text-sm font-bold text-gray-900">
+                            <p class="text-sm font-bold text-foreground">
                                 {dir.locationOfOriginal}
                             </p>
                         </div>
+                        {/if}
                     </div>
+                    {/if}
                 </div>
             {/each}
 
             {#if medicalStore.directives.length === 0}
                 <EmptyState
                     title="Your healthcare wishes matter"
-                    whyMatters="<strong>Without advance directives, doctors and family members must guess what you would want during a medical crisis.</strong> This creates agonizing decisions for loved ones who are already suffering.<br/><br/>Documenting your healthcare wishes—whether it's a healthcare proxy, living will, or DNR—gives them clarity, legal authority, and peace of mind. They'll know they're honoring your choices, not making impossible decisions on your behalf."
-                    encouragement="When you're ready, start with just one directive. You can always add more later."
+                    whyMatters="Record the directive you have prepared, the key wishes it expresses, and who should be contacted. A copy and the original's location help your family and care team find it."
+                    encouragement="Start with one document, such as your healthcare proxy or living will. Use its title and signed date to distinguish it from older versions."
                     icon={Shield}
                     iconClass="text-primary"
-                    ctaLabel="Share my wishes"
+                    ctaLabel="Add a healthcare directive"
                     onAction={() => (showAddForm = true)}
                 />
                 <!-- GHOST ROWS (Hidden, keeping for reference) -->
@@ -554,7 +609,7 @@
                         >
                             {#snippet icon()}
                                 <div
-                                    class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400"
+                                    class="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground"
                                 >
                                     <FileText size={20} />
                                 </div>
@@ -570,8 +625,8 @@
 <!-- Add/Edit Modal -->
 <Modal
     bind:open={() => showAddForm, setFormOpen}
-    title={newDirective.id ? "Share Your Voice" : "Who should hear your voice?"}
-    description="These choices reflect your values and ensure you're cared for exactly as you wish. It's okay to take your time."
+    title={newDirective.id ? "Edit healthcare directive" : "Add a healthcare directive"}
+    description="Keep a readable summary alongside the original document and the contact details of the person who can help your care team find it."
     maxWidth="max-w-lg"
 >
     <form
@@ -583,13 +638,13 @@
     >
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label
-                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                <label for="medical-type"
+                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                     >Directive Type</label
                 >
-                <select
+                <select id="medical-type"
                     bind:value={newDirective.type}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 >
                     <option value="healthcare_proxy">Healthcare Proxy</option>
                     <option value="living_will">Living Will</option>
@@ -599,69 +654,77 @@
                 </select>
             </div>
             <div>
-                <label
-                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                <label for="medical-title"
+                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                     >Title</label
                 >
-                <input
+                <input id="medical-title"
                     type="text"
                     bind:value={newDirective.title}
                     placeholder="e.g. Living Will 2024"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
             </div>
         </div>
 
         <div>
-            <label
-                class="block text-xs font-bold uppercase text-slate-500 mb-1"
+            <label for="medical-summary"
+                class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                 >Summary of Wishes</label
             >
-            <textarea
+            <textarea id="medical-summary"
                 bind:value={newDirective.summary}
-                placeholder="Key points of this directive..."
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                placeholder="The key wishes this document records, in your own words..."
+                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 rows="3"
             ></textarea>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label
-                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                <label for="medical-primary-contact"
+                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                     >Primary Proxy/Contact</label
                 >
-                <input
+                <input id="medical-primary-contact"
                     type="text"
+                    list="medical-contact-options"
                     bind:value={newDirective.primaryContact}
-                    placeholder="e.g. Dr. Sarah Chen"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    onchange={fillProxyPhone}
+                    placeholder="e.g. Sam — my chosen healthcare proxy"
+                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
+                <!-- People from Family & Contacts; any other name can still be typed. -->
+                <datalist id="medical-contact-options">
+                    {#each familyStore.members as person (person.id)}
+                        <option value={person.name}>{person.relation || person.role}</option>
+                    {/each}
+                </datalist>
             </div>
             <div>
-                <label
-                    class="block text-xs font-bold uppercase text-slate-500 mb-1"
+                <label for="medical-contact-phone"
+                    class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                     >Contact Phone</label
                 >
-                <input
+                <input id="medical-contact-phone"
                     type="text"
                     bind:value={newDirective.contactPhone}
                     placeholder="e.g. +1 (555) 000-0000"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
             </div>
         </div>
 
         <div>
-            <label
-                class="block text-xs font-bold uppercase text-slate-500 mb-1"
+            <label for="medical-location-of-original"
+                class="block text-xs font-bold uppercase text-muted-foreground mb-1"
                 >Location of Original Document</label
             >
-            <input
+            <input id="medical-location-of-original"
                 type="text"
                 bind:value={newDirective.locationOfOriginal}
-                placeholder="e.g. Safe deposit box at First National Bank"
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                placeholder="e.g. Signed original in the blue folder; copy with my proxy"
+                class="w-full px-4 py-3 rounded-xl border border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             />
         </div>
 
@@ -674,7 +737,7 @@
         />
 
         <!-- Custom Fields -->
-        <div class="pt-4 mt-4 border-t border-slate-100">
+        <div class="pt-4 mt-4 border-t border-border">
             <CustomFieldsManager
                 entityType="medical"
                 bind:data={parsedCustomAttributes}
@@ -685,15 +748,19 @@
             <button
                 type="button"
                 onclick={resetForm}
-                class="flex-1 py-3 px-6 bg-slate-100 text-slate-600 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
+                class="flex-1 py-3 px-6 bg-muted text-muted-foreground rounded-xl font-semibold hover:bg-border transition-colors"
             >
-                Not right now
+                Maybe later
             </button>
             <button
                 type="submit"
-                class="flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-all"
+                disabled={saving}
+                aria-busy={saving}
+                class="flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
             >
-                {newDirective.id
+                {saving
+                    ? "Saving..."
+                    : newDirective.id
                     ? "Save my updates"
                     : "Include this directive"}
             </button>

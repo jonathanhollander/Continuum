@@ -18,14 +18,14 @@ export interface JournalEntry {
 
 // The server list arrives camelCased; keep custom_attributes under its wire name only, so an
 // update never carries a stale customAttributes copy alongside it.
-const mapper = (data: any): JournalEntry => {
+const mapper = (data: Record<string, unknown>): JournalEntry & { id: number } => {
     const { customAttributes, ...rest } = data;
     return {
         ...rest,
         id: typeof rest.id === 'string' && rest.id.length > 10 ? undefined : Number(rest.id) || rest.id,
         created_at: rest.created_at ?? rest.createdAt,
         custom_attributes: rest.custom_attributes ?? customAttributes,
-    };
+    } as JournalEntry & { id: number };
 };
 
 const manager = registerSync<JournalEntry & { id: number }>('journal_entries', 'journal_entries', mapper, '/api/data')
@@ -47,10 +47,10 @@ const OLD_SAMPLE_VALUES = new Set([
 ]);
 const isOldSampleLetter = (t: string) => t.trim().startsWith(OLD_SAMPLE_LETTER_START) && t.trim().endsWith("[Your Name]");
 
-const asList = (v: unknown): any[] => (Array.isArray(v) ? v.filter((i) => i && typeof i === 'object') : []);
+const asList = (v: unknown): Record<string, unknown>[] => (Array.isArray(v) ? v.filter((i): i is Record<string, unknown> => i && typeof i === 'object') : []);
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 
-function entriesFromDeviceKeys(willItems: any[], lessonItems: any[]): Omit<JournalEntry, 'id'>[] {
+function entriesFromDeviceKeys(willItems: Record<string, unknown>[], lessonItems: Record<string, unknown>[]): Omit<JournalEntry, 'id'>[] {
     const out: Omit<JournalEntry, 'id'>[] = [];
     const hasLetter = manager.items.some((e) => e.type === 'ethical_will');
     for (const will of willItems) {

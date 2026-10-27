@@ -1,6 +1,7 @@
 import { registerSync } from "$lib/services/sync.svelte";
 import { notifications } from "$lib/stores/notificationStore";
 import { deleteMedia, mediaIdFromRef } from "$lib/services/mediaService";
+import { oneSpelling } from "$lib/utils/oneSpelling";
 
 // --- Types ---
 
@@ -48,27 +49,34 @@ export interface FamilyMemory {
  * the server's shape: tags stay one comma-separated string (the column is a string; an
  * array in the body made every create and update fail). Split them for display with tagList().
  */
-const visualMapper = (data: any): VisualMemory => {
-    if (!data) return data;
+const visualMapper = (data: Record<string, unknown>): VisualMemory => {
+    if (!data) return data as unknown as VisualMemory;
     const tags = Array.isArray(data.tags) ? data.tags.join(',') : (data.tags ?? '');
-    return { ...data, tags };
+    // Server rows arrive camel-cased (isFavorite); the store and pages read is_favorite.
+    return oneSpelling({ ...data, tags }, { is_favorite: 'isFavorite' }) as unknown as VisualMemory;
 };
 
 export const tagList = (tags: string | string[] | null | undefined): string[] =>
     Array.isArray(tags) ? tags : (tags || '').split(',').map((t) => t.trim()).filter(Boolean);
 
-const archiveMapper = (data: any): ExternalArchive => data;
+const archiveMapper = (data: Record<string, unknown>): ExternalArchive => data as unknown as ExternalArchive;
 
-const familyMapper = (data: any): FamilyMemory => ({
+const familyMapper = (data: Record<string, unknown>): FamilyMemory => ({
     ...data,
     author: data.author || 'Me'
-});
+} as FamilyMemory);
 
 // --- Sync Managers ---
 
-const visualManager = registerSync<VisualMemory>('visual_memories', 'visual', visualMapper, '/api/memories').setAffirmationContext('heirlooms');
-const archiveManager = registerSync<ExternalArchive>('external_archives', 'archives', archiveMapper, '/api/memories').setAffirmationContext('heirlooms');
-const familyManager = registerSync<FamilyMemory>('family_memories', 'family', familyMapper, '/api/memories').setAffirmationContext('heirlooms');
+const MEMORIES = 'memories' as const;
+
+// Visual memories affirm themselves (affirmMemories): one message per upload batch or bulk tag.
+const visualManager = registerSync<VisualMemory>('visual_memories', 'visual', visualMapper, '/api/memories');
+const archiveManager = registerSync<ExternalArchive>('external_archives', 'archives', archiveMapper, '/api/memories').setAffirmationContext(MEMORIES);
+const familyManager = registerSync<FamilyMemory>('family_memories', 'family', familyMapper, '/api/memories').setAffirmationContext(MEMORIES);
+
+/** One memories affirmation (after a batch of saves, or a single save the person made). */
+export const affirmMemories = () => notifications.showAffirmation(MEMORIES);
 
 // --- Stores & Actions ---
 
@@ -109,7 +117,7 @@ export const addMemory = (
         tags: Array.isArray(memory.tags) ? memory.tags.join(',') : memory.tags,
         is_favorite: memory.is_favorite ?? false
     };
-    return visualManager.create(payload as any, false, false, onRetry);
+    return visualManager.create(payload, false, false, onRetry);
 };
 
 /** The media id behind a record's url; null for old `data:` records and other urls. */
@@ -126,29 +134,34 @@ export const removeMemory = async (id: number) => {
     });
 };
 
-export const updateMemory = (id: number, updates: Partial<VisualMemory>) => {
+/** Save changes to one memory; affirm = false when the caller affirms once for a batch. */
+export const updateMemory = async (id: number, updates: Partial<VisualMemory>, affirm = true) => {
     const item = visualManager.items.find(m => String(m.id) === String(id));
     if (!item) return;
 
     const payload = { ...item, ...updates };
     // Convention: Always send tags as string to backend
     if (Array.isArray(payload.tags)) {
-        (payload as any).tags = payload.tags.join(',');
+        (payload as { tags: string }).tags = payload.tags.join(',');
     }
-    return visualManager.update(id, payload as any);
+    const saved = await visualManager.update(id, payload as VisualMemory);
+    if (affirm) affirmMemories();
+    return saved;
 };
 
 /** Add one tag to each memory, leaving any memory that already has it (any case) as it is. */
 export const addTagToMemories = async (ids: number[], tag: string) => {
     const clean = tag.trim().replace(/,/g, ' ').trim();
     if (!clean) return;
+    let saved = 0;
     for (const id of ids) {
         const item = visualManager.items.find(m => String(m.id) === String(id));
         if (!item) continue;
         const tags = tagList(item.tags);
         if (tags.some(t => t.toLowerCase() === clean.toLowerCase())) continue;
-        await Promise.resolve(updateMemory(item.id!, { tags: [...tags, clean].join(',') })).catch(() => {});
+        await updateMemory(item.id!, { tags: [...tags, clean].join(',') }, false).then(() => saved++, () => {});
     }
+    if (saved > 0) affirmMemories();
 };
 
 export const toggleFavorite = (id: number) => {
@@ -159,23 +172,21 @@ export const toggleFavorite = (id: number) => {
 };
 
 // Archive Actions
-export const addArchive = (archive: Omit<ExternalArchive, 'id'>) => archiveManager.create(archive as ExternalArchive);
+export const addArchive = (archive: Omit<ExternalArchive, 'id'>, onRetry?: () => Promise<unknown>, recoveryId?: string) => archiveManager.create(archive as ExternalArchive, false, false, onRetry, recoveryId);
 export const removeArchive = (id: number) => archiveManager.delete(id);
-export const updateArchive = (id: number, updates: Partial<ExternalArchive>) => {
-    const item = archiveManager.items.find(a => a.id === id);
-    if (item) return archiveManager.update(id, { ...item, ...updates });
-};
+export const updateArchive = (id: number, updates: Partial<ExternalArchive>, onRetry?: () => Promise<unknown>, recoveryId?: string) =>
+    archiveManager.update(id, updates, true, onRetry, recoveryId);
 
 // Family Actions
-export const addFamilyMemory = (memory: Omit<FamilyMemory, 'id'>, onRetry?: () => Promise<unknown>) => familyManager.create(memory as FamilyMemory, false, false, onRetry);
+export const addFamilyMemory = (memory: Omit<FamilyMemory, 'id'>, onRetry?: () => Promise<unknown>, recoveryId?: string) => familyManager.create(memory as FamilyMemory, false, false, onRetry, recoveryId);
 export const removeFamilyMemory = (id: number) => familyManager.delete(id);
-export const updateFamilyMemory = (id: number, updates: Partial<FamilyMemory>) => {
+export const updateFamilyMemory = (id: number, updates: Partial<FamilyMemory>, onRetry?: () => Promise<unknown>, recoveryId?: string) => {
     const item = familyManager.items.find(m => m.id === id);
-    if (item) return familyManager.update(id, { ...item, ...updates });
+    if (item) return familyManager.update(id, { ...item, ...updates }, true, onRetry, recoveryId);
     notifications.showError({
-        message: 'We couldn\'t find that memory to save. It may have been moved \u2014 please refresh and try again when you\'re ready.',
+        message: 'That memory has moved. Refresh whenever you\'re ready and it will be here to save.',
         code: 'NOT_FOUND',
         technicalDetails: `updateFamilyMemory: no item with id ${id}`
-    } as any);
+    });
     throw new Error(`Memory ${id} not found`);
 };

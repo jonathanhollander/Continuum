@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
     import { fade, fly } from "svelte/transition";
     import {
@@ -11,7 +12,6 @@
         Save,
         Loader2,
     } from "lucide-svelte";
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import EmptyState from "$lib/components/EmptyState.svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import AIPromptBar from "$lib/components/concierge/AIPromptBar.svelte";
@@ -25,6 +25,8 @@
         removeMemory as removeVisualMemory,
         toggleFavorite as toggleVisualFavorite,
         addTagToMemories,
+        affirmMemories,
+        tagList,
         syncAllMemories,
         type ExternalArchive,
     } from "$lib/stores/visualMemoryStore.svelte";
@@ -44,15 +46,14 @@
     import BulkActionBar from "$lib/components/modules/visual-memories/BulkActionBar.svelte";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
-    import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte";
 
     let activeTab = $state<"gallery" | "archives">("gallery");
-    let customAttributes = $state<Record<string, any>>({});
-    let dataViewMode = $state<ViewMode>('card');
+    // The Cards/Table choice is kept per module in the person's preferences.
+    let dataViewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('visual-memories'));
 
     // Gallery State
     let viewMode = $state<"grid" | "carousel">("grid");
-    let fileInput: HTMLInputElement;
+    let fileInput: HTMLInputElement | undefined = $state();
     let isSelectionMode = $state(false);
     let selectedIds = $state<string[]>([]);
 
@@ -98,28 +99,51 @@
         showArchiveModal = true;
     }
 
-    function saveArchive() {
-        if (!archiveForm.platform || !archiveForm.locationDetails) return;
-
-        if (editingArchive && editingArchive.id) {
-            updateArchive(editingArchive.id, {
-                platform: archiveForm.platform,
-                location_details: archiveForm.locationDetails,
-                access_url: archiveForm.accessUrl,
-            });
-        } else {
-            addArchive({
-                platform: archiveForm.platform,
-                location_details: archiveForm.locationDetails,
-                access_url: archiveForm.accessUrl,
-            });
-        }
-        showArchiveModal = false;
+    let savingArchive = $state(false);
+    const archiveSaveVersions = new WeakMap<object, number>();
+    const archiveRecoveryIds = new WeakMap<object, string>();
+    async function saveArchive() {
+        if (savingArchive || !archiveForm.platform || !archiveForm.locationDetails) return;
+        const form = archiveForm;
+        const original = JSON.stringify(form);
+        const id = editingArchive?.id;
+        const submitted = {
+            platform: form.platform,
+            location_details: form.locationDetails,
+            access_url: form.accessUrl,
+        };
+        const version = (archiveSaveVersions.get(form) ?? 0) + 1;
+        archiveSaveVersions.set(form, version);
+        let completed = false;
+        const attempt = async () => {
+            if (savingArchive || completed || archiveSaveVersions.get(form) !== version) return;
+            savingArchive = true;
+            try {
+                const saved = id
+                    ? await updateArchive(id, submitted, attempt, archiveRecoveryIds.get(form))
+                    : await addArchive(submitted, attempt, archiveRecoveryIds.get(form));
+                completed = true;
+                archiveRecoveryIds.delete(form);
+                if (archiveForm === form) {
+                    if (JSON.stringify(archiveForm) === original) {
+                        showArchiveModal = false;
+                        editingArchive = null;
+                        archiveForm = { platform: "", locationDetails: "", accessUrl: "" };
+                    } else editingArchive = saved; // a later edit continues the saved location
+                }
+            } catch (e) {
+                if (e && typeof e === "object" && "recoveryId" in e && typeof e.recoveryId === "string") archiveRecoveryIds.set(form, e.recoveryId);
+                // The manager offers Retry; the location and instructions stay in this form.
+            } finally {
+                savingArchive = false;
+            }
+        };
+        await attempt();
     }
 
-    function handleDeleteArchive(id: number) {
+    async function handleDeleteArchive(id: number) {
         if (
-            confirm(
+            await askConfirm(
                 "Remove this archive location? You can add it back anytime.",
             )
         ) {
@@ -132,7 +156,8 @@
     let uploadingCount = $state(0);
 
     // Each file goes to the media API; the record keeps only its download_url.
-    async function saveOne(file: File) {
+    // Resolves true once the memory is saved (the batch affirms once for all of them).
+    async function saveOne(file: File): Promise<boolean> {
         let media;
         try {
             media = await uploadMedia(file, "visual_memories");
@@ -142,9 +167,9 @@
                 code: "UPLOAD_ERROR",
                 technicalDetails: String(err),
             } as any);
-            return;
+            return false;
         }
-        await saveRecord(media, {
+        return saveRecord(media, {
             url: media.download_url,
             name: file.name.replace(/\.[^.]+$/, "").replace(/-|_/g, " "),
             type: file.type.startsWith("image/") ? "photo" : "video",
@@ -156,11 +181,12 @@
 
     // The record save shows its own gentle message with a retry. A retry reuses the
     // uploaded file; closing that message without retrying removes the upload.
-    async function saveRecord(media: { id: number }, data: Parameters<typeof addVisualMemory>[0]) {
+    async function saveRecord(media: { id: number }, data: Parameters<typeof addVisualMemory>[0]): Promise<boolean> {
         let retried = false;
-        const retry = () => {
+        // A save that succeeds on Try Again happens on its own, so it gets its own affirmation.
+        const retry = async () => {
             retried = true;
-            return saveRecord(media, data);
+            if (await saveRecord(media, data)) affirmMemories();
         };
         try {
             const record = await addVisualMemory(data, retry);
@@ -169,9 +195,10 @@
                     console.warn("[visual-memories] reference_id link paused", e),
                 );
             }
+            return true;
         } catch {
             const noteId = get(notifications).filter((n) => n.type === "error").at(-1)?.id;
-            if (!noteId) return;
+            if (!noteId) return false;
             let unsub = () => {};
             unsub = notifications.subscribe((list) => {
                 if (list.some((n) => n.id === noteId)) return;
@@ -185,6 +212,7 @@
                     }
                 });
             });
+            return false;
         }
     }
 
@@ -199,17 +227,25 @@
         input.value = ""; // Clear input
 
         uploadingCount += files.length;
+        let saved = 0;
         for (const file of files) {
             try {
-                await saveOne(file);
+                if (await saveOne(file)) saved += 1;
             } finally {
                 uploadingCount -= 1;
             }
         }
+        if (saved > 0) affirmMemories();
+    }
+
+    async function handleRemoveMemory(id: number) {
+        if (await askConfirm("Remove this item? You can upload it again if needed.")) {
+            removeVisualMemory(id);
+        }
     }
 
     function triggerUpload() {
-        fileInput.click();
+        fileInput?.click();
     }
 
     function toggleSelectionMode() {
@@ -219,9 +255,9 @@
         }
     }
 
-    function handleBulkDeleteSubmit() {
+    async function handleBulkDeleteSubmit() {
         if (
-            confirm(
+            await askConfirm(
                 `Remove ${selectedCount} ${selectedCount === 1 ? "memory" : "memories"}?`,
             )
         ) {
@@ -245,23 +281,23 @@
 {:else}
 <!-- Archive Modal -->
 {#if showArchiveModal}
-    <div role="dialog" aria-modal="true" use:focusTrap={{ onEscape: () => (showArchiveModal = false) }}
+    <div role="dialog" aria-modal="true" aria-labelledby="archive-dialog-title" use:focusTrap={{ onEscape: () => (showArchiveModal = false) }}
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
         transition:fade
     >
         <div
-            class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+            class="bg-card rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
             in:fly={{ y: 20 }}
         >
             <div
-                class="p-6 border-b border-slate-100 flex justify-between items-center"
+                class="p-6 border-b border-border flex justify-between items-center"
             >
-                <h3 class="font-serif font-bold text-xl text-[#304743]">
+                <h3 id="archive-dialog-title" class="font-serif font-bold text-xl text-primary-deep dark:text-primary-hover">
                     {editingArchive ? "Edit Location" : "Add Legacy Location"}
                 </h3>
                 <button aria-label="Close"
                     onclick={() => (showArchiveModal = false)}
-                    class="text-slate-400 hover:text-slate-600"
+                    class="text-muted-foreground hover:text-foreground"
                 >
                     <X size={20} />
                 </button>
@@ -269,74 +305,67 @@
 
             <div class="p-6 space-y-4">
                 <div class="space-y-2">
-                    <label
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wider"
+                    <label for="memory-platform"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wider"
                         >Platform / Device Name</label
                     >
-                    <input
+                    <input id="memory-platform"
                         type="text"
                         bind:value={archiveForm.platform}
                         placeholder="e.g. iCloud, Google Photos, My Passport Drive"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4A7C74]/20 focus:border-[#4A7C74] outline-none font-medium"
+                        class="w-full px-4 py-2 rounded-lg border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium"
                     />
                 </div>
 
                 <div class="space-y-2">
-                    <label
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wider"
+                    <label for="memory-location-details"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wider"
                         >Access Instructions</label
                     >
-                    <textarea
+                    <textarea id="memory-location-details"
                         bind:value={archiveForm.locationDetails}
                         placeholder="How do executors access this? e.g. 'Login details in password vault' or 'Physical drive in fireproof safe'"
-                        class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4A7C74]/20 focus:border-[#4A7C74] outline-none font-medium h-24 resize-none"
+                        class="w-full px-4 py-2 rounded-lg border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium h-24 resize-none"
                     ></textarea>
                 </div>
 
                 <div class="space-y-2">
-                    <label
-                        class="text-xs font-bold uppercase text-slate-500 tracking-wider"
+                    <label for="memory-access-url"
+                        class="text-xs font-bold uppercase text-muted-foreground tracking-wider"
                         >Direct URL (Optional)</label
                     >
                     <div class="relative">
                         <ExternalLink
                             size={16}
-                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                         />
-                        <input
+                        <input id="memory-access-url"
                             type="text"
                             bind:value={archiveForm.accessUrl}
                             placeholder="https://..."
-                            class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4A7C74]/20 focus:border-[#4A7C74] outline-none font-medium text-sm"
+                            class="w-full pl-10 pr-4 py-2 rounded-lg border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none font-medium text-sm"
                         />
                     </div>
-                </div>
-
-                <!-- Custom Fields -->
-                <div class="pt-4 border-t border-slate-100">
-                    <CustomFieldsManager
-                        entityType="external_archive"
-                        bind:data={customAttributes}
-                    />
                 </div>
             </div>
 
             <div
-                class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3"
+                class="p-6 bg-muted border-t border-border flex justify-end gap-3"
             >
                 <button
                     onclick={() => (showArchiveModal = false)}
-                    class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 text-sm"
+                    class="px-4 py-2 font-bold text-muted-foreground hover:text-foreground text-sm"
                 >
-                    Cancel
+                    Maybe later
                 </button>
                 <button
                     onclick={saveArchive}
-                    disabled={!archiveForm.platform ||
+                    disabled={savingArchive || !archiveForm.platform ||
                         !archiveForm.locationDetails}
-                    class="px-6 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm shadow-sm hover:bg-[#3b635d] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                    aria-busy={savingArchive}
+                    class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm shadow-sm hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                 >
-                    <Save size={16} /> Save Location
+                    <Save size={16} /> {savingArchive ? "Saving..." : "Save Location"}
                 </button>
             </div>
         </div>
@@ -346,12 +375,13 @@
 {#if module}
     <LivingBlueprintHeader
         title={module.title}
-        subtitle={module.description}
-        tier={module.role === "owner" ? "preparation" : "executor"}
+        subtitle="Photos, videos, their stories, and where other collections are kept"
     />
 {/if}
 
 <div class="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
+
+    <p class="mb-6 max-w-3xl text-muted-foreground leading-relaxed">Add photos or videos to the Curated Gallery. Open an item and choose Name and describe this memory to record the people, place, date, and story. Use External Archives for collections kept on another service or device, with directions for finding them.</p>
 
     <!-- AI Prompt Bar -->
     <div class="max-w-3xl mx-auto mb-8">
@@ -360,14 +390,14 @@
 
     <!-- Tabs / Navigation -->
     <div
-        class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 border-b border-slate-100 pb-4"
+        class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 border-b border-border pb-4"
     >
-        <div class="flex p-1 bg-slate-100 rounded-full">
+        <div class="flex p-1 bg-muted rounded-full">
             <button
                 class="px-6 py-2 rounded-full font-bold text-sm transition-all {activeTab ===
                 'gallery'
-                    ? 'bg-white text-[#4A7C74] shadow-sm'
-                    : 'text-slate-500 hover:text-[#4A7C74]'}"
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-muted-foreground hover:text-primary'}"
                 onclick={() => (activeTab = "gallery")}
             >
                 Curated Gallery
@@ -375,8 +405,8 @@
             <button
                 class="px-6 py-2 rounded-full font-bold text-sm transition-all {activeTab ===
                 'archives'
-                    ? 'bg-white text-[#4A7C74] shadow-sm'
-                    : 'text-slate-500 hover:text-[#4A7C74]'}"
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-muted-foreground hover:text-primary'}"
                 onclick={() => (activeTab = "archives")}
             >
                 External Archives
@@ -384,18 +414,18 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <DataViewToggle module="visual-memories" onchange={(mode) => dataViewMode = mode} />
             {#if activeTab === "archives"}
                 <button
                     onclick={() => openArchiveModal()}
-                    class="flex items-center gap-2 px-4 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm hover:bg-[#3b635d] transition-colors shadow-sm"
+                    class="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm hover:bg-primary-hover transition-colors shadow-sm"
                 >
                     <Plus size={16} /> Add Location
                 </button>
             {:else}
+                <DataViewToggle module="visual-memories" />
                 <button
                     onclick={triggerUpload}
-                    class="flex items-center gap-2 px-4 py-2 bg-[#4A7C74] text-white rounded-lg font-bold text-sm hover:bg-[#3b635d] transition-colors shadow-sm"
+                    class="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm hover:bg-primary-hover transition-colors shadow-sm"
                 >
                     {#if uploadingCount > 0}
                         <Loader2 size={16} class="animate-spin" /> Saving your memories…
@@ -411,19 +441,19 @@
     {#if activeTab === "gallery"}
         <div in:fade>
             <div
-                class="bg-white rounded-2xl border border-slate-200 p-8 min-h-[400px] relative"
+                class="bg-card rounded-2xl border border-border p-8 min-h-[400px] relative"
             >
                 {#if hasMemories}
                     <div class="absolute top-8 left-8 z-10">
                         <button
                             class="text-sm font-bold px-3 py-1.5 rounded-lg transition-colors {isSelectionMode
-                                ? 'bg-indigo-100 text-indigo-700'
-                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}"
+                                ? 'bg-primary-soft text-primary-hover'
+                                : 'bg-muted text-muted-foreground hover:bg-border'}"
                             onclick={toggleSelectionMode}
                         >
                             {isSelectionMode
-                                ? "Done Selecting"
-                                : "Select Items"}
+                                ? "Finished choosing"
+                                : "Choose items"}
                         </button>
                     </div>
                 {/if}
@@ -438,11 +468,60 @@
                         <div class="flex justify-center mt-6">
                             <button
                                 onclick={triggerUpload}
-                                class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                                class="text-sm font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                             >
                                 <Image size={14} /> Upload First Memory
                             </button>
                         </div>
+                    </div>
+                {:else if dataViewMode === "table"}
+                    <div class="overflow-x-auto mt-12">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="border-b border-border text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                    <th class="py-3 pr-4">Name</th>
+                                    <th class="py-3 pr-4">Type</th>
+                                    <th class="py-3 pr-4">Tags</th>
+                                    <th class="py-3 pr-4">Favorite</th>
+                                    <th class="py-3"><span class="sr-only">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each visualMemories.items as memory (memory.id)}
+                                    <tr class="border-b border-border">
+                                        <td class="py-3 pr-4 font-medium text-foreground">{memory.name}</td>
+                                        <td class="py-3 pr-4 text-muted-foreground">{memory.type === "video" ? "Video" : "Photo"}</td>
+                                        <td class="py-3 pr-4">
+                                            <div class="flex flex-wrap gap-1">
+                                                {#each tagList(memory.tags) as tag}
+                                                    <span class="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{tag}</span>
+                                                {/each}
+                                            </div>
+                                        </td>
+                                        <td class="py-3 pr-4">
+                                            <button
+                                                class="text-xs font-bold px-2 py-1 rounded-lg transition-colors {memory.is_favorite || (memory as any).isFavorite
+                                                    ? 'bg-primary-soft text-primary-hover'
+                                                    : 'text-muted-foreground hover:bg-muted'}"
+                                                aria-pressed={!!(memory.is_favorite || (memory as any).isFavorite)}
+                                                onclick={() => toggleVisualFavorite(Number(memory.id))}
+                                            >
+                                                Favorite
+                                            </button>
+                                        </td>
+                                        <td class="py-3 text-right">
+                                            <button
+                                                aria-label="Remove this item"
+                                                class="text-xs font-bold px-3 py-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                                onclick={() => handleRemoveMemory(Number(memory.id))}
+                                            >
+                                                Remove this item
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
                     </div>
                 {:else}
                     <MemoryGallery
@@ -480,14 +559,14 @@
         <div in:fade>
             {#if !hasArchives}
                 <div
-                    class="bg-white rounded-2xl border border-slate-200 p-4 min-h-[400px] flex items-center justify-center"
+                    class="bg-card rounded-2xl border border-border p-4 min-h-[400px] flex items-center justify-center"
                 >
                     <EmptyState
                         title="Your memories live in many places"
-                        whyMatters="<strong>Your family's most precious photos and videos are scattered across services they may not even know exist.</strong> iCloud, Google Photos, Dropbox, old hard drives, Facebook albums—each one holds irreplaceable memories that could be lost forever if no one knows where to look.<br/><br/>By mapping where your digital memories live, you're ensuring that future generations can access the visual story of your life. These aren't just files—they're birthdays, vacations, quiet moments, and family history."
+                        whyMatters="<strong>Your family's photos and videos live in many places.</strong> iCloud, Google Photos, Dropbox, old hard drives, Facebook albums each hold irreplaceable memories.<br/><br/>Listing where they live helps your family find the visual story of your life: birthdays, vacations, quiet moments, family history."
                         encouragement="Start with just one location—wherever you store most of your photos. You can add more as you remember them."
                         icon={Image}
-                        iconClass="text-purple-500"
+                        iconClass="text-primary"
                         ctaLabel="Add first archive location"
                         onAction={() => openArchiveModal()}
                     />
@@ -507,10 +586,10 @@
                     <!-- Add Card -->
                     <button
                         onclick={() => openArchiveModal()}
-                        class="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-[#4A7C74]/50 hover:bg-[#4A7C74]/5 hover:text-[#4A7C74] transition-all min-h-[160px] group"
+                        class="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all min-h-[160px] group"
                     >
                         <div
-                            class="w-12 h-12 rounded-full bg-slate-50 group-hover:bg-white flex items-center justify-center mb-3 transition-colors"
+                            class="w-12 h-12 rounded-full bg-muted group-hover:bg-card flex items-center justify-center mb-3 transition-colors"
                         >
                             <Plus size={24} />
                         </div>

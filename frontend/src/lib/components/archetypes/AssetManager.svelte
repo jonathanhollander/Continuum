@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
+    import { onMount, untrack } from "svelte";
     import {
         Plus,
         DollarSign,
@@ -20,11 +21,12 @@
         HeartHandshake,
         Sparkles,
         Pencil,
+        X,
+        Archive,
     } from "lucide-svelte";
     import GhostRow from "$lib/components/ui/GhostRow.svelte"; // NEW IMPORT
     import UniversalUploader from "$lib/components/ui/UniversalUploader.svelte";
     import CustomFieldsManager from "$lib/components/ui/CustomFieldsManager.svelte"; // NEW IMPORT
-    import EmptyStateGuide from "$lib/components/ui/EmptyStateGuide.svelte";
     import { language } from "$lib/stores/localization";
     import {
         encouragementMode,
@@ -46,11 +48,20 @@
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
     import { userPreferencesStore, type ViewMode } from "$lib/stores/userPreferencesStore.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
+    import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
+    import { formatMoney } from "$lib/utils/money";
 
-    let { module } = $props<{ module: any }>();
+    // showAddForm is bindable so a page can place Add Asset in its own header (headerAdd=false).
+    let {
+        module,
+        showAddForm = $bindable(false),
+        headerAdd = true,
+    } = $props<{ module: any; showAddForm?: boolean; headerAdd?: boolean }>();
 
     // Determine sync key based on module ID
     // Financial Accounts passes 'assets-main', so we map it to 'financial_assets'
+    // The module is fixed for the life of this page, so the key is read once.
+    // svelte-ignore state_referenced_locally
     const syncKey =
         module.id === "assets-main"
             ? "financial_assets"
@@ -104,13 +115,13 @@
     }
 
     let assets = $derived(assetSync.items);
-    let showAddForm = $state(false);
-    let viewMode = $state<ViewMode>('card');
+    let viewMode = $derived<ViewMode>(userPreferencesStore.getViewMode('financial-accounts'));
 
-    let newAsset = $state<Partial<Asset> & { id?: string; documents?: string }>({
+    // A blank value stays blank (null), so the audit can ask for it; an entered 0 is a real value.
+    let newAsset = $state<Partial<Omit<Asset, "value">> & { value?: number | null; id?: string; documents?: string }>({
         name: "",
         type: "Financial",
-        value: 0,
+        value: null,
         location: "",
         accountNumber: "",
         ownershipPercentage: 100,
@@ -128,6 +139,7 @@
 
     // Reactive object for the custom field manager (binds to this object)
     let parsedCustomAttributes = $state<Record<string, any>>({});
+    let exampleDraft = $state(false);
 
     // AI Intake Mirroring (True Simulation)
     $effect(() => {
@@ -136,21 +148,24 @@
             $conciergeEngine.lastExtractedData?.financial_account ||
             $conciergeEngine.lastExtractedData;
 
-        if (data && (data.name || data.value || data.location)) {
-            // Open form if not already open
-            if (!showAddForm) showAddForm = true;
+        if (data && (data.name || hasNumber(data.value) || data.location)) {
+            // Runs only when the extracted data changes; reading the form here would re-run it forever.
+            untrack(() => {
+                // Open form if not already open
+                if (!showAddForm) showAddForm = true;
 
-            // Sync form state
-            newAsset = {
-                ...newAsset,
-                name: data.name || newAsset.name,
-                type: (data.type || newAsset.type) as AssetType,
-                value: data.value || newAsset.value,
-                location: data.location || newAsset.location,
-                accountNumber: data.accountNumber || newAsset.accountNumber,
-                beneficiaries: data.beneficiaries || newAsset.beneficiaries,
-                notes: data.notes || newAsset.notes,
-            };
+                // Sync form state
+                newAsset = {
+                    ...newAsset,
+                    name: data.name || newAsset.name,
+                    type: (data.type || newAsset.type) as AssetType,
+                    value: hasNumber(data.value) ? data.value : newAsset.value, // an extracted 0 is a real value
+                    location: data.location || newAsset.location,
+                    accountNumber: data.accountNumber || newAsset.accountNumber,
+                    beneficiaries: data.beneficiaries || newAsset.beneficiaries,
+                    notes: data.notes || newAsset.notes,
+                };
+            });
         }
     });
 
@@ -172,6 +187,18 @@
         if (syncKey !== "financial_assets" || assetSync.lastSync === null) assetSync.sync();
     });
 
+    // Saved custom fields as an object; an unreadable value reads as none, so one row never stops the list.
+    function customAttrsOf(raw: unknown): Record<string, any> {
+        if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw as Record<string, any>;
+        if (typeof raw === "string" && raw) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+            } catch {}
+        }
+        return {};
+    }
+
     function parseHistory(history: number[] | string | undefined): number[] {
         if (Array.isArray(history)) return history;
         if (typeof history === "string" && history) {
@@ -190,6 +217,18 @@
         return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 100;
     }
 
+    // The form's value as saved: blank (or not a number) is null, anything entered is that number.
+    function valueOf(v: any): number | null {
+        if (v === null || v === undefined || String(v).trim() === "") return null;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+    }
+
+    // A value was given (0 counts); blank, null or not-a-number does not.
+    function hasNumber(v: any): boolean {
+        return valueOf(v) !== null;
+    }
+
     // Real change only: first recorded value to the latest one; nothing until two values exist.
     function changeOf(history: number[] | string | undefined): number | null {
         const h = parseHistory(history);
@@ -200,90 +239,65 @@
         return ((last - first) / Math.abs(first)) * 100;
     }
 
+    const saveAttempt = formSaveAttempt(assetSync);
+
+    // One save at a time: while it is open the button waits, so a second click sends nothing.
+    let saving = $state(false);
     async function saveAsset() {
-        if (!newAsset.name) return;
-
-        // Serialize Custom Attributes
-        const customAttributesStr = JSON.stringify(parsedCustomAttributes);
-
+        if (saving) return;
+        saving = true;
         try {
-        if (newAsset.id) {
-            // Edit Mode - update via SyncManager
-            const value = Number(newAsset.value) || 0;
-            // History records real saved values: append only when the value changed.
-            const previous = assets.find((a) => a.id === newAsset.id);
-            const history = [...parseHistory(newAsset.valueHistory)];
-            if (history.length === 0 && previous && Number(previous.value) !== value)
-                history.push(Number(previous.value) || 0);
-            if (history.length === 0 || history[history.length - 1] !== value)
-                history.push(value);
-            const updates = {
-                ...newAsset,
-                value,
-                ownershipPercentage: ownershipOf(newAsset.ownershipPercentage),
-                customAttributes: customAttributesStr,
-                valueHistory: history,
-            };
-
-            await assetSync.update(newAsset.id, updates);
-
-            // Log UPDATE
-            activityLog.logEvent({
-                module: module.name || "Asset Manager",
-                action: "UPDATE",
-                entityType: "Asset",
-                entityId: newAsset.id,
-                entityName: newAsset.name || "Unnamed Asset",
-                changes: [], // Simplified for now
-                userContext: $estateProfile.ownerName || "User",
-            });
-        } else {
-            // Create Mode - create via SyncManager
-            const created = await assetSync.create({
-                name: newAsset.name!,
-                type: (newAsset.type as AssetType) || "Other",
-                value: Number(newAsset.value) || 0,
-                location: newAsset.location || "",
-                accountNumber: newAsset.accountNumber || "",
-                ownershipPercentage: ownershipOf(newAsset.ownershipPercentage),
-                beneficiaries: newAsset.beneficiaries || "",
-                notes: newAsset.notes || "",
-                loginUrl: newAsset.loginUrl || "",
-                beneficiaryEmail: newAsset.beneficiaryEmail || "",
-                image: newAsset.image || "",
-                is_closed: newAsset.is_closed || false,
-                closure_date: newAsset.closure_date || "",
-                closureNotes: newAsset.closureNotes || "",
-                documents: newAsset.documents || "",
-                valueHistory: [Number(newAsset.value) || 0], // the one real value so far
-                customAttributes: customAttributesStr,
-            }, false, false, saveAsset);
-
-            // Log CREATE
-            activityLog.logEvent({
-                module: module.name || "Asset Manager",
-                action: "CREATE",
-                entityType: "Asset",
-                entityId: created.id,
-                entityName: created.name,
-                userContext: $estateProfile.ownerName || "User",
-            });
+            await saveAssetOnce();
+        } finally {
+            saving = false;
         }
+    }
 
-        // save(); // SyncManager handles persistence
-        resetForm();
+    async function saveAssetOnce() {
+        if (!newAsset.name) return;
+        const form = newAsset;
+        const fields = JSON.stringify([form, parsedCustomAttributes]);
+        const ownerName = $estateProfile.ownerName || "User";
+        const value = valueOf(form.value);
+        const history = [...parseHistory(form.valueHistory)];
+        const previousValue = valueOf(assets.find((a) => a.id === form.id)?.value);
+        if (form.id && history.length === 0 && previousValue !== null && previousValue !== value)
+            history.push(previousValue);
+        if (value !== null && (history.length === 0 || history[history.length - 1] !== value)) history.push(value);
+        const payload = {
+            ...form,
+            name: form.name!,
+            type: (form.type as AssetType) || "Other",
+            value,
+            ownershipPercentage: ownershipOf(form.ownershipPercentage),
+            customAttributes: JSON.stringify(parsedCustomAttributes),
+            valueHistory: form.id ? history : value === null ? [] : [value],
+        };
+        const id = form.id;
+        try {
+            await saveAttempt(form, payload, (saved) => {
+                activityLog.logEvent({
+                    module: module.name || "Asset Manager", action: id ? "UPDATE" : "CREATE",
+                    entityType: "Asset", entityId: saved.id, entityName: saved.name,
+                    userContext: ownerName,
+                });
+                if (newAsset !== form) return;
+                if (JSON.stringify([form, parsedCustomAttributes]) === fields) resetForm();
+                else newAsset.id = saved.id;
+            }, id);
         } catch {
-            // The manager already showed the one gentle message; the form stays open with the draft.
+            // The captured attempt stays available through Try Again.
         }
     }
 
     function editAsset(asset: Asset) {
+        exampleDraft = false;
         // Ensure all form fields have defaults to prevent bind:value={undefined} errors
         newAsset = {
             id: asset.id,
             name: asset.name || "",
             type: asset.type || "Financial",
-            value: asset.value || 0,
+            value: valueOf(asset.value),
             location: asset.location || "",
             accountNumber: asset.accountNumber || "",
             ownershipPercentage: asset.ownershipPercentage ?? 100,
@@ -299,24 +313,21 @@
             customAttributes: asset.customAttributes || "{}",
             documents: asset.documents || "",
         };
-        try {
-            parsedCustomAttributes = JSON.parse(asset.customAttributes || "{}");
-        } catch (e) {
-            parsedCustomAttributes = {};
-        }
+        parsedCustomAttributes = customAttrsOf(asset.customAttributes);
         showAddForm = true;
     }
 
     function resetForm() {
+        exampleDraft = false;
         newAsset = {
             id: undefined, // Clear ID to switch back to create mode
             name: "",
             type: "Financial",
-            value: 0,
+            value: null,
             location: "",
             accountNumber: "",
             ownershipPercentage: 100,
-            beneficiaries: $estateProfile.primaryBeneficiary || "",
+            beneficiaries: "",
             notes: "",
             valueHistory: [],
             loginUrl: "",
@@ -333,7 +344,7 @@
     }
 
     async function removeAsset(id: string) {
-        if (!confirm("Remove this asset? You can add it back later if needed."))
+        if (!(await askConfirm("Remove this asset? You can add it back later if needed.")))
             return;
         const asset = assets.find((a) => a.id === id);
 
@@ -395,79 +406,69 @@
         switch (type) {
             // Warmer, more comforting gradients for "Legacy" feel
             case "Property":
-                return "from-amber-600/10 to-stone-200/20";
+                return "from-secondary/10 to-primary/5";
             case "Business":
-                return "from-slate-600/10 to-gray-200/20";
+                return "from-secondary/10 to-border/20";
             case "Financial":
-                return "from-emerald-600/10 to-teal-200/20";
+                return "from-primary/10 to-primary/5";
             default:
-                return "from-gray-500/10 to-slate-200/20";
+                return "from-muted-foreground/10 to-border/20";
         }
     }
 
+    // One starter pack at a time: a second click while it is adding sends nothing.
+    let addingStarter = $state(false);
     async function addStarterPack() {
+        if (addingStarter) return;
+        addingStarter = true;
         const address =
             $estateProfile.legalAddress ||
             $estateProfile.legalCityState ||
-            "Home Address";
+            "";
         const starterItems = [
-            {
-                name: "Primary Residence",
-                type: "Property",
-                value: 0,
-                location: address,
-                notes: "Deed location pending",
-            },
-            {
-                name: "Main Checking Account",
-                type: "Financial",
-                value: 0,
-                location: "Bank Name",
-                accountNumber: "Last 4",
-            },
-            {
-                name: "Life Insurance Policy",
-                type: "Financial",
-                value: 0,
-                location: "Provider Name",
-                notes: "Policy # needed",
-            },
-            {
-                name: "Primary Vehicle",
-                type: "Vehicle",
-                value: 0,
-                location: "Garage",
-                notes: "Title location pending",
-            },
+            // Only what is known: the rest stays blank until the person fills it in.
+            { name: "Primary Residence", type: "Property", location: address },
+            { name: "Main Checking Account", type: "Financial", location: "" },
+            { name: "Life Insurance Policy", type: "Financial", location: "" },
+            { name: "Primary Vehicle", type: "Vehicle", location: "" },
         ];
 
-        // Create all in parallel
-        await Promise.all(
-            starterItems.map((item) =>
-                assetSync.create({
+        try {
+            // One at a time, skipping any already saved, so Try Again adds only what is still to come.
+            for (const item of starterItems) {
+                if (assetSync.items.some((a) => a.name === item.name)) continue;
+                await assetSync.create({
                     name: item.name,
                     type: item.type as AssetType,
-                    value: 0,
+                    value: null, // blank until the person adds one, so the audit asks for it
                     location: item.location,
-                    accountNumber: item.accountNumber || "",
+                    accountNumber: "",
                     ownershipPercentage: 100,
-                    beneficiaries: $estateProfile.primaryBeneficiary || "",
-                    notes: item.notes || "",
+                    beneficiaries: "",
+                    notes: "Starter record: replace the name and add the details from your own records.",
                     valueHistory: [],
                     loginUrl: "",
                     beneficiaryEmail: "",
                     closureNotes: "",
-                }),
-            ),
-        );
+                }, false, false, addStarterPack);
+            }
+        } catch {
+            // The manager already showed the one gentle message, with Try Again.
+        } finally {
+            addingStarter = false;
+        }
     }
 
     // Debts are owed: subtracted from the estate, never added.
     const totals = $derived(estateTotals(assets));
 
-    // Dollars and cents, with the sign before the symbol: -$1,250.50
-    const money = (n: number) =>
-        (Number(n) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
+    // The same cents and sign rule as the packet. Debt is an amount owed, however it was typed.
+    const money = formatMoney;
+    const signedAmount = (a: any, value: number): number => isDebt(a) ? -Math.abs(value) : value;
+    // A row's own value as shown: a blank value reads as an em dash, $0 reads as $0.00.
+    const shownValue = (a: any): string =>
+        hasNumber(a.value) ? money(signedAmount(a, Number(a.value))) : "\u2014";
+    const shownShare = (a: any): string => money(signedAmount(a, ownedValue(a)));
     // The owned share as a whole percent, when it is something other than sole ownership
     const partShare = (a: any): number | null => {
         const pct = ownershipOf(a.ownershipPercentage);
@@ -515,59 +516,62 @@
 <div class="space-y-8 animate-in fade-in duration-500">
     <!-- Total Wealth Header -->
     <div
-        class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6"
+        class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-6"
     >
         <div>
             <h2
-                class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-1"
+                class="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1"
             >
-                Net Estate Value
+                Net financial value recorded
             </h2>
-            <div class="text-4xl font-serif font-bold text-[#304743]" data-testid="estate-net">
+            <div class="text-4xl font-serif font-bold text-foreground" data-testid="estate-net">
                 {#if $userRole !== "Family"}
                     {money(totals.net)}
                 {:else}
                     $•••,•••,•••
                 {/if}
             </div>
+            <p class="text-xs text-muted-foreground mt-1">Open records in this list, after ownership shares and amounts owed. Use the separate Property page for property records.</p>
             {#if $userRole !== "Family" && totals.debts > 0}
-                <p class="text-xs text-gray-500 mt-1" data-testid="estate-breakdown">
+                <p class="text-xs text-muted-foreground mt-1" data-testid="estate-breakdown">
                     {money(totals.assets)} in assets, less {money(totals.debts)} owed
                 </p>
             {/if}
         </div>
         <div class="flex gap-3 items-center">
-            <DataViewToggle module="financial-accounts" onchange={(mode) => viewMode = mode} />
-            {#if $userRole !== "Family"}
+            <DataViewToggle module="financial-accounts" />
+            {#if $userRole !== "Family" && headerAdd}
                 <button
                     onclick={() => (showAddForm = true)}
-                    class="px-4 py-2 rounded-lg bg-[#4A7C74] text-white text-sm font-bold hover:bg-[#3b635d] transition-colors flex items-center gap-2 shadow-lg shadow-[#4A7C74]/20"
+                    class="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
                 >
-                    <Plus size={16} /> Add Asset
+                    <Plus size={16} /> Share an asset
                 </button>
             {/if}
-            <button
-                onclick={exportToCSV}
-                class="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-sm font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
-            >
-                <TrendingUp size={16} /> Export CSV
-            </button>
+            {#if $userRole !== "Family"}
+                <!-- The file holds every value and account number, which Family view masks. -->
+                <button
+                    onclick={exportToCSV}
+                    class="px-4 py-2 rounded-lg bg-muted text-muted-foreground text-sm font-bold hover:bg-border transition-colors flex items-center gap-2"
+                >
+                    <TrendingUp size={16} /> Save a copy as a spreadsheet
+                </button>
+            {/if}
         </div>
     </div>
     <!-- Role-Based Context Banner -->
     {#if $userRole === "Executor"}
         <div
             in:slide
-            class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r shadow-sm flex items-start gap-3"
+            class="bg-info/10 border-l-4 border-info p-4 rounded-r shadow-sm flex items-start gap-3"
         >
-            <Info class="text-blue-600 shrink-0 mt-0.5" size={20} />
+            <Info class="text-info shrink-0 mt-0.5" size={20} />
             <div>
-                <h4 class="font-bold text-blue-900 text-sm">
+                <h4 class="font-bold text-foreground text-sm">
                     Executor View Active
                 </h4>
-                <p class="text-blue-700 text-xs mt-1">
-                    You have full access to view and manage assets. Ensure all
-                    valuations are up to date for probate filing.
+                <p class="text-muted-foreground text-xs mt-1">
+                    Use these recorded details to identify accounts and prepare questions for the institution or relevant professional.
                 </p>
             </div>
         </div>
@@ -594,35 +598,30 @@
                 ></div>
 
                 <div
-                    class="bg-white rounded-[3rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative"
+                    class="bg-card rounded-[3rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative"
                     in:scale={{ start: 0.95, duration: 300 }}
                 >
                     <!-- Modal Header -->
                     <div class="p-10 pb-0 flex items-center justify-between">
                         <div>
                             <nav
-                                class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#4A7C74] mb-3"
+                                class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3"
                             >
                                 <Wallet size={12} />
-                                <span>Asset Inventory</span>
+                                <span>Account record</span>
                             </nav>
                             <h2
                                 id="asset-form-title"
-                                class="text-4xl font-black text-slate-900 tracking-tighter"
+                                class="text-4xl font-black text-foreground tracking-tighter"
                             >
-                                {newAsset.id ? "Update" : "Add"}
-                                <span class="text-[#4A7C74]">Asset</span>
+                                {newAsset.id ? "Update account or debt" : "Record account or debt"}
                             </h2>
                         </div>
                         <button aria-label="Close"
                             onclick={resetForm}
-                            class="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:rotate-90 transition-all duration-500"
+                            class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-foreground hover:rotate-90 transition-all duration-500"
                         >
-                            <Trash2
-                                size={24}
-                                strokeWidth={3}
-                                class="rotate-45"
-                            />
+                            <X size={24} strokeWidth={3} />
                         </button>
                     </div>
 
@@ -630,27 +629,27 @@
                         <!-- Group 1: Identity -->
                         <section>
                             <h3
-                                class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                                class="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
                             >
                                 <span
-                                    class="w-6 h-[2px] bg-[#4A7C74] rounded-full"
+                                    class="w-6 h-[2px] bg-primary rounded-full"
                                 ></span>
-                                Asset Details
+                                Account details
                             </h3>
                             <div
                                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                             >
                                 <div class="space-y-3">
                                     <label for="asset-asset-name"
-                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
-                                        >Asset Name</label
+                                        class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
+                                        >Account or debt name</label
                                     >
                                     <input
                                         id="asset-asset-name"
                                         type="text"
                                         bind:value={newAsset.name}
-                                        placeholder="e.g. Chase Checking, Tesla Model Y"
-                                        class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all {$conciergeEngine
+                                        placeholder="e.g. Checking account or credit card"
+                                        class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all {$conciergeEngine
                                             .lastExtractedData?.name
                                             ? 'amber-glow border-amber-500/50'
                                             : ''}"
@@ -658,13 +657,13 @@
                                 </div>
                                 <div class="space-y-3">
                                     <label for="asset-asset-type"
-                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                        class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                         >Asset Type</label
                                     >
                                     <select
                                         id="asset-asset-type"
                                         bind:value={newAsset.type}
-                                        class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
+                                        class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all appearance-none cursor-pointer"
                                     >
                                         {#each TYPE_OPTIONS as opt}
                                             <option value={opt.value}>{opt.label}</option>
@@ -676,43 +675,46 @@
                                 </div>
                                 <div class="space-y-3">
                                     <label for="asset-est-value"
-                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1 font-mono"
-                                        >Est. Value ($)</label
+                                        class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1 font-mono"
+                                        >Balance or amount owed ($)</label
                                     >
                                     <div class="relative">
                                         <DollarSign
                                             size={16}
-                                            class="absolute left-4 top-4.5 text-[#4A7C74]"
+                                            class="absolute left-4 top-4.5 text-primary"
                                         />
                                         <input
                                             id="asset-est-value"
                                             type="number"
                                             bind:value={newAsset.value}
-                                            class="w-full bg-white border-2 border-transparent focus:border-[#4A7C74] rounded-2xl p-4 pl-10 text-sm font-black outline-none transition-all shadow-sm"
+                                            class="w-full bg-card border-2 border-transparent focus:border-primary rounded-2xl p-4 pl-10 text-sm font-black outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                 </div>
                             </div>
+
+                            <p class="mt-3 text-sm text-muted-foreground">Enter the full recorded balance before your ownership percentage below. For a debt, choose Debt or loan and enter the amount owed. Add the statement date and source in Notes.</p>
+                            {#if exampleDraft}<p class="mt-3 text-sm text-primary-hover" role="status">Example starting point: enter your own account name and details. Any words you had already entered stay in the form.</p>{/if}
 
                             <div
                                 class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8"
                             >
                                 <div class="space-y-3">
                                     <label for="asset-location-institution"
-                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
-                                        >Location / Institution</label
+                                        class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
+                                        >Institution or record location</label
                                     >
                                     <input
                                         id="asset-location-institution"
                                         bind:value={newAsset.location}
-                                        placeholder="e.g. 123 Main St, Wallet"
-                                        class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                        placeholder="e.g. Institution name or statement location"
+                                        class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                                     />
                                 </div>
                                 {#if newAsset.type === "Financial" || newAsset.type === "Digital"}
                                     <div class="space-y-3">
                                         <label for="asset-login-url"
-                                            class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                            class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                             >Login URL</label
                                         >
                                         <input
@@ -720,14 +722,14 @@
                                             type="text"
                                             bind:value={newAsset.loginUrl}
                                             placeholder="https://..."
-                                            class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                            class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                                         />
                                     </div>
                                 {/if}
                                 <div class="space-y-3">
                                     <label
                                         for="asset-account-number"
-                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                        class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                         >Account Number</label
                                     >
                                     <input
@@ -735,13 +737,13 @@
                                         type="text"
                                         bind:value={newAsset.accountNumber}
                                         placeholder="e.g. last four digits"
-                                        class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                        class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                                     />
                                 </div>
                                 <div class="space-y-3">
                                     <label
                                         for="asset-ownership"
-                                        class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                        class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                         >Your Ownership (%)</label
                                     >
                                     <input
@@ -750,12 +752,12 @@
                                         min="0"
                                         max="100"
                                         bind:value={newAsset.ownershipPercentage}
-                                        class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-4 text-sm font-bold outline-none transition-all"
+                                        class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-4 text-sm font-bold outline-none transition-all"
                                     />
                                 </div>
                             </div>
 
-                            <div class="mt-8 pt-8 border-t border-slate-100">
+                            <div class="mt-8 pt-8 border-t border-border">
                                 <CustomFieldsManager
                                     entityType="asset"
                                     bind:data={parsedCustomAttributes}
@@ -765,20 +767,20 @@
 
                         <!-- Group 2: Documentation -->
                         <section
-                            class="bg-[#4A7C74]/5 rounded-[2.5rem] p-8 border border-[#4A7C74]/10"
+                            class="bg-primary/5 rounded-[2.5rem] p-8 border border-primary/10"
                         >
                             <h3
-                                class="text-xs font-black text-[#4A7C74] uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                                class="text-xs font-black text-primary-hover uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
                             >
                                 <span
-                                    class="w-6 h-[2px] bg-[#4A7C74] rounded-full"
+                                    class="w-6 h-[2px] bg-primary rounded-full"
                                 ></span>
-                                Verification
+                                Supporting documents
                             </h3>
 
                             <div class="space-y-6">
                                 <div
-                                    class="bg-white/50 rounded-2xl p-6 border border-[#4A7C74]/10"
+                                    class="bg-card/50 rounded-2xl p-6 border border-primary/10"
                                 >
                                     <UniversalUploader
                                         label="Upload Statement or Document"
@@ -794,20 +796,20 @@
                                 >
                                     <div class="space-y-3">
                                         <label for="asset-beneficiary-name"
-                                            class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
-                                            >Beneficiary Name</label
+                                            class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
+                                            >Beneficiary recorded on account documents</label
                                         >
                                         <input
                                             id="asset-beneficiary-name"
                                             type="text"
                                             bind:value={newAsset.beneficiaries}
-                                            placeholder="Who inherits this?"
-                                            class="w-full bg-white border-2 border-transparent focus:border-[#4A7C74] rounded-2xl p-4 text-sm font-bold outline-none transition-all shadow-sm"
+                                            placeholder="As shown on the institution's paperwork"
+                                            class="w-full bg-card border-2 border-transparent focus:border-primary rounded-2xl p-4 text-sm font-bold outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                     <div class="space-y-3">
                                         <label for="asset-beneficiary-email"
-                                            class="text-[11px] font-black text-slate-800 uppercase tracking-wider pl-1"
+                                            class="text-[11px] font-black text-foreground uppercase tracking-wider pl-1"
                                             >Beneficiary Email</label
                                         >
                                         <input
@@ -817,7 +819,7 @@
                                                 newAsset.beneficiaryEmail
                                             }
                                             placeholder="Contact for beneficiary..."
-                                            class="w-full bg-white border-2 border-transparent focus:border-[#4A7C74] rounded-2xl p-4 text-sm font-bold outline-none transition-all shadow-sm"
+                                            class="w-full bg-card border-2 border-transparent focus:border-primary rounded-2xl p-4 text-sm font-bold outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                 </div>
@@ -827,7 +829,7 @@
                         <!-- Group 3: Notes -->
                         <section>
                             <h3
-                                class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                                class="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
                             >
                                 <span
                                     class="w-6 h-[2px] bg-slate-300 rounded-full"
@@ -836,15 +838,37 @@
                             </h3>
                             <textarea
                                 bind:value={newAsset.closureNotes}
-                                placeholder="Instructions for the Executor on how to find/close/transfer this..."
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[120px] resize-none leading-relaxed"
+                                placeholder="Where are the latest statement and originals? Who should your family contact, and what should they ask?"
+                                class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[120px] resize-none leading-relaxed"
                             ></textarea>
+                            <!-- A closed account stays on record and leaves the estate total. -->
+                            <div class="mt-6 flex flex-wrap items-center gap-6">
+                                <label class="flex items-center gap-3 text-sm font-bold text-foreground cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        data-testid="asset-closed"
+                                        bind:checked={newAsset.is_closed}
+                                        class="w-5 h-5 accent-primary"
+                                    />
+                                    This account has been closed
+                                </label>
+                                {#if newAsset.is_closed}
+                                    <label class="flex items-center gap-3 text-sm font-bold text-foreground">
+                                        Date closed
+                                        <input
+                                            type="date"
+                                            bind:value={newAsset.closure_date}
+                                            class="bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-xl px-3 py-2 text-sm font-medium outline-none"
+                                        />
+                                    </label>
+                                {/if}
+                            </div>
                         </section>
 
                         <!-- Group 4: Notes -->
                         <section>
                             <h3
-                                class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
+                                class="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-6 flex items-center gap-3"
                             >
                                 <span
                                     class="w-6 h-[2px] bg-slate-300 rounded-full"
@@ -854,28 +878,30 @@
                             <textarea
                                 id="asset-notes"
                                 bind:value={newAsset.notes}
-                                placeholder="Anything else your family may find helpful..."
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-[#4A7C74] focus:bg-white rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[100px] resize-none leading-relaxed"
+                                placeholder="Statement date and source, ownership details, adviser contact, and questions still to check"
+                                class="w-full bg-background border-2 border-transparent focus:border-primary focus:bg-card rounded-2xl p-6 text-sm font-medium outline-none transition-all min-h-[100px] resize-none leading-relaxed"
                             ></textarea>
                         </section>
                     </div>
 
                     <!-- Footer Actions -->
                     <div
-                        class="p-8 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-4"
+                        class="p-8 border-t border-border bg-background/50 flex justify-end gap-4"
                     >
                         <button
                             onclick={resetForm}
-                            class="px-8 py-4 rounded-2xl font-bold text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all"
+                            class="px-8 py-4 rounded-2xl font-bold text-muted-foreground hover:bg-muted hover:text-muted-foreground transition-all"
                         >
-                            Cancel
+                            Maybe later
                         </button>
                         <button
                             onclick={saveAsset}
-                            class="px-10 py-4 rounded-2xl bg-[#4A7C74] hover:bg-[#3b635d] text-white font-black shadow-xl shadow-[#4A7C74]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+                            disabled={saving}
+                            aria-busy={saving}
+                            class="px-10 py-4 rounded-2xl bg-primary hover:bg-primary-hover text-primary-foreground font-black shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50"
                         >
                             <Sparkles size={18} />
-                            {newAsset.id ? "Update Asset" : "Add to Inventory"}
+                            {saving ? "Saving..." : newAsset.id ? "Save my changes" : "Save account or debt"}
                         </button>
                     </div>
                 </div>
@@ -894,26 +920,28 @@
             {@const sparkline = getSparklinePoints(asset.valueHistory)}
             <div
                 transition:scale={{ duration: 300 }}
-                class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-[#4A7C74]/20 relative overflow-hidden"
+                class="group bg-card rounded-xl p-6 pb-14 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 relative overflow-hidden"
             >
+                {#if $userRole !== "Family"}
                 <div
-                    class="absolute top-2 right-2 flex gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+                    class="absolute bottom-3 right-3 flex gap-1 z-20"
                 >
                     <button
                         onclick={() => editAsset(asset)}
-                        class="p-2 bg-white/80 rounded-full text-blue-400 hover:text-blue-600 hover:bg-blue-50"
-                        title="Edit Asset"
+                        class="p-2 bg-card/80 rounded-full text-muted-foreground hover:text-primary hover:bg-primary-soft"
+                        title="Edit these details"
                     >
                         <Pencil size={16} />
                     </button>
                     <button
                         onclick={() => removeAsset(asset.id)}
-                        class="p-2 bg-white/80 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50"
-                        title="Delete Asset"
+                        class="p-2 bg-card/80 rounded-full text-muted-foreground hover:text-danger hover:bg-danger-soft"
+                        title="Remove this item"
                     >
                         <Trash2 size={16} />
                     </button>
                 </div>
+                {/if}
 
                 <!-- Background Gradient Decoration -->
                 <div
@@ -924,21 +952,21 @@
 
                 <div class="flex justify-between items-start relative z-10">
                     <div
-                        class="p-3 rounded-xl bg-secondary/30 text-[#4A7C74] group-hover:scale-110 transition-transform duration-300"
+                        class="p-3 rounded-xl bg-secondary/30 text-primary group-hover:scale-110 transition-transform duration-300"
                     >
                         <Icon size={24} />
                     </div>
                     <div class="text-right">
                         {#if $userRole !== "Family"}
                             <div class="font-bold text-lg text-foreground">
-                                {isDebt(asset) ? "-" : ""}{money(Math.abs(asset.value || 0))}
+                                {shownValue(asset)}
                             </div>
                             {#if isDebt(asset)}
-                                <div class="text-[11px] text-slate-500 font-medium">Owed</div>
+                                <div class="text-[11px] text-muted-foreground font-medium">Owed</div>
                             {/if}
-                            {#if partShare(asset) !== null}
-                                <div class="text-[11px] text-slate-500 font-medium" data-testid="owned-share">
-                                    Your {partShare(asset)}% share: {money(Math.abs(ownedValue(asset)))}
+                            {#if partShare(asset) !== null && hasNumber(asset.value)}
+                                <div class="text-[11px] text-muted-foreground font-medium" data-testid="owned-share">
+                                    Your {partShare(asset)}% share: {shownShare(asset)}
                                 </div>
                             {/if}
                         {:else}
@@ -955,7 +983,7 @@
                             <div
                                 data-testid="value-change"
                                 title="Change since the first recorded value"
-                                class="flex items-center justify-end gap-1 text-xs font-medium {change > 0 ? 'text-emerald-600' : 'text-slate-500'}"
+                                class="flex items-center justify-end gap-1 text-xs font-medium {change > 0 ? 'text-success' : 'text-muted-foreground'}"
                             >
                                 <TrendingUp size={12} class={change > 0 ? "" : "rotate-180"} />
                                 <span>{change > 0 ? "+" : ""}{change.toFixed(1)}%</span>
@@ -968,6 +996,14 @@
                     <h3 class="font-bold text-lg leading-tight">
                         {asset.name}
                     </h3>
+                    {#if asset.is_closed}
+                        <span
+                            data-testid="closed-badge"
+                            class="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[11px] font-bold"
+                        >
+                            <Archive size={12} /> Closed{asset.closure_date ? ` ${asset.closure_date}` : ""}
+                        </span>
+                    {/if}
                     {#if asset.location}
                         <p class="text-sm text-muted-foreground mt-1">
                             {asset.location}
@@ -975,22 +1011,52 @@
                     {/if}
                 </div>
 
+                <!-- Saved details, shown when they exist -->
+                {#if asset.beneficiaries || asset.closureNotes || ($userRole !== "Family" && (asset.accountNumber || asset.loginUrl))}
+                    <dl class="mt-4 pt-4 border-t border-border/50 space-y-2 relative z-10 text-[11px]" data-testid="asset-details">
+                        {#if asset.beneficiaries}
+                            <div class="flex justify-between gap-3">
+                                <dt class="text-muted-foreground font-black uppercase tracking-widest shrink-0">Beneficiary</dt>
+                                <dd class="text-muted-foreground font-bold text-right break-words">{asset.beneficiaries}</dd>
+                            </div>
+                        {/if}
+                        {#if $userRole !== "Family" && asset.accountNumber}
+                            <div class="flex justify-between gap-3">
+                                <dt class="text-muted-foreground font-black uppercase tracking-widest shrink-0">Account Number</dt>
+                                <dd class="text-muted-foreground font-bold text-right break-all">{asset.accountNumber}</dd>
+                            </div>
+                        {/if}
+                        {#if $userRole !== "Family" && asset.loginUrl}
+                            <div class="flex justify-between gap-3">
+                                <dt class="text-muted-foreground font-black uppercase tracking-widest shrink-0">Login URL</dt>
+                                <dd class="text-muted-foreground font-bold text-right break-all">{asset.loginUrl}</dd>
+                            </div>
+                        {/if}
+                        {#if asset.closureNotes}
+                            <div>
+                                <dt class="text-muted-foreground font-black uppercase tracking-widest">Transfer Instructions</dt>
+                                <dd class="text-muted-foreground font-medium mt-1 whitespace-pre-line">{asset.closureNotes}</dd>
+                            </div>
+                        {/if}
+                    </dl>
+                {/if}
+
                 <!-- Custom Fields Display -->
                 {#if asset.customAttributes && asset.customAttributes !== "{}"}
                     {@const customEntries = Object.entries(
-                        JSON.parse(asset.customAttributes),
+                        customAttrsOf(asset.customAttributes),
                     ).filter(([_, v]) => v !== undefined && v !== "")}
                     {#if customEntries.length > 0}
                         <div
-                            class="mt-4 pt-4 border-t border-slate-50 space-y-2 relative z-10"
+                            class="mt-4 pt-4 border-t border-border/50 space-y-2 relative z-10"
                         >
                             {#each customEntries as [key, value]}
                                 <div class="flex justify-between text-[11px]">
                                     <span
-                                        class="text-slate-400 font-black uppercase tracking-widest"
+                                        class="text-muted-foreground font-black uppercase tracking-widest"
                                         >{key}</span
                                     >
-                                    <span class="text-slate-600 font-bold"
+                                    <span class="text-muted-foreground font-bold"
                                         >{value === true
                                             ? "Yes"
                                             : value === false
@@ -1008,7 +1074,7 @@
                     <div class="mt-4 h-8 w-full opacity-25" data-testid="value-sparkline">
                         <svg
                             viewBox="0 0 100 30"
-                            class="w-full h-full stroke-[#4A7C74] fill-none stroke-2"
+                            class="w-full h-full stroke-primary fill-none stroke-2"
                             preserveAspectRatio="none"
                         >
                             <polyline points={sparkline} />
@@ -1022,11 +1088,11 @@
         <!-- Smart Default Empty State -->
         {#if assets.length === 0}
             <div
-                class="col-span-full border border-amber-200 bg-amber-50/50 rounded-xl p-4 mb-4 flex items-center gap-3 text-amber-800"
+                class="col-span-full border border-border bg-primary-soft rounded-xl p-4 mb-4 flex items-center gap-3 text-primary-hover"
             >
                 <Sparkles size={20} />
                 <p class="text-sm font-medium">
-                    Concierge Mode: Showing examples based on your region.
+                    These examples open a blank record for your own details. Your entered words stay in the form.
                 </p>
             </div>
 
@@ -1039,18 +1105,17 @@
                     value={sampleValue}
                     type="Asset"
                     onclick={() => {
+                        exampleDraft = true;
                         newAsset = {
                             ...newAsset,
-                            name: sample.name,
-                            type: sample.type as AssetType,
-                            value: sampleValue,
+                            type: (newAsset.name ? newAsset.type : sample.type) as AssetType,
                         };
                         showAddForm = true;
                     }}
                 >
                     {#snippet icon()}
                         {@const Icon = getIcon(sample.type as AssetType)}
-                        <Icon size={20} class="text-slate-400" />
+                        <Icon size={20} class="text-muted-foreground" />
                     {/snippet}
                 </GhostRow>
             {/each}
@@ -1059,85 +1124,92 @@
                 {#if $userRole !== "Family"}
                     <button
                         onclick={addStarterPack}
-                        class="text-sm font-bold text-[#4A7C74] hover:bg-[#4A7C74]/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        disabled={addingStarter}
+                        class="disabled:opacity-50 text-sm font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
-                        <Sparkles size={14} /> Or use the Starter Pack
+                        <Sparkles size={14} /> Add a blank starter list
                     </button>
                     <!-- Fallback manual trigger -->
                     <button
                         onclick={() => (showAddForm = true)}
-                        class="text-sm font-bold text-stone-400 hover:text-[#4A7C74] px-4 py-2"
+                        class="text-sm font-bold text-muted-foreground hover:text-primary px-4 py-2"
                     >
-                        Add Item Manually
+                        Or share your own
                     </button>
                 {/if}
             </div>
+            <p class="text-center text-xs text-muted-foreground">The starter list adds common record names with blank amounts. Open each record to replace its name and add your own details.</p>
         {/if}
     </div>
     {:else}
     <!-- Table View -->
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="bg-card rounded-xl border border-border overflow-hidden">
         <table class="w-full">
-            <thead class="bg-slate-50 border-b border-slate-200">
+            <thead class="bg-background border-b border-border">
                 <tr>
-                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Asset</th>
-                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Type</th>
-                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-slate-500">Location</th>
-                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Value</th>
-                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-slate-500">Actions</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Asset</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Type</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Location</th>
+                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Value</th>
+                    <th class="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Actions</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody class="divide-y divide-border">
                 {#each assets as asset (asset.id)}
                     {@const Icon = getIcon(asset.type)}
-                    <tr class="hover:bg-slate-50 transition-colors group">
+                    <tr class="hover:bg-background transition-colors group">
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 shrink-0 rounded-lg bg-secondary/30 flex items-center justify-center text-[#4A7C74]">
+                                <div class="w-8 h-8 shrink-0 rounded-lg bg-secondary/30 flex items-center justify-center text-primary">
                                     <Icon size={16} />
                                 </div>
-                                <span class="font-medium text-slate-800">{asset.name}</span>
+                                <span class="font-medium text-foreground">{asset.name}</span>
+                                {#if asset.is_closed}
+                                    <span data-testid="closed-badge" class="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[11px] font-bold">Closed</span>
+                                {/if}
                             </div>
                         </td>
                         <td class="px-4 py-3">
-                            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">
+                            <span class="px-2 py-1 bg-muted text-muted-foreground rounded text-xs font-medium">
                                 {asset.type}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-slate-600 text-sm">{asset.location || '-'}</td>
+                        <td class="px-4 py-3 text-muted-foreground text-sm">{asset.location || '-'}</td>
                         <td class="px-4 py-3 text-right">
                             {#if $userRole !== "Family"}
-                                <span class="font-bold text-slate-800">{isDebt(asset) ? "-" : ""}{money(Math.abs(asset.value || 0))}</span>
-                                {#if partShare(asset) !== null}
-                                    <div class="text-[11px] text-slate-500">Your {partShare(asset)}% share: {money(Math.abs(ownedValue(asset)))}</div>
+                                <span class="font-bold text-foreground">{shownValue(asset)}</span>
+                                {#if partShare(asset) !== null && hasNumber(asset.value)}
+                                    <div class="text-[11px] text-muted-foreground">Your {partShare(asset)}% share: {shownShare(asset)}</div>
                                 {/if}
                             {:else}
                                 <span class="font-bold text-muted-foreground blur-sm select-none">$•••,•••</span>
                             {/if}
                         </td>
                         <td class="px-4 py-3 text-right">
-                            <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {#if $userRole !== "Family"}
+                            <div class="flex items-center justify-end gap-1">
                                 <button
                                     onclick={() => editAsset(asset)}
-                                    class="p-1 hover:bg-slate-100 text-slate-400 hover:text-[#4A7C74] rounded transition-colors"
-                                    title="Edit"
+                                    class="p-1 hover:bg-muted text-muted-foreground hover:text-primary rounded transition-colors"
+                                    title="Edit these details"
                                 >
                                     <Pencil size={14} />
                                 </button>
                                 <button
                                     onclick={() => removeAsset(asset.id)}
-                                    class="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded transition-colors"
-                                    title="Delete"
+                                    class="p-1 hover:bg-danger-soft text-muted-foreground hover:text-danger rounded transition-colors"
+                                    title="Remove this item"
                                 >
                                     <Trash2 size={14} />
                                 </button>
                             </div>
+                            {/if}
                         </td>
                     </tr>
                 {/each}
                 {#if assets.length === 0}
                     <tr>
-                        <td colspan="5" class="px-4 py-8 text-center text-slate-400">
+                        <td colspan="5" class="px-4 py-8 text-center text-muted-foreground">
                             Your accounts will appear here as you add them.
                         </td>
                     </tr>

@@ -3,15 +3,13 @@
 {% block content %}
 <div class="greeting">Dear {{ recipient_name }},</div>
 
-<h2>Level 2 Wellness Escalation</h2>
+<h2>A closer look at how {{ user_name }} is doing</h2>
 
 <div class="alert-box warning">
-    <strong>Tier 2 Alert:</strong> Extended period without contact
+    It has been a while since we heard from them.
 </div>
 
-<p><strong>{{ user_name }}</strong> has missed their standard check-in window by a significant margin. This is an escalated notification.</p>
-
-<p><strong>Recommended Action:</strong> Please attempt to contact them directly through your usual channels (phone, text, email, or in-person visit if nearby).</p>
+<p>{{ user_name }}'s check-in is running later than usual. If you can, a call, text or visit would be kind.</p>
 
 <div class="cta-container">
     <a href="{{ portal_url }}" class="cta-button">Open Guardian Portal</a>
@@ -19,22 +17,22 @@
 
 <div class="divider"></div>
 
-<p><strong>Timeline Information:</strong></p>
+{% if last_checkin_date %}
+<p><strong>Timeline:</strong></p>
 <ul style="color: #475569; margin: 16px 0;">
     <li>Last check-in: {{ last_checkin_date }}</li>
-    <li>Expected check-in: {{ expected_checkin_date }}</li>
-    <li>Escalation triggered: {{ escalation_date }}</li>
+    <li>This note was sent: {{ escalation_date }}</li>
 </ul>
+{% endif %}
 
-<p><strong>What You Can Do:</strong></p>
+<p><strong>You might:</strong></p>
 <ul style="color: #475569; margin: 16px 0;">
-    <li>Try reaching them via phone, text, or email</li>
-    <li>Check social media for recent activity</li>
-    <li>Contact mutual friends or family if appropriate</li>
-    <li>Use the Guardian Portal to reset the timer once contact is confirmed</li>
+    <li>Reach them by phone, text or email</li>
+    <li>Ask mutual friends or family, if that feels right</li>
+    <li>Let us know in the Guardian Portal once you've spoken with them, which pauses further alerts for a while</li>
 </ul>
 
 <p style="font-size: 14px; color: #64748b; margin-top: 24px;">
-    If you successfully make contact, please update the status in the Guardian Portal. If you have concerns about their safety, additional escalation tiers are available.
+    If their check-ins stay quiet, Continuum will gently reach the next people {{ user_name }} chose.
 </p>
 {% endblock %}

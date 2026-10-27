@@ -19,13 +19,23 @@
             phase = e instanceof LinkClosed ? "closed" : "retry";
         }
     }
+    async function refreshView() {
+        try {
+            const fresh = await fetchRecipientView(token);
+            view = fresh;
+            return fresh;
+        } catch (e) {
+            if (e instanceof LinkClosed) phase = 'closed';
+            throw e;
+        }
+    }
     onMount(load);
 </script>
 
 <svelte:head><title>{view ? `For ${view.recipient.name}` : "A page kept for you"} · Continuum</title></svelte:head>
 
 {#if phase === "ready" && view}
-    <RecipientStartPage {view} fetchBlob={sharedFileFetcher(token)} />
+    <RecipientStartPage {view} {refreshView} fetchBlob={sharedFileFetcher(token)} />
 {:else}
     <RecipientPageState state={phase} onretry={load} />
 {/if}

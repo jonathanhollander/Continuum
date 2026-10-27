@@ -1,16 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from backend.limiter import limiter
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional, Dict, Any
 from datetime import timedelta
 from backend.database import User, get_session
+from backend.config import settings
+from backend.private_access import private_mode, user_allowed, require_allowed_user, require_signup_enabled
 from backend.auth import (
     create_access_token,
     get_password_hash,
     verify_password,
     get_current_user,
+    optional_current_user,
     ACCESS_TOKEN_EXPIRE_MINUTES,
     create_refresh_token,
     verify_refresh_token,
@@ -29,6 +32,7 @@ from backend.utils.audit import log_auth_success, log_auth_failure
 from backend.utils.logger import get_logger
 from backend.challenge_store import challenge_store
 import secrets
+import hashlib
 import base64
 import json
 from webauthn import options_to_json
@@ -53,6 +57,7 @@ class SignupRequest(BaseModel):
 
 class PasskeySignupRequest(BaseModel):
     email: EmailStr
+    registration_id: Optional[str] = Field(default=None, min_length=32, max_length=128)
 
 class WarningMessage(BaseModel):
     code: str
@@ -86,6 +91,7 @@ def _check_user_role(role: Any) -> str:
 class UserResponse(BaseModel):
     id: int
     email: str
+    is_admin: bool = False
     external_id: str
     display_name: Optional[str] = None
     user_role: Optional[str] = "planning"
@@ -107,6 +113,7 @@ from pydantic import field_validator
 class PasskeyRegisterFinishPayload(BaseModel):
     """Validated model for completing passkey registration."""
     user_id: int
+    registration_id: str = Field(min_length=32, max_length=128)
     credential: Dict[str, Any]
 
     @field_validator("credential")
@@ -156,13 +163,14 @@ class PasskeyLoginFinishPayload(BaseModel):
 @limiter.limit("5/minute")
 def signup(request: Request, signup_data: SignupRequest, session: Session = Depends(get_session)):
     """Register a new user account."""
+    require_signup_enabled()
     # Check if user already exists
     existing_user = session.exec(select(User).where(User.email == signup_data.email)).first()
     if existing_user:
         log_auth_failure(session, request, signup_data.email, "signup", "Email already registered")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="This email is already registered. Signing in will take you there."
         )
 
     # Create new user
@@ -174,11 +182,12 @@ def signup(request: Request, signup_data: SignupRequest, session: Session = Depe
     )
 
     session.add(new_user)
+    session.flush()  # assigns new_user.id for the audit row
+
+    # Log successful signup: the user and its audit entry in one commit (X289)
+    log_auth_success(session, request, new_user.id, new_user.email, "signup", commit=False)
     session.commit()
     session.refresh(new_user)
-
-    # Log successful signup
-    log_auth_success(session, request, new_user.id, new_user.email, "signup")
 
     # Collect warnings to return to user
     warnings = []
@@ -200,7 +209,7 @@ def signup(request: Request, signup_data: SignupRequest, session: Session = Depe
         if result.status == "saved_local":
             warnings.append(WarningMessage(
                 code="EMAIL_LOCAL_ONLY",
-                message="Your account is ready! Email was saved locally (development mode). Check backend/outbox/ for the welcome email.",
+                message="Your account is ready! The welcome email was saved to backend/outbox/ (development mode).",
                 severity="info"
             ))
         elif result.status == "failed":
@@ -218,7 +227,7 @@ def signup(request: Request, signup_data: SignupRequest, session: Session = Depe
         # Don't fail signup if email fails - add warning instead
         warnings.append(WarningMessage(
             code="EMAIL_FAILED",
-            message="Your account was created successfully, but we couldn't send the welcome email. You can still log in. If you need assistance, please contact support.",
+            message="Your account is ready, and signing in works now. We're here if you'd like help.",
             severity="warning"
         ))
 
@@ -244,31 +253,18 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), se
     # Find user by email (username field in OAuth2 form)
     user = session.exec(select(User).where(User.email == form_data.username)).first()
 
-    # DEBUG BYPASS: jh@continuum.estate bypasses security
-    if form_data.username == "jh@continuum.estate":
-        logger.warning(f"SECURITY BYPASS: jh@continuum.estate accessing the system without password verification")
-        
-        if not user:
-            logger.info("BYPASS: Creating user jh@continuum.estate as it does not exist")
-            user = User(
-                email="jh@continuum.estate",
-                external_id="user-jh-bypass",
-                hashed_password="BYPASS_AUTH",
-                public_key=""
-            )
-            session.add(user)
-            session.commit()
-            session.refresh(user)
-    elif not user or not user.hashed_password or not verify_password(form_data.password, user.hashed_password):
+    if not user or not user.hashed_password or not verify_password(form_data.password, user.hashed_password):
         log_auth_failure(session, request, form_data.username, "password", "Invalid credentials")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Let's check the email and password together.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Log successful login
-    log_auth_success(session, request, user.id, user.email, "password")
+    require_allowed_user(user.id)
+
+    # Log successful login; create_refresh_token's commit writes it (X289)
+    log_auth_success(session, request, user.id, user.email, "password", commit=False)
 
     # Generate JWT tokens
     access_token = create_access_token(
@@ -289,7 +285,37 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current authenticated user information."""
     return current_user
 
+@router.get("/access-status")
+def access_status(response: Response, user: Optional[User] = Depends(optional_current_user)):
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Vary"] = "Authorization"
+    return {"private_mode": private_mode(), "signup_enabled": not private_mode(),
+            "access_allowed": user_allowed(user.id if user else None)}
+
+
 # WebAuthn/Passkey Authentication
+
+def _registration_key(registration_id: str, challenge: bool = False) -> str:
+    # The cache logs keys at debug level; keep the browser's opaque proof out of them.
+    digest = hashlib.sha256(registration_id.encode()).hexdigest()
+    return f"registration_{'challenge' if challenge else 'pending'}:{digest}"
+
+
+def _pending_registration_user(
+    session: Session, registration_id: str, *, email: Optional[str] = None, user_id: Optional[int] = None
+) -> User:
+    pending = challenge_store.get(_registration_key(registration_id))
+    if not pending or (email is not None and pending.get("email") != email) or (user_id is not None and pending.get("user_id") != user_id):
+        raise HTTPException(status_code=400, detail="That passkey step paused. Start it again whenever you're ready.")
+    # Serialize completion/refresh for this pending account. An established account
+    # always uses its existing sign-in path, even if an earlier attempt is still cached.
+    user = session.exec(select(User).where(User.id == pending["user_id"]).with_for_update()).first()
+    if not user or user.email != pending["email"] or user.hashed_password or user.public_key or session.exec(
+        select(PulseCredential.id).where(PulseCredential.user_id == user.id).limit(1)
+    ).first() is not None:
+        raise HTTPException(status_code=400, detail="This email is already registered. Signing in will take you there.")
+    return user
+
 
 @router.post("/passkey/register/start", summary="Start Passkey registration", description="Initiates the WebAuthn registration process by creating a user and returning registration options/challenge.")
 @limiter.limit("10/minute")
@@ -298,38 +324,45 @@ def passkey_register_start(request: Request, signup_data: PasskeySignupRequest, 
     Start passkey registration flow (Step 1 of 2).
     Creates user account and initiates WebAuthn registration.
     """
-    # Check if user already exists
-    existing_user = session.exec(select(User).where(User.email == signup_data.email)).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+    require_signup_enabled()
+    registration_id = signup_data.registration_id
+    if registration_id:
+        new_user = _pending_registration_user(session, registration_id, email=signup_data.email)
+    else:
+        existing_user = session.exec(select(User).where(User.email == signup_data.email)).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This email is already registered. Signing in will take you there."
+            )
+        new_user = User(
+            email=signup_data.email,
+            external_id=f"user-{signup_data.email}",
+            hashed_password=None,
+            public_key=""
         )
-
-    # Create new user (without password)
-    # Note: public_key is set to empty string as placeholder - will be stored in PulseCredential after registration
-    new_user = User(
-        email=signup_data.email,
-        external_id=f"user-{signup_data.email}",
-        hashed_password=None,  # Passkey-only user
-        public_key=""  # Placeholder - actual key stored in PulseCredential table
-    )
-
-    session.add(new_user)
-    session.commit()
-    session.refresh(new_user)
+        session.add(new_user)
+        session.flush()
+        registration_id = secrets.token_urlsafe(32)
+        # Ownership outlives the five-minute WebAuthn challenge, without becoming a
+        # sign-in token or permission to enroll an already established account.
+        challenge_store.set(_registration_key(registration_id), {
+            "user_id": new_user.id, "email": new_user.email
+        }, expire_seconds=3600)
 
     # Generate WebAuthn registration options
     options = get_registration_options(str(new_user.id), new_user.email)
 
-    # Store challenge temporarily (uses Redis in production, in-memory in development)
-    challenge_store.set(str(new_user.id), {
+    # Every Retry gets a fresh, single-use challenge for this same pending attempt.
+    challenge_store.set(_registration_key(registration_id, challenge=True), {
         "challenge": options.challenge,
         "type": "registration"
     }, expire_seconds=300)
+    session.commit()
 
     return {
         "user_id": new_user.id,
+        "registration_id": registration_id,
         "options": json.loads(options_to_json(options))
     }
 
@@ -342,12 +375,14 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
     Uses Pydantic validation for payload security (P1-High).
     """
     # Validated by Pydantic model
+    require_signup_enabled()
     user_id = payload.user_id
     credential_response = payload.credential
 
-    challenge_data = challenge_store.pop(str(user_id))
+    _pending_registration_user(session, payload.registration_id, user_id=user_id)
+    challenge_data = challenge_store.pop(_registration_key(payload.registration_id, challenge=True))
     if not challenge_data or challenge_data.get("type") != "registration":
-        raise HTTPException(status_code=400, detail="Challenge expired or not found")
+        raise HTTPException(status_code=400, detail="That passkey step paused. Start it again whenever you're ready.")
 
     try:
         # Verify the registration
@@ -388,8 +423,7 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
         # Check if credential already exists
         existing = session.get(PulseCredential, cred_id_b64)
         if existing:
-            session.delete(existing)
-            session.commit()
+            raise HTTPException(status_code=400, detail="Let's try your passkey again, or sign in another way.")
 
         new_cred = PulseCredential(
             id=cred_id_b64,
@@ -401,6 +435,7 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
         )
         session.add(new_cred)
         session.commit()
+        challenge_store.delete(_registration_key(payload.registration_id))
 
         logger.info(f"Passkey registered for user {user_id}: aaguid={aaguid_str}, transports={transports_json}")
 
@@ -419,6 +454,7 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
         }
 
     except Exception as e:
+        session.rollback()
         logger.error(
             "WebAuthn registration verification failed",
             extra={"context": {
@@ -428,7 +464,7 @@ def passkey_register_finish(request: Request, payload: PasskeyRegisterFinishPayl
             }},
             exc_info=True
         )
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Let's try your passkey again, or sign in another way.")
 
 @router.post("/passkey/login/start", summary="Start Passkey login", description="Initiates the WebAuthn assertion process by returning an authentication challenge.")
 @limiter.limit("10/minute")
@@ -441,6 +477,12 @@ def passkey_login_start(request: Request, payload: PasskeyLoginStartPayload = No
     authentication to platform authenticators only (prevents QR code).
     """
     credentials = None
+    if private_mode():
+        owner = session.get(User, settings.PRIVATE_ACCESS_USER_ID)
+        if owner is None or (payload and payload.email and payload.email != owner.email):
+            require_allowed_user(None)
+        credentials = [{"id": credential.id} for credential in session.exec(
+            select(PulseCredential).where(PulseCredential.user_id == owner.id)).all()]
 
     # Debug: Log what we received
     logger.info(f"Passkey login start - payload: {payload}")
@@ -501,20 +543,23 @@ def passkey_login_finish(request: Request, payload: PasskeyLoginFinishPayload, s
     challenge_id = payload.challenge_id
     credential_response = payload.credential
 
+    if private_mode():
+        candidate = session.get(PulseCredential, credential_response.get("id"))
+        require_allowed_user(candidate.user_id if candidate else None)
     challenge_data = challenge_store.pop(challenge_id)
     if not challenge_data or challenge_data.get("type") != "authentication":
-        raise HTTPException(status_code=400, detail="Challenge expired or not found")
+        raise HTTPException(status_code=400, detail="That passkey step paused. Start it again whenever you're ready.")
 
     try:
         # Get credential ID from response
         cred_id = credential_response.get("id")
         if not cred_id:
-            raise HTTPException(status_code=400, detail="Missing credential ID")
+            raise HTTPException(status_code=400, detail="We need the passkey once more; try again.")
 
         # Find credential in database
         credential = session.get(PulseCredential, cred_id)
         if not credential:
-            raise HTTPException(status_code=401, detail="Credential not found")
+            raise HTTPException(status_code=401, detail="Let's try your passkey again, or sign in another way.")
 
         # Verify the authentication
         verification = verify_authentication(
@@ -531,8 +576,9 @@ def passkey_login_finish(request: Request, payload: PasskeyLoginFinishPayload, s
 
         passkey_user = session.get(User, credential.user_id)
         if not passkey_user:
-            raise HTTPException(status_code=401, detail="Authentication failed")
-        log_auth_success(session, request, passkey_user.id, passkey_user.email, "passkey")
+            raise HTTPException(status_code=401, detail="Let's try that again together.")
+        # create_refresh_token's commit writes the audit row (X289)
+        log_auth_success(session, request, passkey_user.id, passkey_user.email, "passkey", commit=False)
 
         # Generate JWT tokens
         access_token = create_access_token(
@@ -564,25 +610,42 @@ def passkey_login_finish(request: Request, payload: PasskeyLoginFinishPayload, s
             }},
             exc_info=True
         )
-        raise HTTPException(status_code=401, detail="Authentication failed")
+        raise HTTPException(status_code=401, detail="Let's try that again together.")
 
 class MagicLinkRequest(BaseModel):
     email: EmailStr
+    redirect: Optional[str] = None
 
-@router.post("/magic-link", summary="Send Magic Link", description="Sends a short-lived login link to the user's email. Fallback for passkeys.")
+
+def _safe_redirect(value: Optional[str]) -> Optional[str]:
+    """Keep only a same-site relative path (e.g. /modules/pets); anything else is dropped."""
+    if not value or len(value) > 500 or not value.startswith("/") or value.startswith("//"):
+        return None
+    if "\\" in value or any(ord(c) < 32 for c in value) or "://" in value:
+        return None
+    return value
+
+@router.post("/magic-link", summary="Request Magic Link", description="Requests a short-lived sign-in email. Existing passkeys remain available.")
 @limiter.limit("5/minute")
 def send_magic_link(request: Request, link_data: MagicLinkRequest, session: Session = Depends(get_session)):
     """
     Send magic link for passwordless login.
     Fallback for users without passkey support.
     """
+    # Receipt of a request says nothing about the account or email delivery outcome.
+    response = {
+        "status": "requested",
+        "message": "Your sign-in request is received. If a link arrives, open it within 15 minutes. You can also sign in with an existing passkey."
+    }
     user = session.exec(select(User).where(User.email == link_data.email)).first()
 
+    if private_mode() and (user is None or not user_allowed(user.id)):
+        return response
     if not user:
-        # Don't reveal if user exists or not (timing-safe response)
+        # Keep the public response identical for existing and unknown accounts.
         # Still log the attempt for security monitoring
         log_auth_failure(session, request, link_data.email, "magic_link", "User not found")
-        return {"status": "sent", "message": "If this email is registered, you will receive a magic link"}
+        return response
 
     # Generate magic link JWT token with short expiration
     access_token = create_access_token(
@@ -595,6 +658,10 @@ def send_magic_link(request: Request, link_data: MagicLinkRequest, session: Sess
     from backend.config import settings
     frontend_url = settings.get_frontend_url()
     magic_link_url = f"{frontend_url}/auth/verify?token={access_token}"
+    safe_redirect = _safe_redirect(link_data.redirect)
+    if safe_redirect:
+        from urllib.parse import quote
+        magic_link_url += f"&redirect={quote(safe_redirect, safe='/')}"
 
     # Send email with magic link
     from backend.utils.audit import log_audit
@@ -604,45 +671,51 @@ def send_magic_link(request: Request, link_data: MagicLinkRequest, session: Sess
             magic_link_url=magic_link_url,
             db_session=session
         )
-        sent = result.status != "failed"
+        delivery_state = result.delivery_state
+        accepted = result.provider_accepted
+        outcome = {"delivery_state": delivery_state, "provider": result.provider}
         # A request is not a login: record it as a request, not as an auth success
         log_audit(
             session=session, request=request, action="magic_link_requested",
             user_id=user.id, user_email=user.email, resource_type="magic_link_request",
-            success=sent, error_message=None if sent else (result.error or "Email not sent")
+            success=accepted, error_message=None if accepted else delivery_state,
+            details=json.dumps(outcome)
         )
-        if sent:
+        context = {"user_id": user.id, "email": user.email, **outcome}
+        if accepted:
             logger.info(
-                "Magic link email sent",
-                extra={"context": {"user_id": user.id, "email": user.email}}
+                "Magic link email accepted by provider",
+                extra={"context": context}
+            )
+        elif delivery_state == "saved_local":
+            logger.info(
+                "Magic link email prepared locally",
+                extra={"context": context}
             )
         else:
             logger.warning(
                 "Magic link email failed to send",
-                extra={"context": {"user_id": user.id, "email": user.email, "error": result.error}}
+                extra={"context": context}
             )
     except Exception as e:
         log_audit(
             session=session, request=request, action="magic_link_requested",
             user_id=user.id, user_email=user.email, resource_type="magic_link_request",
-            success=False, error_message=type(e).__name__
+            success=False, error_message=type(e).__name__,
+            details=json.dumps({"delivery_state": "failed"})
         )
         logger.warning(
             "Magic link email failed to send",
             extra={"context": {
                 "user_id": user.id,
                 "email": user.email,
-                "error": str(e),
-                "error_type": type(e).__name__
+                "error_type": type(e).__name__,
+                "delivery_state": "failed"
             }}
         )
-        # Still return success to prevent email enumeration
+        # The public receipt stays uniform even when sending raises.
 
-    # Return success (don't leak if email exists)
-    return {
-        "status": "sent",
-        "message": "If this email is registered, you will receive a magic link"
-    }
+    return response
 
 @router.get("/magic-link/verify")
 @limiter.limit("5/minute")
@@ -660,18 +733,20 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
 
         if token_type != "magic_link":
             log_auth_failure(session, request, "", "magic_link_verify", "Invalid token type")
-            raise HTTPException(status_code=401, detail="Invalid token type")
+            raise HTTPException(status_code=401, detail="Let's sign in again.")
 
         try:
             user_pk = int(user_id)
         except (TypeError, ValueError):
             log_auth_failure(session, request, "", "magic_link_verify", "Token missing valid subject")
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            raise HTTPException(status_code=401, detail="This link has rested. A fresh one is a click away from the sign-in page.")
 
         user = session.get(User, user_pk)
         if not user:
             log_auth_failure(session, request, "", "magic_link_verify", "User not found")
-            raise HTTPException(status_code=401, detail="User not found")
+            raise HTTPException(status_code=401, detail="Let's check the email you used.")
+
+        require_allowed_user(user.id)
 
         # One-time use: record the jti on first verify. Reuses refresh_tokens (unique token_hash,
         # revoked=True so it can never act as a refresh token). Tokens without a jti (issued before
@@ -679,7 +754,7 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
         jti = payload.get("jti")
         if not jti or not isinstance(jti, str):
             log_auth_failure(session, request, user.email, "magic_link_verify", "Token has no one-time id")
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            raise HTTPException(status_code=401, detail="This link has rested. A fresh one is a click away from the sign-in page.")
         import hashlib
         from datetime import datetime
         from sqlalchemy.exc import IntegrityError
@@ -696,10 +771,10 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
         except IntegrityError:
             session.rollback()
             log_auth_failure(session, request, user.email, "magic_link_verify", "Token already used")
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            raise HTTPException(status_code=401, detail="This link has rested. A fresh one is a click away from the sign-in page.")
 
-        # Log successful magic link authentication
-        log_auth_success(session, request, user.id, user.email, "magic_link")
+        # Log successful magic link authentication; create_refresh_token's commit writes it (X289)
+        log_auth_success(session, request, user.id, user.email, "magic_link", commit=False)
 
         # Generate JWT tokens
         access_token = create_access_token(
@@ -717,7 +792,7 @@ def verify_magic_link(request: Request, token: str, session: Session = Depends(g
 
     except jwt.PyJWTError:
         log_auth_failure(session, request, "", "magic_link_verify", "Invalid or expired token")
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise HTTPException(status_code=401, detail="This link has rested. A fresh one is a click away from the sign-in page.")
 
 
 # --- Refresh Token Endpoints ---
@@ -729,13 +804,16 @@ def refresh_access_token(request: Request, token_request: RefreshTokenRequest, s
     Refresh access token using a refresh token.
     Implements token rotation (old refresh token is revoked, new one is issued).
     """
+    if private_mode():
+        candidate = verify_refresh_token(token_request.refresh_token, session)
+        require_allowed_user(candidate.id if candidate else None)
     result = rotate_refresh_token(token_request.refresh_token, session)
 
     if not result:
         log_auth_failure(session, request, "", "refresh", "Invalid or expired refresh token")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired refresh token",
+            detail="Please sign in again whenever you're ready.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -764,11 +842,14 @@ def logout(request: Request, token_request: RefreshTokenRequest, session: Sessio
     Logout by revoking the provided refresh token.
     This only affects the current device/session.
     """
+    if private_mode():
+        candidate = verify_refresh_token(token_request.refresh_token, session)
+        require_allowed_user(candidate.id if candidate else None)
     if revoke_refresh_token(token_request.refresh_token, session):
-        return {"status": "success", "message": "Logged out successfully"}
+        return {"status": "success", "message": "You're signed out. Take care."}
     else:
         # Don't reveal if token was already revoked or invalid
-        return {"status": "success", "message": "Logged out successfully"}
+        return {"status": "success", "message": "You're signed out. Take care."}
 
 
 @router.post("/logout-all", summary="Logout from all devices", description="Revoke all refresh tokens for the current user, logging out from all devices.")
@@ -779,7 +860,7 @@ def logout_all(request: Request, user: User = Depends(get_current_user), session
     Requires valid access token authentication.
     """
     count = revoke_all_user_tokens(user.id, session)
-    return {"status": "success", "message": f"Logged out from all devices ({count} sessions revoked)"}
+    return {"status": "success", "message": f"You're signed out everywhere ({count} sessions)."}
 
 
 @router.patch("/preferences", response_model=UserResponse)
