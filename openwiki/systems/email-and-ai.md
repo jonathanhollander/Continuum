@@ -3,9 +3,6 @@ type: system
 title: Email and AI Services
 description: How email provider outcomes, local preparation and delivery logs work, and how the AI settings resolver prepares privacy-adapted structured requests for Bifrost or legacy OpenRouter transport.
 tags: [email, postmark, smtp, ai, openrouter, concierge]
-verified:
-  - by: openwiki/0.4.3
-    at: 2026-10-27T00:48:46.078Z
 sources:
   - id: openwiki-source-1db86b4a3dc9202a94647927
     resource: repo://backend/ai_request.py
@@ -35,7 +32,10 @@ sources:
     resource: repo://frontend/src/lib/services/aiConciergeService.ts
   - id: openwiki-source-ad50b7e2c2f89430d17b9018
     resource: repo://frontend/src/lib/stores/conciergeEngine.ts
-generated: { by: "codex", at: "2026-10-27T00:48:04.158Z" }
+generated: { by: "claude-code", at: "2026-10-27T18:31:56.115Z" }
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-10-27T18:31:56.115Z
 ---
 
 # Email and AI Services
@@ -82,6 +82,10 @@ The concierge panel in the app shell is driven by `frontend/src/lib/stores/conci
 ## Shared configuration and request preparation
 
 `backend/ai_request.py` defines validated input slots, history, configuration fields, limits and request assembly. `backend/ai_settings.py` resolves shipped shared → purpose → variant defaults and saved shared → purpose → variant overrides. Model choice, additional context, role/emotional instructions, templates, history rules and UI prompt assets are part of the effective configuration, with per-field source attribution. Runtime `/api/ai/config` returns resolved UI assets so consumers use configured prompts instead of silently reverting to hard-coded copies. Saved prompt-asset patches recursively validate the placeholders declared for each asset, including strings nested inside maps/lists; this patch validation does not revalidate every shipped asset on runtime reads. Runtime rendering recognizes spaced placeholder names and digit-containing names, preserving unknown placeholders instead of inventing values.
+
+Input slots include the current field's label (`field_label`), its exact visible question (`field_question`) and earlier answers serialized with their questions (`question_answers`), so a model sees what was asked rather than treating answers as bare facts. The configuration has an `application_name` field (1–128 visible ASCII characters, no surrounding spaces or templates); the prepared request reports it, and the transport sends it as the `User-Agent` header to Bifrost, and as both `User-Agent` and `X-Title` to legacy OpenRouter. The shipped `DEFAULT_MODEL` in `backend/ai_capabilities.py` is `fireworks/accounts/fireworks/models/deepseek-v4p1-flash`, and `funeral` is a module variant.
+
+On the frontend, `aiCapabilities.ts` tracks a per-purpose/variant load state (`idle`, `loading`, `ready`, `error`) in `aiConfigStates`. A configuration read is accepted only if the session, configuration epoch and pending request are still current; invalidation keeps the last loaded UI assets while the next read settles.
 
 The administrator surface at `/admin/ai-settings` uses `/api/ai/admin/settings` to save/reset scope overrides and `/api/ai/admin/preview` to inspect preparation. Preview and actual send both call `prepare_request`; editing a saved scope validates affected descendants before commit. Database errors leave changes retryable and roll back the transaction. The last prepared/attempted request metadata is exposed only to administrators and stays bound to their active session.
 

@@ -3,9 +3,6 @@ type: frontend
 title: Routes, Modules and Navigation
 description: The SvelteKit route tree, the feature modules under /modules, how the sidebar groups and module catalog are defined in navigation.ts, how the root layout guards routes by login and role, and where UI labels and translations come from.
 tags: [frontend, sveltekit, routing, navigation, localization]
-verified:
-  - by: openwiki/0.4.3
-    at: 2026-10-27T00:50:18.916Z
 sources:
   - id: openwiki-source-67fc218f0ef51113a017c8bf
     resource: repo://frontend/_archive/routes/concierge-window/%2Bpage.svelte
@@ -17,6 +14,8 @@ sources:
     resource: repo://frontend/_archive/routes/test-registry/%2Bpage.svelte
   - id: openwiki-source-e2a1eb5fed659ae69f5d6aed
     resource: repo://frontend/src/lib/config/navigation.ts
+  - id: openwiki-source-03e86e3a6251257bfb79f5e6
+    resource: repo://frontend/src/lib/services/accessStatus.ts
   - id: openwiki-source-67156f86d79c4837cafc3c9f
     resource: repo://frontend/src/lib/stores/localization.ts
   - id: openwiki-source-a8a830617ab03d4b55d49d9a
@@ -31,7 +30,10 @@ sources:
     resource: repo://frontend/src/routes/pulse/%2Bpage.ts
   - id: openwiki-source-0eed3417ae81cad84b7c92a7
     resource: repo://frontend/src/routes/pulse/portal/%5Btoken%5D/%2Bpage.ts
-generated: { by: "codex", at: "2026-10-27T00:50:18.916Z" }
+generated: { by: "claude-code", at: "2026-10-27T18:31:56.115Z" }
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-10-27T18:31:56.115Z
 ---
 
 # Routes, Modules and Navigation
@@ -65,7 +67,7 @@ Modules under `frontend/src/routes/modules/` include `financial-accounts`, `insu
 
 - Each `NavItem` carries `label`, `key`, `href`, `icon` (from `lucide-svelte`), `allowedRoles` (`Owner`, `Executor`, `Family`) and optional flags such as `isCoreAction`, `isQuickStart` and `isExecutorEssential`.
 - A separate list defines the Pulse sub-navigation.
-- `catalogCategories` drives the `/catalog` page: **Life & Legacy** (letters, heirlooms, journal, visual memories, time capsule, timeline, final wishes, family tree) and **Helpful Tools** (binder, executor guide, practice run, QR codes, insights, activity history, important dates, scenarios, calendar, complete record, treasure hunt, builder tools).
+- `catalogCategories` drives the `/catalog` page: **Life & Legacy** (letters, heirlooms, journal, visual memories, time capsule, timeline, final wishes, family tree) and **Helpful Tools** (binder, executor guide, practice run, QR codes, insights, activity history, important dates, scenarios, calendar, Additional Records, treasure hunt, builder tools). `advanced-registry` is labelled **Additional Records** (purchase history, maintenance, claims and account wishes) in both the sidebar and the catalog.
 - `coreActions` is the subset across all groups flagged `isCoreAction`, used for onboarding progress.
 
 The separate owner **For My Son (preview)** entry appears after My Instructions and opens recipient setup/preview. **Help & Resources** appears after Extras. Both stay out of module grids and the navGroups role guard.
@@ -74,7 +76,9 @@ To add a module to the sidebar or catalog, add its route folder and an entry her
 
 ## Route guard
 
-The root layout calls `auth.init()` on mount, then a reactive effect enforces two rules once auth has finished loading:
+Before either rule runs, the layout reads the server's private-preview decision from `frontend/src/lib/services/accessStatus.ts`. That store calls the public `GET /api/auth/access-status` (with the current bearer token, if any) whenever the auth session or stored token changes, ignoring responses from a superseded session. Until it reports `access_allowed: true`, the layout shows a loading screen or a "Continuum is private while it is being prepared" page with a sign-in link, and it skips global sync, user preferences, context/audit refresh, notifications and the navigation guard. `/login` and `/auth/verify` stay reachable so the allowed owner can sign in. See [Authentication](/openwiki/systems/authentication.md) for the server side.
+
+The root layout calls `auth.init()` on mount, then, once access is allowed, a reactive effect enforces two rules after auth has finished loading:
 
 1. **Login** — any route that is not a wizard/start route, a marketing route (`/marketing*` or `/`), or an auth/public Pulse route (`/login`, `/signup`, `/auth/*`, `/pulse/respond*`, `/pulse/verify*`) redirects to `/login` when there is neither a user nor a token and offline-local mode is not active. Public exceptions also include `/pulse/portal/`, `/portal/` guardian pages and `/for/` recipient pages.
 2. **Role** — for a logged-in user, if the current path exactly matches a `navGroups` item whose `allowedRoles` does not include the current role, the user is sent to `/dashboard`. Paths not listed in `navGroups` (including catalog-only modules) are not role-checked.

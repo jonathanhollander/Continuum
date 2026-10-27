@@ -3,10 +3,9 @@ type: operations
 title: Development, Configuration and Deployment
 description: How Continuum is configured through backend/config.py and environment variables, what production mode changes, the dev and test seed users, logging and audit utilities, the manual testing approach, and how Railway builds and runs the app with Nixpacks.
 tags: [operations, configuration, deployment, railway, logging]
-verified:
-  - by: openwiki/0.4.3
-    at: 2026-10-27T00:41:19.118Z
 sources:
+  - id: openwiki-source-d60a6f0f1e9b6eab797ff859
+    resource: repo://.railway/railway.ts
   - id: openwiki-source-82a325da453da1db06378e6d
     resource: repo://backend/config.py
   - id: openwiki-source-fcffbe3e28749eaf9a39557c
@@ -27,11 +26,12 @@ sources:
     resource: repo://nixpacks.toml
   - id: openwiki-source-1ab94efcf6f027306f9d48e5
     resource: repo://Procfile
-  - id: openwiki-source-0f7600e0d2d7c91e381ed675
-    resource: repo://railway.toml
   - id: openwiki-source-6edb3f73cf0628642d8c8a74
     resource: repo://scripts/smoke_test.py
-generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
+generated: { by: "claude-code", at: "2026-10-27T18:31:56.115Z" }
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-10-27T18:31:56.115Z
 ---
 
 # Development, Configuration and Deployment
@@ -44,7 +44,7 @@ All backend settings live in one Pydantic `Settings` class in `backend/config.py
 
 | Group | Variables (defaults) |
 |---|---|
-| Environment | `ENVIRONMENT` (`development`), `DEBUG` (`True`) |
+| Environment | `ENVIRONMENT` (`development`), `DEBUG` (`True`), `PRIVATE_ACCESS_USER_ID` (unset; a positive user id turns on private-preview mode, see [Authentication](/openwiki/systems/authentication.md)) |
 | URLs | `FRONTEND_URL` (`http://localhost:5173`), `API_URL`, `CORS_ORIGINS` |
 | Database | `DATABASE_URL` (`sqlite:///./continuum_saas.db`), `DB_ECHO`, `DB_POOL_SIZE`, `DB_MAX_OVERFLOW` |
 | Auth | `JWT_SECRET_KEY`, `JWT_ALGORITHM` (`HS256`), `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` (15), `JWT_REFRESH_TOKEN_EXPIRE_DAYS` (7), `SECRET_KEY` |
@@ -91,7 +91,7 @@ Before any separately authorized deployment, run `npm run check` and `npm run bu
 
 Production runs on Railway at `https://continuum.estate`, with PostgreSQL.
 
-- `railway.toml` selects the Nixpacks builder and sets the health check to `/api/health`.
+- `.railway/railway.ts` is the Railway infrastructure-as-code definition (`railway/iac` SDK, partial `Continuum`). It declares the `Continuum` service from the `jonathanhollander/Continuum` GitHub source with the `NIXPACKS` builder, `/api/health` health check, one replica in `us-east4-eqdc4a`, the existing `continuum-volume` (50000 MB) mounted at `/data`, and every configured service variable kept through `preserve()` so no secret is stored in the file. It replaced the root `railway.toml` (card X141); Postgres and its volume are outside this partial. Changes are made by reviewing a `railway config plan` and then applying it, with the SDK installed outside application dependencies.
 - `nixpacks.toml` installs Python 3.11, Node 20 and build libraries, creates `/opt/venv`, installs `backend/requirements.txt`, runs `npm install` and `npm run build` in `frontend/`, and starts `uvicorn backend.main:app` on `$PORT` (default 8080). `PYTHONPATH=/app`.
 - `Procfile` carries the same start command.
 - `backend/requirements.txt` uses exact pins copied from production's `pip freeze`. Unpinned installs pulled a newer SQLModel/SQLAlchemy that broke login and seeding.

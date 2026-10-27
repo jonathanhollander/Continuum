@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:360a7b5e858e529826775cfadc842111a11a8abf03d1a6280af404f165dbc70f",
+  "pageVersion": "sha256:73318b3012587208e3ac01147312e4c6a206d24bd9363988702569d10ef32206",
   "claims": [
     {
       "id": "claim_cc26c152130447d8bdbf0af66e36836f",
@@ -12,7 +12,7 @@
         },
         {
           "resource": "repo://frontend/src/lib/config/navigation.ts#L79-L377",
-          "version": "repo-lines-v1:sha256:7f4b59da983e26d2fd80876773ad906f41d4f7181817b661fda8d2cb6b1ea46e:eyJzZWxlY3RlZExpbmVDb3VudCI6Mjk5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI5NDlmNjM1NTYyNjU3M2Q2MDExOTM2MWQ5MjM0Nzg2MjkzYmJjNDAyZGI1OTliZjNhYzk1MDlmYWRlNzZlNWFmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJiMDJkMmMwZDZkYzVlNzRkOTJmYTE0YjkxZGJlYTI2NDA5MGJlYjM1ZmRiOTE4OGQ5YjM0MTE4MWRjZTlmNGNlIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlZTRmNTI0MTExNTVhMjIxNjhmZjlkOWVlODMzYzFkYjNlOWI5NzFiNmM2MDdiODlmMjViNjQ2OTc4Y2EzMGI2IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJmODlkNmU2YjYwZDNkZGZjMTU5MWQ2NTQxM2VmYTE3NGNjMmY1MGEyZWJmOTQxY2UzZGY4YjMwMGI1YWViNmNiIn0"
+          "version": "repo-lines-v1:sha256:df0b7ccc3b79f49176b447654eac878e041b41c86c7936dd024019b1ca955e77:eyJzZWxlY3RlZExpbmVDb3VudCI6Mjk5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI5NDlmNjM1NTYyNjU3M2Q2MDExOTM2MWQ5MjM0Nzg2MjkzYmJjNDAyZGI1OTliZjNhYzk1MDlmYWRlNzZlNWFmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJiMDJkMmMwZDZkYzVlNzRkOTJmYTE0YjkxZGJlYTI2NDA5MGJlYjM1ZmRiOTE4OGQ5YjM0MTE4MWRjZTlmNGNlIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlZTRmNTI0MTExNTVhMjIxNjhmZjlkOWVlODMzYzFkYjNlOWI5NzFiNmM2MDdiODlmMjViNjQ2OTc4Y2EzMGI2IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJmODlkNmU2YjYwZDNkZGZjMTU5MWQ2NTQxM2VmYTE3NGNjMmY1MGEyZWJmOTQxY2UzZGY4YjMwMGI1YWViNmNiIn0"
         }
       ]
     },
@@ -21,8 +21,8 @@
       "statement": "catalogCategories defines Life & Legacy and Helpful Tools, while coreActions is every navGroups item flagged isCoreAction across all groups.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/lib/config/navigation.ts#L480-L521",
-          "version": "repo-lines-v1:sha256:d62f85d7b6f22c81ddc597240729a20c99e6277e9d8a9f527ca7829e3071c3c4:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxMzMxZWMxZWU3YmZlZmVkZmIyZDhkOTJlYzYyOGRmODQyM2M5NTU0NzQxNmYxZWZiZDQ1NzE2M2JjYmMzZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1ZmY3NTMzMTlmODQxNzQ3ZTA2NDcxMzEzOTA1MzZjYzRiMjFiMjI1YmU2YjZlZTI4NzQ3MDQzY2MxODZiMjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4YWY1OTgzMWJjODVhNDM4NjE5YWIzZGQzY2IyYmQ4M2RlY2ZmYmRlYzU3ODYwMWY4ZjhkN2ZhN2Q0MTMyZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://frontend/src/lib/config/navigation.ts#L480-L520",
+          "version": "repo-lines-v1:sha256:ae21a93e802cb98ab3d160776bb6bf183decec47e815d91c67532f0abe6e8eac:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxMzMxZWMxZWU3YmZlZmVkZmIyZDhkOTJlYzYyOGRmODQyM2M5NTU0NzQxNmYxZWZiZDQ1NzE2M2JjYmMzZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiYjhjMDg5YzczYmYzNjVjYWE3NDY1ZmI3ZWFkODAyMzVmMzFhZTM2MDQwZDdhMzU2ZGYyNDA3MmM2NmMzYTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4YWY1OTgzMWJjODVhNDM4NjE5YWIzZGQzY2IyYmQ4M2RlY2ZmYmRlYzU3ODYwMWY4ZjhkN2ZhN2Q0MTMyZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1ZmY3NTMzMTlmODQxNzQ3ZTA2NDcxMzEzOTA1MzZjYzRiMjFiMjI1YmU2YjZlZTI4NzQ3MDQzY2MxODZiMjQifQ"
         }
       ]
     },
@@ -31,12 +31,12 @@
       "statement": "The root layout redirects signed-out users on protected routes to /login, except offline-local mode; wizard/start, marketing, auth, public Pulse/guardian and /for/ recipient routes bypass the login guard.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L141-L175",
-          "version": "repo-lines-v1:sha256:4cdde7c3d53cb65e795acc7243c69ca6faa834b2ace693e5d3ef60b0557cddba:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4NGMzZjRhYTk0NzZkZWZjNzVkODU2ZGMxYjUzNTdmYjNhMTVlZDNkYmE1YTJlYmZmNDRjNjExMGYzYTMyYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzZjcwMDkwZjVlZWIzMWEzZDQ2MzcxNDFlYmFhMGY0MGFhOGEyZjk1OGYxY2U0MTFjOWY0YTIxZGZkY2E2NWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmNTkwYzE0ODQ5OTg0MGI3ZmMyNzk3NjM3Y2EwYjU0ZThhOTE3MTU2NDQzM2Q4YjcxMzRjZjNiNmMxYjVjY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwYTg3MTNjY2M0Yjk2MTUwNjc1MGM3NzYyYjVmYzc4NTNhNmJmNzJjYzg1ODEwNjVmZDYyZjkyZWZjZDdkOTMifQ"
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L142-L178",
+          "version": "repo-lines-v1:sha256:e501df5d8c3bd026764501cc5189d5fba8112f8eefc01f79076a97889d160f7a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4NGMzZjRhYTk0NzZkZWZjNzVkODU2ZGMxYjUzNTdmYjNhMTVlZDNkYmE1YTJlYmZmNDRjNjExMGYzYTMyYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlNzhiYmY3NWI3ZDdjOWQ1Njk0NGVlOTFjZTJmNjEzYzMyMTY5MzMxYmExNjdmZjE4M2M5NzdjZjVmODJlNWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmNTkwYzE0ODQ5OTg0MGI3ZmMyNzk3NjM3Y2EwYjU0ZThhOTE3MTU2NDQzM2Q4YjcxMzRjZjNiNmMxYjVjY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwYTg3MTNjY2M0Yjk2MTUwNjc1MGM3NzYyYjVmYzc4NTNhNmJmNzJjYzg1ODEwNjVmZDYyZjkyZWZjZDdkOTMifQ"
         },
         {
-          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L300-L330",
-          "version": "repo-lines-v1:sha256:5e777433c58ddadf7890e9a7c394603925cb36dcdd2a8bc47f366beac89fb7b5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmZmYwNjMzNDhhMWUxYTMyNTEzZWFjYzAxNmZjMjVjZmZlZjBiNGM5MGJmMGM4ODhlZDU4NTdmMjEzYTMyZGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0ZWZjNDk0MThkMjZkY2YxMjliMjJhNmFhMjExMDhjZWVjMzc2NzdhMzJkMDhlOWQ1ZmVlMzVkZGE2NmJiOWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcwODc1YzJkMjJkMWMxYjE2ODQzOWU4MzgxZGEzYzEzNmI1YzA5OGJjODY3MjE0Zjc5NGZmMzRjMzRlZmRiYWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyNjg4NTMzMGY4OWQ1MTM5YWIwZTg1MjFlNWM4NWE1OTFlMjZhYTgxZjQ1YTQxYWI0MTlmZTZiZDA1YzMyNWQifQ"
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L299-L330",
+          "version": "repo-lines-v1:sha256:ab4b70ffe0df3d27cfba811acf43401b16dec8032202ba5cf9a9a2285f4c4294:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmZmYwNjMzNDhhMWUxYTMyNTEzZWFjYzAxNmZjMjVjZmZlZjBiNGM5MGJmMGM4ODhlZDU4NTdmMjEzYTMyZGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhNzM0OTJkODk0NmIxZDBmOWQ5YzA0YjcwNGE5MjBmMjRmODllZjdjN2Y3MzExYTg1OTlkMTBjN2Y2MzU4ZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcwODc1YzJkMjJkMWMxYjE2ODQzOWU4MzgxZGEzYzEzNmI1YzA5OGJjODY3MjE0Zjc5NGZmMzRjMzRlZmRiYWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI4MGEyN2EyYjI1YzUyOTc0YWE2NGY4OGRmZTk4YTMxZmViMzIwODNiNGMzYzdmNTZiZTVkYmEzZjIyMjhlYjYifQ"
         }
       ]
     },
@@ -45,7 +45,7 @@
       "statement": "For logged-in users the layout redirects to /dashboard when the current path exactly matches a navGroups item whose allowedRoles excludes the current role; paths not in navGroups are not role-checked.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L314-L329",
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L313-L328",
           "version": "repo-lines-v1:sha256:8174e1d018687666a04886c9765f3dd68060e2085ce92e4918c59c797abac03b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzZTA1ZGM3MDBhMDM1ZmY4NTYyYjMxN2UyOGI5MjlkMGYzZTI4OThmMWM2ZWQ5MGI1YzZlYmJiNDg5NTY1MzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2ODA2ZjE1NWM1YWMxYWUyNzIyY2EwNmYyYWM5Y2FkY2I4ODFiOTEyM2NiNjI0YTNjMTA0NzViNDQ0OWRjMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMDAyZjNiY2Q3Yjk5MzE5Yjc5OTIxNzAxNzUzMzQ5OWJiZmY5ZTVkZmNjN2QxMTM3NWMzYzg2MTQ1Y2E3NDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM1NTk5N2I2NTcwNGMyNWU0YjVjMjhkMDdiMzYxNTUyNGU5NDYwMjg3NmVjYmUxMmM0MTE2NjM4ODVlMWQyOWQifQ"
         }
       ]
@@ -79,8 +79,8 @@
       "statement": "Only /start picks up email/lang handoff query parameters and removes them; the account becomes active at sign-in rather than from URL parameters.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L239-L252",
-          "version": "repo-lines-v1:sha256:8e1c1df0e7ca34057f958f17b85ad3ac6f5249eac99f4d6bc3292d389c5474df:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2N2FiZTRhMzY0NTI5ODYwN2ZkYzkwZWEzOTI4ODBmN2RiMWIxYTBjOTc0YTk2MDQzOTg4MGJmNDVmZGMyYjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0ZWZjNDk0MThkMjZkY2YxMjliMjJhNmFhMjExMDhjZWVjMzc2NzdhMzJkMDhlOWQ1ZmVlMzVkZGE2NmJiOWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1ZDA3OTRhZGMyNTVhMjk5Mjg0NDkwNTc3ZjNiYTMzNzI0ZTNiOTQwNzc3YmJmNGM4YWFiZDQ1Njk1OWRmMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA5NmRlMmUxOTRkNjczMWFmOTk4NGMyZWIzZTgxYjlmMGE5YWUyM2ZlNjBmODA0MDY3MzcyNGJjYzA3ZWY5NTkifQ"
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L238-L251",
+          "version": "repo-lines-v1:sha256:8e1c1df0e7ca34057f958f17b85ad3ac6f5249eac99f4d6bc3292d389c5474df:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2N2FiZTRhMzY0NTI5ODYwN2ZkYzkwZWEzOTI4ODBmN2RiMWIxYTBjOTc0YTk2MDQzOTg4MGJmNDVmZGMyYjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0ZWZjNDk0MThkMjZkY2YxMjliMjJhNmFhMjExMDhjZWVjMzc2NzdhMzJkMDhlOWQ1ZmVlMzVkZGE2NmJiOWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNkZmZjNDZhNmUzMzUxMjI3YWI5YzAyMmZjYmRiYmI1NTliN2Y4ZDZjMTgyM2UwMjdjY2FhZDBkZmE0YWFmOTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA5NmRlMmUxOTRkNjczMWFmOTk4NGMyZWIzZTgxYjlmMGE5YWUyM2ZlNjBmODA0MDY3MzcyNGJjYzA3ZWY5NTkifQ"
         }
       ]
     },
@@ -115,8 +115,8 @@
           "version": "repo-file-v1:sha256:8c4ead3c1a3c2a63fe50a00834923493a7ed837328db11ee842a2a23b7b36436"
         },
         {
-          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L141-L175",
-          "version": "repo-lines-v1:sha256:4cdde7c3d53cb65e795acc7243c69ca6faa834b2ace693e5d3ef60b0557cddba:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4NGMzZjRhYTk0NzZkZWZjNzVkODU2ZGMxYjUzNTdmYjNhMTVlZDNkYmE1YTJlYmZmNDRjNjExMGYzYTMyYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzZjcwMDkwZjVlZWIzMWEzZDQ2MzcxNDFlYmFhMGY0MGFhOGEyZjk1OGYxY2U0MTFjOWY0YTIxZGZkY2E2NWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmNTkwYzE0ODQ5OTg0MGI3ZmMyNzk3NjM3Y2EwYjU0ZThhOTE3MTU2NDQzM2Q4YjcxMzRjZjNiNmMxYjVjY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwYTg3MTNjY2M0Yjk2MTUwNjc1MGM3NzYyYjVmYzc4NTNhNmJmNzJjYzg1ODEwNjVmZDYyZjkyZWZjZDdkOTMifQ"
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L142-L178",
+          "version": "repo-lines-v1:sha256:e501df5d8c3bd026764501cc5189d5fba8112f8eefc01f79076a97889d160f7a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4NGMzZjRhYTk0NzZkZWZjNzVkODU2ZGMxYjUzNTdmYjNhMTVlZDNkYmE1YTJlYmZmNDRjNjExMGYzYTMyYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlNzhiYmY3NWI3ZDdjOWQ1Njk0NGVlOTFjZTJmNjEzYzMyMTY5MzMxYmExNjdmZjE4M2M5NzdjZjVmODJlNWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmNTkwYzE0ODQ5OTg0MGI3ZmMyNzk3NjM3Y2EwYjU0ZThhOTE3MTU2NDQzM2Q4YjcxMzRjZjNiNmMxYjVjY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwYTg3MTNjY2M0Yjk2MTUwNjc1MGM3NzYyYjVmYzc4NTNhNmJmNzJjYzg1ODEwNjVmZDYyZjkyZWZjZDdkOTMifQ"
         }
       ]
     },
@@ -137,10 +137,52 @@
           "version": "repo-lines-v1:sha256:35659975b00971acb35f98531eef23a8cad814d4132d224db6bef90b9a1379ef:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDk4ZTBiMmM2ZDAwZjBlNDk0NmJjZmU2MDE5OTg1MDNhNWNkNTFmYTk3M2M4YzA3ZWVmZGFjODIwYTNkNjA2MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWExZDFhNjMzOTAyMjljNzk4MzQ3ZTgzYTA0MDU0NDFjOTQwMDAzNTI4NGFkMTY4YzFiZjZjZGYxZDcwYTM3MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
         }
       ]
+    },
+    {
+      "id": "claim_565a2d5c55aa4ae994803a6b6ffa00d4",
+      "statement": "Until the access-status store reports access_allowed true, the root layout withholds global sync, user preferences, the navigation guard and the app shell, showing a loading screen or a private-preview page with a sign-in link, while /login and /auth/verify stay reachable.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L177-L178",
+          "version": "repo-lines-v1:sha256:6900ff24749e4f4d1635ca0c6e196f063f123e740889a7de5580ba6ac9c5837a:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWE3YzBkNjJmMWQyNGIxYzY0YWM3NDU2ZDQ4MTMyMGQzODVhYWY3ZjQ3ZjI3MTg2Yjc0MGNiNzgzZjhhNDA5MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2U3OGJiZjc1YjdkN2M5ZDU2OTQ0ZWU5MWNlMmY2MTNjMzIxNjkzMzFiYTE2N2ZmMTgzYzk3N2NmNWY4MmU1YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTdmODRhMzg5ZTBlMTM3MjM5MmZjOGEwZDc5MmJkZWM5ODZiZWU0ZjFhNjkwYmY1YmYyZjAwYWY5ODliMzY5YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTBhODcxM2NjYzRiOTYxNTA2NzUwYzc3NjJiNWZjNzg1M2E2YmY3MmNjODU4MTA2NWZkNjJmOTJlZmNkN2Q5MyJ9"
+        },
+        {
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L203-L226",
+          "version": "repo-lines-v1:sha256:9a1a0a5b6deb8a926184e1329d559741520da09e5a0d37b83f8d026dff377506:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhZTk1ZjM5Nzc2Y2Q3MTBmNjI3MTRjYTgzNmZmYTcxMjk4YzU0ZjNmZTg5ZDNhOWIyNWJiZjVlY2UzZTU5MDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0ZWZjNDk0MThkMjZkY2YxMjliMjJhNmFhMjExMDhjZWVjMzc2NzdhMzJkMDhlOWQ1ZmVlMzVkZGE2NmJiOWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZjOGNjNGM4OGYwZGI2MTQ1ZWUxYzY1OTk3NmFkOTcyOWE2YjAwNjM0NTYxYmFhZTZmMjZkYjJhNThmOWY0MzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI3YTM5YjI0MjJmNDhiMzE3NzA3NGY4ZWQzNjNiNTg2NmE0YzJiYzE0NWRjYmE2MDg4NjdmYzExNmVlMjFjYzIifQ"
+        },
+        {
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L346-L364",
+          "version": "repo-lines-v1:sha256:79c5da3e43704379eaa2467e6938b94cd297c21ceb55dc140e833ffcaba42ff3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0NGI3NTk0YmZiOTQ3MGYxOWQ1NjQ1NjczZGEyMTI5NTA5YTg1YWU4OWQ4MTE1OWZjZGRjMmY4ZWM0ZTgwNzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkODhjMjYxNThlYTY0ZDUyYzE0ODY4ZGZhZTZiYzQ3ODM5NzNjYjBjMjIxYTI0OTBjYjM1YTJlNWMxZTc4MjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5MWFjMmExNWI5NTgwNWI1NDhmZTdhOTBmZjVlNjY3NGM3MjYwMDM0MzEzZjU5NjU1MGQ5ZWJjYmI4YmQxMDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQyMDM5YjA5NjFmZTRlMmQ2NDZiOWMzZTJlZWFmNTk0NDZkNTdkNGFkYjNmNmQ3YjcyNTI3YzU0Yjg0MWQwMzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ee10db35365b48bf95ef481f0b3953ba",
+      "statement": "accessStatus.ts fetches the public /api/auth/access-status endpoint with the current bearer token whenever the auth store or stored token changes, and discards a response whose session or request revision has been superseded.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/accessStatus.ts#L21-L59",
+          "version": "repo-lines-v1:sha256:f127897a124f5101976e6fbc813800ffc312eee060a099b00eea77b31e2d9e1a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzYmYyZTJlMGE5NmZlMjBiNGFkZDg4ZmE4YmFiZTVmZjYyYmYzNDAyZjI5ZmJkN2JiZDVlNjBjNjI1MzI1M2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZDExY2FmNDNlOTdlZjM2OWU2YmVlZDFhMjY4YmQwNTgzOGYyOWI5ZGQyNTRiZjY5YmE2NDg4NDE0NzIzNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0ZmFiZTc2YjE3MWM3YzA2NmE1MDQ0ODU5YzNmNmFkNDkxMDkwZDRjNzkxMGE1MGEyZTQ5NDhkYjY4NDRkMjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4bcdb7b4e4054578bb2a2f5a23d0c39f",
+      "statement": "The advanced-registry module is labelled Additional Records in both navGroups and catalogCategories.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/config/navigation.ts#L341-L348",
+          "version": "repo-lines-v1:sha256:0c35fb456be65592ff49731e36f80910131d9b4ed5c874a631fee072342edd3b:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjBlZjRkMTU4NTc5NzQwNzhjZjNhMGE0NjgzYzg3ZjVkMzNmNzliYzJhOGNhZWJmOTg1ODg1MzU0MmIyYmQ1NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDA5M2RjZTAyZmEzZTVjMGI4YzFjODZhYzY3ZTg3NjNlM2EyNDlhYWFkMDFmOWE4ZWRlMmQ2NzI3MTUwYmQ3OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTM2ZTk3N2JhMDQ1ZTE2YjQ3YTgzNzNkMjA1NzIxODBjMjVhYTM4NmE1ZjkzZjMxM2E5OWFkYzU3NjljYTdkNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWQyNTNhYjJkNjBiZWYzY2EzYmFjYTMzZTZiNjQ0YjM4Yzc3ZmE4NWQxY2Y2ZWUyYmZlMjAwYmY5YTA1ZGI3MiJ9"
+        },
+        {
+          "resource": "repo://frontend/src/lib/config/navigation.ts#L513-L513",
+          "version": "repo-lines-v1:sha256:7a35f695e0b65485d467da2a87cd988875b98a99edc5ddd8832adca52f687548:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2EzNWY2OTVlMGI2NTQ4NWQ0NjdkYTJhODdjZDk4ODg3NWI5OGE5OWVkYzVkZGQ4ODMyYWRjYTUyZjY4NzU0OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2EzNWY2OTVlMGI2NTQ4NWQ0NjdkYTJhODdjZDk4ODg3NWI5OGE5OWVkYzVkZGQ4ODMyYWRjYTUyZjY4NzU0OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWI0N2ZmODJmMTgyMzI3ZTY2YWE0NTIwNDM0ZWM0NWUxMTZhNGQzYjBlMGNhNDRlZDJiZWZkMjExNzdhMTQ1MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmQ0MWFiMWM3NzVmMGRlZThiMGYxNmQwMzkwNWUxMzQ2ZDhkOWE4NDkxMzU4Mjc0MmI5OWJlNDUxNTRhZTA3YiJ9"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-10-27T00:50:18.916Z"
+    "at": "2026-10-27T18:31:56.115Z"
   }
 }

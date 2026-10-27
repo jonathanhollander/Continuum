@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:6d6b6d012b17de6f42f2aecc30e8afea42275d5206617003bbdcd04d7a802b83",
+  "pageVersion": "sha256:5ec1613e619891868d0328a73221f2f8f6c3ae692e4cdbc40436a5c68fe812f0",
   "claims": [
     {
       "id": "claim_ea09dd541b594a0695042b528af21e63",
@@ -97,8 +97,8 @@
       "statement": "The authenticated AI chat proxy accepts a structured purpose/variant/inputs/history request, prepares it through the shared settings resolver, enforces input limits, and sends the prepared request through configured Bifrost or eligible legacy OpenRouter transport.",
       "evidence": [
         {
-          "resource": "repo://backend/ai_settings.py#L205-L232",
-          "version": "repo-lines-v1:sha256:9fcd6a73869d91f3647fea77ebc943a3a08c21180fa6c163b2375180bb791acd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2MDYxNDg3MDMyNDM3NGY4ZTk2ODVmMmI4OTI5YTEyOWEwMTUxZWIzMDg2OGRkNDhkY2JmOTg3Y2Y5MjdhNjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyNjBkZDE5NzA0NTBjMmM2NDdiMzE2ZDg5YTQ0ZmQ3MjMxNDE3YjY1ZmUxZTUwNWJkODAwMDY0NmQwYTczZjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQzOWQ5M2I5MjgyZWY5Mjc3ODk0MWViNTUzMjZkNjIzOWQyNDg1MWM1Y2RlYzdiNzAwYjZjNDY3MzIzNmI5MjkifQ"
+          "resource": "repo://backend/ai_settings.py#L212-L233",
+          "version": "repo-lines-v1:sha256:0623866439dd07469a0f297f02078d98b077e157f649447952624d4810f4f777:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5N2YxNTBmZTE0M2NhZjQyY2Y3MzM0NGI4ODdiNDk0NjkwODQ0MTcyOGU3MzFkMzQzZTdmNDE0YWY2M2NlOWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyNjBkZDE5NzA0NTBjMmM2NDdiMzE2ZDg5YTQ0ZmQ3MjMxNDE3YjY1ZmUxZTUwNWJkODAwMDY0NmQwYTczZjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVlZDMwNDgzYjIxY2NiOTQ4ZDNkMzBjNWJiODc0OWY1NDhhMzJiNjE4ZTBlOTZiYWE1ZGU5NzdjYzcxMzY4MjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQzOWQ5M2I5MjgyZWY5Mjc3ODk0MWViNTUzMjZkNjIzOWQyNDg1MWM1Y2RlYzdiNzAwYjZjNDY3MzIzNmI5MjkifQ"
         },
         {
           "resource": "repo://backend/routers/ai_proxy.py#L20-L61",
@@ -155,11 +155,11 @@
       "statement": "AI configuration layers shipped shared/purpose/variant defaults with saved scope overrides and records the source of effective fields; Admin preview and send both use prepare_request.",
       "evidence": [
         {
-          "resource": "repo://backend/ai_settings.py#L227-L232",
-          "version": "repo-lines-v1:sha256:cbfae3dd712697ba4ee0ad2370414724c80e050fec5d5df48001f843f42d245c:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2EyZDIyNDQ5OTlmZTI0YWI4NWVjOTI4YWI0YTQwZDRmNjc4MzAxMTg4MjQxNzVjOTVkMWZiZjY0OWE0OTUwNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzI2MGRkMTk3MDQ1MGMyYzY0N2IzMTZkODlhNDRmZDcyMzE0MTdiNjVmZTFlNTA1YmQ4MDAwNjQ2ZDBhNzNmOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjQ1NzllYjUyMTk2MWJiM2E3MDFjNmQwYjVkODQ2NWVlMTI3MjBhOTllZGVhMGZmMzc3ZjYyMjQxNWI0ZDNlYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDM5ZDkzYjkyODJlZjkyNzc4OTQxZWI1NTMyNmQ2MjM5ZDI0ODUxYzVjZGVjN2I3MDBiNmM0NjczMjM2YjkyOSJ9"
+          "resource": "repo://backend/ai_settings.py#L228-L233",
+          "version": "repo-lines-v1:sha256:f0b1463204ffe581216c41d56a9cd1a8df420e5b5ab0cfdfff6fa69a839e951a:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2EyZDIyNDQ5OTlmZTI0YWI4NWVjOTI4YWI0YTQwZDRmNjc4MzAxMTg4MjQxNzVjOTVkMWZiZjY0OWE0OTUwNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzI2MGRkMTk3MDQ1MGMyYzY0N2IzMTZkODlhNDRmZDcyMzE0MTdiNjVmZTFlNTA1YmQ4MDAwNjQ2ZDBhNzNmOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjQ1NzllYjUyMTk2MWJiM2E3MDFjNmQwYjVkODQ2NWVlMTI3MjBhOTllZGVhMGZmMzc3ZjYyMjQxNWI0ZDNlYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDM5ZDkzYjkyODJlZjkyNzc4OTQxZWI1NTMyNmQ2MjM5ZDI0ODUxYzVjZGVjN2I3MDBiNmM0NjczMjM2YjkyOSJ9"
         },
         {
-          "resource": "repo://backend/ai_settings.py#L90-L152",
+          "resource": "repo://backend/ai_settings.py#L91-L153",
           "version": "repo-lines-v1:sha256:9bc3f6db403187841fce2707546c275985656f9b319ca85febb055a6e104560c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5YTljOWQ4Yzg1ZjI1Mjk1MDAzNGI3YjFlNzBlZTE2NGMwMmRmNDdiZDYxOWE0Y2JhZDdiZTRmZTEzNTIxMWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExMTE4OTZkMzY5ZmJjNWIzOTBkY2U1MThhNWRkMWJmMWRlNmZmNWJhMGRkMDFhNzJiMmE2NzA5ZjQ3NjJiNjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyMjE2MjBjYTYzOWU5N2I2YmU3YzYwNmI5NWMyZDQ2M2MxMDQ0ZDNhN2FhOWI0OWNmZDFhY2EyZjE1NzZmMGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRhOTgzZDYwNWZiOTk3ODk2MTE1N2YyNjEyY2E1NzE2OTNkMmNiMzI3ZmI3NDM2YmUyNDM0MDI5YTJlNjI3MGEifQ"
         },
         {
@@ -183,18 +183,64 @@
       "statement": "Saved UI prompt-asset patches validate allowed placeholders recursively through nested lists/maps; runtime template rendering recognizes spaced placeholder names containing digits and preserves unknown placeholders.",
       "evidence": [
         {
-          "resource": "repo://backend/ai_request.py#L139-L169",
+          "resource": "repo://backend/ai_request.py#L147-L177",
           "version": "repo-lines-v1:sha256:1a2ce7513e8fcadefe98d1ee434608ab06d05638b207e80692b871edd7abc872:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI2ZTFiYTFkYTQ2YzFlMTM1YWQ2MTk0NmVmOGE4NDg5YzVlODkxMGU3MGExODM3MWZmYmNlOGUyODRiMDM4MmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiYjlhNmVmNTBjNmQyNzE3NjA3MjQxNzI1OThiY2NiY2ZmNTZjNzBjNjNmN2IzYTFiY2VlZTYwY2JiZjc1NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3OWY5Mzg2MjY2MmU3NGU3ZTZmMjNmZjk3MTdlZTVlYTQ1MDRkMGVmOGY4NzY1YTYzOTZkZDU5ZTM5ZTdiODMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRlYWJiOTZiMmVhYjg2MDI0NTNlNTFmYWM0NzIwNjExNzFkYzYxNzlkYWEyN2M1MThjYWY4Njc5ZjY3ODAwMzgifQ"
         },
         {
-          "resource": "repo://frontend/src/lib/services/aiCapabilities.ts#L143-L146",
-          "version": "repo-lines-v1:sha256:cc6d0b9a50c08a7b5359b00830de0b2caeb3c6af786b68074e59277e364f5345:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGZhZGNiYWI4MDcyODA2MGJlYTkxYjhlMzUyOTI0OWNmNjFhNmVjN2Q3NjQ2NjBhMjAxODU3NmViOTI5ZTgwZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmM3YjhlZTY5NDZkZGUyZWUzNWExMmYzNTk5MDk5NTRiOTI5ZjE1MGI4YTQ2ZTU1MTQzYTgyMGEwNjljMWMzMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzg3YmY4MmJiYmMwZjU3MGI2ZDUzYmI0ODFjYmI0ZDM4Zjc4ZjEwMWFkMDEyZjg1MjU3YmI3MDY5NTIxNjY5YiJ9"
+          "resource": "repo://frontend/src/lib/services/aiCapabilities.ts#L170-L172",
+          "version": "repo-lines-v1:sha256:cd624d84dc5e091df09b59c4b9fbc91c63e1943ab0ec251badba0d5be033e877:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjk5OWVjYjI3NmIzNzBmNzBmZTA5M2YwNjQ2ZjE1MGYzNWFkMWMwZjJlMjdhNTA3ODE0OWNjNzQ4YjI2ODRmMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGJkYzRiMzgxOTY0NTJlMzE1ZjkyNTBiODMwNzQwOWNiOTU0MGI3NjQwZDk5MzZhNDdlYzFjNDM4YTAyMWM3ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzg3YmY4MmJiYmMwZjU3MGI2ZDUzYmI0ODFjYmI0ZDM4Zjc4ZjEwMWFkMDEyZjg1MjU3YmI3MDY5NTIxNjY5YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_2242686464f64b8497bae357848ce174",
+      "statement": "The AI configuration's application_name field is validated as 1-128 visible ASCII characters without surrounding spaces or template braces, and request transport sends it as the User-Agent header to Bifrost and as both User-Agent and X-Title to legacy OpenRouter.",
+      "evidence": [
+        {
+          "resource": "repo://backend/ai_request.py#L116-L120",
+          "version": "repo-lines-v1:sha256:e20aae978b7c25d979f02bd094f25d99d4927123938746c06448a98a7dcf0964:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDcxMGJjZWVhOTM3MDkzOTgzNDYzMmE2NzQzNWFlNDcyMDdkN2YwY2Q3YWUzYTUwZTZhM2Y3ZWE1ODZjYzMzZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2YzYThlZWU4MTNlODBmMzNjZmNjODQwN2EwZWRmMzcwNWQ3NWM3N2M5OWViMTA3YjIxNDI5NTY5YmEyMDdjMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTJmYmQwYWI3MjgwOTkzZWM3NjVkZWMwY2M4NjY3NWY1YmUyYmU4YWE1MDBmMWI1MTc0ZWFjZDJmYzA0YjNmOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTZmNTkyNjRhMGYwMGYyMjg4MTFlOWJlNGU1MmQxZjU3OTU0NjA0YThmN2JjNDkxOGM3NzkzNGU0NDlkNjYwMyJ9"
+        },
+        {
+          "resource": "repo://backend/ai_settings.py#L212-L233",
+          "version": "repo-lines-v1:sha256:0623866439dd07469a0f297f02078d98b077e157f649447952624d4810f4f777:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5N2YxNTBmZTE0M2NhZjQyY2Y3MzM0NGI4ODdiNDk0NjkwODQ0MTcyOGU3MzFkMzQzZTdmNDE0YWY2M2NlOWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyNjBkZDE5NzA0NTBjMmM2NDdiMzE2ZDg5YTQ0ZmQ3MjMxNDE3YjY1ZmUxZTUwNWJkODAwMDY0NmQwYTczZjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVlZDMwNDgzYjIxY2NiOTQ4ZDNkMzBjNWJiODc0OWY1NDhhMzJiNjE4ZTBlOTZiYWE1ZGU5NzdjYzcxMzY4MjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQzOWQ5M2I5MjgyZWY5Mjc3ODk0MWViNTUzMjZkNjIzOWQyNDg1MWM1Y2RlYzdiNzAwYjZjNDY3MzIzNmI5MjkifQ"
+        },
+        {
+          "resource": "repo://backend/ai_settings.py#L69-L71",
+          "version": "repo-lines-v1:sha256:8842472bd8012289a12b6424b8371f443baf8ce586293cc8b802c21c359a3aa8:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTVhMGRlYzU1OTgyNWRmZjk5MDg2NjU4NWI5ZDBiMjJhYWI3MTBjZTViMTc4M2ExYTYwNjU2Y2RiNTFiMDcxNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTVkZmU1YzA0MGFkNzUyMTgyNWU3OWRmZjVkODVkMjYyNDQ1NGNlYmU1NTQ4NTUyYjUyOGQzYWFmMTljMWZjNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGNiYjBmMjEwYTQyYmQyOWRiM2RkNTgxOGQ3NWZhOGE1ZjVkNzRiMWI1ZTgxMjJhMjFjNzBkNTNhNjJmMTk5NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWIyNjM5NDJlNDk5MzU2MzU1ZmM0OGI2NmUwYTMzYTJiNGZkZDJmMjhkNmVjMzQ2YWNkMjE0MDMwMzUyM2IzOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_afbefa2eeec740a6b72625d263b425a0",
+      "statement": "Structured AI inputs include field_label, field_question and question_answers slots carrying the current field's label, its visible question and earlier answers serialized with their questions.",
+      "evidence": [
+        {
+          "resource": "repo://backend/ai_request.py#L194-L203",
+          "version": "repo-lines-v1:sha256:0750f927a98ee050846b434abe4d56c915712be292e2db8c2b2ec4e3d1e42605:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyM2IyYjQwNThmNjkwYTU5MmM0OTUzMWU3NWJkNzU5M2RhYzI1NmIxM2U0ZjgzOTYxMmVlMjYwZmNlNzI4OTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllMGQ1MWNjYTYzYTMzYTUxYTAwNmM1Mzg4ZTE2MWE2OTcwMDA5MTRjOTVjMDEzZGM4MWMzZjNhY2FhMGE0M2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVmOTk1YzIwY2RiNGY3ZTQ3OThhYmE0NDYyNmRlOWRhNzY1NzdkMzE5MWVkOTdjMjQ0MWY4OGMwMTlhNTJiM2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRjNGI5YTk1YmRjOGMxNGYzNWEzNGFjNmVhZTkwMmE2MWMxMThjZjQwMWEyNTgyMzZiMWMzMDFkM2YxMTMwYWUifQ"
+        },
+        {
+          "resource": "repo://backend/ai_request.py#L22-L30",
+          "version": "repo-lines-v1:sha256:1d13025846a10cd3fe43d9d1c5d1aec976da6d76a6a9c70acb856197c93cb95a:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGIwYjJmNjhmOTRmOWZkZDhiYjkwODgzZmU0NTEwMWJiYzc0YzMwNjc5YTM3ZjkwNjQ2NDhhODdjMTExOGI2NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDdkYmM0ZWEzM2QwOTJmZDhkMDBkMDkyMDNlMzljMjAyZjEyOWI0ZDFlMDkxNTVkNTUyN2EyMTYwMGJkYWZiOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzVlODJmMTljODY4ZDcxN2UyOWMzNWNiYTYzZDQwODY3NDI5MjQ5NjIxOWQwMTU5YTI5NzRlOTY3ZTI5NDU5YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGRkYTM3NGZhNTVlYzE4YjRmMDk2ODQ2NDhhYzAzMzdiMTg2MjM0YTYxZDk3OTk4N2VjMTNjYTcyNzMzMWI5YyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_bc8ea28014d541798b2147715c0a00c6",
+      "statement": "aiCapabilities.ts records a per-purpose/variant idle, loading, ready or error state for runtime configuration loads and accepts a load only while its session, configuration epoch and pending request remain current.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/aiCapabilities.ts#L124-L155",
+          "version": "repo-lines-v1:sha256:78a93e079b50e438aa25a9c3aab509e6e6bb3f50343b8efa7081dddde7e0ee83:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzZDNlMzVlMjE0YTNiYzZkMWNjOTIwZDM2OGY2ZmM0ZmJhNGU0Nzg1YzZjOTE2YTA3N2ZiMTJjMmU2Y2QwZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5NzA0NDFlZjlmZmM5NWQ4MTc0MGVkZWJhMzM3NzI4MGVhNmJjZDRjNThiMWMwZTRjYTFjNjIwMzlhZDlmZTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE4MWI1ODQzMTYxNWQzNDlhZjYxYzQ0Nzg4ZTcwOGI4MGVmNDQzYmMwYjI5NTdiNGZkNzczZWY2N2Q3ZDZiMTIifQ"
+        },
+        {
+          "resource": "repo://frontend/src/lib/services/aiCapabilities.ts#L84-L104",
+          "version": "repo-lines-v1:sha256:9a57ff515371d38ede1601141dc294026d360e13bd9f0aba65b82645a8d25a4b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjZjliZjdjODc3YjJjOWUwMTcyZTZlMjYyYjZmNTMyYzk4NGQwNmIzZGIyMDc2N2YzODA1YmRiZTZmNTk5ZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJmNzk1YjM2NWFkMjVkYWI0MzE2NjM4MjVmOTZiM2ZlZWRlZDliZGQ2MmE1YTJmMTUzYjExYTE2MDY3NDEyYTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmZTQ0NGYwYzJjNWM0MDI0MTk4NjljYmUyZGEzZWM2Y2M3NTJiMjMwMjdiNmZkMGEwNGNhOGI0MDZmMzA3ZTEifQ"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-10-27T00:48:46.078Z"
+    "at": "2026-10-27T18:31:56.115Z"
   }
 }

@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:17d6152c230df3e1280d9b10e1dba3e883ca89d76222cb645e5db1615fa88bd6",
+  "pageVersion": "sha256:59d16bbce138a1b0e421d708f995a3c8c27b1a6ccc7f1156b4f92edc00f22e40",
   "claims": [
     {
       "id": "claim_ae156f8fa14a4feea919645c19810110",
       "statement": "On startup the app configures logging, creates database tables, seeds the dev user dev@continuum.im with password dev123 if missing, and starts the Pulse scheduler; shutdown stops the scheduler.",
       "evidence": [
         {
-          "resource": "repo://backend/main.py#L188-L210",
+          "resource": "repo://backend/main.py#L189-L211",
           "version": "repo-lines-v1:sha256:a321ebf8e5bb102acef58312328f9caa22afc9ce849ea87385e72e2a9cdab95d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyNTc2MDQ1ZjFmMWY1ZTM4Mzc5NjIyOWE0Y2UyYjg4MTU3NzFiZjI2MDliYzdjNjkzMzRhNzEyNzZmMjU3MjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliZDMwMGU2NWU4NGRlNGM0NjhhMTVhMmU5Y2I4ZGIxMTIxNjc1MDRjYjZhZmI2YTI2YmY1NmViNGZjN2JiZDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzOWVhM2UyMTNiOTU0MDFiYWQyYTYxYjU1YTVmNDhiMzQxNGE3ZDA4MmIxNjJmYWMyZTY5MTcyMDYzOTk0NzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmYmFjNDU1ZTRmOWZlYTkyNzAyMWFkYWRiNzkwOGVlNjMyYzJiMjFlYmQ2YTIxZTE3ZTYwNGU4MWYxOWUxZmYifQ"
         },
         {
-          "resource": "repo://backend/main.py#L47-L61",
+          "resource": "repo://backend/main.py#L48-L62",
           "version": "repo-lines-v1:sha256:c20e4807aec56c465f7eab7f10cff3fa0f6a45944123543e2bbc0a9d983dcc95:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3Y2ZmM2YxNzg0MmRlYzZlN2U5MWMzZTNiOGZjZTBhODIyZmMzMTEyNzM4MWIwMGY0NGE5ZjEzMzMzMDNhMmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhY2MxMzkwNDk2YmY5OTkxNTE1NzQ4ZWUwNDQ0MTBiY2RlOWE1YjA0Y2ZkNmE2YzdlM2IyNzgzY2ViYTA1OTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE4OGQ0ZWUwMWJhMzE3ZTA0M2IyOTJiMWMyZjVlNjk1OGNiMTM2YTExOGQ0NmU0NDUxNWM0OWZkMzkxNmZiNTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzNmY4Y2NkMDQ0YzUyMzYxNGU4Njg2N2FmMzdiOTM4OWQ3MzQ4ODBhN2I5N2MwZWM0MTExMTdlMzEwMmM0MGQifQ"
         }
       ]
@@ -21,7 +21,7 @@
       "statement": "The active application registers estate_data.router, whose MODEL_MAP resolves both documents and vault_documents to Document; the old dedicated documents router is not mounted.",
       "evidence": [
         {
-          "resource": "repo://backend/main.py#L172-L186",
+          "resource": "repo://backend/main.py#L173-L187",
           "version": "repo-lines-v1:sha256:99994921243e83fdb00bf9698e98c4cd6140225fbee67d5f4f810bb173a5dcbc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExZTk1M2ZiMmU5Yzk5NDQ0ZWYxN2ZkNGJhOGNmNjU3NTA2ZDQyZDcwNjRhNDY4MmRlMGM2NTFjYzRkMWUwZTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5ZDZkYWJmZTc4OTE4YWUxMjg5OGI1MWE2N2RjNDk4MmRjNmQxYjRjYjEyNDVlZTI5YTAwNDgzZDBkMzUxYzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFjMWJlYTkyZWRiODZlMzVlNzU5OGRlZDg2MTk3MmViZmVmZjM0ZDliNDA5ZTI3NWJjNmEyYTJlN2Y4ZDgyM2EifQ"
         },
         {
@@ -35,7 +35,7 @@
       "statement": "The /api/health endpoint checks database connectivity and upload directory writability, reports the scheduler as disabled or its running state, and returns 503 when database/storage checks or scheduler inspection raises a failure; a stopped scheduler alone does not fail health.",
       "evidence": [
         {
-          "resource": "repo://backend/main.py#L348-L400",
+          "resource": "repo://backend/main.py#L350-L402",
           "version": "repo-lines-v1:sha256:bef308e0d6598f84c8a88dc7c056c432d32e2c9b7356cfadda0b775b3381180c:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhNWI0NmFkOTNjN2UwYTAwNGE4MTk1ODEyZGJkYjQ0NDZiODk4MWU1MzliMDUyM2Y3MTA5ZTNlZDhmNGIwYmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1OWU5NjFhYWMxNGFhMjU1ZmRiMjRmYzdmN2Y4ZjU5MjYzMzE5Yjg1NTUyYzAxZjlhMDIwMWE1Y2E5ODY2YmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5N2ZlYzBkNWJlOWNmYzI2ZmEzOTA5NzYxNzFjNTU0ODI4NzI5ZDgxMjQyN2QwMDdhZTUyMjFkOTE2OGMyZTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI0Yjk3ZTVjMWIzNzcyMjQ3ZDM2YTU3YWU0MWM0YjhhNzZmODIyZjRjYWJiOWU4NDgzNTZlNjJlMTVlOWIzMWUifQ"
         }
       ]
@@ -137,7 +137,7 @@
           "version": "repo-lines-v1:sha256:68fe0d28aefc60e2203590a70b4b3f297036d73e95aace8f350cbb9ad501596e:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZDNkOTYzYzg0NGYxZmI1MWRjOWMzYTRlMjdkY2UwY2E5NTUyZDEwNzlkMjg2MGM3MWFkNWEzNTA0YzU3NGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0YzdkZmMwOGQ1MGI4OGE4NGE2ZTI3MWQ2MzdjYzZkMDQ5ZDJlMzViZjBlMGJmZjlkMjBmMzIzOWFhZjU5MzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyN2U1ZDY3MjQxNzQ3N2U1MmI0NWUzY2Y0OTg1ZWRjMjdhOWQxMWNiOThmOTYzNmM5ZjY3MjM5NzFiNzJlOWMifQ"
         },
         {
-          "resource": "repo://backend/main.py#L250-L294",
+          "resource": "repo://backend/main.py#L252-L296",
           "version": "repo-lines-v1:sha256:5ae6756ca0a7f1aefacd0cef19523482f9fefb6c7394be2821e9a30f60bb2b2e:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmZDZmM2Q4ZmQ1ZDE2N2JiMmFiZGI5YTFlZTcyNjU4MDQ0ZTFlZGQwMzIzOTBmMWQwMzZiYjJiYjJkZmJlNTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZhMmExNTkzZGY4YjdkYTFjYTkzZjViZTFiZjU2OTM3YzBiN2E2MzJlNDI2YjUzODQ5NGIzOGE0NTJiM2VlODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjczZTNjZDg5ZTVmODc0MGU5MDVkZTFkYzZhNWQxYWUxNTY4Njc4N2ZjN2Y5Mjk1YzIwZGZhYTdiNWVhMzJmNTQifQ"
         }
       ]
@@ -157,7 +157,7 @@
       "statement": "The backend serves the built frontend from frontend/dist, falling back to index.html for client-side routes, returning 404 for unknown /api paths and blocking path traversal.",
       "evidence": [
         {
-          "resource": "repo://backend/main.py#L440-L506",
+          "resource": "repo://backend/main.py#L442-L508",
           "version": "repo-lines-v1:sha256:c3893726029b05f42cae49362d2b5206810a935728fad7377c81acd5a16fd170:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhMTI2MDBmNDg0MDY1ZTJiMjRkZTQyZDY4YWE0OWFkMjEwZjdiMzgwMmU1ODM0NTZiNmEwYjA0MDQ1MTEwMjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhNTIwODgwZjRlMmNkODUyMTZkN2YwY2MwYWFiZGE0ZWU2ZDcxMDBjYzJjN2YwOWM5NjFmZjFhMjBiNTc5YmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZhMzZjY2RkMDY4MGUyM2MxMmZiMGVkZjkzZGUzOGE5NmQyZGQzNGY1N2E1M2NiODg2MDNjNDk3ZTAxNWRkNDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1MzZkOWE1Mzk0MDI1ODkyZWY1NWU5ODE3ZjhjNWZjZTgzZWUzOThiZTgyZjEyMzFhYjc5YmM5MGM0YmIwYjkifQ"
         }
       ]
@@ -167,8 +167,8 @@
       "statement": "Every response gets an X-Request-ID header from RequestIdMiddleware.",
       "evidence": [
         {
-          "resource": "repo://backend/main.py#L98-L114",
-          "version": "repo-lines-v1:sha256:21844e61c0fb4041d27a7fb71cda869e7272e65e416661bfde67eb4085315282:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1Nzk4MTgwZGJiYTY2MmFhYzkyMDZiNDI5MzQ1NGM4ZDhkODU1NDIyYTdkMWJhMGM1YzAxYzQ2Y2FkOWRmYWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyZmIwNTIzNGUyOWI0NjQyNWE4ZjllN2Y2YTZiNTA2MjM5ZmUyYzJlNTUwYjg0NWM4NmQ5NDFhMDQzOGE4ZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE0M2E2NGU3NjY4MTlmMjkwMTI1MzI2ZTQ3YzM5NzBhMzMyNGZlMWMyMjRjMGQyMzYxNzhjMDhiZTQ3YmEwNmUifQ"
+          "resource": "repo://backend/main.py#L99-L119",
+          "version": "repo-lines-v1:sha256:9f268b9f7678fa23351130223215bd76db0214bd04732bd27df835e406dd5acd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1Nzk4MTgwZGJiYTY2MmFhYzkyMDZiNDI5MzQ1NGM4ZDhkODU1NDIyYTdkMWJhMGM1YzAxYzQ2Y2FkOWRmYWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4NWNiMGRiYWJhMTFhYzViNDgyZjExYjVmNzg5ZTYwOTM3NTlmNmM2MThjY2YwMDdhNDljNWZmYWYwNjVkYTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyZmIwNTIzNGUyOWI0NjQyNWE4ZjllN2Y2YTZiNTA2MjM5ZmUyYzJlNTUwYjg0NWM4NmQ5NDFhMDQzOGE4ZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmODkwZDZhZDZiOGM1Y2U4ZGFiNjNiM2JlYzIyNzM1Y2E3YmJjYWE2YWFlZjNkMjIyMWJiNmVmYzY2ZmQzNGIifQ"
         }
       ]
     },
@@ -199,10 +199,28 @@
           "version": "repo-lines-v1:sha256:d3dc639f25f9effebfd574b9a7b4d7f9658ef5ff5b95fe1f399a6f230125be81:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmNzRhYjJhMGMwZmU3NGNiNGIwNGQzOTRmNTA2ZjRkMDAyOWNjMTg3OGVlY2NjYTcyZmFlNTBmMjY2MGRmNTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlY2E4MTNhOTk2ZGRiYTQ5YTgyMmQ0ZmUwZWZmNTgzMTE1NzIyMjdkZDA0YmIwMzg0YzY3YzY1ZDkzNDQ0YWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE4OTI3YWZjYzVmYmRhNDY1NWM5MzNmNzMzMThkNGRiNjRkZDU0NjZkMDA4Y2I5YTYxZTYwZmUxN2Y4NTA2Y2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM2ZjNlZWFiMjY4ZDAyOTI5ZTJiYzc4ZTVkOTIzMzU3OTBiNTY5Mzk1ZDE2NzRlOGFlZmJjYmVkNTBjMjdiYWUifQ"
         }
       ]
+    },
+    {
+      "id": "claim_9a930bddf8c1416a8ef9938b3f647d64",
+      "statement": "When PRIVATE_ACCESS_USER_ID is set, the enforce_private_access middleware rejects signup and passkey-registration API paths with 403, lets a fixed allowlist of health, CSRF, access-status, login, refresh and logout routes through, and requires every other /api, /openapi.json, /docs and /redoc request to carry a bearer token for exactly that user id; OPTIONS and non-API paths are not gated.",
+      "evidence": [
+        {
+          "resource": "repo://backend/config.py#L29-L32",
+          "version": "repo-lines-v1:sha256:d654f53af9a6b3e67736b23d8e8b5ce83af7dd2612910c81d3cbbf71a514ca8b:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTMzN2M3OTVhMzI0ZmM4NzAzYTFmMTc3ODcwODlkNmFjYjlmNTJjY2E5NjRlZjgzNGQyYWVhNGE1OTkwYmRlMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjg0YWNmMjg1OWM4MWVkMDNiYmViZDllNWM1MzYxYWMwNTBhM2Y4NzM3MzUzYjQxYzljMmIyODMwYjczYzE1ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzMxZDI2Njc4ODE2NDUxZjNiZWIzN2ZkNzQ4MWM1YzA3MDk2YjA4OWUyZTkwYzFhYWFhNzY2NjBmODI3NDk2NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWNmMmYwZTIwYWJhMzczOTE3NmJlYmZhOWU4ODk4NjlkZTQxNDUwMWI5ZWI0ZjljZTQwMmI1Y2M4YjA0NDI0YiJ9"
+        },
+        {
+          "resource": "repo://backend/main.py#L236-L237",
+          "version": "repo-lines-v1:sha256:03fcd105c54c0791e28a615622fc3af3bc86ffeaaa74710c8e36b831006b14a6:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDg3OGFmOTRhZWFkOTlmNjY0OGMyZWM0NDI0YTA1N2UzNjFlNjQxZWJhOGY2MDY5ZDc3YTU2OTU2ZTM2OTk4YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDk4MDlhODhhYWQwMTNlMTcyNzFlYmRiNTFhMzliZmU4Njk3NWY1OTBhY2JmOGFmN2IyMDVkOWQwZjQ1NTgzMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWY0YTU5YWZhMDlmOTc0M2ZhMTFjMjYxYTQxNTFlOWE3MzkyYWY5MmRhOTkwMmU3NzVjYmU2OWVhNTgwODEzMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDFlOGFlNjY1MTZjOTkwMWIzYTM3ZDNjODAyMzQxYTNhNGUyYWRkOTMyMWYwNzNjMmIwNDYzNzJiNGUzOWFmNCJ9"
+        },
+        {
+          "resource": "repo://backend/private_access.py#L12-L65",
+          "version": "repo-lines-v1:sha256:338559725a94f8e176526afa8178b3afc8658d01ea3522e6e230f81681bc3f0b:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxMDk3ZGM0MzMzMTA3MjY4YjhiNTU3MjliODAxMmU3YmQzMWY5Y2I0ZjJlMTUyYWU0MjZiOWY4OGJmOTY3MjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhNzk2NWE0ZDljMzVkNjczNGIzNmQyYTFkMjkzNzk5MWY3MmQ1MWYwZjhmMWI0ZGM1ZWI3NDU5Y2M2MTBkOTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc2Zjc3YWNmY2E2MTQ2NzcwYzIyMjlhYmRhMjk1YTcwMWUyMDZhNThiMTljODJkM2U0ODMwMjgxZDhjMjgyMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-10-27T00:41:19.118Z"
+    "at": "2026-10-27T18:31:56.115Z"
   }
 }

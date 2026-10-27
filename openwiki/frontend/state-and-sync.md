@@ -3,10 +3,9 @@ type: frontend
 title: Frontend State and SyncManager
 description: How module stores persist data through SyncManager and SingletonSyncManager — localStorage-first loading, optimistic writes with rollback, snake/camel key conversion, the sync registry and global syncAll, the local-to-cloud migration path, and the namespaced persistence helpers.
 tags: [frontend, state, sync, localstorage, svelte5]
-verified:
-  - by: openwiki/0.4.3
-    at: 2026-10-27T00:41:19.118Z
 sources:
+  - id: openwiki-source-bf83456089b336c891ea9d97
+    resource: repo://frontend/src/lib/services/sampleRegistry.ts
   - id: openwiki-source-b8f9cc4b612027ee1143245a
     resource: repo://frontend/src/lib/services/sync.svelte.ts
   - id: openwiki-source-5ea2480e87f58467c23047b0
@@ -19,7 +18,10 @@ sources:
     resource: repo://frontend/src/lib/stores/persistence.ts
   - id: openwiki-source-a8a830617ab03d4b55d49d9a
     resource: repo://frontend/src/routes/%2Blayout.svelte
-generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
+generated: { by: "claude-code", at: "2026-10-27T18:31:56.115Z" }
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-10-27T18:31:56.115Z
 ---
 
 # Frontend State and SyncManager
@@ -44,7 +46,9 @@ Stores create managers with `registerSync(key, endpoint, mapper?, apiBase?)` or 
 3. **Server reconciliation** — returned rows become the saved base while fields with open updates remain overlaid. A failed initial read keeps the device copy and offers retry.
 4. **Resumable migration** — local records never confirmed by this server or a saved pending upload are POSTed one by one. Remaining work stays in the original account/profile namespace; returning to that account resumes it. Records known to have existed on the server and since removed are not recreated.
 
-`syncAll` starts stores shown by the active page first. Other ordinary stores follow after those answer and a short idle delay; on-demand stores (including letters) wait until shown, unless `everything` is requested. The dashboard requests everything. Registration after an active session starts also syncs the new manager, covering direct visits to lazy modules. The layout skips full-owner syncing on `/for/` recipient routes and clears managers on sign-out.
+`syncAll` starts stores shown by the active page first. Other ordinary stores follow after those answer and a short idle delay; on-demand stores (including letters) wait until shown, unless `everything` is requested. The dashboard requests everything. Registration after an active session starts also syncs the new manager, covering direct visits to lazy modules. The layout skips full-owner syncing on `/for/` recipient routes and clears managers on sign-out. It also waits for the private-preview access check (`accessStatus.ts`) to allow the session before starting `syncAll`, the context refresh and the estate audit; see [Routes and Navigation](/openwiki/frontend/routes-and-navigation.md).
+
+Admin-generated sample records are tracked per account/profile in `frontend/src/lib/services/sampleRegistry.ts`. A create made with origin `admin-sample` records the server-confirmed ID through `markConfirmedSample` right after the POST succeeds; a failure in that bookkeeping is only logged, so it never turns an accepted POST into a retried create. A recovered create keeps its origin on retry, so the confirmed sample ID is still recorded.
 
 ## Writes
 

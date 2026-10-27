@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:5da5bce2f594b04a5c7f7ae3f341c9e6aa655b8507386a95d39699c04c8e821f",
+  "pageVersion": "sha256:b5ae5437eb6ba80ff2855e31d25383abd56e1b59be06f76376c68d1a38e698fe",
   "claims": [
     {
       "id": "claim_3bcc1001a8ae432f992ae062b192c755",
@@ -32,15 +32,15 @@
     },
     {
       "id": "claim_078bcc134beb476bb20b399b071e9010",
-      "statement": "Railway builds with Nixpacks, installs Python requirements into /opt/venv, builds the frontend with npm run build, starts uvicorn backend.main:app and health-checks /api/health.",
+      "statement": "Railway builds with Nixpacks as declared in .railway/railway.ts, installs Python requirements into /opt/venv, builds the frontend with npm run build, starts uvicorn backend.main:app and health-checks /api/health.",
       "evidence": [
+        {
+          "resource": "repo://.railway/railway.ts#L54-L69",
+          "version": "repo-lines-v1:sha256:555cb77e30163bf3dfaf4807e0a710f82b566c6d230751f23795a1486b7ff047:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjMTdmMzY4Yzg3NGE0MmE3NDJkMjUxZjEzNjEyYmY0Yzg0NTU0NDcyODA1OTFkYmQ0NzcwNjQxNzRlMGUwY2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyZjQxNjZkZWQ3YTQ1MjNmZmY5MmMyNGEyNWFhM2M5NmM5Y2Q2MjVlNjEyODVkZGUwZTc1OTY2ODY5YmRjOWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2NzBjZGJiOGMxMDBmZjkzYjJmOGUxOGZmNzVjZDNhMDU4NDRjMzM5MmIxMTM4MjQ3MDJkMjMzMjNjMzdkNzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjODVhOTFhZWQxODJjY2FkNmMxZTc4OThjOWU5YWU2YjZjNzg2NzkzNTE0MGYzM2U0NTg4ZDFmYzE2MDMyNmEifQ"
+        },
         {
           "resource": "repo://nixpacks.toml",
           "version": "repo-file-v1:sha256:74276f7b6efcc85787b6551f60ab11ec3e5fd2a632e9ed05dddc1b593e62e298"
-        },
-        {
-          "resource": "repo://railway.toml",
-          "version": "repo-file-v1:sha256:494a7f0cfdef409b0d6f68e9bfc20b52eefc0437e7bdf041be0a9ac0f1210fab"
         }
       ]
     },
@@ -50,7 +50,7 @@
       "evidence": [
         {
           "resource": "repo://frontend/src/hooks.client.ts#L81-L134",
-          "version": "repo-lines-v1:sha256:e33bb4ba42833ac26f53d38b3f018d4b532efbae9fc6cdbd6881d2c8b199c208:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0ODY0MzYxMWQzZDgyNDIxMmI5M2JkZTEyNmMyYjhjNjIwYzcwOWI2Njk1MjU4MTc1YzY4OTIxMTE1NjJmZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiZjVlM2RkYmQ3MGMxYTRiM2VkZTlmYTNiM2QwNmY5MWE3Yjk0OWZjYzhkMWI4YTg1MTEzOTRjMTI2MWFiYjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxNzRiODFlODgzNDdkY2E2MzhmNDdiY2I5MmRlOTI0OTg1NDdiYzU3Y2Y4NDEzOGEwMmMwMTlhZGRiMDczZDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+          "version": "repo-lines-v1:sha256:04e0fc80288b208ce68c9894e5ef2bc16a451d8d1e004a9972b92c51e4d998cd:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0ODY0MzYxMWQzZDgyNDIxMmI5M2JkZTEyNmMyYjhjNjIwYzcwOWI2Njk1MjU4MTc1YzY4OTIxMTE1NjJmZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiZjVlM2RkYmQ3MGMxYTRiM2VkZTlmYTNiM2QwNmY5MWE3Yjk0OWZjYzhkMWI4YTg1MTEzOTRjMTI2MWFiYjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxNzRiODFlODgzNDdkY2E2MzhmNDdiY2I5MmRlOTI0OTg1NDdiYzU3Y2Y4NDEzOGEwMmMwMTlhZGRiMDczZDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
         },
         {
           "resource": "repo://frontend/src/lib/api/client.ts#L18-L30",
@@ -77,7 +77,7 @@
       "statement": "The backend serves the built SPA from frontend/dist with an index.html fallback, so production runs as a single origin.",
       "evidence": [
         {
-          "resource": "repo://backend/main.py#L440-L506",
+          "resource": "repo://backend/main.py#L442-L508",
           "version": "repo-lines-v1:sha256:c3893726029b05f42cae49362d2b5206810a935728fad7377c81acd5a16fd170:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhMTI2MDBmNDg0MDY1ZTJiMjRkZTQyZDY4YWE0OWFkMjEwZjdiMzgwMmU1ODM0NTZiNmEwYjA0MDQ1MTEwMjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhNTIwODgwZjRlMmNkODUyMTZkN2YwY2MwYWFiZGE0ZWU2ZDcxMDBjYzJjN2YwOWM5NjFmZjFhMjBiNTc5YmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZhMzZjY2RkMDY4MGUyM2MxMmZiMGVkZjkzZGUzOGE5NmQyZGQzNGY1N2E1M2NiODg2MDNjNDk3ZTAxNWRkNDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1MzZkOWE1Mzk0MDI1ODkyZWY1NWU5ODE3ZjhjNWZjZTgzZWUzOThiZTgyZjEyMzFhYjc5YmM5MGM0YmIwYjkifQ"
         }
       ]
@@ -85,6 +85,6 @@
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-10-27T00:41:19.118Z"
+    "at": "2026-10-27T18:31:56.115Z"
   }
 }

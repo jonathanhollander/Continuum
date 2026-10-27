@@ -3,9 +3,6 @@ type: system
 title: Authentication
 description: How users sign in to Continuum — password, magic link, WebAuthn passkeys — and how JWT access and refresh tokens, get_current_user, the WebAuthn challenge store, CSRF exemptions, rate limits and the frontend auth store fit together.
 tags: [auth, jwt, webauthn, passkeys, security]
-verified:
-  - by: openwiki/0.4.3
-    at: 2026-10-27T00:41:19.118Z
 sources:
   - id: openwiki-source-9d39a51fb1867de8482d70e3
     resource: repo://backend/auth.py
@@ -13,11 +10,16 @@ sources:
     resource: repo://backend/challenge_store.py
   - id: openwiki-source-43cec924cc2faa688a976aa9
     resource: repo://backend/csrf.py
+  - id: openwiki-source-c034c695277ec964fa4adfb2
+    resource: repo://backend/private_access.py
   - id: openwiki-source-988e9d9be22f74fe8d2eaaca
     resource: repo://backend/routers/auth.py
   - id: openwiki-source-5314c7322469359ea3b510ed
     resource: repo://frontend/src/lib/stores/auth.ts
-generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
+generated: { by: "claude-code", at: "2026-10-27T18:31:56.115Z" }
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-10-27T18:31:56.115Z
 ---
 
 # Authentication
@@ -43,6 +45,18 @@ Each successful sign-in returns `{ access_token, refresh_token, token_type: "bea
 **Passkeys**: registration start creates the `User` row (with an empty `public_key` placeholder), stores the WebAuthn challenge, and returns options; finish verifies the attestation and stores the credential as a `PulseCredential` row. Login start optionally looks up the email's credentials to restrict the prompt; login finish pops the challenge, verifies the assertion against the stored public key and sign count, and updates the sign count. The relying party comes from `RP_ID`, `RP_NAME` and `ORIGIN` (see [Development, Configuration and Deployment](/openwiki/operations/development-and-deployment.md)).
 
 Password login always verifies the stored hash; the former hard-coded account bypass is no longer present.
+
+## Private-preview mode
+
+Setting `PRIVATE_ACCESS_USER_ID` to a user id restricts the whole app to that one account (`backend/private_access.py`). Unset, every check below is a no-op.
+
+- `GET /api/auth/access-status` is public. It returns `{private_mode, signup_enabled, access_allowed}` for the optional bearer token's user, with `Cache-Control: no-store` and `Vary: Authorization`.
+- Password signup and both passkey-registration steps call `require_signup_enabled()` and answer 403 `Continuum is in private preview.`
+- Password login, magic-link verification, passkey login finish (by the credential's owner), refresh and logout (by the refresh token's owner) call `require_allowed_user()` and refuse any other account with that 403.
+- Passkey login start resolves the allowed owner and limits the offered credentials to that owner's passkeys; a different email is refused.
+- A magic-link request for any other or unknown email returns the usual generic receipt without sending anything.
+
+The HTTP middleware applies the same rule to every other `/api` request (see [Backend API and Routers](/openwiki/architecture/backend-api.md)), and the frontend `accessStatus.ts` store reads the status endpoint to decide whether to show the app or a private page (see [Routes and Navigation](/openwiki/frontend/routes-and-navigation.md)).
 
 ## Tokens
 

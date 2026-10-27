@@ -5,8 +5,10 @@ description: How the FastAPI app in backend/main.py is assembled — middleware,
 tags: [backend, fastapi, api, routers, errors]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-10-27T00:41:19.118Z
+    at: 2026-10-27T18:31:56.115Z
 sources:
+  - id: openwiki-source-82a325da453da1db06378e6d
+    resource: repo://backend/config.py
   - id: openwiki-source-43cec924cc2faa688a976aa9
     resource: repo://backend/csrf.py
   - id: openwiki-source-91574aa19b9d1f3eea4fd100
@@ -15,9 +17,11 @@ sources:
     resource: repo://backend/limiter.py
   - id: openwiki-source-fcffbe3e28749eaf9a39557c
     resource: repo://backend/main.py
+  - id: openwiki-source-c034c695277ec964fa4adfb2
+    resource: repo://backend/private_access.py
   - id: openwiki-source-4be256b5d86d6f7252b493a6
     resource: repo://backend/routers/estate_data.py
-generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
+generated: { by: "claude-code", at: "2026-10-27T18:31:56.115Z" }
 ---
 
 # Backend API and Routers
@@ -28,7 +32,11 @@ generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
 
 The FastAPI lifespan configures logging, creates tables, checks/seeds `dev@continuum.im` with password `dev123`, and calls the Pulse scheduler start/stop functions. API probes must use a disposable database and avoid lifespan startup unless the scheduler is isolated. The shared slowapi limiter uses client IP; generic estate mutations allow 600/minute to accommodate local-data migration.
 
-`RequestIdMiddleware` gives responses an `X-Request-ID`. Security headers, CORS from settings, CSRF and production HTTPS forwarding handling wrap requests. HTTPS redirect excludes `/api/health` so direct container probes work.
+`RequestIdMiddleware` gives responses an `X-Request-ID`. Security headers, CORS from settings, CSRF, the private-preview access gate and production HTTPS forwarding handling wrap requests. HTTPS redirect excludes `/api/health` so direct container probes work.
+
+## Private-preview access gate
+
+`backend/private_access.py` registers `enforce_private_access` as an HTTP middleware right after CSRF. It is inactive unless `PRIVATE_ACCESS_USER_ID` (a positive integer in `backend/config.py`) is set. When set, every `/api` path plus `/openapi.json`, `/docs` and `/redoc` is gated: signup and passkey-registration paths return 403 `Continuum is in private preview.`, a fixed allowlist (health, CSRF token, access status, token login, passkey login, magic link, refresh, logout) passes through, and everything else needs a valid bearer token whose user id equals the configured id. Token validation reuses `get_current_user` in a thread-pool worker. `OPTIONS` preflights and non-API SPA paths are never gated. The auth router applies the same rule inside password login and signup; see [Authentication](/openwiki/systems/authentication.md).
 
 The active router list covers auth, admin users, email, Pulse, contacts, estate data, medical, memories, media, support, AI proxy/settings, export and recipient access. The old dedicated documents, insurance, pets and heirlooms router files are not the mounted API contract: their corresponding records use the generic estate collection surface. In particular both `documents` and `vault_documents` resolve to `Document` in `MODEL_MAP`.
 

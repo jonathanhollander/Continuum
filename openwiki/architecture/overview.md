@@ -3,10 +3,9 @@ type: architecture
 title: System Architecture Overview
 description: How Continuum's static SvelteKit single-page app, the FastAPI backend that also serves it, and the SQLite/PostgreSQL database fit together, and how a request flows from a module page to the database and back.
 tags: [architecture, overview, frontend, backend, deployment]
-verified:
-  - by: openwiki/0.4.3
-    at: 2026-10-27T00:41:19.118Z
 sources:
+  - id: openwiki-source-d60a6f0f1e9b6eab797ff859
+    resource: repo://.railway/railway.ts
   - id: openwiki-source-43cec924cc2faa688a976aa9
     resource: repo://backend/csrf.py
   - id: openwiki-source-fcffbe3e28749eaf9a39557c
@@ -25,9 +24,10 @@ sources:
     resource: repo://frontend/vite.config.ts
   - id: openwiki-source-7f4d4870536a9fe6b18e7b19
     resource: repo://nixpacks.toml
-  - id: openwiki-source-0f7600e0d2d7c91e381ed675
-    resource: repo://railway.toml
-generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
+generated: { by: "claude-code", at: "2026-10-27T18:31:56.115Z" }
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-10-27T18:31:56.115Z
 ---
 
 # System Architecture Overview
@@ -55,13 +55,13 @@ In development Vite runs on port 5173 and proxies `/api` to `http://localhost:80
 
 `backend/main.py` assembles the FastAPI app, registers the domain routers under `/api`, then mounts `frontend/dist/_app` and `frontend/dist/images` and adds a catch-all route that returns real files from `frontend/dist` or falls back to `index.html`. In production the browser therefore talks to a single origin. Details are in [Backend API and Routers](/openwiki/architecture/backend-api.md).
 
-Railway builds the image with Nixpacks (`railway.toml`, `nixpacks.toml`): it installs Python 3.11 and Node 20, installs `backend/requirements.txt` into `/opt/venv`, runs `npm run build` in `frontend/`, and starts `uvicorn backend.main:app`. The Railway health check is `/api/health`.
+Railway builds the image with Nixpacks. The service, builder and `/api/health` health check are declared as infrastructure-as-code in `.railway/railway.ts` (which replaced the root `railway.toml`); `nixpacks.toml` installs Python 3.11 and Node 20, installs `backend/requirements.txt` into `/opt/venv`, runs `npm run build` in `frontend/`, and starts `uvicorn backend.main:app`. See [Development and Deployment](/openwiki/operations/development-and-deployment.md).
 
 ## Request flow
 
 1. A module page calls its store. Most stores wrap a `SyncManager` (`frontend/src/lib/services/sync.svelte.ts`) that renders from a localStorage cache first, tracks the mutation and sends the request (see [Frontend State and SyncManager](/openwiki/frontend/state-and-sync.md)).
 2. Requests carry the JWT from `localStorage['continuum_auth_token']` as a Bearer header. The helpers in `frontend/src/lib/api/client.ts` preserve HTTP errors. The owner-bound client fetch hook refreshes eligible 401s once, sharing concurrent refresh work; it signs out only on a definite refresh refusal. Transient failures remain retryable, and session ownership checks prevent a delayed request/result from crossing an account change.
-3. FastAPI runs the middleware chain (request ID, security headers, CORS, CSRF, HTTPS redirect in production), resolves the user with `get_current_user`, and the router reads or writes SQLModel rows scoped to that user.
+3. FastAPI runs the middleware chain (request ID, security headers, CORS, CSRF, the private-preview gate when `PRIVATE_ACCESS_USER_ID` is set, HTTPS redirect in production), resolves the user with `get_current_user`, and the router reads or writes SQLModel rows scoped to that user.
 4. Errors come back as `{ "error": { "message", "code", ... } }`; `parseApiError` in `frontend/src/lib/services/errorHandler.ts` turns them into `ErrorDetails` for notifications.
 
 The backend's CSRF middleware rejects state-changing requests without a matching `X-CSRF-Token` header when `ENVIRONMENT` is production. The frontend satisfies it in one place: `frontend/src/hooks.client.ts` wraps `window.fetch` before the app loads and, for every `POST`/`PUT`/`PATCH`/`DELETE` to the page's own origin or the configured API origin, copies the `csrf_token` cookie into that header. If the cookie is missing it first calls `/api/health` to get a fresh one. Callers that already set the header are left alone.
