@@ -9,9 +9,9 @@
 <div class="max-w-6xl mx-auto p-8">
     <LivingBlueprintHeader
         title="Document Vault"
-        subtitle="One home for your legal documents"
-        detailedDescription="A central home for the documents that define your legal and personal wishes. From wills to trusts, the blueprints of your legacy are kept together here."
-        whyMatters="Searching for a will or trust document can delay estate settlement by months. Centralizing them here provides your family with a clear roadmap when they need it most."
+        subtitle="Copies, original locations, and review details"
+        detailedDescription="Add the documents your family may need, such as a will, trust, deed, or policy. Record the title, where the original is kept, and any signing or review dates. You can attach a digital copy or record the physical location."
+        whyMatters="Specific locations and recognizable titles help your family find the intended version. Review dates help you keep the recorded details current."
     />
 
 

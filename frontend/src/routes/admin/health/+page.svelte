@@ -29,10 +29,11 @@
     >
         <div>
             <h1 class="text-3xl font-bold text-white mb-2">
-                Data Health Center
+                Record Review List
             </h1>
             <p class="text-slate-400">
-                A look at how current each record is.
+                Questions raised by the same six-area record checks as Record Coverage.
+                This list does not check review dates or establish that information is current.
             </p>
         </div>
         {#if auditSources.canScore}<div
@@ -41,11 +42,12 @@
             <ShieldAlert class={levelTone.icon} size={24} />
             <div>
                 <div class="text-xs uppercase font-bold {levelTone.label}">
-                    Care Level
+                    Review list size
                 </div>
                 <div class="text-lg font-bold text-white">
                     {level}
                 </div>
+                <div class="text-xs text-slate-300">{audit.issues.length} questions</div>
             </div>
         </div>{/if}
     </div>
@@ -59,14 +61,14 @@
                 class="flex items-center gap-2 text-lg font-bold text-white mb-6"
             >
                 <TriangleAlert class="text-warning" size={20} />
-                Records worth a closer look
+                Questions to review
             </h3>
 
             {#if audit.issues.length === 0}
                 <div
                     class="p-4 bg-success/10 border border-success/30 rounded-lg text-success text-sm flex items-center gap-2"
                 >
-                    <Activity size={16} /> Everything is current.
+                    <Activity size={16} /> No gaps found by these record checks. Review dates, details and access separately.
                 </div>
             {:else}
                 <ul class="space-y-2">
@@ -94,7 +96,7 @@
         <h3
             class="text-sm font-mono text-muted-foreground mb-4 uppercase tracking-wider"
         >
-            Raw Audit Telemetry
+            Record-check Details and Source IDs
         </h3>
         <pre
             class="text-xs text-success font-mono overflow-x-auto p-4 bg-slate-900 rounded-lg border border-slate-800 max-h-64">

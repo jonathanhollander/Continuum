@@ -288,9 +288,9 @@
     <!-- Header sits outside the content wrapper so its title lines up with sibling module pages -->
     <LivingBlueprintHeader
         title="Event Calendar"
-        subtitle="Afterlife Calendar"
-        detailedDescription="You can shape how your birthday, holidays and anniversaries are celebrated. Create meaningful rituals and messages for the dates that matter most."
-        whyMatters="With your guidance, special dates become moments of connection. By documenting your wishes, you transform grief into intentional remembrance."
+        subtitle="Meaningful dates, wishes and message drafts"
+        detailedDescription="Save a meaningful date with your wishes and an optional email draft. A person can open the draft in their email app, review it and send it."
+        whyMatters="Your family can refer to your own words when deciding how to observe a meaningful date."
     >
         <div class="flex items-center gap-3">
             <DataViewToggle module="calendar" />
@@ -312,8 +312,8 @@
 
     {#if events.length === 0}
         <EmptyState
-            title="Create meaningful moments for the future"
-            whyMatters="<strong>Birthdays, anniversaries and holidays will keep arriving, and your family can feel your presence on them.</strong> With your guidance, special dates become moments of connection.<br/><br/>By documenting your wishes for these special days, you transform difficult dates into moments of joy. Your family will know exactly how to honor you, celebrate together, and feel your presence even in your absence."
+            title="Add a date and what it means"
+            whyMatters="Record a birthday, anniversary or other meaningful date. Add a wish for how it could be observed, and an optional email draft for someone to review and send."
             encouragement="Start with your birthday or a holiday you love. Add others as they come to mind."
             icon={Clock}
             iconClass="text-primary"
@@ -434,7 +434,7 @@
                                 class="w-full flex items-center justify-center gap-2 py-3 border border-border rounded-xl text-muted-foreground font-bold text-sm hover:border-primary hover:text-primary-hover transition-colors bg-card"
                             >
                                 <Mail size={16} />
-                                Prepare "Future Email"
+                                Open email draft
                             </a>
                         {/if}
                     </div>
@@ -636,7 +636,7 @@
                             class="w-full px-4 py-2 rounded-xl border border-warning/30 bg-card focus:outline-none focus:ring-2 focus:ring-warning/30"
                         ></textarea>
                         <p class="text-xs text-warning mt-2">
-                            A small instruction creates connection.
+                            Write the wish you want your family to be able to find.
                         </p>
                     </div>
 
@@ -645,12 +645,12 @@
                         <div class="flex items-center gap-2 mb-4">
                             <Mail class="text-primary" size={18} />
                             <h4 id="event-message-heading" class="font-bold text-foreground">
-                                Future Message
+                                Email draft
                             </h4>
                         </div>
                         <p class="text-sm text-muted-foreground mb-4">
-                            Draft a message for this day. Your executor can open
-                            this in their email, ready for them to send for you.
+                            Save a draft for this day. Open email draft launches an email app
+                            for review and sending; saving the date does not schedule delivery.
                         </p>
 
                         <div class="space-y-3">
@@ -712,7 +712,7 @@
                         disabled={!newEvent.title || !formDate || saving}
                         aria-busy={saving}
                         class="px-6 py-2 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50"
-                        >{saving ? "Saving..." : "Save Event"}</button
+                        >{saving ? "Saving..." : "Save date"}</button
                     >
                 </div>
             </div>

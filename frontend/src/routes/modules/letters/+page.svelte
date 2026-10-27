@@ -1110,10 +1110,9 @@
                         <p
                             class="text-muted-foreground text-sm font-medium leading-relaxed mt-1"
                         >
-                            This letter is structured to satisfy typical
-                            requirements for {selectedTemplate.category?.toLowerCase() ||
-                                "general"}
-                            institutions.
+                            Review the names, facts, your role, and any documents
+                            or access instructions before sharing this draft. For
+                            an institution, confirm its current process before sending it.
                         </p>
                     </div>
                 </div>
@@ -1145,7 +1144,7 @@
                                 class="w-4 h-4 bg-primary-soft text-primary-hover rounded-lg flex items-center justify-center"
                                 ><CircleCheck size={10} /></span
                             >
-                            Documents that may help
+                            Documents and details to confirm
                         </h4>
                         <ul class="space-y-4">
                             {#each selectedTemplate.requiredDocs as doc}
@@ -1174,7 +1173,7 @@
                             class="font-black text-foreground uppercase tracking-widest text-xs flex items-center gap-3"
                         >
                             <Sparkles size={16} class="text-gold-text" />
-                            Expert Advice
+                            Follow-up question
                         </h4>
                         <p
                             class="text-sm text-muted-foreground leading-relaxed font-medium italic"

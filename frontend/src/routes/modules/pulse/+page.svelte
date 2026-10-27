@@ -190,7 +190,7 @@
                     <Loader2 class="w-12 h-12 text-primary animate-spin" />
                     <span
                         class="text-xs font-bold text-primary mt-4 uppercase tracking-[0.3em]"
-                        >Letting them know...</span
+                        >Saving your check-in...</span
                     >
                 {:else if localStatus.lastSuccess}
                     <CheckCircle2
@@ -198,7 +198,7 @@
                     />
                     <span
                         class="text-xs font-bold text-primary mt-4 uppercase tracking-[0.3em]"
-                        >Received, thank you</span
+                        >Check-in saved</span
                     >
                 {:else}
                     <div
@@ -231,7 +231,7 @@
                 class="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed italic"
             >
                 {#if pulse.status === "active"}
-                    {#if guardians.length > 0}Your inner circle is standing by.{/if}
+                    {#if guardians.length > 0}Review the people in your Trusted Contacts.{/if}
                     {#if pulse.next_nudge}
                         Your next gentle nudge is {new Date(
                             pulse.next_nudge,
@@ -241,8 +241,7 @@
                             minute: "2-digit",
                         })}.{/if}
                 {:else if pulse.status === "grace"}
-                    Whenever you're ready, a check-in lets your circle know
-                    you're well.
+                    Record a check-in whenever you're ready to start the next check-in interval.
                 {:else if pulse.status === "disabled"}
                     Whenever you'd like check-ins to begin again,
                     <a
@@ -255,7 +254,7 @@
                         href="/modules/pulse/settings"
                         class="text-primary hover:text-primary-hover not-italic"
                         >Choose how often we check in</a
-                    >, and we'll gently keep watch from there.
+                    >, then review the people and waits on your Escalation Plan.
                 {/if}
             </p>
             {#if pulse.guardianCheckin}
@@ -388,7 +387,7 @@
                         <p
                             class="text-[10px] text-primary uppercase tracking-widest"
                         >
-                            Your circle is told shortly after the timer ends
+                            Pulse attempts alerts after the timer ends
                         </p>
                     </div>
                     <button
@@ -425,13 +424,13 @@
                     </div>
                     {#if timerPeople.length > 0}
                         <p class="text-xs text-muted-foreground leading-relaxed" data-testid="timer-people">
-                            If the time passes, we gently tell {timerPeople.join(", ")}.
+                            If the timer expires, Pulse attempts an email alert to {timerPeople.join(", ")}.
                             <a href="/modules/pulse/escalation" class="text-primary hover:text-primary-hover">Choose who</a>
                         </p>
                     {:else}
                         <p class="text-xs text-muted-foreground leading-relaxed" data-testid="timer-people">
                             <a href="/modules/pulse/escalation" class="text-primary hover:text-primary-hover">Choose who is told</a>
-                            on your Escalation Plan, with "Told when I start a timer".
+                            on your Escalation Plan using the Safety Timer choice.
                         </p>
                     {/if}
                     <button
@@ -443,8 +442,8 @@
                 </div>
             {:else}
                 <p class="text-sm text-muted-foreground leading-relaxed mb-6">
-                    Share a short walk or visit with your circle. If the time
-                    passes, the people you chose are gently told.
+                    Set a timer for a short walk or visit. If it expires, Pulse attempts
+                    an email alert to the safety timer contacts you chose.
                 </p>
                 <button
                     onclick={() => (localStatus.showSafetyConfig = true)}
@@ -474,13 +473,13 @@
                     </h3>
                 </div>
                 <p class="text-sm text-muted-foreground leading-relaxed">
-                    Read the notes and check-ins from your guardians.
+                    Save practical notes for each guardian's portal, read their replies, and review recorded alert attempts.
                 </p>
             </div>
             <div class="pt-6">
                 <span
                     class="text-[10px] text-primary font-bold uppercase tracking-widest border border-primary/20 px-3 py-1 rounded-full"
-                    >Explore Connection</span
+                    >Review and save notes</span
                 >
             </div>
         </a>
@@ -527,7 +526,7 @@
             <h3
                 class="text-xs font-bold text-muted-foreground uppercase tracking-[0.4em] mb-4"
             >
-                Estate Readiness
+                Record coverage score
             </h3>
             <AuditSourceStatus state={auditSources} />
             {#if auditSources.canScore && estateAudit.percentage > 0}
@@ -536,12 +535,13 @@
                 </div>
             {:else if auditSources.canScore}
                 <div class="text-3xl md:text-4xl font-serif text-foreground mb-2" data-testid="pulse-readiness">
-                    Ready when you are
+                    Add records to begin
                 </div>
             {/if}
             <p class="text-sm text-muted-foreground max-w-sm">
-                Each part of your plan you add brings this closer to complete,
-                and your check-ins keep the people you trust reassured.
+                Points for recorded information across accounts, insurance, contacts, medical wishes,
+                digital accounts and personal records. Review the source records for accuracy,
+                legal requirements, access and handover details. Pulse check-in status is shown separately.
             </p>
         </div>
     </div>

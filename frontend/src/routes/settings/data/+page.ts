@@ -1,1 +1,1 @@
-export const load = () => ({ title: "Your records, kept safe" });
+export const load = () => ({ title: "Your record copies" });

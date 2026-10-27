@@ -279,6 +279,12 @@
             </div>
         </div>
 
+        <p class="text-sm text-muted-foreground leading-relaxed mt-3">
+            The check-in interval runs from your last recorded check-in. The grace period follows it,
+            then Tier 1's saved wait begins. Set later tiers and personal waits on your
+            <a href="/modules/pulse/escalation" class="text-primary hover:underline">Escalation Plan</a>.
+        </p>
+
         <!-- ESCALATION PROTOCOL: the tier boxes live on the Escalation Plan page -->
         <div class="space-y-4" id="contacts-section">
             <div class="flex items-center justify-between">
@@ -374,9 +380,11 @@
                     </h3>
                 </div>
                 <p class="text-sm text-muted-foreground leading-relaxed">
-                    Share the notes in <a href="/modules/pulse/vault" class="text-primary hover:text-primary-hover">your vault</a>
-                    with your guardians once an escalation reaches the tier you
-                    set for each one.
+                    Turn on Automatic Release to make <a href="/modules/pulse/vault" class="text-primary hover:text-primary-hover">vault instructions</a>
+                    available under their saved tier rules. Guardians whose tier has been reached can read items
+                    through the current stage; a personal-wait alert accepted by the email provider can open items
+                    through that guardian's own tier earlier. Your next check-in closes this access.
+                    Review each person's current view in <a href="/modules/pulse/transparency" class="text-primary hover:underline">Transparency</a>.
                 </p>
                 <div
                     class="flex items-center justify-between p-3 rounded-xl bg-slate-950/40 border border-slate-800"

@@ -260,17 +260,14 @@
                                 What is a Passkey?
                             </h3>
                             <p class="text-foreground text-base leading-relaxed">
-                                A Passkey is a safe way to log in using what's
-                                already on your device—like your fingerprint,
-                                your face, or the code you use to unlock your
-                                screen.
+                                A passkey lets you sign in with your device's
+                                fingerprint, face recognition, or screen unlock code.
                             </p>
                             <div class="bg-background/40 rounded-xl p-4">
                                 <p class="text-foreground text-sm">
-                                    It's much safer than a password, and best of
-                                    all: <strong class="text-foreground">
-                                        a way to sign in with what's already on your device.
-                                    </strong>
+                                    You can also choose <strong class="text-foreground">
+                                        email sign-in below
+                                    </strong> to request a sign-in link.
                                 </p>
                             </div>
                         </div>
