@@ -1,4 +1,4 @@
-import { getStored, setStored } from "$lib/stores/persistence";
+import { sampleSyncKey as syncKeyOf, sampleRegistryFor as registryFor, saveSampleRegistry as saveRegistry } from "$lib/services/sampleRegistry";
 import { getRegistry } from "$lib/services/sync.svelte";
 import { get } from 'svelte/store';
 import { activeAccountId } from '$lib/stores/keyringStore';
@@ -12,27 +12,7 @@ import "$lib/stores/calendarStore.svelte";
 import "$lib/stores/letterStore.svelte";
 import "$lib/stores/documentStore.svelte";
 
-// Fake-item kind -> the owning store's registry key. Test registries saved before this used the kind.
-const SYNC_KEY: Record<string, string> = { assets: "properties", financial_accounts: "financial_assets" };
-const syncKeyOf = (mod: string) => SYNC_KEY[mod] ?? mod;
-
-const TEST_REGISTRY_KEY = "continuum_test_registry";
-
-type TestRegistry = {
-    [moduleId: string]: string[];
-};
-
 export type SamplePurgeResult = { deletedCount: number; remainingCount: number };
-
-// Older registries used the sample kind. The owning store key also drives the settings markers.
-const normalizedRegistry = (registry: TestRegistry): TestRegistry => {
-    const result: TestRegistry = {};
-    for (const [mod, ids] of Object.entries(registry)) {
-        const key = syncKeyOf(mod);
-        result[key] = [...new Set([...(result[key] || []), ...ids.map(String)])];
-    }
-    return result;
-};
 
 function captureFactoryOwner() {
     const session = captureSession();
@@ -42,11 +22,6 @@ function captureFactoryOwner() {
         && account === (get(activeAccountId) || 'anonymous')
         && profile === (get(currentProfileId) || 'owner') };
 }
-type FactoryOwner = ReturnType<typeof captureFactoryOwner>;
-const registryFor = (owner: FactoryOwner) =>
-    normalizedRegistry(getStored<TestRegistry>(TEST_REGISTRY_KEY, {}, owner.profile, owner.account));
-const saveRegistry = (owner: FactoryOwner, registry: TestRegistry) =>
-    setStored(TEST_REGISTRY_KEY, registry, owner.profile, owner.account);
 
 class TestDataFactoryService {
     private _initialized = false;
@@ -80,14 +55,9 @@ class TestDataFactoryService {
                     if (!owner.current()) break;
                     const fakeItem = this.createFakeItem(mod);
                     try {
-                        // A returned confirmation always belongs to this batch's namespace.
-                        // A session change can withhold a late response; it stops the batch below.
-                        const created = await sync.create(fakeItem);
-                        if (created && created.id != null) {
-                            const registry = registryFor(owner);
-                            registry[syncKey] = [...new Set([...(registry[syncKey] || []), String(created.id)])];
-                            saveRegistry(owner, registry);
-                        }
+                        // Origin travels with recovery, outside the record payload. The manager
+                        // records only a confirmed server ID in the create's captured namespace.
+                        await sync.create(fakeItem, false, false, undefined, undefined, 'admin-sample');
                     } catch (e) {
                         console.error(`[FactoryService] Failed to create for ${mod}`, e);
                     }
@@ -139,7 +109,7 @@ class TestDataFactoryService {
     }
 
     getRegistry() {
-        return normalizedRegistry(getStored<TestRegistry>(TEST_REGISTRY_KEY, {}));
+        return registryFor(captureFactoryOwner());
     }
 
     isTestId(mod: string, id: string) {
