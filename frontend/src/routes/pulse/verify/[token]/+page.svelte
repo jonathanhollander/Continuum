@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import { onMount } from "svelte";
-    import { API_BASE_URL } from "$lib/config";
+    import { apiFetch } from "$lib/api/client";
     import { CheckCircle2, Shield, Activity, Loader2 } from "lucide-svelte";
     import { fade } from "svelte/transition";
     import LivingMesh from "$lib/components/pulse/LivingMesh.svelte";
@@ -26,7 +26,7 @@
     onMount(async () => {
         const token = $page.params.token;
         try {
-            const res = await fetch(`${API_BASE_URL}/api/pulse/verify/${token}`);
+            const res = await apiFetch(`/api/pulse/verify/${token}`);
             if (res.ok) {
                 const data = await res.json();
                 state.userName = data.user_name || "";
@@ -45,7 +45,7 @@
         const token = $page.params.token;
         state.sending = true;
         try {
-            const res = await fetch(`${API_BASE_URL}/api/pulse/verify/${token}`, {
+            const res = await apiFetch(`/api/pulse/verify/${token}`, {
                 method: "POST",
             });
             if (res.ok) {
@@ -107,12 +107,12 @@
                     <CheckCircle2 class="w-3 h-3" /> Received
                 </div>
 
-                <h2 class="text-3xl font-serif text-foreground">Thank you, we have you.</h2>
+                <h2 class="text-3xl font-serif text-foreground">Your check-in is saved.</h2>
 
                 <div class="py-4">
                     <p class="text-slate-300 leading-relaxed">
-                        Thank you for letting us know. Your check-in is saved,
-                        and any guardian we reached out to is told you are well.
+                        Thank you for checking in. Your recorded check-in time
+                        starts the next check-in interval.
                     </p>
                 </div>
 
@@ -138,14 +138,14 @@
                     {state.userName ? `Hello, ${state.userName}` : "Hello"}
                 </h2>
                 <p class="text-slate-300 leading-relaxed">
-                    One tap lets the people you trust know you're well.
+                    Record your check-in to start the next check-in interval.
                 </p>
                 <button
                     onclick={checkIn}
                     disabled={state.sending}
                     class="w-full bg-primary hover:bg-primary-hover disabled:opacity-60 text-primary-foreground font-bold px-8 py-4 rounded-2xl transition-all"
                 >
-                    {state.sending ? "Letting your circle know..." : "I'm here and well"}
+                    {state.sending ? "Saving your check-in..." : "I'm here and well"}
                 </button>
             </div>
         {/if}

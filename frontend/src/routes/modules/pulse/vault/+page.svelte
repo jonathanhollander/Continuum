@@ -28,9 +28,9 @@
     let listError = $state("");
 
     const tierLabels: Record<string, string> = {
-        tier_1_escalation: "Tier 1 (closest partners)",
-        tier_2_escalation: "Tier 2 (Family)",
-        tier_3_escalation: "Tier 3 (nearby help)",
+        tier_1_escalation: "Tier 1",
+        tier_2_escalation: "Tier 2",
+        tier_3_escalation: "Tier 3",
     };
     function tierLabel(condition: string): string {
         return tierLabels[condition] ?? condition.replaceAll("_", " ");
@@ -130,7 +130,7 @@
         <div
             class="bg-indigo-500/10 border border-indigo-500/30 px-3 py-1 rounded-full text-[10px] text-indigo-400 font-bold uppercase tracking-widest"
         >
-            Private to you
+            Guardian instructions
         </div>
     </div>
 
@@ -153,9 +153,8 @@
                         class="text-indigo-300">gate codes</span
                     >, <span class="text-indigo-300">home keys</span>, and
                     <span class="text-indigo-300">pet care steps</span>. They
-                    stay private until the time comes: once an escalation
-                    reaches the tier you set for an item, every guardian the
-                    escalation has reached can read it.
+                    are shared through guardian portals when <a href="/modules/pulse/settings" class="text-primary hover:underline">Automatic Release</a>
+                    is on and the release conditions below are met.
                 </p>
             </div>
         </div>
@@ -193,18 +192,19 @@
                 />
             </div>
             <div class="space-y-2">
-                <label for="vault-item-unlock" class="text-xs text-muted-foreground ml-1">Share with</label>
+                <label for="vault-item-unlock" class="text-xs text-muted-foreground ml-1">Release from stage</label>
                 <select
+                    aria-describedby="vault-release-rule"
                     id="vault-item-unlock"
                     bind:value={newItem.unlock_condition}
                     class="w-full bg-background border border-slate-800 rounded-xl px-4 py-3 text-sm text-foreground focus:border-indigo-500/50 outline-none"
                 >
                     <option value="tier_1_escalation"
-                        >Tier 1 (closest partners)</option
+                        >Tier 1</option
                     >
-                    <option value="tier_2_escalation">Tier 2 (Family)</option>
+                    <option value="tier_2_escalation">Tier 2</option>
                     <option value="tier_3_escalation"
-                        >Tier 3 (nearby help)</option
+                        >Tier 3</option
                     >
                 </select>
             </div>
@@ -220,6 +220,13 @@
                 class="w-full bg-background border border-slate-800 rounded-xl px-4 py-3 text-sm text-foreground focus:border-indigo-500/50 outline-none font-mono"
             ></textarea>
         </div>
+
+        <p class="text-sm text-muted-foreground leading-relaxed" id="vault-release-rule">
+            With Automatic Release on, a guardian whose tier has been reached can read items through the current stage.
+            A personal-wait alert accepted by the email provider can open items through that guardian's own tier earlier.
+            Your next check-in closes this access. Review the people and available items in
+            <a href="/modules/pulse/transparency" class="text-primary hover:underline">Transparency</a>.
+        </p>
 
         <button
             onclick={addItem}
@@ -290,7 +297,7 @@
                             <div
                                 class="text-[10px] text-indigo-300 font-bold uppercase tracking-widest"
                             >
-                                Shared at {tierLabel(item.unlock_condition)}
+                                Release rule: {tierLabel(item.unlock_condition)}
                             </div>
                         </div>
                     </div>
@@ -385,8 +392,8 @@
                         will be glad to have if something happens.
                     </p>
                     <p class="text-muted-foreground mt-3 leading-relaxed">
-                        The Pulse Vault keeps these private until the time comes: once an escalation reaches the tier you set,
-                        every guardian it has reached can read them. It's peace of mind that the people you trust will have what they need.
+                        Choose a release stage for each item and review Automatic Release in your check-in settings.
+                        Use <a href="/modules/pulse/transparency" class="text-primary hover:underline">Transparency</a> to see each guardian's current view.
                     </p>
                 </div>
 

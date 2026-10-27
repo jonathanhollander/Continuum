@@ -18,9 +18,10 @@
 
     <div class="bg-background/30 p-6 rounded-2xl border border-slate-800">
         <p class="text-muted-foreground mb-6 max-w-2xl">
-            These are the people Continuum will reach out to when a check-in has
-            been quiet for a while. In the Escalation Plan you choose how long
-            Continuum waits before each group is contacted.
+            These people are assigned to Pulse alert tiers. An explicit Pulse tier takes precedence;
+            otherwise Pulse uses the call order in Family &amp; Contacts (Tier 1, 2 or 3).
+            “Kept private” stays off that call order; an explicit Pulse tier still applies.
+            Review waits on your <a href="/modules/pulse/escalation" class="text-primary hover:underline">Escalation Plan</a>.
         </p>
         <PulseContactsManager
             userId={1}

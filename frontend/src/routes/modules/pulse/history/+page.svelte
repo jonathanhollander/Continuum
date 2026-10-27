@@ -26,15 +26,17 @@
         return history.filter((h) => f.methods.includes(h.method));
     }
 
-    const isGuardian = (method: string) => method?.startsWith("guardian_");
+    const isGuardian = (method: string) => ["guardian_snooze", "guardian_confirmation"].includes(method);
     // "Marked OK by Gil" / "Confirmed by Gil" -> "Gil"
     const guardianName = (note: string | null) =>
         (note ?? "").split(" by ").slice(1).join(" by ") || "A guardian";
 
     function getLabel(checkin: any) {
         if (isGuardian(checkin.method)) return `${guardianName(checkin.note)} checked on you`;
-        if (checkin.method === "magic_link") return "You checked in from your email link";
-        return "You checked in";
+        if (checkin.method === "pulse_enabled") return "You turned on wellness check-ins";
+        if (checkin.method === "magic_link" || checkin.method === "email_link") return "You checked in from your email link";
+        if (checkin.method === "manual" || checkin.method === "biometric") return "You checked in";
+        return "Recorded Pulse action";
     }
     // Notes the owner wrote; the app's own markers are left out
     function getNote(checkin: any) {
@@ -173,7 +175,7 @@
                     <div
                         class="text-xs font-bold text-primary uppercase tracking-wider bg-primary/10 px-3 py-1 rounded-full border border-primary/20"
                     >
-                        Received
+                        Recorded
                     </div>
                 </div>
             {/each}
