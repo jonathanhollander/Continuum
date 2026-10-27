@@ -83,7 +83,7 @@
     </aside>
 
     <!-- Main Content Area -->
-    <main class="flex-1 ml-64 p-8 overflow-y-auto">
+    <main class="flex-1 ml-64 p-8">
         <div
             class="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500"
         >
