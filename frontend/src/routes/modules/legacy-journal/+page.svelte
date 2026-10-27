@@ -88,15 +88,6 @@
         },
     ];
 
-    // Journal prompt pool for AI Helper
-    const journalPromptPool = [
-        "Help me describe a childhood memory that shaped who I am...",
-        "Write about a value I want my children to carry forward...",
-        "Tell the story of how I met the love of my life...",
-        "Describe a challenge I overcame and what it taught me...",
-        "Write about a person who influenced my life deeply...",
-        "Share wisdom I wish I'd known at 20 years old...",
-    ];
 
     onMount(async () => {
         await journalStore.sync();
@@ -279,7 +270,7 @@
                     <div class="max-w-3xl mx-auto mb-8">
                         <AIPromptBar
                             context="letters"
-                            promptPool={journalPromptPool}
+                            promptPoolSource="routes/modules/legacy-journal/+page.svelte:journalPromptPool"
                         />
                     </div>
 

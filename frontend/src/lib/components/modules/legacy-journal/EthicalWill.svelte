@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { aiRuntimeAssets, aiAssets, observeAIConfig } from "$lib/services/aiCapabilities";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { fade } from "svelte/transition";
     import { Save, Heart, Anchor, Shield, Sun, Edit3, X } from "lucide-svelte";
@@ -26,18 +27,8 @@
         { title: "Resilience", desc: "What matters is how you rise after a fall.", iconName: "Anchor" },
     ];
 
-    const EXAMPLE_LETTER = `To my dearest family,
-
-More than my possessions, I want to leave you with the beliefs that have guided my life. I have tried my best to live with integrity and love.
-
-I hope you will always prioritize your relationships over material success. Money can be regained, but time with loved ones is precious.
-
-Forgive freely. Letting go of anger sets you free.
-
-I am so proud of the people you have become.
-
-With all my love,
-[Your Name]`;
+    const exampleLetter = $derived(aiAssets({purpose:'writer.rewrite_text',variant:'ethical_will'}, $aiRuntimeAssets)['lib/components/modules/legacy-journal/EthicalWill.svelte:EXAMPLE_LETTER']);
+    $effect(() => observeAIConfig({purpose:'writer.rewrite_text',variant:'ethical_will'}));
 
     let letterEntry = $derived(journalStore.items.find((e) => e.type === "ethical_will"));
     let values = $derived(journalStore.items.filter((e) => e.type === "core_value"));
@@ -342,7 +333,7 @@ With all my love,
                     </h2>
                     {#if !letterText.trim()}
                         <button
-                            onclick={() => (letterText = EXAMPLE_LETTER)}
+                            onclick={() => (letterText = typeof exampleLetter === 'string' ? exampleLetter : '')}
                             class="text-sm font-bold text-primary hover:underline"
                         >
                             Begin from an example
@@ -357,6 +348,7 @@ With all my love,
                         class="bg-card p-8 md:p-12 rounded-2xl border border-border shadow-sm relative"
                     >
                         <SmartTextarea
+                            job={{job_id:`ethical-will:${loadedLetterId ?? "draft"}`,document_title:letterEntry?.title}}
                             context="ethical_will"
                             label="Values Letter"
                             hideLabel

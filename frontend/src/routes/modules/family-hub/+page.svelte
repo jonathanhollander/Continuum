@@ -546,12 +546,7 @@
             <!-- AI Concierge Drafting Assistant -->
             <AIPromptBar
                 context="heirlooms"
-                prompts={[
-                    "Help me capture a family memory...",
-                    "Draft a story about this family tradition...",
-                    "Write about the significance of this photo...",
-                    "Help me preserve a family recipe with its history..."
-                ]}
+                promptSource="routes/modules/family-hub/+page.svelte:prompts"
             />
 
             <!-- Latest Memories Grid -->

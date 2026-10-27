@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { aiJobId, aiSourceFacts } from "$lib/services/aiCapabilities";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { fade, scale } from "svelte/transition";
     import { focusTrap } from "$lib/actions/focusTrap";
@@ -168,6 +169,7 @@
                             >The Lesson</label
                         >
                         <SmartTextarea
+                            job={{job_id:aiJobId("lesson",newLesson,editingId),document_title:newLesson.title,source_facts:aiSourceFacts({category:newLesson.category})}}
                             context="life_lesson"
                             id="lesson-content"
                             bind:value={newLesson.content}

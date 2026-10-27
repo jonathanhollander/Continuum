@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { aiJobId, aiSourceFacts } from "$lib/services/aiCapabilities";
     import { formSaveAttempt } from "$lib/utils/formSaveAttempt";
     import { askConfirm } from "$lib/components/ui/ConfirmModal.svelte";
     import { focusTrap } from "$lib/actions/focusTrap";
@@ -357,7 +358,7 @@
     <div class="max-w-3xl mx-auto mb-12">
         <AIPromptBar
             context="heirlooms"
-            promptPool={REFLECTION_POOLS.heirlooms.story}
+            promptPoolSource="lib/data/reflectionPools.ts:heirlooms.story"
         />
     </div>
 
@@ -678,6 +679,7 @@
             <div>
                 {#key newHeirloom}
                     <VisionUploader
+                        job={{job_id:aiJobId("heirloom",newHeirloom,editingId),document_title:newHeirloom.name,recipient_name:newHeirloom.recipient,source_facts:aiSourceFacts({story:newHeirloom.story})}}
                         bind:this={photoUploader}
                         bind:imageUrl={newHeirloom.image}
                         bind:provenance={newHeirloom.ownershipDetails}

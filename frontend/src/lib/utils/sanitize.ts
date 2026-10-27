@@ -1,5 +1,5 @@
 /** A request-local privacy filter. Its original-value map is never sent or persisted. */
-export function createRedactionSession(contents: readonly string[]) {
+export function createRedactionSession(contents: readonly string[], requiredContents?: readonly string[]) {
     const originals = new Map<string, string>();
     const tokens = new Map<string, string>();
     const supplied = contents.join('\n');
@@ -56,12 +56,19 @@ export function createRedactionSession(contents: readonly string[]) {
         } catch {
             result = restoreString(content);
         }
-        if (requireEveryValue && (unresolved || seen.size !== originals.size)) {
+        if (requireEveryValue && (unresolved || [...(requiredTokens ?? originals.keys())].some((token) => !seen.has(token)))) {
             throw new Error('Writing suggestion omitted a private detail');
         }
         return result;
     }
 
+    // Optional surrounding context uses this same map, while a writer still has to return
+    // every protected value from its original text/notes. Existing callers require all values.
+    const requiredTokens = requiredContents === undefined ? null : new Set<string>();
+    if (requiredTokens) {
+        requiredContents?.forEach(redact);
+        originals.forEach((_, token) => requiredTokens.add(token));
+    }
     return { redact, restoreResponse };
 }
 

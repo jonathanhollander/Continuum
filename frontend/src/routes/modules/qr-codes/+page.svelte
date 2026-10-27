@@ -156,12 +156,7 @@
     <!-- AI Concierge Drafting Assistant -->
     <AIPromptBar
         context="qr-codes"
-        prompts={[
-            "Explain how these QR shortcuts open my signed-in account...",
-            "Draft sign-in instructions for my executor using a printed QR code...",
-            "Help me explain recipient links to my family...",
-            "Where can I keep printed QR codes safe at home?"
-        ]}
+        promptSource="routes/modules/qr-codes/+page.svelte:prompts"
     />
 
     <!-- Essential Access Packs -->

@@ -11,8 +11,8 @@
         aiDraftText,
         aiSoftenText,
         type WriterContext,
-        CONTEXT_SUGGESTIONS,
     } from "$lib/services/writerService";
+    import { aiRuntimeAssets, aiAssets, assetStrings, observeAIConfig, registerAIJob, notifyAIJobChanged, type AIWritingJob } from "$lib/services/aiCapabilities";
     import { AI_UNAVAILABLE } from "$lib/services/aiConciergeService";
     import { auth } from "$lib/stores/auth";
     import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
@@ -31,6 +31,7 @@
         minimal = false,
         oninput,
         onchange,
+        job,
     } = $props<{
         value?: string;
         placeholder?: string;
@@ -43,6 +44,7 @@
         minimal?: boolean;
         oninput?: (val: string) => void;
         onchange?: (val: string) => void;
+        job?: AIWritingJob;
     }>();
 
     const ownId = $props.id();
@@ -66,7 +68,22 @@
     let suggestionOwner: SessionOwnership | null = null;
     let suggestionSource: string | null = null;
 
-    const sourceFingerprint = () => JSON.stringify([context, mode, value, bullets]);
+    const currentJob = (): AIWritingJob => ({ ...job, job_id: job?.job_id ?? `${context}:${ownId}`, document_type: job?.document_type ?? context, current_draft: value });
+    const sourceFingerprint = () => JSON.stringify([context, mode, value, bullets, sentimentValue, currentJob()]);
+    let observedSource = $state("");
+    $effect(() => {
+        const source = sourceFingerprint();
+        if (source !== observedSource) {
+            observedSource = source;
+            requestVersion++;
+            isProcessing = false;
+            discardSuggestion();
+        }
+    });
+    $effect(() => observeAIConfig({ purpose: 'writer.rewrite_text', variant: context }));
+    let releaseJob: (() => void) | undefined;
+    function engageJob() { releaseJob?.(); releaseJob = registerAIJob(currentJob); }
+    $effect(() => { sourceFingerprint(); if (releaseJob) notifyAIJobChanged(); });
     function discardSuggestion() {
         suggestionOwner = null;
         suggestionSource = null;
@@ -78,15 +95,18 @@
         if (!isCurrentSession(owner)) {
             owner = captureSession();
             closeDrawer();
+            releaseJob?.(); releaseJob = undefined;
         }
         if (suggestion && suggestionSource !== sourceFingerprint()) discardSuggestion();
     });
-    onDestroy(() => { requestVersion++; });
+    onDestroy(() => { requestVersion++; releaseJob?.(); });
 
+    const assets = $derived(aiAssets({purpose:mode === 'draft' ? 'writer.draft_text' : 'writer.rewrite_text',variant:context}, $aiRuntimeAssets));
+    $effect(() => observeAIConfig({ purpose: 'writer.draft_text', variant: context }));
     const activeSuggestions = $derived(
         (suggestions && suggestions.length > 0
             ? suggestions
-            : CONTEXT_SUGGESTIONS[context as WriterContext] || []) as string[],
+            : assetStrings((assets["lib/services/writerService.ts:CONTEXT_SUGGESTIONS"] as Record<string, unknown> | undefined)?.[context])) as string[],
     );
 
     async function handleGenerate() {
@@ -104,8 +124,8 @@
         try {
             const result =
                 mode === "draft"
-                    ? await aiDraftText(bullets, context)
-                    : await aiSoftenText(value, sentimentValue, context);
+                    ? await aiDraftText(bullets, context, currentJob())
+                    : await aiSoftenText(value, sentimentValue, context, currentJob());
             if (version !== requestVersion || !isCurrentSession(startedBy) || source !== sourceFingerprint()) return;
             if (result) {
                 suggestionOwner = startedBy;
@@ -133,7 +153,8 @@
 
     // A starter becomes the opening words of the field; the cursor lands after it.
     function useStarter(starter: string) {
-        const end = /[?]$/.test(starter) ? "\n" : /[\p{L}\p{N}]$/u.test(starter) ? ": " : " ";
+        const suffixes = assets["lib/components/ui/SmartTextarea.svelte:starter_suffixes"] as Record<string, string> | undefined;
+        const end = suffixes?.[/[?]$/.test(starter) ? 'question' : /[\p{L}\p{N}]$/u.test(starter) ? 'word' : 'other'] ?? '';
         value = starter + end;
         oninput?.(value);
         onchange?.(value);
@@ -165,7 +186,7 @@
     }
 </script>
 
-<div class="space-y-2 h-full">
+<div class="space-y-2 h-full" onfocusin={engageJob}>
     {#if label}
         <label
             for={fieldId}
