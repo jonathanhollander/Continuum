@@ -308,14 +308,14 @@
                     <History class="w-8 h-8 text-muted-foreground" />
                 </div>
                 <h3 class="font-bold text-lg text-foreground mb-2">
-                    Your activity appears here
+                    Recorded changes
                 </h3>
                 <p class="text-muted-foreground">
                     {searchQuery ||
                     selectedModule !== "all" ||
                     selectedAction !== "all"
                         ? "Try adjusting your filters"
-                        : "Each change you save will appear here."}
+                        : "Events recorded by supported sections appear here. Open the relevant record page to review what is saved."}
                 </p>
             </div>
         {:else}

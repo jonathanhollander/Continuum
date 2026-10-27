@@ -15,11 +15,11 @@
     let ready = $state(false);
     let showSuccess = $state(false);
 
-    // Get user's first name for personalization
-    let firstName = $derived(() => {
-        const name = $auth.user?.email?.split("@")[0] || "there";
-        return name.charAt(0).toUpperCase() + name.slice(1);
-    });
+    // /auth/me returns the saved onboarding display name; never derive a name from email.
+    let displayName = $derived(
+        ($auth.user as (NonNullable<typeof $auth.user> & { display_name?: string | null }) | null)
+            ?.display_name?.trim() || "",
+    );
 
     onMount(() => {
         setTimeout(() => {
@@ -71,10 +71,10 @@
             <!-- Welcome Message -->
             <div class="space-y-3" in:fly={{ y: 20, delay: 200 }}>
                 <h1 class="text-3xl md:text-4xl font-serif font-bold text-foreground">
-                    Welcome, {firstName()}
+                    {displayName ? `Welcome, ${displayName}` : "Welcome to Continuum"}
                 </h1>
                 <p class="text-lg text-muted-foreground leading-relaxed">
-                    Let's start with something gentle.
+                    Start with a person you want to keep informed.
                 </p>
             </div>
 
@@ -98,8 +98,8 @@
                 <!-- Card Body -->
                 <div class="p-6 space-y-5">
                     <p class="text-foreground text-left leading-relaxed">
-                        <strong>Who should have access</strong> if something happens to you?
-                        A single trusted person is a lovely place to begin.
+                        <strong>Who should your family contact?</strong>
+                        Record a trusted person’s name, relationship and contact details.
                     </p>
 
                     <!-- Benefits -->
@@ -109,7 +109,7 @@
                                 <Check class="w-4 h-4 text-success" />
                             </div>
                             <p class="text-sm text-muted-foreground">
-                                They'll know who to contact and what to do
+                                Add how to reach them and what they can help with
                             </p>
                         </div>
                         <div class="flex items-start gap-3">
@@ -117,7 +117,7 @@
                                 <Check class="w-4 h-4 text-success" />
                             </div>
                             <p class="text-sm text-muted-foreground">
-                                You can give them specific access levels later
+                                Create their recipient link when you are ready to share
                             </p>
                         </div>
                         <div class="flex items-start gap-3">
@@ -125,7 +125,7 @@
                                 <Check class="w-4 h-4 text-success" />
                             </div>
                             <p class="text-sm text-muted-foreground">
-                                This is a gift to the people you love
+                                Preview that link to review the records it includes
                             </p>
                         </div>
                     </div>

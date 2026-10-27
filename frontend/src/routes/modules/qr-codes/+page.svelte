@@ -413,7 +413,7 @@
                                         <Smartphone size={12} />
                                         <span
                                             class="text-[10px] font-medium truncate"
-                                            >Deep Link Active</span
+                                            >QR code created</span
                                         >
                                     </div>
                                 </div>
@@ -452,7 +452,7 @@
                                             {label.assetType}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-muted-foreground text-sm">Deep Link Active</td>
+                                    <td class="px-4 py-3 text-muted-foreground text-sm">QR code created</td>
                                     <td class="px-4 py-3 text-right">
                                         <div class="flex items-center justify-end gap-2">
                                             <button

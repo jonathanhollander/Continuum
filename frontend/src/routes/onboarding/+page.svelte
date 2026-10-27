@@ -195,7 +195,7 @@
                                 for="name-input"
                                 class="block text-sm text-muted-foreground text-left"
                             >
-                                What should we call you?
+                                Name you want your family to see
                             </label>
                             <input
                                 id="name-input"
@@ -203,11 +203,15 @@
                                 type="text"
                                 bind:value={displayName}
                                 onkeydown={handleNameKeydown}
-                                placeholder="Your first name"
+                                placeholder="Your name"
                                 disabled={nameSubmitted}
                                 class="w-full px-5 py-4 bg-foreground/5 border border-border rounded-2xl text-foreground placeholder:text-muted-foreground text-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                             />
                         </div>
+
+                        <p class="text-sm text-muted-foreground text-left">
+                            This is your display name in Continuum. You can use the name familiar to your family.
+                        </p>
 
                         {#if !nameSubmitted}
                             <button

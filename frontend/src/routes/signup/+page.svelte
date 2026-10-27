@@ -335,10 +335,10 @@
                         <p class="text-foreground text-base leading-relaxed">
                             After entering your email, we'll help you set up a
                             passkey using your fingerprint, face, or device PIN.
-                            This is faster and more secure than passwords.
+                            Your device will guide you through creating it.
                         </p>
                         <p class="text-muted-foreground text-sm italic">
-                            Your passkey is all you'll use to sign in
+                            You can also sign in by email. If passkey setup pauses, choose the email-link option.
                         </p>
                     </div>
                 </div>
