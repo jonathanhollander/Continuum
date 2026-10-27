@@ -40,14 +40,14 @@
         EMOTIONAL_PROMPTS,
         type LetterTemplate,
     } from "$lib/data/letterTemplates";
-    import { onMount, tick, untrack } from "svelte";
+    import { onMount, onDestroy, tick, untrack } from "svelte";
     import { activityLog } from "$lib/stores/activityLog.svelte";
     import { estateProfile } from "$lib/stores/estateStore.svelte";
     import LetterAssistant from "$lib/components/modules/letters/LetterAssistant.svelte";
     import SmartTextarea from "$lib/components/ui/SmartTextarea.svelte";
     import { aiRuntimeAssets, aiAssets, aiAsset, assetStrings, loadAIConfig, observeAIConfig, renderAIAsset, registerAIJob, aiJobId, aiSourceFacts, type AIWritingJob } from "$lib/services/aiCapabilities";
     import { auth } from "$lib/stores/auth";
-    import { captureSession, isCurrentSession } from "$lib/services/sessionOwnership";
+    import { captureSession, isCurrentSession, type SessionOwnership } from "$lib/services/sessionOwnership";
     import RefreshControl from "$lib/components/ui/RefreshControl.svelte";
     import { notifications } from "$lib/stores/notificationStore";
     import DataViewToggle from "$lib/components/ui/DataViewToggle.svelte";
@@ -231,6 +231,7 @@
 
     // Per-letter details; cleared whenever a new letter is started.
     function clearLetterDetails() {
+        selectionVersion++;
         writingDraft = {};
         editingId = null;
         letterRecipientId = "";
@@ -273,6 +274,7 @@
     }
 
     function viewLetter(letter: Letter) {
+        selectionVersion++;
         generatedLetter = letter.content;
         editingId = letter.id;
         recordedRecipientName = letter.recipientName ?? "";
@@ -398,11 +400,15 @@
     }, contacts));
 
     let selectionVersion = 0;
+    let selectionAlive = true;
+    const ownsSelection = (owner: SessionOwnership, version: number) => selectionAlive && version === selectionVersion && isCurrentSession(owner);
+    onDestroy(() => { selectionAlive = false; selectionVersion++; });
+    function returnToMenu() { selectionVersion++; mode = "menu"; }
     async function startEmotionalFlow(flow: "spouse" | "ethical_will") {
         const owner = captureSession(), version = ++selectionVersion;
         try { await loadAIConfig({ purpose: 'letter.draft' }, true); }
-        catch (error) { notifications.showError(error instanceof Error ? error : String(error)); return; }
-        if (!isCurrentSession(owner) || version !== selectionVersion) return;
+        catch (error) { if (ownsSelection(owner, version)) notifications.showError(error instanceof Error ? error : String(error)); return; }
+        if (!ownsSelection(owner, version)) return;
         clearLetterDetails();
         selectedTemplate = null;
         emotionalFlow = flow;
@@ -456,11 +462,11 @@
         const owner = captureSession(), version = ++selectionVersion;
         try {
             await loadAIConfig({ purpose: 'letter.draft' }, true);
-            if (!isCurrentSession(owner) || version !== selectionVersion) return;
+            if (!ownsSelection(owner, version)) return;
             const body = aiAsset<Record<string, string>>('lib/data/letterTemplates.ts:bodies', {purpose:'letter.draft'})?.[template.id];
             if (typeof body !== 'string') throw new Error('Drafting template could not be loaded');
             template = { ...template, body };
-        } catch (error) { notifications.showError(error instanceof Error ? error : String(error)); return; }
+        } catch (error) { if (ownsSelection(owner, version)) notifications.showError(error instanceof Error ? error : String(error)); return; }
         clearLetterDetails();
         // A letter from the library is never an emotional letter, even after one was open.
         emotionalFlow = null;
@@ -1020,7 +1026,7 @@
             <div class="lg:col-span-2 space-y-8">
                 <div class="flex items-center justify-between gap-4">
                     <button aria-label="Back to Your letters"
-                        onclick={() => (mode = "menu")}
+                        onclick={returnToMenu}
                         class="p-4 bg-card border border-border rounded-2xl text-muted-foreground hover:text-foreground transition-all"
                     >
                         <ArrowLeft size={20} />
@@ -1173,7 +1179,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <button
-                        onclick={() => (mode = "menu")}
+                        onclick={returnToMenu}
                         class="p-3 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground"
                         aria-label="Back to Your letters"
                     >
