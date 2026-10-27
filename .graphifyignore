@@ -12,3 +12,6 @@ legacy_nextjs_archive/public/
 .agent/agents/
 .agent/skills/
 docs/reviews/*/evidence/
+# /jhupdate3: generated logo-review build output and PDF rendering of docs/CONTINUUM_LOGO_REVIEW.md
+output/
+docs/CONTINUUM_LOGO_REVIEW.pdf
