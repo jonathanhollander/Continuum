@@ -6,28 +6,33 @@ export interface FAQItem {
 
 export const faqs: FAQItem[] = [
     {
-        question: "Do I need to complete everything at once?",
-        answer: "No! Start with the Quick Start (30 minutes), then build over time. The 30-Day Plan is a suggested pace, but go at your own speed. Even partial documentation is better than none.",
+        question: "Where should I begin?",
+        answer: "Start with something your family will need: a person to contact, a letter, or an account. Save the record, then reopen it to check the details. You can add the rest over time.",
         category: "General"
     },
     {
-        question: "What if I don't have a Will or Trust yet?",
-        answer: "Start anyway! Document your assets, wishes, and family information. This prep work will make meeting with an attorney much more efficient (and often cheaper).",
+        question: "What if I do not have a will or trust yet?",
+        answer: "You can still record accounts, people, wishes and questions for an adviser. In Legal documents, note which papers you have and where the originals are kept. Recording a wish here does not create a will or establish someone's authority to act.",
         category: "Legal"
     },
     {
-        question: "Is my information secure?",
-        answer: "This system runs locally on your machine or private server. We recommend keeping sensitive passwords OUT of plain text fields (use password hints) and encrypting your backups.",
+        question: "What should I record about access to an account?",
+        answer: "Record the institution, identifying details, contact person and where to find access instructions. Use a password manager for passwords rather than placing them in ordinary notes. Preview the recipient's page before sharing, and keep any downloaded copy somewhere you choose.",
         category: "Security"
     },
     {
-        question: "How do I share this with my Executor?",
-        answer: "You can export the entire workspace to PDF/HTML for a physical 'Red Binder', or if hosted personally, create a user account for them in the Admin Hub.",
+        question: "How do I share records with my son or executor?",
+        answer: "Open Family & Contacts, choose the person and create their recipient link. Add a note, then preview the page to check what they will see before you share the link yourself. Marking someone as executor records that role; it does not share records or send an invitation. Their page lets them read the shared records and download a copy with available files.",
         category: "Technical"
     },
     {
-        question: "Can I customize the databases?",
-        answer: "Yes, the system is flexible. You can add custom assets, document types, or even new modules if you're comfortable with the code.",
+        question: "How do I keep a copy outside Continuum?",
+        answer: "Open the Red Binder to print or save a PDF, or download the full record and files as a ZIP. Extract the ZIP, open packet.html and keep the files folder beside it. The ZIP also includes packet.pdf, the recorded data and a file manifest. Review any files-to-revisit notice before relying on the copy.",
         category: "Technical"
+    },
+    {
+        question: "Can I record details that do not fit the usual fields?",
+        answer: "Use the record's notes and, where offered, custom fields. For example, add an account's branch contact or an heirloom's repair history. Save and reopen the record, then preview the recipient page or Red Binder to check how those details read.",
+        category: "General"
     }
 ];
