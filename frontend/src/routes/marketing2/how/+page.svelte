@@ -98,19 +98,19 @@
             num: "01",
             title: $m2t.howBeat1Title,
             desc: $m2t.howBeat1Desc,
-            shot: { src: "/images/marketing2/shot-letters.jpg", w: 1400, h: 850, alt: "The letters page with suggested prompts for writing to someone you choose" },
+            shot: { src: "/images/marketing2/shot-letters.jpg", w: 1400, h: 850, alt: $m2t.shotLettersAlt },
         },
         {
             num: "02",
             title: $m2t.howBeat2Title,
             desc: $m2t.howBeat2Desc,
-            shot: { src: "/images/marketing2/shot-accounts.jpg", w: 1400, h: 550, alt: "Saved financial accounts, each showing where it is held and who it is for" },
+            shot: { src: "/images/marketing2/shot-accounts.jpg", w: 1400, h: 550, alt: $m2t.shotAccountsAlt },
         },
         {
             num: "03",
             title: $m2t.howBeat3Title,
             desc: $m2t.howBeat3Desc,
-            shot: { src: "/images/marketing2/shot-recipient.jpg", w: 1200, h: 1125, alt: "A recipient page preview with first steps and a letter, shown with sample details" },
+            shot: { src: "/images/marketing2/shot-recipient.jpg", w: 1200, h: 1125, alt: $m2t.shotRecipientAlt },
         },
     ]);
     const grainBg = `background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%" height="100%" filter="url(%23noise)"/%3E%3C/svg%3E');`;

@@ -42,7 +42,6 @@
     let prefersReducedMotion = $state(false);
 
     // Signup flow state
-    let name = $state("");
     let email = $state("");
     let signupStep = $state(0);
 
@@ -280,12 +279,6 @@
         };
     });
 
-    function handleNameSubmit() {
-        if (name.trim().length > 1) {
-            signupStep = 1;
-        }
-    }
-
     function handleEmailSubmit() {
         email = email.trim();
         if (email.includes("@") && email.includes(".")) {
@@ -295,7 +288,7 @@
                 return;
             }
             // This page keeps only the greeting and email intent.
-            signupStep = 2;
+            signupStep = 1;
         }
     }
 
@@ -572,7 +565,7 @@
             >
                 <img
                     src="/images/marketing2/hero-shoebox.jpg"
-                    alt="A shoebox of photographs and letters, lit softly under a bed"
+                    alt={$m2t.shotHeroAlt}
                     width="1024"
                     height="1024"
                     fetchpriority="high"
@@ -755,8 +748,8 @@
             <div class="max-w-4xl mx-auto mt-16 reveal-section" use:reveal={{ delay: 200 }}>
                 <ProductShot
                     src="/images/marketing2/shot-letters.jpg"
-                    alt="The Legacy Correspondence page with the drafting assistant and suggested prompts for a letter"
-                    caption="Letters, with optional prompts to help you begin."
+                    alt={$m2t.shotLettersAlt}
+                    caption={$m2t.shotLettersCaption}
                     width={1400}
                     height={850}
                 />
@@ -791,8 +784,8 @@
 
                 <ProductShot
                     src="/images/marketing2/shot-pulse.jpg"
-                    alt="The Pulse wellness check-in page with its I'm Here button"
-                    caption="Your Pulse check-in page."
+                    alt={$m2t.shotPulseAlt}
+                    caption={$m2t.shotPulseCaption}
                     width={1400}
                     height={802}
                     class="mb-16"
@@ -899,8 +892,8 @@
 
                 <ProductShot
                     src="/images/marketing2/shot-recipient.jpg"
-                    alt="A recipient page preview with first steps and a letter, shown with sample details"
-                    caption="A recipient page preview, shown with sample details."
+                    alt={$m2t.shotRecipientAlt}
+                    caption={$m2t.shotRecipientCaption}
                     width={1200}
                     height={1125}
                     fit="aspect-[16/11] object-cover object-top"
@@ -940,41 +933,6 @@
                             {$m2t.invitationDesc}
                         </p>
 
-                        <div class="max-w-md mx-auto space-y-6">
-                            <p class="text-sm text-white/70">
-                                {$m2t.signupNamePrompt}
-                            </p>
-                            <input
-                                type="text"
-                                bind:value={name}
-                                aria-label="First name"
-                                placeholder={$m2t.signupNamePlaceholder}
-                                onkeydown={(e) =>
-                                    e.key === "Enter" && handleNameSubmit()}
-                                class="w-full bg-transparent border-b border-white/20 focus:border-gold/50 py-4 text-2xl font-serif text-center text-white/90 outline-none transition-all duration-300 placeholder:text-white/60 focus:shadow-[0_4px_20px_-4px_color-mix(in_srgb,var(--color-gold)_30%,transparent)]"
-                            />
-
-                            {#if name.trim().length > 1}
-                                <button
-                                    onclick={handleNameSubmit}
-                                    class="mt-8 inline-flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-white/80 transition-all duration-300 group hover:shadow-[0_0_30px_color-mix(in_srgb,var(--color-gold)_20%,transparent)]"
-                                    in:scale={{
-                                        duration: 300,
-                                        start: 0.9,
-                                        easing: backOut,
-                                    }}
-                                >
-                                    {$m2t.signupButton}
-                                    <ArrowRight
-                                        size={18}
-                                        class="group-hover:translate-x-1 transition-transform"
-                                    />
-                                </button>
-                            {/if}
-                        </div>
-                    </div>
-                {:else if signupStep === 1}
-                    <div class="text-center" in:fly={{ x: 50, duration: 400 }}>
                         <p class="text-sm text-white/70 mb-8">
                             {$m2t.signupEmailPrompt}
                         </p>
@@ -1005,13 +963,6 @@
                                 />
                             </button>
                         {/if}
-
-                        <button
-                            onclick={() => (signupStep = 0)}
-                            class="mt-6 block mx-auto text-sm text-white/70 hover:text-white/90 transition-colors"
-                        >
-                            {$m2t.signupBack}
-                        </button>
                     </div>
                 {:else}
                     <div
@@ -1032,7 +983,6 @@
                         </div>
                         <h2 class="text-3xl font-serif text-white/90 mb-2">
                             {$m2t.signupWelcome}
-                            {name}.
                         </h2>
                         <p class="text-lg text-white/50 mb-8">
                             {$m2t.invitationDesc}

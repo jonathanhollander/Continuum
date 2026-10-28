@@ -51,6 +51,24 @@
             0 30px 80px -30px rgba(0, 0, 0, 0.8),
             0 0 0 1px rgba(0, 0, 0, 0.4),
             0 0 60px -20px color-mix(in srgb, var(--color-primary) 35%, transparent);
+        transition:
+            transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+            box-shadow 0.7s ease;
+    }
+    .shot-frame:hover {
+        transform: translateY(-6px);
+        box-shadow:
+            0 40px 90px -30px rgba(0, 0, 0, 0.85),
+            0 0 0 1px rgba(0, 0, 0, 0.4),
+            0 0 80px -16px color-mix(in srgb, var(--color-primary) 45%, transparent);
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .shot-frame {
+            transition: none;
+        }
+        .shot-frame:hover {
+            transform: none;
+        }
     }
     .shot-frame img {
         filter: brightness(0.93);

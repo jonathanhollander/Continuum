@@ -492,8 +492,9 @@ def _spa_index():
 # Handle root specifically to avoid 404s
 # GET and HEAD both, so `curl -I` and uptime probes get 200 instead of 405.
 @app.api_route("/", methods=["GET", "HEAD"])
-async def serve_root():
-    return _spa_index()
+async def serve_root(request: Request):
+    # The home page lives at /marketing2; a permanent redirect keeps old links and search results.
+    return RedirectResponse(f"/marketing2{'?' + request.url.query if request.url.query else ''}", status_code=301)
 
 # Catch-all route to serve index.html for client-side routing
 @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])

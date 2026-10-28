@@ -128,7 +128,7 @@
     const featureCards = $derived([
         {
             icon: FileText,
-            shot: { src: "/images/marketing2/shot-accounts.jpg", w: 1400, h: 550, pos: "object-left-top", alt: "Saved financial accounts, each showing where it is held and who it is for" },
+            shot: { src: "/images/marketing2/shot-accounts.jpg", w: 1400, h: 550, pos: "object-left-top", alt: $m2t.shotAccountsAlt },
             title: $m2t.featurePracticalTitle,
             desc: $m2t.featurePracticalDesc,
             items: [
@@ -144,7 +144,7 @@
         },
         {
             icon: Heart,
-            shot: { src: "/images/marketing2/shot-heirlooms.jpg", w: 1000, h: 830, pos: "object-top", alt: "Heirloom cards with a photograph, a short story, and who each item is for" },
+            shot: { src: "/images/marketing2/shot-heirlooms.jpg", w: 1000, h: 830, pos: "object-top", alt: $m2t.shotHeirloomsAlt },
             title: $m2t.featurePersonalTitle,
             desc: $m2t.featurePersonalDesc,
             items: [
@@ -160,7 +160,7 @@
         },
         {
             icon: Shield,
-            shot: { src: "/images/marketing2/shot-pulse.jpg", w: 1400, h: 802, pos: "object-center", alt: "The Pulse wellness check-in page with its I'm Here button" },
+            shot: { src: "/images/marketing2/shot-pulse.jpg", w: 1400, h: 802, pos: "object-center", alt: $m2t.shotPulseAlt },
             title: $m2t.featureProtectiveTitle,
             desc: $m2t.featureProtectiveDesc,
             items: [
@@ -176,7 +176,7 @@
         },
         {
             icon: Briefcase,
-            shot: { src: "/images/marketing2/shot-packet.jpg", w: 1400, h: 923, pos: "object-left-top", alt: "The packet preview, with a printable PDF and a download of the full record and files" },
+            shot: { src: "/images/marketing2/shot-packet.jpg", w: 1400, h: 923, pos: "object-left-top", alt: $m2t.shotPacketAlt },
             title: $m2t.featurePreparedTitle,
             desc: $m2t.featurePreparedDesc,
             items: [

@@ -1,10 +1,10 @@
 # Mockups
 
-**Last Updated:** 2026-10-27 22:30 EST
+**Last Updated:** 2026-10-27 23:10 EST
 
-## `/marketing2` with images (D5, awaiting owner decision)
+## `/marketing2` with images (D5, shipped: Hybrid with dark screenshots)
 
-Owner request: keep `/marketing2`'s wording and add images. Three directions were mocked up; none is merged or deployed. Each folder holds 1440-wide full-page shots (`marketing2.png`, `how.png`, `features.png`), a 390-wide phone shot (`marketing2-390.png`) and the agent's `PROPOSAL.md`.
+Owner request: keep `/marketing2`'s wording and add images. Three directions were mocked up. The owner chose Hybrid on 2026-10-27 ("go with hybrid, dark screenshots"); it is merged and live, with the app screenshots retaken in dark theme. The recipient page and the packet PDF stay light because that is how families see them. Each folder holds 1440-wide full-page shots (`marketing2.png`, `how.png`, `features.png`), a 390-wide phone shot (`marketing2-390.png`) and the agent's `PROPOSAL.md`.
 
 | Direction | Folder | Branch / commit | Weakest part |
 |---|---|---|---|
