@@ -192,7 +192,7 @@
             {/each}
 
             <div
-                class="surface-dark p-8 bg-gradient-to-br from-card to-background rounded-[40px] text-foreground"
+                class="p-8 bg-gradient-to-br from-card to-background rounded-[40px] text-foreground"
             >
                 <ShieldAlert class="text-gold-text mb-4" size={32} />
                 <h4 class="font-bold text-lg mb-2 text-foreground">Review Your Records</h4>

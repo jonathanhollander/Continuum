@@ -36,11 +36,11 @@
 
 <div class="space-y-8">
     <div
-        class="flex items-center justify-between border-b border-slate-800 pb-8"
+        class="flex items-center justify-between border-b border-border pb-8"
     >
         <div>
-            <h1 class="text-3xl font-bold text-white mb-2">Manual Interface Checklist</h1>
-            <p class="text-slate-400">
+            <h1 class="text-3xl font-bold text-foreground mb-2">Manual Interface Checklist</h1>
+            <p class="text-muted-foreground">
                 Mark the visual checks you have personally reviewed. Checkmarks are
                 saved with your account and record your own manual review.
             </p>
@@ -50,9 +50,9 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Vibe Check List -->
         <div class="lg:col-span-2 space-y-4">
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+            <div class="bg-card border border-border rounded-xl p-6">
                 <h3
-                    class="text-lg font-bold text-white mb-6 flex items-center gap-2"
+                    class="text-lg font-bold text-foreground mb-6 flex items-center gap-2"
                 >
                     <Palette size={18} class="text-primary" />
                     Your Visual Review Checks
@@ -64,7 +64,7 @@
                             class="flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all
                             {check.checked
                                 ? 'bg-success/10 border-success/30'
-                                : 'bg-slate-950 border-slate-800 hover:border-slate-700'}"
+                                : 'bg-background border-border hover:border-primary/40'}"
                             role="button"
                             tabindex="0"
                             onclick={() => toggle(check.id)}
@@ -78,7 +78,7 @@
                             <span
                                 class={check.checked
                                     ? "text-success"
-                                    : "text-slate-400"}>{check.label}</span
+                                    : "text-muted-foreground"}>{check.label}</span
                             >
                             {#if check.checked}
                                 <Check size={18} class="text-success" />
@@ -92,7 +92,7 @@
         <!-- Responsive Preview Mockup (Static) -->
         <div class="space-y-6">
             <div
-                class="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col items-center justify-center min-h-[300px]"
+                class="bg-card border border-border rounded-xl p-6 flex flex-col items-center justify-center min-h-[300px]"
             >
                 <div class="flex items-end gap-4 text-muted-foreground mb-4">
                     <Monitor size={64} />
@@ -104,21 +104,21 @@
                 </p>
             </div>
 
-            <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-800">
-                <h4 class="text-sm font-bold text-white mb-2">
+            <div class="bg-muted rounded-xl p-6 border border-border">
+                <h4 class="text-sm font-bold text-foreground mb-2">
                     Theme Token Check
                 </h4>
                 <div class="flex gap-2">
                     <div
-                        class="w-8 h-8 rounded bg-primary ring-1 ring-white/10"
+                        class="w-8 h-8 rounded bg-primary ring-1 ring-border"
                         title="Primary"
                     ></div>
                     <div
-                        class="w-8 h-8 rounded bg-secondary ring-1 ring-white/10"
+                        class="w-8 h-8 rounded bg-secondary ring-1 ring-border"
                         title="Secondary"
                     ></div>
                     <div
-                        class="w-8 h-8 rounded bg-accent ring-1 ring-white/10"
+                        class="w-8 h-8 rounded bg-accent ring-1 ring-border"
                         title="Accent"
                     ></div>
                 </div>

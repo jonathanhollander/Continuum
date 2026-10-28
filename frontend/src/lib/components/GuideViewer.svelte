@@ -30,7 +30,7 @@
     <!-- Clicking the dimmed area closes the guide; Escape does the same through the window handler. -->
     <!-- svelte-ignore a11y_interactive_supports_focus, a11y_click_events_have_key_events -->
     <div use:focusTrap
-        class="surface-dark fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
         transition:fade={{ duration: 200 }}
         onclick={handleBackdropClick}
         role="dialog"
@@ -42,11 +42,11 @@
 
         <!-- Modal Content -->
         <div
-            class="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 border border-white/10 shadow-2xl"
+            class="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl bg-card border border-border shadow-2xl"
             transition:fly={{ y: 20, duration: 300 }}
         >
             <!-- Header -->
-            <div class="sticky top-0 z-10 px-8 py-6 bg-slate-900/95 backdrop-blur-xl border-b border-white/10">
+            <div class="sticky top-0 z-10 px-8 py-6 bg-card/95 backdrop-blur-xl border-b border-border">
                 <div class="flex items-start justify-between gap-4">
                     <div class="flex items-start gap-4">
                         <div class="w-12 h-12 rounded-2xl bg-primary-soft flex items-center justify-center border border-primary/20 shrink-0">
@@ -63,7 +63,7 @@
                     </div>
                     <button
                         onclick={onClose}
-                        class="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                        class="p-2 rounded-xl bg-muted hover:bg-muted/70 transition-colors"
                         aria-label="Close guide"
                     >
                         <LucideX class="w-5 h-5 text-muted-foreground" />
@@ -74,7 +74,7 @@
             <!-- Scrollable Content -->
             <div class="overflow-y-auto max-h-[calc(90vh-120px)] px-8 py-8 space-y-8">
                 <!-- Introduction -->
-                <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
+                <div class="p-6 rounded-2xl bg-muted border border-border">
                     <p class="text-foreground/90 leading-relaxed italic">
                         {guide.introduction}
                     </p>
@@ -91,7 +91,7 @@
                                 {section.title}
                             </h3>
                         </div>
-                        <div class="pl-11 prose prose-invert prose-slate max-w-none">
+                        <div class="pl-11 prose dark:prose-invert prose-slate max-w-none">
                             {#each section.content.split('\n\n') as paragraph}
                                 {#if paragraph.startsWith('**') && paragraph.includes('**:')}
                                     <!-- Bold heading with content -->

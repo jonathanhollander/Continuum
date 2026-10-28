@@ -46,8 +46,8 @@
 <!-- Header Section -->
 <div class="flex flex-col items-start gap-6 sm:flex-row sm:items-center justify-between mb-12">
     <div>
-        <h1 class="text-3xl font-bold text-white mb-2">Record Coverage</h1>
-        <p class="text-slate-400 max-w-2xl">
+        <h1 class="text-3xl font-bold text-foreground mb-2">Record Coverage</h1>
+        <p class="text-muted-foreground max-w-2xl">
             Points for recorded information in six areas.
         </p>
     </div>
@@ -62,7 +62,7 @@
                 stroke="currentColor"
                 stroke-width="8"
                 fill="transparent"
-                class="text-slate-800"
+                class="text-muted"
             />
             <circle
                 cx="64"
@@ -84,7 +84,7 @@
                 {#if auditSources.hasErrors}<span class="text-3xl text-muted-foreground">—</span>
                 {:else}<Loader2 size={28} class="animate-spin text-info" />{/if}
             {:else}
-                <span class="text-3xl font-bold text-white"
+                <span class="text-3xl font-bold text-foreground"
                     >{audit.percentage}%</span
                 >
                 <span class="text-[10px] uppercase tracking-widest text-muted-foreground"
@@ -101,26 +101,26 @@
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {#each Object.entries(audit.moduleScores) as [id, score], i}
         <div
-            class="bg-slate-900 border border-slate-800 rounded-xl p-6 relative group hover:border-slate-700 transition-all"
+            class="bg-card border border-border rounded-xl p-6 relative group hover:border-primary/40 transition-all"
         >
             <div class="flex items-center justify-between mb-4">
-                <h3 class="font-bold text-white capitalize">{id} Data</h3>
+                <h3 class="font-bold text-foreground capitalize">{id} Data</h3>
                 <span
-                    class="text-xs font-mono px-2 py-1 rounded bg-slate-800 text-slate-300"
+                    class="text-xs font-mono px-2 py-1 rounded bg-muted text-muted-foreground"
                 >
                     {score} pts
                 </span>
             </div>
 
             <!-- Mini Progress Bar -->
-            <div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
+            <div class="h-2 bg-muted rounded-full overflow-hidden mb-4">
                 <div
                     class="h-full bg-info transition-all duration-500"
                     style="width: {share(id, score) * 100}%"
                 ></div>
             </div>
 
-            <p class="text-sm text-slate-400 mb-4">
+            <p class="text-sm text-muted-foreground mb-4">
                 {#if score === 0}
                     0 points from these record checks so far.
                 {:else if share(id, score) < 1}
@@ -129,14 +129,14 @@
                     These record checks are filled.
                 {/if}
             </p>
-            <p class="text-xs text-slate-400 mb-4">{checkRule[id]}</p>
-            <details class="mb-4 text-xs text-slate-300" data-coverage-sources={id}>
+            <p class="text-xs text-muted-foreground mb-4">{checkRule[id]}</p>
+            <details class="mb-4 text-xs text-muted-foreground" data-coverage-sources={id}>
                 <summary class="cursor-pointer font-semibold">Source records for these checks</summary>
-                <p class="mt-2 text-slate-400">Loaded source IDs before the scoring rules above are applied. The rules above decide which rows add points.</p>
+                <p class="mt-2 text-muted-foreground">Loaded source IDs before the scoring rules above are applied. The rules above decide which rows add points.</p>
                 {#each auditSources.sources.filter((source) => sectionSources[id]?.includes(source.id)) as source (source.id)}
                     <div class="mt-3" data-coverage-source={source.id}>
                         <a class="underline underline-offset-2" href={source.path}>{source.name}</a>
-                        <span class="text-slate-400"> · {source.state === "ready" ? "Loaded" : source.state === "error" ? "Refresh failed" : "Device copy"}</span>
+                        <span class="text-muted-foreground"> · {source.state === "ready" ? "Loaded" : source.state === "error" ? "Refresh failed" : "Device copy"}</span>
                         {#if source.recordIds.length > 0}
                             <ul class="mt-1 space-y-1 break-all">
                                 {#each source.recordIds as recordId}
@@ -144,24 +144,24 @@
                                 {/each}
                             </ul>
                         {:else}
-                            <p class="mt-1 text-slate-400">0 source IDs returned.</p>
+                            <p class="mt-1 text-muted-foreground">0 source IDs returned.</p>
                         {/if}
                     </div>
                 {/each}
             </details>
 
             {#if id === "family"}
-                <div class="mb-4 text-sm text-slate-300" data-testid="contact-readiness-evidence">
-                    <p class="text-xs text-slate-400 mb-3">{audit.contactEvidence.rule}</p>
+                <div class="mb-4 text-sm text-foreground" data-testid="contact-readiness-evidence">
+                    <p class="text-xs text-muted-foreground mb-3">{audit.contactEvidence.rule}</p>
                     <p class="font-medium mb-2">Recorded contacts: {audit.contactEvidence.includedContacts.length}</p>
                     {#each audit.contactEvidence.includedContacts as contact (contact.id)}
-                        <details class="border-t border-slate-800 py-2" data-contact-id={contact.id}>
-                            <summary class="cursor-pointer break-words">{contact.name} <span class="text-xs text-slate-400">#{contact.id}</span></summary>
+                        <details class="border-t border-border py-2" data-contact-id={contact.id}>
+                            <summary class="cursor-pointer break-words">{contact.name} <span class="text-xs text-muted-foreground">#{contact.id}</span></summary>
                             <dl class="mt-2 space-y-1 text-xs break-words">
-                                <div><dt class="inline text-slate-400">Role: </dt><dd class="inline">{contact.role}</dd></div>
-                                {#if contact.relation}<div><dt class="inline text-slate-400">Relationship: </dt><dd class="inline">{contact.relation}</dd></div>{/if}
-                                {#if contact.email}<div><dt class="inline text-slate-400">Email: </dt><dd class="inline">{contact.email}</dd></div>{/if}
-                                {#if contact.phone}<div><dt class="inline text-slate-400">Phone: </dt><dd class="inline">{contact.phone}</dd></div>{/if}
+                                <div><dt class="inline text-muted-foreground">Role: </dt><dd class="inline">{contact.role}</dd></div>
+                                {#if contact.relation}<div><dt class="inline text-muted-foreground">Relationship: </dt><dd class="inline">{contact.relation}</dd></div>{/if}
+                                {#if contact.email}<div><dt class="inline text-muted-foreground">Email: </dt><dd class="inline">{contact.email}</dd></div>{/if}
+                                {#if contact.phone}<div><dt class="inline text-muted-foreground">Phone: </dt><dd class="inline">{contact.phone}</dd></div>{/if}
                             </dl>
                         </details>
                     {/each}
@@ -183,14 +183,14 @@
 <!-- Action Cards -->
 {#if audit.issues.length > 0}
     <div class="mt-12">
-        <h3 class="text-xl font-bold text-white mb-6">Questions to Review</h3>
+        <h3 class="text-xl font-bold text-foreground mb-6">Questions to Review</h3>
         <div class="space-y-3">
             {#each audit.issues.slice(0, 5) as issue}
                 <div
-                    class="flex items-center gap-4 p-4 bg-slate-900/50 border-l-4 border-warning rounded-r-lg"
+                    class="flex items-center gap-4 p-4 bg-muted border-l-4 border-warning rounded-r-lg"
                 >
                     <CircleCheck class="text-warning shrink-0" size={20} />
-                    <span class="text-slate-300 text-sm font-medium"
+                    <span class="text-foreground text-sm font-medium"
                         >{issue}</span
                     >
                 </div>

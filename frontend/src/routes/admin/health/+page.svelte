@@ -25,13 +25,13 @@
 
 <div class="space-y-8">
     <div
-        class="flex items-center justify-between border-b border-slate-800 pb-8"
+        class="flex items-center justify-between border-b border-border pb-8"
     >
         <div>
-            <h1 class="text-3xl font-bold text-white mb-2">
+            <h1 class="text-3xl font-bold text-foreground mb-2">
                 Record Review List
             </h1>
-            <p class="text-slate-400">
+            <p class="text-muted-foreground">
                 Questions raised by the same six-area record checks as Record Coverage.
             </p>
         </div>
@@ -43,10 +43,10 @@
                 <div class="text-xs uppercase font-bold {levelTone.label}">
                     Review list size
                 </div>
-                <div class="text-lg font-bold text-white">
+                <div class="text-lg font-bold text-foreground">
                     {level}
                 </div>
-                <div class="text-xs text-slate-300">{audit.issues.length} questions</div>
+                <div class="text-xs text-muted-foreground">{audit.issues.length} questions</div>
             </div>
         </div>{/if}
     </div>
@@ -55,9 +55,9 @@
     {#if auditSources.canScore}
     <!-- Red Flags Grid -->
     <div class="grid grid-cols-1 gap-6">
-        <section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+        <section class="bg-card border border-border rounded-xl p-6">
             <h3
-                class="flex items-center gap-2 text-lg font-bold text-white mb-6"
+                class="flex items-center gap-2 text-lg font-bold text-foreground mb-6"
             >
                 <TriangleAlert class="text-warning" size={20} />
                 Questions to review
@@ -73,12 +73,12 @@
                 <ul class="space-y-2">
                     {#each audit.issues as issue}
                         <li
-                            class="flex items-start gap-3 p-3 bg-slate-950 rounded border border-slate-800"
+                            class="flex items-start gap-3 p-3 bg-background rounded border border-border"
                         >
                             <span
                                 class="w-1.5 h-1.5 rounded-full bg-danger mt-2 shrink-0"
                             ></span>
-                            <span class="text-sm text-slate-300">{issue}</span>
+                            <span class="text-sm text-foreground">{issue}</span>
                         </li>
                     {/each}
                 </ul>
@@ -90,7 +90,7 @@
 
     <!-- JSON Inspector (Developer Tool) -->
     <section
-        class="bg-slate-950 border border-slate-800 rounded-xl p-6 overflow-hidden"
+        class="bg-background border border-border rounded-xl p-6 overflow-hidden"
     >
         <h3
             class="text-sm font-mono text-muted-foreground mb-4 uppercase tracking-wider"
@@ -98,7 +98,7 @@
             Record-check Details and Source IDs
         </h3>
         <pre
-            class="text-xs text-success font-mono overflow-x-auto p-4 bg-slate-900 rounded-lg border border-slate-800 max-h-64">
+            class="text-xs text-success font-mono overflow-x-auto p-4 bg-card rounded-lg border border-border max-h-64">
 {JSON.stringify({ ...(auditSources.canScore ? audit : {}), sourceReadiness: auditSources }, null, 2)}
         </pre>
     </section>

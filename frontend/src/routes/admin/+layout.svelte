@@ -39,7 +39,7 @@
 
 {#if isAdmin}
 <div
-    class="surface-dark min-h-screen bg-slate-950 text-foreground flex font-sans antialiased selection:bg-primary/30"
+    class="min-h-screen bg-background text-foreground flex font-sans antialiased selection:bg-primary/30"
 >
     <!-- Admin Sidebar -->
     <aside

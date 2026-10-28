@@ -21,7 +21,7 @@
     ];
 </script>
 
-<div class="surface-dark relative overflow-hidden rounded-2xl bg-primary/10 border border-primary/20" in:fade>
+<div class="relative overflow-hidden rounded-2xl bg-primary/10 border border-primary/20" in:fade>
     <div class="p-6">
         <div class="flex items-start gap-4">
             <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">

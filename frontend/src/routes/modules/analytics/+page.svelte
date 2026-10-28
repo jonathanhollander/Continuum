@@ -52,7 +52,7 @@
 </script>
 
 <div
-    class="surface-dark min-h-screen bg-background text-foreground p-8 relative overflow-hidden"
+    class="min-h-screen bg-background text-foreground p-8 relative overflow-hidden"
 >
     {#if showFireDrill}
         <FireDrill on:close={() => (showFireDrill = false)} />

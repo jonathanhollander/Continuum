@@ -17,24 +17,24 @@
 
 <div class="space-y-8 pb-20">
     <!-- Header -->
-    <header class="border-b border-slate-800 pb-8">
+    <header class="border-b border-border pb-8">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <a aria-label="Back"
                     href="/admin"
-                    class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+                    class="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
                 >
                     <ArrowLeft size={20} />
                 </a>
                 <div>
                     <h1
-                        class="font-bold text-white text-3xl flex items-center gap-2"
+                        class="font-bold text-foreground text-3xl flex items-center gap-2"
                     >
                         <Zap size={20} class="text-gold-text" />
                         Automation Control Center
                     </h1>
                     <p
-                        class="text-xs text-slate-400 font-mono uppercase tracking-wider"
+                        class="text-xs text-muted-foreground font-mono uppercase tracking-wider"
                     >
                         Admin Mode
                     </p>
@@ -44,7 +44,7 @@
             <div class="flex items-center gap-3">
                 <span class="w-2 h-2 rounded-full bg-success"
                 ></span>
-                <span class="text-sm font-bold text-slate-300"
+                <span class="text-sm font-bold text-muted-foreground"
                     >Saved to your account</span
                 >
             </div>
@@ -56,9 +56,9 @@
             <!-- Left Column: Rules -->
             <div class="lg:col-span-2 space-y-6">
                 <div
-                    class="bg-slate-900 rounded-xl p-6 border border-slate-800"
+                    class="bg-card rounded-xl p-6 border border-border"
                 >
-                    <h2 class="font-serif text-2xl text-white mb-6">
+                    <h2 class="font-serif text-2xl text-foreground mb-6">
                         Active Rules
                     </h2>
                     <div class="space-y-4">

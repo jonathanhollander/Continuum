@@ -104,7 +104,7 @@
     aria-modal="true"
     aria-label="The Fire Drill"
     use:focusTrap={{ onEscape: close }}
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md surface-dark"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md"
     transition:fade
 >
     <div

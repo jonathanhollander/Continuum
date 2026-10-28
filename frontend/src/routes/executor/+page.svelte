@@ -134,7 +134,7 @@
     }
 </script>
 
-<div class="surface-dark min-h-screen bg-background text-foreground p-6">
+<div class="min-h-screen bg-background text-foreground p-6">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <div class="mb-8" in:fade>
