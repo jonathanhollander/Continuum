@@ -102,7 +102,7 @@
 
     <!-- Filters -->
     <div
-        class="bg-background/50 p-4 rounded-xl border border-slate-800 flex flex-wrap gap-4 items-center"
+        class="bg-background/50 p-4 rounded-xl border border-border flex flex-wrap gap-4 items-center"
     >
         <span
             class="text-xs text-muted-foreground font-bold uppercase tracking-widest"
@@ -140,7 +140,7 @@
             {#each getFilteredHistory() as checkin (checkin.id)}
                 {@const Icon = getMethodIcon(checkin.method)}
                 <div
-                    class="bg-background/50 border border-slate-800 rounded-xl p-4 flex items-center justify-between hover:bg-card/80 transition-colors"
+                    class="bg-background/50 border border-border rounded-xl p-4 flex items-center justify-between hover:bg-card/80 transition-colors"
                     in:fade
                 >
                     <div class="flex items-center gap-4">
@@ -182,7 +182,7 @@
         </div>
     {:else}
         <div
-            class="text-center py-12 text-muted-foreground bg-background/30 rounded-2xl border border-slate-800/50 dashed"
+            class="text-center py-12 text-muted-foreground bg-background/30 rounded-2xl border border-border/50 dashed"
         >
             <Clock class="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>Your check-ins will gather here.</p>

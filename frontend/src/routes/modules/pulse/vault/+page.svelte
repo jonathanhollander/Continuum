@@ -123,12 +123,12 @@
                 <ArrowLeft class="w-5 h-5 text-muted-foreground" />
             </a>
             <h1 class="text-2xl font-serif text-foreground flex items-center gap-3">
-                <Lock class="w-6 h-6 text-indigo-400" />
+                <Lock class="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                 The Vault
             </h1>
         </div>
         <div
-            class="bg-indigo-500/10 border border-indigo-500/30 px-3 py-1 rounded-full text-[10px] text-indigo-400 font-bold uppercase tracking-widest"
+            class="bg-indigo-500/10 border border-indigo-500/30 px-3 py-1 rounded-full text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-widest"
         >
             Guardian instructions
         </div>
@@ -136,13 +136,13 @@
 
     <!-- Intro Card -->
     <div
-        class="bg-background/50 border border-slate-800 rounded-2xl p-8 backdrop-blur-sm relative overflow-hidden"
+        class="bg-background/50 border border-border rounded-2xl p-8 backdrop-blur-sm relative overflow-hidden"
     >
         <div class="flex flex-col md:flex-row gap-8 items-center relative z-10">
             <div
                 class="w-20 h-20 bg-indigo-500/10 border border-indigo-500/20 rounded-full flex items-center justify-center shrink-0"
             >
-                <ShieldAlert class="w-10 h-10 text-indigo-400" />
+                <ShieldAlert class="w-10 h-10 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div class="space-y-2 text-center md:text-left">
                 <h2 class="text-xl font-medium text-foreground">
@@ -150,9 +150,9 @@
                 </h2>
                 <p class="text-muted-foreground text-sm leading-relaxed max-w-xl">
                     Store sensitive instructions like <span
-                        class="text-indigo-300">gate codes</span
-                    >, <span class="text-indigo-300">home keys</span>, and
-                    <span class="text-indigo-300">pet care steps</span>. They
+                        class="text-indigo-700 dark:text-indigo-300">gate codes</span
+                    >, <span class="text-indigo-700 dark:text-indigo-300">home keys</span>, and
+                    <span class="text-indigo-700 dark:text-indigo-300">pet care steps</span>. They
                     are shared through guardian portals when <a href="/modules/pulse/settings" class="text-primary hover:underline">Automatic Release</a>
                     is on and the release conditions below are met.
                 </p>
@@ -162,12 +162,12 @@
 
     <!-- Entry Form -->
     <div
-        class="bg-slate-950/40 border border-slate-800 rounded-2xl p-8 space-y-6"
+        class="bg-card/60 border border-border rounded-2xl p-8 space-y-6"
     >
         <div class="flex items-center gap-2 mb-2">
             <Plus class="w-4 h-4 text-primary" />
             <h3
-                class="text-sm font-bold text-slate-300 uppercase tracking-widest"
+                class="text-sm font-bold text-foreground uppercase tracking-widest"
             >
                 {newItem.id ? `Editing “${items.find((i) => i.id === newItem.id)?.name ?? newItem.name}”` : "Add an item"}
             </h3>
@@ -188,7 +188,7 @@
                     id="vault-item-name"
                     bind:value={newItem.name}
                     placeholder="e.g. Back Gate Code"
-                    class="w-full bg-background border border-slate-800 rounded-xl px-4 py-3 text-sm text-foreground focus:border-indigo-500/50 outline-none"
+                    class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:border-indigo-500/50 outline-none"
                 />
             </div>
             <div class="space-y-2">
@@ -197,7 +197,7 @@
                     aria-describedby="vault-release-rule"
                     id="vault-item-unlock"
                     bind:value={newItem.unlock_condition}
-                    class="w-full bg-background border border-slate-800 rounded-xl px-4 py-3 text-sm text-foreground focus:border-indigo-500/50 outline-none"
+                    class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:border-indigo-500/50 outline-none"
                 >
                     <option value="tier_1_escalation"
                         >Tier 1</option
@@ -217,7 +217,7 @@
                 bind:value={newItem.content}
                 placeholder="What they should know..."
                 rows="3"
-                class="w-full bg-background border border-slate-800 rounded-xl px-4 py-3 text-sm text-foreground focus:border-indigo-500/50 outline-none font-mono"
+                class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:border-indigo-500/50 outline-none font-mono"
             ></textarea>
         </div>
 
@@ -265,12 +265,12 @@
 
         {#each items as item (item.id)}
             <div
-                class="bg-background/30 border border-slate-800/50 rounded-2xl p-6 group hover:border-border/50 transition-all"
+                class="bg-background/30 border border-border/50 rounded-2xl p-6 group hover:border-border/50 transition-all"
             >
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
                         <div
-                            class="w-8 h-8 bg-card rounded-lg flex items-center justify-center text-indigo-400"
+                            class="w-8 h-8 bg-card rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-400"
                         >
                             {#if item.name
                                 .toLowerCase()
@@ -295,7 +295,7 @@
                                 {item.name}
                             </h4>
                             <div
-                                class="text-[10px] text-indigo-300 font-bold uppercase tracking-widest"
+                                class="text-[10px] text-indigo-700 dark:text-indigo-300 font-bold uppercase tracking-widest"
                             >
                                 Release rule: {tierLabel(item.unlock_condition)}
                             </div>
@@ -315,7 +315,7 @@
                                 window.scrollTo({ top: 0, behavior: "smooth" });
                             }}
                             title="Edit"
-                            class="p-2 text-muted-foreground hover:text-indigo-400 transition-colors"
+                            class="p-2 text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-600 dark:text-indigo-400 transition-colors"
                         >
                             <span class="sr-only">Edit</span>
                             <svg
@@ -357,14 +357,14 @@
 
                 {#if showSecrets[item.id]}
                     <div
-                        class="bg-slate-950/50 rounded-xl p-4 font-mono text-sm text-primary border border-primary/20"
+                        class="bg-muted/50 rounded-xl p-4 font-mono text-sm text-primary border border-primary/20"
                         in:slide
                     >
                         {item.content}
                     </div>
                 {:else}
                     <div
-                        class="bg-slate-950/20 rounded-xl p-4 font-mono text-xs text-muted-foreground italic select-none"
+                        class="bg-card/60 rounded-xl p-4 font-mono text-xs text-muted-foreground italic select-none"
                     >
                         ••••••••••••••••••••••••••••
                     </div>
@@ -378,7 +378,7 @@
                 in:fade
             >
                 <div class="w-20 h-20 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <Lock class="w-10 h-10 text-indigo-400" />
+                    <Lock class="w-10 h-10 text-indigo-600 dark:text-indigo-400" />
                 </div>
 
                 <h3 class="font-serif font-bold text-2xl text-foreground mb-4">
@@ -386,8 +386,8 @@
                 </h3>
 
                 <div class="mb-6 bg-card/50 rounded-xl p-5 border border-border text-left">
-                    <p class="text-slate-300 leading-relaxed">
-                        <strong class="text-indigo-300">Some information is best kept for when it's truly needed.</strong>
+                    <p class="text-foreground leading-relaxed">
+                        <strong class="text-indigo-700 dark:text-indigo-300">Some information is best kept for when it's truly needed.</strong>
                         Gate codes, safe combinations, pet feeding instructions, or where you keep the spare key—these are things your trusted contacts
                         will be glad to have if something happens.
                     </p>

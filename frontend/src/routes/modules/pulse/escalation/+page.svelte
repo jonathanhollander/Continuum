@@ -16,7 +16,7 @@
         >
     </div>
 
-    <div class="bg-background/30 p-6 rounded-2xl border border-slate-800">
+    <div class="bg-background/30 p-6 rounded-2xl border border-border">
         <p class="text-muted-foreground mb-6 max-w-2xl">
             Choose the wait for each alert tier. Tier 1's wait starts after your check-in interval
             and grace period. Each later tier's wait starts when the previous tier is reached.

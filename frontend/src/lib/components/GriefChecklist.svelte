@@ -82,7 +82,7 @@
             class="px-4 py-2 rounded-xl text-sm font-medium transition-all {activePriority ===
             'immediate'
                 ? 'bg-primary/20 text-primary-hover border border-primary/30'
-                : 'bg-white/5 text-muted-foreground hover:text-foreground'}"
+                : 'bg-muted text-muted-foreground hover:text-foreground'}"
         >
             Right now
         </button>
@@ -91,7 +91,7 @@
             class="px-4 py-2 rounded-xl text-sm font-medium transition-all {activePriority ===
             'soon'
                 ? 'bg-primary/20 text-primary-hover border border-primary/30'
-                : 'bg-white/5 text-muted-foreground hover:text-foreground'}"
+                : 'bg-muted text-muted-foreground hover:text-foreground'}"
         >
             In the Coming Days
         </button>
@@ -101,8 +101,8 @@
         {#each filteredItems as item (item.id)}
             <div
                 in:fly={{ y: 20, duration: 500 }}
-                class="p-6 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300 hover:bg-white/10 {item.done
-                    ? 'bg-white/[0.02]'
+                class="p-6 rounded-2xl bg-card border border-border transition-all duration-300 hover:bg-muted {item.done
+                    ? 'opacity-80'
                     : ''}"
             >
                 <div class="flex gap-4">
@@ -138,10 +138,10 @@
 
     {#if activePriority === "immediate"}
         <div
-            class="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex gap-4 items-start"
+            class="p-6 rounded-2xl bg-warning-soft border border-warning/20 flex gap-4 items-start"
         >
-            <LucideAlertCircle class="w-6 h-6 text-amber-400 shrink-0 mt-1" />
-            <p class="text-sm text-amber-200/70 leading-relaxed italic">
+            <LucideAlertCircle class="w-6 h-6 text-warning shrink-0 mt-1" />
+            <p class="text-sm text-warning leading-relaxed italic">
                 "The first 24 hours can feel like a blur. Try to focus only on
                 these few things. They are enough for now."
             </p>

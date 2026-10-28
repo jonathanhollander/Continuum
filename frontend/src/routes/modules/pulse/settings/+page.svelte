@@ -215,7 +215,7 @@
             <button
                 class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors disabled:opacity-50 {settings.enabled
                     ? 'bg-primary'
-                    : 'bg-slate-700'}"
+                    : 'bg-slate-300 dark:bg-slate-700'}"
                 role="switch"
                 aria-checked={settings.enabled}
                 aria-label="Active Heartbeat"
@@ -255,7 +255,7 @@
                         disabled={!loaded}
                         oninput={() => typingVersion.frequency_days++}
                         onchange={(e) => saveNumber("frequency_days", e.currentTarget.value, 1, 365)}
-                        class="w-24 bg-slate-950/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                        class="w-24 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
                     />
                     <span class="text-sm text-muted-foreground">days</span>
                 </div>
@@ -275,7 +275,7 @@
                         disabled={!loaded}
                         oninput={() => typingVersion.grace_period_hours++}
                         onchange={(e) => saveNumber("grace_period_hours", e.currentTarget.value, 0, 720)}
-                        class="w-24 bg-slate-950/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                        class="w-24 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
                     />
                     <span class="text-sm text-muted-foreground">hours</span>
                 </div>
@@ -333,7 +333,7 @@
                 <div class="flex items-center gap-2 mb-4 relative z-10">
                     <Ghost
                         class="w-5 h-5 {resting
-                            ? 'text-purple-400'
+                            ? 'text-purple-600 dark:text-purple-400'
                             : 'text-muted-foreground'}"
                     />
                     <h3 class="text-lg font-medium text-foreground">
@@ -351,7 +351,7 @@
                         class="absolute inset-x-0 bottom-0 h-1 bg-purple-500/30"
                     ></div>
                     <p
-                        class="text-[10px] text-purple-300 font-mono mb-3 relative z-10 tracking-widest uppercase"
+                        class="text-[10px] text-purple-700 dark:text-purple-300 font-mono mb-3 relative z-10 tracking-widest uppercase"
                     >
                         Active until: {new Date(
                             settings.ghost_mode_until!,
@@ -362,8 +362,8 @@
                     onclick={toggleGhostMode}
                     disabled={!loaded}
                     class="w-full py-2.5 rounded-xl border transition-all text-sm font-bold relative z-10 {resting
-                        ? 'bg-purple-900/30 border-purple-500/50 text-purple-200 scale-[0.98]'
-                        : 'bg-card border-border text-slate-300 hover:bg-slate-700 hover:border-slate-600'}"
+                        ? 'bg-purple-500/10 dark:bg-purple-900/30 border-purple-500/50 text-purple-800 dark:text-purple-200 scale-[0.98]'
+                        : 'bg-card border-border text-foreground hover:bg-muted hover:border-muted-foreground/40'}"
                 >
                     {!loaded
                         ? "Rest Mode"
@@ -377,7 +377,7 @@
                 class="bg-background/50 p-6 rounded-2xl border border-border/50 space-y-4 backdrop-blur-sm"
             >
                 <div class="flex items-center gap-2">
-                    <Shield class="w-5 h-5 text-indigo-400" />
+                    <Shield class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                     <h3 class="text-lg font-medium text-foreground">
                         Notes for your guardians
                     </h3>
@@ -390,7 +390,7 @@
                     Review each person's current view in <a href="/modules/pulse/transparency" class="text-primary hover:underline">Transparency</a>.
                 </p>
                 <div
-                    class="flex items-center justify-between p-3 rounded-xl bg-slate-950/40 border border-slate-800"
+                    class="flex items-center justify-between p-3 rounded-xl bg-card/60 border border-border"
                 >
                     <div class="text-xs text-muted-foreground font-medium">
                         Automatic Release
@@ -398,7 +398,7 @@
                     <button
                         class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 {settings.location_vault_enabled
                             ? 'bg-indigo-500'
-                            : 'bg-slate-700'}"
+                            : 'bg-slate-300 dark:bg-slate-700'}"
                         role="switch"
                         aria-checked={settings.location_vault_enabled}
                         aria-label="Automatic Release"
