@@ -4,7 +4,7 @@
 
 ## `/marketing2` image proposals (historical; rejected for use on the live site)
 
-**Owner correction, 2026-10-28:** the owner explicitly rejects the image/icon changes and states that replacement artwork was not approved. The Hybrid implementation is being removed from the live routes. These mockups remain historical evidence, not an approved design or authority to reuse their artwork. The earlier record of selecting Hybrid is superseded by this instruction.
+**Owner correction, 2026-10-28:** the owner explicitly rejects the image/icon changes and states that replacement artwork was not approved. The Hybrid implementation was removed from the live routes by `6ad4df0`, verified on desktop and phone. These mockups remain historical evidence, not an approved design or authority to reuse their artwork. The earlier record of selecting Hybrid is superseded by this instruction.
 
 Each folder holds historical 1440-wide full-page shots (`marketing2.png`, `how.png`, `features.png`), a 390-wide phone shot (`marketing2-390.png`) and the agent's `PROPOSAL.md`.
 
