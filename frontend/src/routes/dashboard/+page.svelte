@@ -463,7 +463,7 @@
                 >
                     <a
                         href="/modules/contacts"
-                        class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
+                        class="bg-card border border-border rounded-xl p-4 text-center hover:bg-muted hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
                             <Users size={20} class="text-primary" />
@@ -490,7 +490,7 @@
                     {#if showPolicies}
                     <a
                         href="/modules/insurance"
-                        class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
+                        class="bg-card border border-border rounded-xl p-4 text-center hover:bg-muted hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
                             <Shield size={20} class="text-primary" />
@@ -518,7 +518,7 @@
                     {#if showAccounts}
                     <a
                         href="/modules/financial-accounts"
-                        class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
+                        class="bg-card border border-border rounded-xl p-4 text-center hover:bg-muted hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
                             <FileText size={20} class="text-primary" />
@@ -545,7 +545,7 @@
                     {/if}
                     <a
                         href="/modules/medical"
-                        class="bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
+                        class="bg-card border border-border rounded-xl p-4 text-center hover:bg-muted hover:border-primary/30 hover:scale-[1.02] transition-all cursor-pointer block"
                     >
                         <div class="flex items-center justify-center mb-2">
                             <Heart size={20} class="text-primary" />
@@ -582,7 +582,7 @@
                             aria-label={$dict.dashFindLabel}
                             bind:value={searchQuery}
                             placeholder={$dict.dashFindPlaceholder}
-                            class="w-full bg-slate-950/50 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-all backdrop-blur-sm"
+                            class="w-full bg-card border border-border rounded-xl pl-11 pr-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-all backdrop-blur-sm"
                         />
                         <div
                             class="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity"
@@ -729,7 +729,7 @@
                                             <div
                                                 class="relative h-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] {status.inProgress
                                                     ? 'bg-gradient-to-br from-success/10 to-success/5 border border-success/20 hover:border-success/40'
-                                                    : 'bg-white/5 border border-white/10 hover:border-primary/40 hover:bg-white/10'}"
+                                                    : 'bg-card border border-border hover:border-primary/40 hover:bg-muted'}"
                                             >
                                                 <div
                                                     class="p-5 h-full flex items-center gap-4"
@@ -752,7 +752,7 @@
                                                         >
                                                             {navText(item.key, item.label)}
                                                         </h3>
-                                                        {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-foreground" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
+                                                        {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-muted text-foreground" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
                                                         {#if status.count > 0}
                                                             <p
                                                                 class="text-sm text-success"
@@ -789,7 +789,7 @@
                             <div class="space-y-6">
                                 {#each statusFilteredGroups as group, groupIndex (group.groupKey)}
                                     <section
-                                        class="rounded-2xl bg-slate-950/30 backdrop-blur-sm border border-white/5 overflow-hidden"
+                                        class="rounded-2xl bg-muted/40 border border-border overflow-hidden"
                                         in:fly={{
                                             y: 20,
                                             duration: 400,
@@ -797,7 +797,7 @@
                                         }}
                                     >
                                         <div
-                                            class="px-6 py-4 border-b border-white/5"
+                                            class="px-6 py-4 border-b border-border"
                                         >
                                             <h2
                                                 class="text-lg font-semibold text-foreground"
@@ -828,7 +828,7 @@
                                                         <div
                                                             class="relative h-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] {status.inProgress
                                                                 ? 'bg-gradient-to-br from-success/10 to-success/5 border border-success/20 hover:border-success/40'
-                                                                : 'bg-white/5 border border-white/10 hover:border-primary/40 hover:bg-white/10'}"
+                                                                : 'bg-card border border-border hover:border-primary/40 hover:bg-muted'}"
                                                         >
                                                             <div
                                                                 class="p-5 h-full flex items-center gap-4"
@@ -853,7 +853,7 @@
                                                                     >
                                                                         {navText(item.key, item.label)}
                                                                     </h3>
-                                                                    {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-foreground" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
+                                                                    {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-muted text-foreground" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
 {#if status.inProgress && status.count > 0}
                                                                         <p
                                                                             class="text-sm text-success mt-0.5"
@@ -890,7 +890,7 @@
                             {@const isCollapsed = collapsedSections.has(group.groupKey)}
 
                             <section
-                                class="rounded-2xl bg-slate-950/30 backdrop-blur-sm border border-white/5 overflow-hidden"
+                                class="rounded-2xl bg-muted/40 border border-border overflow-hidden"
                                 in:fly={{
                                     y: 30,
                                     duration: 600,
@@ -899,7 +899,7 @@
                             >
                                 <!-- Group Header -->
                                 <button
-                                    class="w-full px-6 py-5 border-b border-white/5 text-left hover:bg-white/5 transition-colors"
+                                    class="w-full px-6 py-5 border-b border-border text-left hover:bg-muted transition-colors"
                                     onclick={() =>
                                         toggleSection(group.groupKey)}
                                 >
@@ -959,7 +959,7 @@
                                                     <div
                                                         class="relative h-full rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] {status.inProgress
                                                             ? 'bg-gradient-to-br from-success/10 to-success/5 border border-success/20 hover:border-success/40'
-                                                            : 'bg-white/5 border border-white/10 hover:border-primary/40 hover:bg-white/10'}"
+                                                            : 'bg-card border border-border hover:border-primary/40 hover:bg-muted'}"
                                                     >
                                                         <div
                                                             class="p-5 h-full flex items-center gap-4"
@@ -987,7 +987,7 @@
                                                                 >
                                                                     {navText(item.key, item.label)}
                                                                 </h3>
-                                                                {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-white/10 text-foreground" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
+                                                                {#if item.isPreview}<span class="inline-block text-xs font-medium px-2 py-0.5 rounded-md bg-muted text-foreground" data-testid="preview-tag">{$dict.earlyPreview}</span>{/if}
 {#if status.inProgress && status.count > 0}
                                                                     <p
                                                                         class="text-sm text-success mt-0.5"
@@ -1021,19 +1021,19 @@
                 <!-- Loading State with Shimmer -->
                 <div class="space-y-6 mt-8">
                     {#each [1, 2] as section}
-                        <div class="rounded-2xl bg-slate-800/20 p-4">
+                        <div class="rounded-2xl bg-muted/40 p-4">
                             <div
-                                class="h-6 w-40 bg-slate-700/30 rounded mb-4 animate-pulse"
+                                class="h-6 w-40 bg-muted rounded mb-4 animate-pulse"
                             ></div>
                             <div
                                 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
                             >
                                 {#each Array(4) as _}
                                     <div
-                                        class="h-24 rounded-xl bg-slate-800/30 animate-pulse relative overflow-hidden"
+                                        class="h-24 rounded-xl bg-muted animate-pulse relative overflow-hidden"
                                     >
                                         <div
-                                            class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent shimmer-animation"
+                                            class="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/5 to-transparent shimmer-animation"
                                         ></div>
                                     </div>
                                 {/each}

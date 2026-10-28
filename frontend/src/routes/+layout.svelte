@@ -175,20 +175,9 @@
 	let isAccessBootstrapRoute = $derived($page.url.pathname === "/login" || $page.url.pathname === "/auth/verify");
 	let accessAllowed = $derived($accessStatus.phase === "ready" && $accessStatus.status?.access_allowed === true);
 
-	// Derived: Is this the Dashboard route? (needs dark background for glassmorphism)
+	// Derived: Is this the Dashboard route? (it syncs every module)
 	let isDashboardRoute = $derived($page.url.pathname === "/dashboard");
 
-	// Pages whose own content is dark: the header sits dark above them too.
-	const darkHeaderPaths = [
-		"/dashboard",
-		"/resources/grief-support",
-		"/modules/analytics",
-		"/modules/treasure-hunt",
-		"/admin/readiness",
-		"/onboarding",
-		"/modules/pulse",
-	];
-	let isDarkHeader = $derived(darkHeaderPaths.includes($page.url.pathname));
 
 	// Sync Data when Auth is ready
 	let lastSyncedToken = $state<string | null>(null);
@@ -383,9 +372,7 @@
 	<!-- Standard Application Layout -->
 	<div
 		dir={$language === "he" ? "rtl" : "ltr"}
-		class="min-h-screen flex flex-col font-sans {isDashboardRoute
-			? 'surface-dark bg-background text-foreground'
-			: 'bg-background text-foreground'}"
+		class="min-h-screen flex flex-col font-sans bg-background text-foreground"
 	>
 		<a
 			href="#main-content"
@@ -397,9 +384,7 @@
 			<!-- Mobile Sidebar Overlay -->
 			{#if isSidebarOpen}
 				<button
-					class="fixed inset-0 z-40 lg:hidden backdrop-blur-sm cursor-default w-full h-full border-0 {isDarkHeader
-						? 'bg-black/80'
-						: 'bg-background/80'}"
+					class="fixed inset-0 z-40 lg:hidden backdrop-blur-sm cursor-default w-full h-full border-0 bg-background/80"
 					transition:fade={{ duration: 200 }}
 					onclick={toggleSidebar}
 					aria-label={$dict.closeSidebar}
@@ -415,37 +400,27 @@
 
 			<!-- Main Content Wrapper -->
 			<div
-				class="flex-1 ml-0 lg:ml-0 flex flex-col min-w-0 relative {isDashboardRoute
-					? 'bg-transparent'
-					: 'bg-background'}"
+				class="flex-1 ml-0 lg:ml-0 flex flex-col min-w-0 relative bg-background"
 			>
 				<!-- Mobile Header -->
 				<header
-					class="lg:hidden sticky top-0 z-30 border-b px-4 py-3 flex items-center justify-between {isDarkHeader
-						? 'bg-primary-deep border-white/10'
-						: 'bg-background border-border'}"
+					class="lg:hidden sticky top-0 z-30 border-b px-4 py-3 flex items-center justify-between bg-background border-border"
 				>
 					<div class="flex items-center gap-3">
 						<button aria-label={$dict.menu}
-							class="p-2 -ml-2 rounded-lg {isDarkHeader
-								? 'text-white/80 hover:bg-white/10'
-								: 'text-muted-foreground hover:bg-muted'}"
+							class="p-2 -ml-2 rounded-lg text-muted-foreground hover:bg-muted"
 							onclick={toggleSidebar}
 						>
 							<Menu class="w-6 h-6" />
 						</button>
 						<span
-							class="font-semibold {isDarkHeader
-								? 'text-white'
-								: 'text-foreground'}">Continuum</span
+							class="font-semibold text-foreground">Continuum</span
 						>
 					</div>
 
 					<a aria-label={$dict.settings}
 						href="/settings"
-						class="p-2 rounded-lg {isDarkHeader
-							? 'text-white/80 hover:bg-white/10'
-							: 'text-muted-foreground hover:bg-muted'}"
+						class="p-2 rounded-lg text-muted-foreground hover:bg-muted"
 					>
 						<Settings class="w-5 h-5" />
 					</a>
@@ -453,33 +428,23 @@
 
 				<!-- Glass Header (Desktop) -->
 					<header
-						class="hidden lg:flex sticky top-0 z-40 h-20 px-8 items-center justify-between border-b transition-all {isDarkHeader
-							? 'bg-primary-deep border-white/10'
-							: 'bg-background border-border'}"
+						class="hidden lg:flex sticky top-0 z-40 h-20 px-8 items-center justify-between border-b transition-all bg-background border-border"
 					>
 						<!-- Breadcrumbs / Page Title -->
 						<div
-							class="flex items-center gap-2 text-sm {isDarkHeader
-								? 'text-white/70'
-								: 'text-muted-foreground'}"
+							class="flex items-center gap-2 text-sm text-muted-foreground"
 						>
 							<span
-								class="uppercase tracking-wider font-semibold text-xs {isDarkHeader
-									? 'text-white/70'
-									: 'text-muted-foreground'}"
+								class="uppercase tracking-wider font-semibold text-xs text-muted-foreground"
 								>{$dict.groupOverview || "Estate Overview"}</span
 							>
 							<ChevronRight
 								size={14}
-								class={isDarkHeader
-									? "text-white/70"
-									: "text-muted-foreground"}
+								class="text-muted-foreground"
 							/>
 							<span
 								data-testid="breadcrumb-title"
-								class="font-serif font-medium text-lg {isDarkHeader
-									? 'text-white'
-									: 'text-foreground'}"
+								class="font-serif font-medium text-lg text-foreground"
 							>
 								{breadcrumbTitle}
 							</span>
@@ -487,17 +452,15 @@
 
 						<!-- Header Actions -->
 						<div class="flex items-center gap-6">
-							<!-- Take a Break Button (on the dark header its icon goes light) -->
-							<TakeBreakButton variant="icon-only" dark={isDarkHeader} />
+							<!-- Take a Break Button -->
+							<TakeBreakButton variant="icon-only" />
 
 							<!-- Context-Aware Role Switcher -->
-							<RoleSwitcher dark={isDarkHeader} />
+							<RoleSwitcher />
 
 							<!-- Color Picker (Top Menu) -->
 							<div
-								class="flex items-center gap-1.5 px-2 py-1 rounded-lg border {isDarkHeader
-									? 'bg-white/10 border-white/20'
-									: 'bg-muted border-border'}"
+								class="flex items-center gap-1.5 px-2 py-1 rounded-lg border bg-muted border-border"
 							>
 								<div
 									class="w-3 h-3 rounded-full shrink-0 border border-white/30 bg-primary"
@@ -509,9 +472,7 @@
 										accessibilityStore.setColor(
 											e.currentTarget.value as any,
 										)}
-									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 {isDarkHeader
-										? 'text-white/80 hover:text-white'
-										: 'text-muted-foreground hover:text-foreground'}"
+									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 text-muted-foreground hover:text-foreground"
 								>
 									<option value="teal">🟢 {$dict.colors.teal}</option>
 									<option value="indigo">🔵 {$dict.colors.indigo}</option>
@@ -524,15 +485,11 @@
 
 							<!-- Language Selector (Top Menu) -->
 							<div
-								class="flex items-center gap-1.5 px-2 py-1 rounded-lg border max-w-[100px] {isDarkHeader
-									? 'bg-white/10 border-white/20'
-									: 'bg-muted border-border'}"
+								class="flex items-center gap-1.5 px-2 py-1 rounded-lg border max-w-[100px] bg-muted border-border"
 							>
 								<Globe
 									size={14}
-									class="{isDarkHeader
-										? 'text-white/70'
-										: 'text-muted-foreground'} shrink-0"
+									class="text-muted-foreground shrink-0"
 								/>
 								<select
 									aria-label={$dict.labelLanguages}
@@ -541,9 +498,7 @@
 										language.set(
 											e.currentTarget.value as any,
 										)}
-									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 {isDarkHeader
-										? 'text-white/80 hover:text-white'
-										: 'text-muted-foreground hover:text-foreground'}"
+									class="bg-transparent text-[10px] font-bold uppercase tracking-tight outline-none cursor-pointer transition-colors border-none p-0 pr-1 focus:ring-0 min-w-0 text-muted-foreground hover:text-foreground"
 								>
 									<option value="en">🇺🇸 EN</option>
 									<option value="es">🇪🇸 ES</option>
@@ -557,9 +512,7 @@
 							<!-- AI Concierge Trigger -->
 							<button
 								onclick={() => conciergeEngine.open()}
-								class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors border {isDarkHeader
-									? 'bg-white/10 text-white hover:bg-white/20 border-white/30'
-									: 'bg-primary-soft text-primary-hover hover:bg-primary/15 border-primary/20'}"
+								class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors border bg-primary-soft text-primary-hover hover:bg-primary/15 border-primary/20"
 								title={$dict.openConcierge}
 							>
 								<Sparkles size={18} />

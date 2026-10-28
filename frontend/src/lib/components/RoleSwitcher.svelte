@@ -11,9 +11,6 @@
     import { dict } from "$lib/stores/conciergeStore.svelte";
     import { UserCog, Users, Heart, Briefcase } from 'lucide-svelte';
 
-    // dark: the header above this page is dark (layout's isDarkHeader), so the trigger text goes light.
-    let { dark = false }: { dark?: boolean } = $props();
-
     let isOpen = $state(false);
 
     const roles = [
@@ -42,9 +39,7 @@
 <div class="relative z-50">
     <button
         onclick={() => isOpen = !isOpen}
-        class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors {dark
-            ? 'text-slate-300 hover:text-white hover:bg-white/10'
-            : 'text-muted-foreground hover:text-foreground hover:bg-muted'}"
+        class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
     >
         <UserCog size={16} />
         <span class="hidden md:inline">

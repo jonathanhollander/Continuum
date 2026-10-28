@@ -8,18 +8,12 @@
 
     interface Props {
         variant?: "primary" | "subtle" | "icon-only";
-        // dark: the header above this page is dark (layout's isDarkHeader), so the icon goes light.
-        dark?: boolean;
     }
 
-    let { variant = "subtle", dark = false }: Props = $props();
+    let { variant = "subtle" }: Props = $props();
 
     // Colour classes for the subtle and icon-only variants (written out in full for Tailwind).
-    let tone = $derived(
-        dark
-            ? "text-white/80 hover:text-white hover:bg-white/10"
-            : "text-muted-foreground hover:text-primary-hover hover:bg-primary-soft",
-    );
+    const tone = "text-muted-foreground hover:text-primary-hover hover:bg-primary-soft";
 
     function handleClick() {
         overwhelmDetector.requestBreak();
