@@ -3,30 +3,32 @@ type: guide
 title: Quickstart
 description: Orientation for a new developer on Continuum — what the product is, how to run the SvelteKit frontend and FastAPI backend locally, how to sign in, where the main systems live, and which wiki page covers each task.
 tags: [quickstart, onboarding, setup]
-verified:
-  - by: openwiki/0.4.3
-    at: 2026-10-27T00:41:19.118Z
 sources:
   - id: openwiki-source-8037e2358a2c4f9b2c722a11
     resource: repo://AGENTS.md
+  - id: openwiki-source-82a325da453da1db06378e6d
+    resource: repo://backend/config.py
   - id: openwiki-source-fcffbe3e28749eaf9a39557c
     resource: repo://backend/main.py
+  - id: openwiki-source-c034c695277ec964fa4adfb2
+    resource: repo://backend/private_access.py
   - id: openwiki-source-a2371d6362e5db4bc834ad03
     resource: repo://CLAUDE.md
-  - id: openwiki-source-196170e31ff8ec60a116165b
-    resource: repo://docs/README.md
   - id: openwiki-source-1047363cf615000e4c9bb694
     resource: repo://frontend/package.json
   - id: openwiki-source-d61d83066a37e33b8d45f791
     resource: repo://start.sh
-generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
+generated: { by: "claude-code", at: "2026-10-28T04:26:57.052Z" }
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-10-28T04:26:57.052Z
 ---
 
 # Quickstart
 
-Continuum is Jonathan's personal legacy and financial handover for his son. The recovery prioritizes recording his words and practical information, preserving complete saves, and making a readable copy his son can use. It is also end-of-life planning software: one place for a person's accounts, documents, medical wishes, contacts, letters and memories, plus **Pulse**, a welfare check-in that alerts chosen guardians if the person stops responding. Its users may be planning ahead or grieving, so user-facing text is deliberately gentle ("Save my thoughts", not "Submit").
+Continuum is Jonathan's personal legacy and financial handover for his son. Current owner direction is features and usability first: recording his words and practical information, preserving complete saves, and making a readable copy his son can use. Commercial features stay deferred, and security, administration and infrastructure work happen when Jonathan asks. It is also end-of-life planning software: one place for a person's accounts, documents, medical wishes, contacts, letters and memories, plus **Pulse**, a welfare check-in that alerts chosen guardians if the person stops responding. Its users may be planning ahead or grieving, so user-facing text is deliberately gentle ("Save my thoughts", not "Submit").
 
-The stack is a SvelteKit 2 / Svelte 5 single-page app (`frontend/`) and a FastAPI + SQLModel + Alembic backend (`backend/`), deployed as one service on Railway at `https://continuum.estate`. The former root Next.js README is archived under `docs/archive/`; use `docs/README.md` as the current documentation index. `legacy_nextjs_archive/` is that old code.
+The stack is a SvelteKit 2 / Svelte 5 single-page app (`frontend/`) and a FastAPI + SQLModel + Alembic backend (`backend/`), deployed as one service on Railway at `https://continuum.estate`. The former root Next.js README is archived under `docs/archive/`; use `docs/README.md` as the current documentation index. Open work is tracked in `docs/PUNCHLIST.md`; the recovery task cards in `docs/RECOVERY_EXECUTION_PLAN.md` are complete. `legacy_nextjs_archive/` is that old code. In production `/` redirects to the `/marketing2` home page.
 
 ## Run it locally
 
@@ -54,7 +56,7 @@ Vite proxies `/api` to port 8000. Defaults use SQLite (`continuum_saas.db`) and 
 
 ## Signing in locally
 
-- `dev@continuum.im` / `dev123` — seeded on every backend start if missing.
+- `dev@continuum.im` / `dev123` — seeded on backend start outside production, if missing. Registration is closed unless `SIGNUP_ENABLED=true`, so local sign-up needs that setting.
 - Password verification is required for every account; the former hard-coded bypass is removed.
 - Magic links are written to the configured local outbox in local mode. A request receipt is not proof of sent or delivered email.
 
@@ -71,7 +73,7 @@ Vite proxies `/api` to port 8000. Defaults use SQLite (`continuum_saas.db`) and 
 | Routes and module pages | `frontend/src/routes/` (`modules/<name>/`) |
 | Sidebar and catalog | `frontend/src/lib/config/navigation.ts` |
 | Data sync | `frontend/src/lib/services/sync.svelte.ts`, stores in `frontend/src/lib/stores/` |
-| Project docs and current plan | `docs/` (index `docs/README.md`) |
+| Project docs and open work | `docs/` (index `docs/README.md`, open items `docs/PUNCHLIST.md`) |
 
 ## Working conventions
 

@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:6375ae91b2916738840a6cd6eaaf1d2e2e06d937373ba73d8d1ec46a504edfd3",
+  "pageVersion": "sha256:e951b2ce9008a8f0f854e76da2eacffafc0a1f525817913fff3e075ccbcd0387",
   "claims": [
     {
       "id": "claim_dd98b1ecf5c04641828d3793abb2012f",
       "statement": "All backend settings are fields of one Pydantic Settings class in backend/config.py, with SQLite as the default DATABASE_URL, 15-minute access tokens and 7-day refresh tokens.",
       "evidence": [
         {
-          "resource": "repo://backend/config.py#L21-L144",
-          "version": "repo-lines-v1:sha256:a3ad86f48bdc8ec9f918f08a1cda28264a534d1c76a2ffa79f41a8a01a013596:eyJzZWxlY3RlZExpbmVDb3VudCI6MTI0LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJmYzg2MzMxYzkwYjc4Y2RiOTE3ZmQ1YmQ2OWZjMDcxNGQ1YTVmZTg0NjBkODc2Mjc5ZTE1ZmY0MmZmYzcyMzVjIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI3YTIyZmNjNjViMDMzNzE4NDk1NDA5YzM0NjVhOWIyZmQwZmMxMjg5YjJjZjJjYjE5NjAwNmZjMGRmY2QzZGVlIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlMWFjZTM1OTNlN2U5MjEwMzg1NzIyMDY1NzRhNmFhZDA3MGYxNjI5MzViNGYzOWY0Y2Y0MWZiMjRlNmRjMmY1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJhNjEwMjEzMzQyNTk5YTJiYWIzNTI1MmJhYThkZWE5Mzk2NzFiMzVmMjE2NzA4OGY1NDY2NzgxN2NkMjk0MTc1In0"
+          "resource": "repo://backend/config.py#L21-L135",
+          "version": "repo-lines-v1:sha256:43d869a057c9be33713a51e72aedbd7bf4e72732d5c3b83f2f0031029e517986:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJmYzg2MzMxYzkwYjc4Y2RiOTE3ZmQ1YmQ2OWZjMDcxNGQ1YTVmZTg0NjBkODc2Mjc5ZTE1ZmY0MmZmYzcyMzVjIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0NDk5ZjQ2YTE4MzcxNDBlMzAyODBkMWFhMGQyMzYyM2M5MDczMzBhY2MwMmY5NGM5ODViYTIzZDNiNTY0MDAzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlMWFjZTM1OTNlN2U5MjEwMzg1NzIyMDY1NzRhNmFhZDA3MGYxNjI5MzViNGYzOWY0Y2Y0MWZiMjRlNmRjMmY1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI5ZGFmMzhkNmI4MzFlZjgxODE3OGJiNjllODI3NzU3ZDdhMzFiYTM1YzFkZWEwZTE0YzA3NWFhNGM4YTYyNzIyIn0"
         }
       ]
     },
@@ -27,8 +27,8 @@
       "statement": "In production, RP_ID, ORIGIN and FRONTEND_URL left at localhost defaults are replaced with the continuum.estate domain, and RAILWAY_PUBLIC_DOMAIN fills RP_ID and ORIGIN when they are still defaults.",
       "evidence": [
         {
-          "resource": "repo://backend/config.py#L168-L197",
-          "version": "repo-lines-v1:sha256:b21e11d17341db67f54f68e74e63a1f83df8418a71274e821921a4aae976fb5d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZTRiYTRhMWE3YmIwM2JhZGQ3YTliMjQ2MGNhNDJmMzhlZjExOWNmNzBjN2JmODBkZDA2NGNiMmM2NmMwMDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyYWIwOTBiY2QxNjIwZmE2MmVhZWUxNTdhNzRmY2E2MzVhYTI5ZTEyY2JmZmQ2MThiNTc5MmQ4N2JjMDNhM2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5ZTI2NmEwNDRkNmU3NWY1NWY4NTIyMDljOTBkNDEyZTBjZmJjZGJhMDJkMjY5NjM1ZmI2YzMxMmFmOTA4NzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3OTk1ZjBkNTk2NjJlMzYxZDZhNWE3NTIyNTNmNDZlMDVhNGE0MzgwMjZmZjA1YWFkMDg0YzkyZDQ0M2JkMjMifQ"
+          "resource": "repo://backend/config.py#L161-L197",
+          "version": "repo-lines-v1:sha256:eee0b83f2e84f59712530aebc22dcecdd9734dab6a5a540ff5a79ae471cd9703:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZTRiYTRhMWE3YmIwM2JhZGQ3YTliMjQ2MGNhNDJmMzhlZjExOWNmNzBjN2JmODBkZDA2NGNiMmM2NmMwMDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyYWIwOTBiY2QxNjIwZmE2MmVhZWUxNTdhNzRmY2E2MzVhYTI5ZTEyY2JmZmQ2MThiNTc5MmQ4N2JjMDNhM2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5ZTI2NmEwNDRkNmU3NWY1NWY4NTIyMDljOTBkNDEyZTBjZmJjZGJhMDJkMjY5NjM1ZmI2YzMxMmFmOTA4NzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3OTk1ZjBkNTk2NjJlMzYxZDZhNWE3NTIyNTNmNDZlMDVhNGE0MzgwMjZmZjA1YWFkMDg0YzkyZDQ0M2JkMjMifQ"
         }
       ]
     },
@@ -37,8 +37,8 @@
       "statement": "In production, validate_production_config results are logged as warnings and do not stop startup.",
       "evidence": [
         {
-          "resource": "repo://backend/config.py#L267-L326",
-          "version": "repo-lines-v1:sha256:235ebe1de0b1bb071cc4296352fcd44d148d5b4096833a93222c257cfcf93c55:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhODdhOTNiNTBhM2FjZTdmOTBkN2EzZTlmYmFiYzg2NzIxNjlhMWE4ZGNmMWU5NjljMzY4Yzc2NTVmMTg1YzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzZWFhMmFiZjA3NzhjMmNiODUyNTRiMWYwOTE3NWMwN2JkODMxM2RjNGIxZDU2NjRiNmFlOTU2OGQ2NGM5MWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY4ZTQwNzBkNDNiYTMxMzdmNWEyZWVmYzQ4MWMwYjY5YTg2OTdhMjZhN2VkMzY5MDc4ZGFmYWNlYWMzMzE5MmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwZTViYzBmZTE4OGNmNTkwMWRlOTdjNjc3YjU4NjM5N2NmMzUwMTY3N2VkNzE0MjFiNDAwZDBiMjY0OTM5MWEifQ"
+          "resource": "repo://backend/config.py#L267-L320",
+          "version": "repo-lines-v1:sha256:a6db41b7b42dc4e4c41909bdb2fc1d2fc9fed5700a54eeeb1aa66859e0fee306:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhODdhOTNiNTBhM2FjZTdmOTBkN2EzZTlmYmFiYzg2NzIxNjlhMWE4ZGNmMWU5NjljMzY4Yzc2NTVmMTg1YzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5N2I0N2JiODFjZTkzY2JhNjdhZmMwODY5OGE4MGNmYTA5M2E4NjY3ZTljOWY5NjUzMzc4MThkNjU3OGQxODUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY4ZTQwNzBkNDNiYTMxMzdmNWEyZWVmYzQ4MWMwYjY5YTg2OTdhMjZhN2VkMzY5MDc4ZGFmYWNlYWMzMzE5MmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI2NTNkMTAwNTkyY2MwNGQwODExMDlkZDc3ZjBjZTgzMTVmYThmNjI0MDg3ODZkZDRlNWEwZjY2NjY3MmRiOTkifQ"
         }
       ]
     },
@@ -57,8 +57,8 @@
       "statement": "Startup sets DEBUG or INFO logging and requests JSON file output only for ENVIRONMENT=production; setup_logging always keeps console output human-readable and writes a rotating file under backend/logs.",
       "evidence": [
         {
-          "resource": "repo://backend/main.py#L48-L54",
-          "version": "repo-lines-v1:sha256:862f4cf2b26caf4e7b096c270f71ac5c42688b66c63811771119bef22eefc392:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODdjZmYzZjE3ODQyZGVjNmU3ZTkxYzNlM2I4ZmNlMGE4MjJmYzMxMTI3MzgxYjAwZjQ0YTlmMTMzMzMwM2EyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzBjMWYxODhmMTQyZWQ3YTgyNDY4MGIyMDcxNzJjNTUxOWJjNjE0YTQ4ZmRhN2NmMTY3ZWRiOGRkZjc5OTU2YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTg4ZDRlZTAxYmEzMTdlMDQzYjI5MmIxYzJmNWU2OTU4Y2IxMzZhMTE4ZDQ2ZTQ0NTE1YzQ5ZmQzOTE2ZmI1NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzIwM2ZhNWY4NDAwMGE1OWY2OTkzMGQyOGY4ZGMwM2M5ZjI4MmYyZDA2OTc2YjQzM2JjZjEwZGIwNDEzZDQ2NyJ9"
+          "resource": "repo://backend/main.py#L50-L56",
+          "version": "repo-lines-v1:sha256:b49932c259fd623176b99684d09d99821ab20d325092818218dbbbee5ea112c1:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGJlNzA1ODE0NTcxNmY2YzliNjhlMzBhZDMyNmNmOTFmOTkzMDg1ZGJmZTk1Y2ExOTJjNDJhZjZlODk5MGRmYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWIyNGVkY2U0N2JiNTk3MDJkM2ViNzQ1NDY1ZmZjMWIzNzgxNWIzZDJkM2Y1ZDU5ZWI3NThkZTA1N2U3MTAwNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDY3OTg2NTJiYmIxMmE1NzJiOGIwNjRmMDhlNjQwZDk2ZjA1OGYxNzkyZmQ0Yjg1ZTQ0NGM3OGU4OGNhNmM0YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2QyNDBiMTAyMmE4MGQ4ZGY3OTBmZmY1MTY2NjViZmMyY2NiMjFlOWMwYmNlMmUwOTcwMmJjMDNmYTBmZDJmNiJ9"
         },
         {
           "resource": "repo://backend/utils/logger.py#L120-L177",
@@ -71,7 +71,7 @@
       "statement": "log_audit records user/client/action/resource context and can defer commit to the caller so the audit row and primary change share a transaction; its own immediate exceptions are logged.",
       "evidence": [
         {
-          "resource": "repo://backend/routers/estate_data.py#L282-L293",
+          "resource": "repo://backend/routers/estate_data.py#L279-L290",
           "version": "repo-lines-v1:sha256:b2a4deb4e37f546a7ea46673f54c58a7a1da769459acb6a17704bd752f97cb44:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiMzBkN2I1MTRlOWUxMmMzMjllMGM0YzY3MDY0ZGYxMjVjMDA1NzU4NDRjNjkwMWI2NzI3M2Y1Mzg5ODhhYzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc3ODAxYjhiMjhiMjRlMDRmY2E5ZjQ5Njc5ZDE1MDc1NDk3MzE0ZTFlNjU1YTczN2JhNDQxODI5MzNiYWM3YzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY2Nzc0NWRhYTczMDg5YjZmM2UyMDVjYWZhMTEzYzRjNzJkMGQzZjUxNjJlN2ZjNmIxOTY4MDg1NzdiN2I5MTQifQ"
         },
         {
@@ -95,8 +95,8 @@
       "statement": "Nixpacks installs Python 3.11 and Node 20, installs pinned requirements into /opt/venv, builds the frontend and starts uvicorn backend.main:app on PORT defaulting to 8080; Railway health-checks /api/health as declared in .railway/railway.ts.",
       "evidence": [
         {
-          "resource": "repo://.railway/railway.ts#L54-L69",
-          "version": "repo-lines-v1:sha256:555cb77e30163bf3dfaf4807e0a710f82b566c6d230751f23795a1486b7ff047:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjMTdmMzY4Yzg3NGE0MmE3NDJkMjUxZjEzNjEyYmY0Yzg0NTU0NDcyODA1OTFkYmQ0NzcwNjQxNzRlMGUwY2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyZjQxNjZkZWQ3YTQ1MjNmZmY5MmMyNGEyNWFhM2M5NmM5Y2Q2MjVlNjEyODVkZGUwZTc1OTY2ODY5YmRjOWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2NzBjZGJiOGMxMDBmZjkzYjJmOGUxOGZmNzVjZDNhMDU4NDRjMzM5MmIxMTM4MjQ3MDJkMjMzMjNjMzdkNzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjODVhOTFhZWQxODJjY2FkNmMxZTc4OThjOWU5YWU2YjZjNzg2NzkzNTE0MGYzM2U0NTg4ZDFmYzE2MDMyNmEifQ"
+          "resource": "repo://.railway/railway.ts#L53-L70",
+          "version": "repo-lines-v1:sha256:cc26d9b689237a740d543d04be94cae873c263cf6ebcf2fe56bac35ac85fd4f4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4NjAyODcwOWQ4YTlhOTM2Yzc3Yjg4NWM3ZDlkNmUxNzk4ZTZjZGY3NzYyMDFjODQ5NmI0YTA2ZmVkMmUzZWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3MDI1NGVmYmQzYzdhYzgyOTEzODk1ZDhiYjFiZmMxYmZmZmFlY2E2NDZhMzMwNmVjMWY0ZjYzNzI5MjBmODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVjMDJhZjNlMTM0ZWJmZTM3YzY3YTk1YjNhMDNmMjMxZDJlNjI2ZDU4OWI1ZTZlMjFhOGI0YTljZTZlNGQwYTQifQ"
         },
         {
           "resource": "repo://Procfile",
@@ -123,8 +123,8 @@
       "statement": "The production HTTPS redirect uses X-Forwarded-Proto and never redirects /api/health.",
       "evidence": [
         {
-          "resource": "repo://backend/main.py#L240-L250",
-          "version": "repo-lines-v1:sha256:af500da5598df8283d7035af71c466ccf6f24ca5a89e68539cb4c25058cfdcf7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjViNzk0MjEyM2I0YmYwNTU1MzU5MGM5NWQ3N2I5NmI4NGViOWVlMzgwZjE0NTk0YmMyMGMwZTY3OGUzMDVjNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkY2YyMGQwMjc5NDQ4NjYzZTllNjY4ODI5ZGZhNjQyNzQ1MTA1NGZlZjZkYmU5MjIzZmExZmVmMDgxNjIzOGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMxZTc4YzIxMGZhZGIxOGFiN2QwMTVlZjJiYzE4ZGM1YTc1ZGVhNDRlODA1ZTJlNDVjYzQ4MjU3ZDk3YTY5NzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5YTQ4ZGMyYzdmZWUzYmI4NDdkMzlkZGUwN2VlZDllZjYxMjA1ZTg1MzRjNTAzMDZiZTg1OWI5OWI5ZDRhZGUifQ"
+          "resource": "repo://backend/main.py#L247-L258",
+          "version": "repo-lines-v1:sha256:fff0472357b874ad38087ab2552d57563b516fde9ac30d3ea13f3e4918d284fe:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzOTdmNDlkMjE0Mjc5MjVjNDI5MGNiNjFlY2I3OTAzYjg2NTU2NmJiYTE2ZjI3MjYxZjA4OTU4OTc2NWExZjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkY2YyMGQwMjc5NDQ4NjYzZTllNjY4ODI5ZGZhNjQyNzQ1MTA1NGZlZjZkYmU5MjIzZmExZmVmMDgxNjIzOGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIzODYxMzBhNWMyM2NkZGY0ZTM5OGI2NWViNmJjODJlOWE5MjkzYzc0MDliMzgxZWJmMmQyMTMzZmYyYTRhYjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiZjAyNTIxM2NlYTFhMDNkN2U4ZjMwODIwMzBhMjE1MDg1MDVlOTg2OTRkYTk2ZGJjZjAxMWU5ODQwMjgzYzQifQ"
         }
       ]
     },
@@ -144,7 +144,7 @@
       "evidence": [
         {
           "resource": "repo://.railway/railway.ts#L1-L74",
-          "version": "repo-lines-v1:sha256:ed011c56d66d91c53228ed72214ff226bf79105d39ecb0851d35b19d6423f191:eyJzZWxlY3RlZExpbmVDb3VudCI6NzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4N2VkNzljYzJhNWM1NjczMDQxMTAwZDU1ZTZkNjE5MmI2ZjllM2EyYTZkZmNiNmU1NzhhYzUyYjkwNWQ3ZmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "version": "repo-lines-v1:sha256:21374024ff24e85afe492f3544277b4ffd1eba2639392b3685dc21667a861b49:eyJzZWxlY3RlZExpbmVDb3VudCI6NzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4N2VkNzljYzJhNWM1NjczMDQxMTAwZDU1ZTZkNjE5MmI2ZjllM2EyYTZkZmNiNmU1NzhhYzUyYjkwNWQ3ZmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
@@ -153,14 +153,56 @@
       "statement": "PRIVATE_ACCESS_USER_ID is an optional positive-integer setting in backend/config.py that defaults to unset.",
       "evidence": [
         {
-          "resource": "repo://backend/config.py#L29-L32",
-          "version": "repo-lines-v1:sha256:d654f53af9a6b3e67736b23d8e8b5ce83af7dd2612910c81d3cbbf71a514ca8b:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTMzN2M3OTVhMzI0ZmM4NzAzYTFmMTc3ODcwODlkNmFjYjlmNTJjY2E5NjRlZjgzNGQyYWVhNGE1OTkwYmRlMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjg0YWNmMjg1OWM4MWVkMDNiYmViZDllNWM1MzYxYWMwNTBhM2Y4NzM3MzUzYjQxYzljMmIyODMwYjczYzE1ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzMxZDI2Njc4ODE2NDUxZjNiZWIzN2ZkNzQ4MWM1YzA3MDk2YjA4OWUyZTkwYzFhYWFhNzY2NjBmODI3NDk2NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWNmMmYwZTIwYWJhMzczOTE3NmJlYmZhOWU4ODk4NjlkZTQxNDUwMWI5ZWI0ZjljZTQwMmI1Y2M4YjA0NDI0YiJ9"
+          "resource": "repo://backend/config.py#L35-L35",
+          "version": "repo-lines-v1:sha256:b84acf2859c81ed03bbebd9e5c5361ac050a3f8737353b41c9c2b2830b73c15d:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjg0YWNmMjg1OWM4MWVkMDNiYmViZDllNWM1MzYxYWMwNTBhM2Y4NzM3MzUzYjQxYzljMmIyODMwYjczYzE1ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjg0YWNmMjg1OWM4MWVkMDNiYmViZDllNWM1MzYxYWMwNTBhM2Y4NzM3MzUzYjQxYzljMmIyODMwYjczYzE1ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzBiYjMxNmU4MWEzNTJlMTFiMzQyYmZlYTUwMGIyYzY5YTRjNzI3ZDU4MDBhMmFkMDdlNTFkMDg2NTYzZmNkOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWNmMmYwZTIwYWJhMzczOTE3NmJlYmZhOWU4ODk4NjlkZTQxNDUwMWI5ZWI0ZjljZTQwMmI1Y2M4YjA0NDI0YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e82593def25c45cb9c88af50eccd34b5",
+      "statement": "An unset DEBUG resolves to true everywhere except production, and the email outbox moves to /data/outbox when uploads live on the /data volume and OUTBOX_DIR is still the default.",
+      "evidence": [
+        {
+          "resource": "repo://backend/config.py#L167-L168",
+          "version": "repo-lines-v1:sha256:26a368e80b1bd8a7f39264bacc13fb9fea12fec0269225ff075ce905df620692:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDUxMzdmYmYyZWQ1Y2E1MWI2ZjdmNWE4MTQyZWY0Zjg4MzUzZmNjODEzNjgxOGEzMWFhNTVkNjJhMjE4YjAwOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5MGQ5ZWRjMDcwYTRjYzk5ZDViOWM5NWZjMzhjNWYyNjA1MDE4NWJlY2RkZTcyMWJmYjIxMmFjNGE1ZDQxYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWZmMzFkYzViMzAxZDNhZWUyYjkwOTZhMTVhMTcxNzU4ZGMwOTAzOWNhOGU5YTEwYmViZTUyNzczNDc1OWIwNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGE0NGMyZTQ3ODczNmEyYjA5MDAyMzMyOWM3ZTE2MTU2OTkwODc5N2ZmNzQ2MTA4ZmMyMjE5ZjI2NWQyYWFkMSJ9"
+        },
+        {
+          "resource": "repo://backend/config.py#L193-L195",
+          "version": "repo-lines-v1:sha256:89c909756c811b90ae16cec9fb3ff3e286c03d909e497ed193378f81b9683c55:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTdmMGU1YjczYTIyNGUwMThiMDM5OWFjM2I1NTlhMzdjZDBiY2EzNDM1NzcxOTY0OTlmZmExNjYwZDFmYzQyNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWZhY2UwNmI4OGMyZGVhNDkzYzVhNjdiZjY5NTIzMWM5NzE3ZjFjYTNkODIxMmM4NjFmYmZlZTljMjI0MjRiOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODdlZGNiNDE5MGJmNzE3ZTE2MGI0MjYzNmM1NDAwZmUxZTNiOGM3MjMzNjBkZWM2MGQ5MmUzZTg0YzIxNzg3NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGUxMWFkMzQ3Y2U1MDFjOThiYzYzMzcwZmZlMzBmNDg2NTE0NjlhY2EzYjdhOGNlMzlhM2JlMGY3MGQyOGJmYyJ9"
+        },
+        {
+          "resource": "repo://backend/config.py#L28-L33",
+          "version": "repo-lines-v1:sha256:abb816417755b5715555d52cc28d8baa61a01f41898d98cb2333530a3bd00114:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmQ5YzNkMTEzNzE2NThjZDZhNDE0NzE3YTA4Yjk4YjVkZmE4M2JmZDFkMmQ1OGVjODY2NmRlZWY1M2M3MDI0OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjc5NzRiN2Q2MTU2NjkwY2VlNGE1NTc2MTM4OWNkMzNjMDdiMzZkN2QzNWNlMWM5ZDVjZjFhYWQwOTRlNDlkNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDI2ZDcwOTY2ZGFmMTc0OThjM2VjZjU0ZWRkNmY0YTZiMWVhZjExMDc1ZjQ1NDExMWIzYzAyMTUxZWViOGQ2MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_2016aca313954a3fbd3918c9cae2f337",
+      "statement": "SIGNUP_ENABLED defaults to False, and RESEND_API_KEY selects Resend as the first-choice email provider ahead of Postmark, SMTP and the local file outbox.",
+      "evidence": [
+        {
+          "resource": "repo://backend/config.py#L28-L35",
+          "version": "repo-lines-v1:sha256:a74c4c66682a3a7d3a16c8fe24630b6045ebdcf4c4b66d09030e970124b7c977:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjg0YWNmMjg1OWM4MWVkMDNiYmViZDllNWM1MzYxYWMwNTBhM2Y4NzM3MzUzYjQxYzljMmIyODMwYjczYzE1ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjc5NzRiN2Q2MTU2NjkwY2VlNGE1NTc2MTM4OWNkMzNjMDdiMzZkN2QzNWNlMWM5ZDVjZjFhYWQwOTRlNDlkNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWNmMmYwZTIwYWJhMzczOTE3NmJlYmZhOWU4ODk4NjlkZTQxNDUwMWI5ZWI0ZjljZTQwMmI1Y2M4YjA0NDI0YiJ9"
+        },
+        {
+          "resource": "repo://backend/config.py#L72-L82",
+          "version": "repo-lines-v1:sha256:dedcd51e22a9e01eda1608a2b3ef25641296270cc136df8c19ce237ea3880240:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZmZjJiYjZiNDcyMTYxZTg0ZGU5MTdlOTNlNmM2OTgyOTY5NzZiNTQzNzgyN2FkNzY5YjVmNDI5OTIxMzRjZmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNjODQxNzBiNGIzOTM0MzEwNTRjZThjNzIxZGQwYWY2NTcwZDUwNGI2MmQzNGE2MjBhYzU4MGU5NmE1NWVkYTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6aa8f899397b45f2b37ee3add53d7b3a",
+      "statement": "backend/tests/test_signup_closure.py is a unittest run directly from the repo root against a disposable SQLite database and outbox with startup skipped.",
+      "evidence": [
+        {
+          "resource": "repo://backend/tests/test_signup_closure.py#L1-L20",
+          "version": "repo-lines-v1:sha256:dcd4bdf20aecd836b42e42a54ed0b83ab039d2aaf1d4fa19913c8dac67aad123:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0N2MzZWZhOWYwZTBmZTgxNWE4ODkwYjk3MjBmZmE5NTIzODE0ZTcwYTM2NjdjODhmNmFiZTIxZGVhZDM2N2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZDNkOTYzYzg0NGYxZmI1MWRjOWMzYTRlMjdkY2UwY2E5NTUyZDEwNzlkMjg2MGM3MWFkNWEzNTA0YzU3NGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM0MDdlMDVhMDA4NzlkMTZjZDg1ZTRhZWI2ZjU3YWNhMjVjYmI0ZmY3Mzc5MGUwNjJjNGJhYWNmYmUxZTIzMjQifQ"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-10-27T18:31:56.115Z"
+    "at": "2026-10-28T04:26:57.052Z"
   }
 }

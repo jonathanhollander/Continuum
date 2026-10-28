@@ -8,8 +8,8 @@ sources:
     resource: repo://frontend/src/lib/services/sampleRegistry.ts
   - id: openwiki-source-b8f9cc4b612027ee1143245a
     resource: repo://frontend/src/lib/services/sync.svelte.ts
-  - id: openwiki-source-5ea2480e87f58467c23047b0
-    resource: repo://frontend/src/lib/services/syncService.ts
+  - id: openwiki-source-746daec8819ea3e5f5305b27
+    resource: repo://frontend/src/lib/stores/activityLog.svelte.ts
   - id: openwiki-source-db154f029b9b856c12f66692
     resource: repo://frontend/src/lib/stores/estateStore.svelte.ts
   - id: openwiki-source-c46629f42a68b4eff315a78a
@@ -18,10 +18,10 @@ sources:
     resource: repo://frontend/src/lib/stores/persistence.ts
   - id: openwiki-source-a8a830617ab03d4b55d49d9a
     resource: repo://frontend/src/routes/%2Blayout.svelte
-generated: { by: "claude-code", at: "2026-10-27T18:31:56.115Z" }
+generated: { by: "claude-code", at: "2026-10-28T04:26:57.052Z" }
 verified:
   - by: openwiki/0.4.3
-    at: 2026-10-27T18:31:56.115Z
+    at: 2026-10-28T04:26:57.052Z
 ---
 
 # Frontend State and SyncManager
@@ -52,14 +52,16 @@ Admin-generated sample records are tracked per account/profile in `frontend/src/
 
 ## Writes
 
-- **`create(data)`** POSTs first and appends the server response only on success. Writes remove server-managed ID/user/timestamps consistently. A failed create retains its draft/recovery identity for retry.
-- **`update(id, partial)`** applies the local patch optimistically, serializes requests to that row, and uses the returned server row as the confirmed base. Failure rolls back touched fields without replacing unrelated concurrent changes; the editor's draft remains available and the error is rethrown.
+- **`create(data)`** POSTs first and appends the server response only on success. Writes remove server-managed ID/user/timestamps consistently. A failed create is remembered on the device (so Try Again still works after the form closes or the page reloads) and retains its draft/recovery identity for retry.
+- **`update(id, partial)`** applies the local patch optimistically, serializes requests to that row, sends only the fields this update changed (so values read earlier never overwrite another device's newer edits; the server merges), and uses the returned server row as the confirmed base. Failure rolls back touched fields without replacing unrelated concurrent changes; the typed edits are remembered on the device for Try Again, also after a reload, and the error is rethrown.
 - **`delete(id)`** removes optimistically and treats 404 as already removed. On failure only the removed row is restored, preserving other concurrent changes, and a retry is offered without rethrowing. A failed post-delete follow-up never restores a record already removed on the server.
-- **Standalone singleton saves** serialize from the confirmed base plus the explicit patch. Pending newer patches stay visible across an earlier failure. **Profile slices** share one record and post only changed keys so one slice cannot overwrite another slice's newer values.
+- **Standalone singleton saves** serialize from the confirmed base plus the explicit patch, but post only the keys that patch changed; a failed save is remembered on the device for Try Again. Pending newer patches stay visible across an earlier failure. **Profile slices** share one record and post only changed keys so one slice cannot overwrite another slice's newer values.
 
 Operations retain ownership throughout fetch, response and retry. Account changes stop work, keep recoverable drafts under their original namespace and prevent old responses or retry notices from mutating the new account's active records. Quiet background bookkeeping avoids changing the primary save status or displaying unrelated failures.
 
 Failures show a gentle message through `notifications.showError` with technical details attached. When a store calls `setAffirmationContext(...)`, successful creates and updates also show an affirmation (for example `'letters'`, `'medical'`, `'heirlooms'`).
+
+`keepNewest(count, field)` caps a long log to its newest rows on this device (the activity log keeps 200 by `timestamp`, matching the server limit).
 
 `audit()` re-fetches the remote list and compares ids with the local list (`onlyLocal`, `onlyRemote`, `matches`), for diagnostics such as the data settings page.
 
@@ -80,8 +82,6 @@ continuum_acc_{activeAccountId or 'anonymous'}_prof_{currentProfileId or 'owner'
 ```
 
 `activeAccountId` comes from `keyringStore.ts` (a local list of signed-in emails) and `currentProfileId` from `profileContext.ts`, so one browser can hold separate caches per account and per profile. `setStored` updates an in-memory mirror and attempts localStorage. If the browser refuses, the newest value remains in memory and `cacheStorageState` reports that limit; `retryStored` retries device persistence only and never repeats an already-confirmed server POST. `createProfileStore(key, initial)` builds a plain writable store that re-reads on account or profile change and writes back on every change; stores built this way stay local-only unless they also use a SyncManager.
-
-`frontend/src/lib/services/syncService.ts` is the legacy whole-blob sync: a two-second-debounced POST of `transparent_data` to `/api/estate`. New stores should use a manager instead.
 
 ## Adding a synced store
 

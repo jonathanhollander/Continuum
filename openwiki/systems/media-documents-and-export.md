@@ -3,9 +3,6 @@ type: system
 title: Media, Documents and Export
 description: Where Continuum keeps uploaded files and recordings (backend media storage on local disk or S3, browser IndexedDB, inline data URLs), how vault documents are stored, the IndexedDB-to-server media migration, and how the PDF export and the printable Red Binder assemble a readable copy.
 tags: [media, uploads, storage, documents, export, pdf]
-verified:
-  - by: openwiki/0.4.3
-    at: 2026-10-27T00:41:19.118Z
 sources:
   - id: openwiki-source-82a325da453da1db06378e6d
     resource: repo://backend/config.py
@@ -37,7 +34,10 @@ sources:
     resource: repo://frontend/src/routes/binder/%2Bpage.svelte
   - id: openwiki-source-3d0548204610eff66b0d9787
     resource: repo://frontend/src/routes/export/preview/%2Bpage.svelte
-generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
+generated: { by: "claude-code", at: "2026-10-28T04:26:57.052Z" }
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-10-28T04:26:57.052Z
 ---
 
 # Media, Documents and Export
@@ -50,7 +50,7 @@ Files reach storage by three different routes, depending on which module saved t
 
 | Endpoint | Behaviour |
 |---|---|
-| `POST /upload` | Multipart upload; checks MIME type against image, video, audio and document allow-lists and size against `MAX_UPLOAD_SIZE` (10 MB); stores the file and a `MediaFile` row with `storage_provider` and `doc_category` |
+| `POST /upload` | Multipart upload; reads at most one byte past `MAX_UPLOAD_SIZE` (10 MB) so an oversized file is refused without loading it all, checks the MIME type against image, video, audio and document allow-lists, then sniffs the first bytes: a recognised signature overrides a mismatched browser label, and an image or PDF claim with no matching signature is refused with 400; stores the file and a `MediaFile` row with `storage_provider` and `doc_category` |
 | `GET /` | List the user's non-deleted media |
 | `GET /{id}` | Metadata |
 | `GET /{id}/download` | Authenticated owner read; S3 files redirect to a presigned URL, local files are streamed with `FileResponse` |
@@ -61,7 +61,7 @@ Files reach storage by three different routes, depending on which module saved t
 
 - `LocalStorage` writes under `UPLOAD_DIR` (`backend/uploads`) in `{user_id}/{category}/{module}` folders.
 - `S3Storage` uses `boto3` against `AWS_ENDPOINT_URL` / `AWS_BUCKET_NAME` (S3 or MinIO) with keys `{user_id}/{category}/{module}/{filename}` and one-hour presigned URLs.
-- `HybridStorage` (the one the router uses) tries S3 first when `S3_ENABLED` is true and falls back to local disk if the upload fails; it returns which provider was used. `S3_ENABLED` defaults to false, so files go to local disk unless it is set.
+- `HybridStorage` (the one the router uses) tries S3 first when `S3_ENABLED` is true and falls back to local disk if the upload fails (S3 gets its own in-memory copy of the bytes, because boto closes the stream it uploads, so the fallback still has the data); it returns which provider was used. `S3_ENABLED` defaults to false, so files go to local disk unless it is set.
 
 `/api/health` checks that the upload directory is writable.
 
@@ -77,7 +77,7 @@ The canonical IndexedDB store is `continuum_media_db`; `utils/mediaStorage.ts` r
 
 ## Document records
 
-The active generic `/api/data/documents` and `/api/data/vault_documents` aliases both use `Document`. The document vault is `/modules/legal-documents`; historical dedicated router files are not mounted. Records describe the paper/original location, digitized status and optional stored file reference; describing where an original is kept does not imply an uploaded copy exists.
+The active generic `/api/data/documents` collection uses `Document` (the older `vault_documents` alias has been removed). The document vault is `/modules/legal-documents`; historical dedicated router files are not mounted. Records describe the paper/original location, digitized status and optional stored file reference; describing where an original is kept does not imply an uploaded copy exists.
 
 ## One snapshot for the handover
 

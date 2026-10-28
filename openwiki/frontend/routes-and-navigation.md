@@ -4,6 +4,8 @@ title: Routes, Modules and Navigation
 description: The SvelteKit route tree, the feature modules under /modules, how the sidebar groups and module catalog are defined in navigation.ts, how the root layout guards routes by login and role, and where UI labels and translations come from.
 tags: [frontend, sveltekit, routing, navigation, localization]
 sources:
+  - id: openwiki-source-fcffbe3e28749eaf9a39557c
+    resource: repo://backend/main.py
   - id: openwiki-source-67fc218f0ef51113a017c8bf
     resource: repo://frontend/_archive/routes/concierge-window/%2Bpage.svelte
   - id: openwiki-source-cf13a34d11e5e91843676cce
@@ -20,20 +22,24 @@ sources:
     resource: repo://frontend/src/lib/stores/localization.ts
   - id: openwiki-source-a8a830617ab03d4b55d49d9a
     resource: repo://frontend/src/routes/%2Blayout.svelte
+  - id: openwiki-source-626977162aa089188fd347cc
+    resource: repo://frontend/src/routes/%2Bpage.ts
   - id: openwiki-source-e785dc8115d96129a58b8654
     resource: repo://frontend/src/routes/modules/%5Bid%5D/%2Bpage.svelte
   - id: openwiki-source-9f12d421e5b1384ec4277355
     resource: repo://frontend/src/routes/modules/%5Bid%5D/%2Bpage.ts
+  - id: openwiki-source-59ab84fdf2da3d773ed27079
+    resource: repo://frontend/src/routes/modules/anniversary-manager/%2Bpage.ts
   - id: openwiki-source-6ea17f618ad95605f8e1011a
     resource: repo://frontend/src/routes/modules/executor-guide/%2Bpage.ts
   - id: openwiki-source-060e6e4ffd9b41dc41adcfd0
     resource: repo://frontend/src/routes/pulse/%2Bpage.ts
   - id: openwiki-source-0eed3417ae81cad84b7c92a7
     resource: repo://frontend/src/routes/pulse/portal/%5Btoken%5D/%2Bpage.ts
-generated: { by: "claude-code", at: "2026-10-27T18:31:56.115Z" }
+generated: { by: "claude-code", at: "2026-10-28T04:26:57.052Z" }
 verified:
   - by: openwiki/0.4.3
-    at: 2026-10-27T18:31:56.115Z
+    at: 2026-10-28T04:26:57.052Z
 ---
 
 # Routes, Modules and Navigation
@@ -44,20 +50,20 @@ All routes live under `frontend/src/routes/` and render only in the browser (the
 
 | Area | Routes |
 |---|---|
-| Public / marketing | `/` and `/marketing2` |
+| Public / marketing | `/marketing2` (with `/marketing2/features` and `/marketing2/how`); `/` permanently redirects there, keeping the query string |
 | Auth | `/login`, `/signup`, `/auth/*` (magic-link verification) |
-| Onboarding | `/start`, `/welcome`, `/onboarding` |
+| Onboarding | `/start`, `/onboarding` |
 | Main app | `/dashboard`, `/catalog`, `/settings` (including `/settings/data`), `/help`, `/resources/grief-support`, `/tools/ai-audit` |
 | Feature modules | `/modules/<name>` — one folder per module |
 | Handover and export | `/binder` (the "Red Binder"), `/export/preview`, `/executor`, `/for/[token]`, `/for/preview/[contactId]` |
 | Pulse public pages | `/pulse/respond/[token]`, `/pulse/verify/[token]`, `/portal/[token]`; the older `/pulse/portal/[token]` address redirects to `/portal/[token]` |
 | Administration | `/admin`, `/admin/ai-settings`, `/admin/users`, `/admin/automation`, `/admin/health`, `/admin/readiness`, `/admin/ui-audit` |
 
-The old `/estate/[id]`, `/concierge-window`, `/debug-textarea` and `/test-registry` page sources live under `frontend/_archive/routes/`, outside the active route tree. No `/wizard` page exists in the active tree; the layout still recognizes that prefix in its public-route guard, which does not create a route. `/pulse` redirects to `/modules/pulse`, preserving its query string.
+The old `/estate/[id]`, `/concierge-window`, `/debug-textarea` and `/test-registry` page sources live under `frontend/_archive/routes/`, outside the active route tree. No `/wizard` page exists in the active tree; the layout still recognizes that prefix in its public-route guard, which does not create a route. `/pulse` redirects to `/modules/pulse`, preserving its query string. The former `/welcome` page has been removed, and `/modules/anniversary-manager` now only redirects (301) to `/modules/calendar`, where Important Dates live as the same `calendar_events` records.
 
-Modules under `frontend/src/routes/modules/` include `financial-accounts`, `insurance`, `contacts`, `legal-documents`, `medical`, `home-manual`, `pulse` (with sub-pages `vault`, `transparency`, `messages`, `history`, `contacts`, `escalation`, `settings`), `subscriptions`, `pets`, `property`, `digital-guardian`, `letters`, `heirlooms`, `legacy-journal`, `visual-memories`, `time-capsule`, `timeline`, `funeral`, `family-hub`, `calendar`, `scenario-mode`, `simulator`, `qr-codes`, `analytics`, `activity-log`, `anniversary-manager`, `advanced-registry`, `builders-console`, `treasure-hunt`, `executor-guide` and `executor-toolkit`. `/modules/executor-guide` is a redirect to `/modules/executor-toolkit`. Each module page usually pairs with a store in `frontend/src/lib/stores/` (see [Frontend State and SyncManager](/openwiki/frontend/state-and-sync.md)).
+Modules under `frontend/src/routes/modules/` include `financial-accounts`, `insurance`, `contacts`, `legal-documents`, `medical`, `home-manual`, `pulse` (with sub-pages `vault`, `transparency`, `messages`, `history`, `contacts`, `escalation`, `settings`), `subscriptions`, `pets`, `property`, `digital-guardian`, `letters`, `heirlooms`, `legacy-journal`, `visual-memories`, `time-capsule`, `timeline`, `funeral`, `family-hub`, `calendar`, `scenario-mode`, `simulator`, `qr-codes`, `analytics`, `activity-log`, `advanced-registry`, `builders-console`, `treasure-hunt`, `executor-guide` and `executor-toolkit`. `/modules/executor-guide` is a redirect to `/modules/executor-toolkit`. Each module page usually pairs with a store in `frontend/src/lib/stores/` (see [Frontend State and SyncManager](/openwiki/frontend/state-and-sync.md)).
 
-`/modules/[id]` is the generic registry fallback. It renders `ModuleContent` keyed by the current module ID; vault-like IDs redirect to `/modules/legal-documents`. Named module folders take precedence, keeping asset/contact editors on their own routes. Unknown registry IDs show a return-to-catalog state.
+`/modules/[id]` is the generic registry fallback. It renders `ModuleContent` keyed by the current module ID; vault-like IDs redirect to `/modules/legal-documents`, and its load function returns the registry title (or "Page Moved") for the layout breadcrumb. Named module folders take precedence, keeping asset/contact editors on their own routes. Unknown registry IDs show a return-to-catalog state.
 
 ## Navigation configuration
 
@@ -67,7 +73,7 @@ Modules under `frontend/src/routes/modules/` include `financial-accounts`, `insu
 
 - Each `NavItem` carries `label`, `key`, `href`, `icon` (from `lucide-svelte`), `allowedRoles` (`Owner`, `Executor`, `Family`) and optional flags such as `isCoreAction`, `isQuickStart` and `isExecutorEssential`.
 - A separate list defines the Pulse sub-navigation.
-- `catalogCategories` drives the `/catalog` page: **Life & Legacy** (letters, heirlooms, journal, visual memories, time capsule, timeline, final wishes, family tree) and **Helpful Tools** (binder, executor guide, practice run, QR codes, insights, activity history, important dates, scenarios, calendar, Additional Records, treasure hunt, builder tools). `advanced-registry` is labelled **Additional Records** (purchase history, maintenance, claims and account wishes) in both the sidebar and the catalog.
+- `catalogCategories` drives the `/catalog` page: **Life & Legacy** (letters, heirlooms, journal, visual memories, time capsule, timeline, final wishes, family tree) and **Helpful Tools** (binder, executor guide, practice run, QR codes, plan check-in, insights, activity history, future scenarios, event calendar, Additional Records, treasure hunt, builder tools). `advanced-registry` is labelled **Additional Records** (purchase history, maintenance, claims and account wishes) in both the sidebar and the catalog.
 - `coreActions` is the subset across all groups flagged `isCoreAction`, used for onboarding progress.
 
 The separate owner **For My Son (preview)** entry appears after My Instructions and opens recipient setup/preview. **Help & Resources** appears after Extras. Both stay out of module grids and the navGroups role guard.

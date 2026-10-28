@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:5ec1613e619891868d0328a73221f2f8f6c3ae692e4cdbc40436a5c68fe812f0",
+  "pageVersion": "sha256:f8a13c200112091146558f1243788fd1d7edb030a4405880b2f47fb2d43428b8",
   "claims": [
     {
       "id": "claim_ea09dd541b594a0695042b528af21e63",
-      "statement": "The email provider is Postmark when POSTMARK_API_KEY is set, otherwise SMTP when SMTP_ENABLED and SMTP_HOST are set, otherwise a local outbox directory.",
+      "statement": "The email provider is Resend when RESEND_API_KEY is set, otherwise Postmark when POSTMARK_API_KEY is set, otherwise SMTP when SMTP_ENABLED and SMTP_HOST are set, otherwise a local outbox directory.",
       "evidence": [
         {
-          "resource": "repo://backend/services/email_service.py#L102-L109",
-          "version": "repo-lines-v1:sha256:bfdfd55b974925c29c0c63459d28f681d79f6517b735d9d3a01f3686e9cd944b:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWQ4ZmQ0MDMwOGE1YWI2OWQ2ZjQyMjQ2NTQzZDhhYTI0OGNlNjAxZWFkNjhjZmFhMmVkN2FmZjRiODkxOWY1YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzAwNTRmMTVmZDIyYjUxODAzYzMxY2EzYzkyZTVhMTUzZjhkZThkMzFiODAxYTY0ZWNmYzZjYjQ5MDczMWRmNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjZlMDMwZGY1MGU2YzNlN2JhMjE3NzYwOTBiOGUyZjJkZDQxNDNlZmVjMTI3M2QyMzk2ZTY4N2YwMGEwZTM1NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWJkZTBmODdkNmNlM2E1MWY4MmJlYTUzM2Q5ZjIwZjJlMDcyNmNmYTJhZWYxM2E3MzExZmZjZWQ1ZWQzMTI4MiJ9"
+          "resource": "repo://backend/services/email_service.py#L107-L116",
+          "version": "repo-lines-v1:sha256:388b9d25d58d8e3db10ba3c964c0dcb20b08d007dc65a6eb4073f421de25ed05:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkOGZkNDAzMDhhNWFiNjlkNmY0MjI0NjU0M2Q4YWEyNDhjZTYwMWVhZDY4Y2ZhYTJlZDdhZmY0Yjg5MTlmNWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwMDU0ZjE1ZmQyMmI1MTgwM2MzMWNhM2M5MmU1YTE1M2Y4ZGU4ZDMxYjgwMWE2NGVjZmM2Y2I0OTA3MzFkZjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI2ZTAzMGRmNTBlNmMzZTdiYTIxNzc2MDkwYjhlMmYyZGQ0MTQzZWZlYzEyNzNkMjM5NmU2ODdmMDBhMGUzNTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImViZGUwZjg3ZDZjZTNhNTFmODJiZWE1MzNkOWYyMGYyZTA3MjZjZmEyYWVmMTNhNzMxMWZmY2VkNWVkMzEyODIifQ"
         }
       ]
     },
@@ -17,22 +17,22 @@
       "statement": "A failed Postmark send falls back to SMTP when enabled or to the local outbox, and a missing Postmark library switches the provider the same way.",
       "evidence": [
         {
-          "resource": "repo://backend/services/email_service.py#L221-L264",
-          "version": "repo-lines-v1:sha256:4f10aef2aa630cadbbbfcac9a7aa4568e2f7495d70ba34922f440832ebd4373e:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxZjA2ZjIyM2MwODlmZDhjYmFkYzc1ODhlNDBhM2JjYWM1ZDRkMjg4M2YwZTJlODY2OTVjMWI3ZjVkNWVkYzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1NjFhMWMxYWZlNGVhMjljYmQ3NjdmNjU3NzBjMzJhN2Y0OWRhZGY3NTI3YTZlMzA1ZjI1YjM4MjdiZDY4M2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4NjIzMDFhOTI0ZDQwMzlkNDgxYmUwYTQ1MTBkNDY3ZDFlMzg0NDNhZTQ0MGE2MWUxNjA0YzQ0ZjIyYWE3YTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYzNjUxNDkzZTQzNDc1YjhhNGVhNjk3ZmEzMDdiZTM3ODE3MjgyNzQyMjgwMWM5ZjQ0MjI1ZTQ5NGU5YjYxN2QifQ"
+          "resource": "repo://backend/services/email_service.py#L258-L302",
+          "version": "repo-lines-v1:sha256:1f288e0a49a0a691bf93dbdfba4a70e6c7e23729a1ef4cfdcc7120ae39eac3f4:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxZjA2ZjIyM2MwODlmZDhjYmFkYzc1ODhlNDBhM2JjYWM1ZDRkMjg4M2YwZTJlODY2OTVjMWI3ZjVkNWVkYzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkxMzIyOGZhNDZlOGVjYzNjMGI2ZjU1YzVkNmFkMDkxODZlMThhNmU3YzA3MTcyODc3ZGVkMDEwOGI0NGI2ZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYxNzYxMzAzYmY4ZDE4MGI5MmU2ZjliNTIzZDE0YjU4M2ZmZTcwMmUxNGQ0YTExOTY2NjZiMzU1YzRlMjQzYzkifQ"
         },
         {
-          "resource": "repo://backend/services/email_service.py#L90-L100",
-          "version": "repo-lines-v1:sha256:011caac633ee19a0cce7f7dfac2fcb30d93a526ff9ace9ea3472497004dff0b8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViNTRiYzhlN2Y1ZTZmOTc2MzFiZDJjZGY3NTM2OTA4MmUxNzc1YzAzYTI4OTNkNWQ4MGFhYjliZDYxYzQxMDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhOTliOWFjNDk1ODA3ZTY0OTA4MzIyNmZkNTNiZjdmNDBiYWZjNTQ0ZjYyZDFiYzAzODJlYTA0MTI3MjBhMTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQzZGM5YjhmMThlZWZlNzNiZGMyZTc3ZjYzYWNkZWU1MDVkODExMTM2MWMyZTA5NTJmNGRlMjUwNGI0NDQ4N2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZkMzVhZjA0YWI1MzBlOWU5NDg2ODQyZjFiMmQxMjdlZjA0Nzc1NTBiZjJlYTM5YTRjNDVlZjg2NDI0YzllN2QifQ"
+          "resource": "repo://backend/services/email_service.py#L90-L105",
+          "version": "repo-lines-v1:sha256:648d7a442313114dbc028b532691d3b2a9360984e1148eb170d588bb79f08d6f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmODc3NGY3ZTIyYmNiNGUxZDg4NDczOTc3NmJjYTMwM2M3MDJiOGQzMjA3YjI0ZWIxN2YwZThiM2JkZWQ3ZjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhOTliOWFjNDk1ODA3ZTY0OTA4MzIyNmZkNTNiZjdmNDBiYWZjNTQ0ZjYyZDFiYzAzODJlYTA0MTI3MjBhMTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI5YTEwOWVkNmUwNzY0MDI0NjBlZGM4NGQyNzNkMzY5OWI1ZTIzNmFkODQ3NDBiNTIzMWFlZWY0Yzk1ZjUzNTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZkMzVhZjA0YWI1MzBlOWU5NDg2ODQyZjFiMmQxMjdlZjA0Nzc1NTBiZjJlYTM5YTRjNDVlZjg2NDI0YzllN2QifQ"
         }
       ]
     },
     {
       "id": "claim_8805a1bce38445818fff1ed5c5cd228b",
-      "statement": "Local mode saves each email as an HTML file in OUTBOX_DIR named from timestamp, subject and recipient.",
+      "statement": "Local mode saves each email as an HTML file in OUTBOX_DIR named from timestamp, subject and recipient, with unsafe filename characters replaced.",
       "evidence": [
         {
-          "resource": "repo://backend/services/email_service.py#L314-L339",
-          "version": "repo-lines-v1:sha256:8dce731eb87df70064c0009440143bccf53812a992f8d4245464ce4c6ee20bb1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzOGNmMDVmZTFjY2E3MTgzNWZkMDEyOGJmYWIxMzZjNzMyOGQxZjMxN2VhZmFlZmFkNDgwZjdjYzkzMjA1YzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3OWNiNmU4Mjc3ZjU1NjdhMjU4NTVjZDMwMDlmYzgxZjFkZmVjNDhmNWFlZmMwODA2OTFiZTBjN2Y0MTUyMmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjY2EwNzg0MjM4OTdlNmRjODZiNjJlOTQ5YTk4OWQ4YWM1ZDg1ODUyYjRkN2RhNjY2YTQ2YTFkNTk1YWY1MTcifQ"
+          "resource": "repo://backend/services/email_service.py#L351-L380",
+          "version": "repo-lines-v1:sha256:0f55bee59b4f3fce62e244b9d573ec5a505180510f9dd4ec2e2444983b7014fd:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzOGNmMDVmZTFjY2E3MTgzNWZkMDEyOGJmYWIxMzZjNzMyOGQxZjMxN2VhZmFlZmFkNDgwZjdjYzkzMjA1YzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1NjljYjA5MjgwZWUwNzgxOTQ1ZTQ4ZDQwNDFiZDJkZmFhZTY5MWFkMmVhYmY1ZDNjYmEwODQ2YzcyMTZjYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3OWNiNmU4Mjc3ZjU1NjdhMjU4NTVjZDMwMDlmYzgxZjFkZmVjNDhmNWFlZmMwODA2OTFiZTBjN2Y0MTUyMmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc2OTcwMTUwMjc3Mzg4NzgyNWM3YzNlNmQxN2RlNDBiMDg0ZGQ2NjhhNzkzNDVlOGI2YTg5NDBmYjM2ZGQwZjIifQ"
         }
       ]
     },
@@ -41,8 +41,8 @@
       "statement": "send_email renders a Jinja2 template from templates/emails, creates a pending EmailLog row when given a session, and updates it to the send result or failed.",
       "evidence": [
         {
-          "resource": "repo://backend/services/email_service.py#L111-L219",
-          "version": "repo-lines-v1:sha256:4115598239370132b9f8ed77f32a6ea56cc4272746300463877f06a086b8e9aa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJhZTE5NTM4Y2VmNDRiM2M1YzQ3N2E5NjY5NjYyNGFkYTE4MTg2NzM2NTExM2Y5NDA0OGQ1OWY4ZjYwNWQyYzhiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI5ZWJjNTJjNzUwMTM2MmZiNTljZDhkZWUzN2U0NTE3MzBiMDBjMDI2ZTgyNGVjOGRlOGM0YzQwZGViNmRlZTgxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJmYTk2ZGFkNmEwZjM1NjdhNjA3MjQ1MDViOWI4ZmFkNThjZjU4ZmQ4NDE5MDUxMTk0ZmYzOWJhZGVkODUwYTIzIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI5YmNhN2U3ZmY5OTFmZjFiM2Q1ZjJjODdhYjc1N2E0ZmJjYWE4ZTE2Yzk1MGU3Y2Y3ZDg3ZmZlMmZmYjA0YzAzIn0"
+          "resource": "repo://backend/services/email_service.py#L118-L228",
+          "version": "repo-lines-v1:sha256:06d5252144ae6263aa368720a8350cb29028cc8e1bb57dfc3b1519c2876e23eb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTExLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJhZTE5NTM4Y2VmNDRiM2M1YzQ3N2E5NjY5NjYyNGFkYTE4MTg2NzM2NTExM2Y5NDA0OGQ1OWY4ZjYwNWQyYzhiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI5ZWJjNTJjNzUwMTM2MmZiNTljZDhkZWUzN2U0NTE3MzBiMDBjMDI2ZTgyNGVjOGRlOGM0YzQwZGViNmRlZTgxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJmYTk2ZGFkNmEwZjM1NjdhNjA3MjQ1MDViOWI4ZmFkNThjZjU4ZmQ4NDE5MDUxMTk0ZmYzOWJhZGVkODUwYTIzIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzZmNiOTVkNTg0MjQ1NmViMDI5YTI2ZDRlY2Q2MzM3ZjY5ZTUyMWU5NDcwYzczNzUwM2E1MzY1MDYwMTVlZTU5In0"
         }
       ]
     },
@@ -79,12 +79,12 @@
       "statement": "The email router exposes owner/admin status, admin resend, Postmark webhook and bounce endpoints; administrative access uses the saved User.is_admin designation.",
       "evidence": [
         {
-          "resource": "repo://backend/routers/email.py#L118-L185",
-          "version": "repo-lines-v1:sha256:74c61d6bb33bf0e0e534e4b08e2a4a4d64015ebb6a1bd85a5e2db6a04a186414:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2NjU1YTRjNWU2ZDZiNDlmODlhZjM0YmRkOTVkZWMzYThiNGY4MzU2MWZmMDlkZmRkM2FhMWM3ZDllYTVmYjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMyNzZhOTUyNzFhZTU4MWVlYjQ5ODY3Yjg0NTBhMzgyMmQzMWI1NTlmZmUzMDZhNjA0ZWU4M2ExZWIzYWIyNDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxNjNmZDQ4MTkyZDM4N2Q5ODcwODJjMjVhNjZjNGZjNGMyYmIyM2I1MmNhNzJjNzk3MzQzNWNiM2I1MzExMTMifQ"
-        },
-        {
           "resource": "repo://backend/routers/email.py#L328-L463",
           "version": "repo-lines-v1:sha256:4b8cb7eb02c9418eecd8bf0f5b1216f5f0838e730363bd2754a21a6e5a6b15b1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTM2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJkM2Q3ZTA5Njc4NzVjMzI3MmE1OTgzNmY2ZjM5ZWFhMjUxNGM0Y2JkM2I1ZDlhMzRlNzM0OGRiNzBkZmJjZWRmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI2M2EyMjQ2YjIwNjIxMDYzMDZiNmVmZTkzYWZlOGUwN2Y5OGM2NmE1NjkxNzIxM2VhMDgzNThiZmNmYTYwZTQ0IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI2ZDJkMmVmZWQ1YjYzNzBhMzdjNmI4ZmJjMTc5YjZhOWRlMmE4YWVlYzI3MWQ5ZjEwMTdhZjJmYmQ0ODA2OWQ4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        },
+        {
+          "resource": "repo://backend/routers/email.py#L44-L200",
+          "version": "repo-lines-v1:sha256:4aff8bab64a0adf8f64badc78c7ea3721689ef37b26e72ee7acec9d11cad2c0c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTU3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJlMGMwMzg2MzVkOTU4NTcwM2UwYmNjNDQ5NDRhZDJkN2I3OTc4ZWM3MzhiYjFhMWNkZWM1NzMxNzYxZmJkZGNlIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0N2E5MTVlMTU1YjAzYjYxOWY1OTkyNDExOGJlNGNkMDkxMWJlZjg3ZTI5NmU2NDY5MTAwZTFmNWIwYjk0OWM3IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwZGFjNTAxZDRhZmM1NzY0ZDE2ZTFkZDgxZjc4YjgzZGZmNGNiMGQ4N2YzNmQ0NjM4NWE2ZWFkZTUzM2JhMzljIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIxMWY1ZjYxMzFiNzg2ZDA4Njg2YjYwNjZkNTM1MDI2OGY4OGU3YmQ4ODI5MjJkMmIyZGFmZWZhMzEzNGUxOGQwIn0"
         },
         {
           "resource": "repo://backend/routers/email.py#L70-L75",
@@ -131,8 +131,8 @@
       "statement": "Support discovery uses Tavily search and returns 503 when TAVILY_API_KEY is missing rather than fabricating local search results.",
       "evidence": [
         {
-          "resource": "repo://backend/routers/support.py#L22-L70",
-          "version": "repo-lines-v1:sha256:0e3cf376ad7ef726b1febd44e983434d8470b175c3e5d3ea60243f588fd4d05a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2ZDA5YTA0NzBjOWJiMzdjMmJmYTM5NmIwYjYyNjE0MjYxMTc4MzQ0MzBkMmY3YWRjNGIzYWFkN2QxNTFiMjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0MDgxM2Y3MzViOTU0ZGI5YWZjODBkZmFhNmQyM2I1MWFmMWE1NDY5ZjU1OTE5M2EzYzQxN2ZhNjRmNDY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZlM2UzMmU2ZTRiNGM2MmUyYTEwNjM3NTlhYWM1ZDBiYWRiYWQ5ZWJmODVlYmVkODU0ZTU0ZTYxMmE1ZDYyZGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://backend/routers/support.py#L24-L80",
+          "version": "repo-lines-v1:sha256:eaec9e86c022428020d8f25587c8211e7ec2362a314b334702c6af46a79db213:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjNGQzMjk2ZTg3YzY3ZGNmMTdlNzUxMzRiMjE5MTUwZWQ0ODMwNDAyOWJhZDQxODgyMTY1NDE5NzkxZTQzOGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyMGRhMGEyMDU5YjMxYTM3MDNkNTEyMTM3ODdmMjBhNTJiZWVjN2NjMTk5ZDI4NzdkMzA1NDNmNmY5ZDVjZjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZlM2UzMmU2ZTRiNGM2MmUyYTEwNjM3NTlhYWM1ZDBiYWRiYWQ5ZWJmODVlYmVkODU0ZTU0ZTYxMmE1ZDYyZGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
@@ -141,12 +141,12 @@
       "statement": "EmailResult distinguishes provider_accepted, saved_local and failed; sent_at is populated only for actual provider acceptance, which still does not prove human receipt.",
       "evidence": [
         {
-          "resource": "repo://backend/services/email_service.py#L185-L194",
-          "version": "repo-lines-v1:sha256:ff445369942b4de866177ccbfa339af19ae3cf4bb5fade1173acb129973fc64f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhZWEzMzI4YmYwMDIwZTJjNmY5Zjk4Yzc3MWQyYTZiNjk1YWNkMGU2YzkzNWQxN2VkMzExZTE3ZDE4NjhmNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0MjA3N2MzYWJiOGJhMzdlOTAzZWFhYWJkNTU2ZjFhZjEzOGUwZDBhNWYyMzY1MzgwODNlOTliNjc0ZDY2MDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJiMWZlODk1YWEwZjE0Mjk2NmNjMzc4MzIwYjU4MGQ2ZGRjMGMyZjAyZDY1ZDFkODFlNzM0Mzg1Y2UxZGY4NmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkzOTliZGI4MmIzMzcyYTU3MjgyNWQ0YjFlOTI4NmNlNTQwMzdlYjhlNDkyZmNiMmJhZWJjYTliZTM1ZmYxYzAifQ"
+          "resource": "repo://backend/services/email_service.py#L194-L204",
+          "version": "repo-lines-v1:sha256:4c089dcc92dd689965c666aacb309d195d0d64dc890d832ef4e61a096c153030:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhZWEzMzI4YmYwMDIwZTJjNmY5Zjk4Yzc3MWQyYTZiNjk1YWNkMGU2YzkzNWQxN2VkMzExZTE3ZDE4NjhmNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJiMWZlODk1YWEwZjE0Mjk2NmNjMzc4MzIwYjU4MGQ2ZGRjMGMyZjAyZDY1ZDFkODFlNzM0Mzg1Y2UxZGY4NmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk3ZmUyOTdjMjE1ZDU2Y2UxNjVkMTM0Nzc4ZjEwOGI2ZmYzZjU5NDliYmFlNWU2ZGRmMDYxOGJhM2I1NGI0NDcifQ"
         },
         {
           "resource": "repo://backend/services/email_service.py#L43-L61",
-          "version": "repo-lines-v1:sha256:d36635fcb82030f4f2f0e3b312f37b4c45a87711c01e06e241069977f527cd68:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlN2ZjOTYyZWI3NjkxYmQxZjg4YjA0M2JlM2E5MmViOTU1OWJkNWY5NDEzZDYyMzc5YmQ4ZDgwZWIyNDM3OWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiN2IzMjZhY2M1MTA4NGUzOTljNmU5NmExY2E3YmE5MzM0MzMyOTdlMmFjNmRjMTVhYWZhODQ0ZGY5YzgyNzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxNGMwZjRkNjM5Y2VhZGI2MTIzMzYyMTk0Yjk2ZmQ5YzczZWZkZGVmMjk4MTFiYmFjMGMxYTc0MmJiYjFhNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY5MDdkZjFjMDhhNTI4NzZiZDU0Yzk5ZTUxMmFlNWJkYjBlM2U0MjNjMmM1NjkyNmNiMTFhZWFkMjZjM2M5ZDMifQ"
+          "version": "repo-lines-v1:sha256:760d85dbde4dfb0182265b85933bb8e2ad445b2dd74b8ba58c6d58de26702421:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiZGFjNmZiMzdmYjI3M2ViYTIzNzMyMmRhZjZlNWU5ZjY0ODViMWQxZGNlMTQyZTc5NWExNTcxYmI1ZjY3MDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiZjQ1NmY4OTBmNGUyMzhjZDUyM2E0YTFkMzk0YWJmYjc4NWQxMDA3YzUzZmQ5YWY5NTdlYWU2M2E5YTQ0ZDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJmZDVjNjMyYWNlYzBkY2MyYTM3MmE3ZWE1N2FjNWIzM2E3Yzc1OGI4MzQyM2Q3YmViMmRlOTk1MGY5NDJhZTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI1YmNmMDRlMmViYjZmOTNhNmJkZmZlMmJmMDQyNzA2NjBlNjIyZTJlNDY4ZGYzNWJhMjdiMmQ1ZGJkMGMyMDAifQ"
         }
       ]
     },
@@ -237,10 +237,30 @@
           "version": "repo-lines-v1:sha256:9a57ff515371d38ede1601141dc294026d360e13bd9f0aba65b82645a8d25a4b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjZjliZjdjODc3YjJjOWUwMTcyZTZlMjYyYjZmNTMyYzk4NGQwNmIzZGIyMDc2N2YzODA1YmRiZTZmNTk5ZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJmNzk1YjM2NWFkMjVkYWI0MzE2NjM4MjVmOTZiM2ZlZWRlZDliZGQ2MmE1YTJmMTUzYjExYTE2MDY3NDEyYTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmZTQ0NGYwYzJjNWM0MDI0MTk4NjljYmUyZGEzZWM2Y2M3NTJiMjMwMjdiNmZkMGEwNGNhOGI0MDZmMzA3ZTEifQ"
         }
       ]
+    },
+    {
+      "id": "claim_1102c83f3d724314bf5ceee7b5146375",
+      "statement": "A Resend send posts to the Resend HTTP API with a 15-second timeout and raises on a non-2xx response, so the send is logged as failed without falling back to another provider.",
+      "evidence": [
+        {
+          "resource": "repo://backend/services/email_service.py#L210-L256",
+          "version": "repo-lines-v1:sha256:f77cf29e7e69af4aef55ccf3c75aaa9bbe8693d1e5b4a95889ee72dcc3260635:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxNTBlMzIwNTBhYjM4NTA4NGE5ZjZmMTM2YWM2MjBkZDM0NTNhN2MyMmExN2QyOTc1MDRlMzU2ODZjNDRlZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMxMWM0N2JmNGE2MjBiM2IzNjNhNjI5MGVmMWNlNmQ1YzViMjk3ODcwZmVmZDk4ODYzNjE5NWZhOTBhNWM1MDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEwYWU2MGMyN2EwYzFkMzI4ZDI2MmYzZjUyZGJjMTBmNTc0MmZkNTEwMmMzNTAwMWI5ODljMmFjMjg3YTk5OGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjliY2E3ZTdmZjk5MWZmMWIzZDVmMmM4N2FiNzU3YTRmYmNhYThlMTZjOTUwZTdjZjdkODdmZmUyZmZiMDRjMDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5dac598edbf34259a7bbaf60bb6306ae",
+      "statement": "Support discovery requires a signed-in user, caps location and category lengths, and GET /api/support/discovery/available reports whether a Tavily key is configured.",
+      "evidence": [
+        {
+          "resource": "repo://backend/routers/support.py#L24-L40",
+          "version": "repo-lines-v1:sha256:d9fae0812dcc6d00c7cf8488571fa4ba554a521d70cb45f13b0f523dea919bf8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjNGQzMjk2ZTg3YzY3ZGNmMTdlNzUxMzRiMjE5MTUwZWQ0ODMwNDAyOWJhZDQxODgyMTY1NDE5NzkxZTQzOGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2YTcxNTI1NzJlZTg0ZjEwOTA2Yzc0YjlmMmE5MjQzNGRkYWIwZTNjNDI4MTNiMDRlNTk3ZWZjZWM5NTFiMjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZlM2UzMmU2ZTRiNGM2MmUyYTEwNjM3NTlhYWM1ZDBiYWRiYWQ5ZWJmODVlYmVkODU0ZTU0ZTYxMmE1ZDYyZGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2NzdiYWE2OGVmZWVmNWE1MzY1Nzg2ZWFiODkyODAwZWVlY2JlMGEwMTFjNmFmYThmM2YzODEzZWNjMWEzNGYifQ"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-10-27T18:31:56.115Z"
+    "at": "2026-10-28T04:26:57.052Z"
   }
 }

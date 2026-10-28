@@ -8,6 +8,8 @@ sources:
     resource: repo://backend/auth.py
   - id: openwiki-source-87d81f66b697288fe96a6b72
     resource: repo://backend/challenge_store.py
+  - id: openwiki-source-82a325da453da1db06378e6d
+    resource: repo://backend/config.py
   - id: openwiki-source-43cec924cc2faa688a976aa9
     resource: repo://backend/csrf.py
   - id: openwiki-source-c034c695277ec964fa4adfb2
@@ -16,10 +18,10 @@ sources:
     resource: repo://backend/routers/auth.py
   - id: openwiki-source-5314c7322469359ea3b510ed
     resource: repo://frontend/src/lib/stores/auth.ts
-generated: { by: "claude-code", at: "2026-10-27T18:31:56.115Z" }
+generated: { by: "claude-code", at: "2026-10-28T04:26:57.052Z" }
 verified:
   - by: openwiki/0.4.3
-    at: 2026-10-27T18:31:56.115Z
+    at: 2026-10-28T04:26:57.052Z
 ---
 
 # Authentication
@@ -44,14 +46,16 @@ Each successful sign-in returns `{ access_token, refresh_token, token_type: "bea
 
 **Passkeys**: registration start creates the `User` row (with an empty `public_key` placeholder), stores the WebAuthn challenge, and returns options; finish verifies the attestation and stores the credential as a `PulseCredential` row. Login start optionally looks up the email's credentials to restrict the prompt; login finish pops the challenge, verifies the assertion against the stored public key and sign count, and updates the sign count. The relying party comes from `RP_ID`, `RP_NAME` and `ORIGIN` (see [Development, Configuration and Deployment](/openwiki/operations/development-and-deployment.md)).
 
+Challenges live for 300 seconds. In production they are kept in a PostgreSQL `webauthn_challenges` table; if Postgres is still waking when the store is created, table setup is retried on each later use so the store stays on Postgres for the life of the process (there is no in-memory fallback). Development uses an in-memory store.
+
 Password login always verifies the stored hash; the former hard-coded account bypass is no longer present.
 
 ## Private-preview mode
 
-Setting `PRIVATE_ACCESS_USER_ID` to a user id restricts the whole app to that one account (`backend/private_access.py`). Unset, every check below is a no-op.
+Setting `PRIVATE_ACCESS_USER_ID` to a user id restricts the whole app to that one account (`backend/private_access.py`). Unset, every check below except the signup gate is a no-op.
 
 - `GET /api/auth/access-status` is public. It returns `{private_mode, signup_enabled, access_allowed}` for the optional bearer token's user, with `Cache-Control: no-store` and `Vary: Authorization`.
-- Password signup and both passkey-registration steps call `require_signup_enabled()` and answer 403 `Continuum is in private preview.`
+- Password signup and both passkey-registration steps call `require_signup_enabled()`. Registration is open only when `SIGNUP_ENABLED` is true and private mode is off; otherwise these answer 403 with the signup-closed message ("Continuum is open to existing members…"). This applies even without `PRIVATE_ACCESS_USER_ID`, and the HTTP middleware refuses the same POST paths.
 - Password login, magic-link verification, passkey login finish (by the credential's owner), refresh and logout (by the refresh token's owner) call `require_allowed_user()` and refuse any other account with that 403.
 - Passkey login start resolves the allowed owner and limits the offered credentials to that owner's passkeys; a different email is refused.
 - A magic-link request for any other or unknown email returns the usual generic receipt without sending anything.
@@ -61,7 +65,7 @@ The HTTP middleware applies the same rule to every other `/api` request (see [Ba
 ## Tokens
 
 - **Access token** — HS256 JWT signed with `JWT_SECRET_KEY`, `sub` = user id as a string, expiry `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` (15).
-- **Refresh token** — 64 random URL-safe bytes; only its SHA-256 hash is stored in `refresh_tokens` with a 7-day expiry. `POST /api/auth/refresh` rotates it (old token revoked, new pair issued). `POST /api/auth/logout` revokes one token; `POST /api/auth/logout-all` revokes every token for the user.
+- **Refresh token** — 64 random URL-safe bytes; only its SHA-256 hash is stored in `refresh_tokens` with a 7-day expiry. `POST /api/auth/refresh` rotates it (old token revoked, new pair issued) and deletes expired `refresh_tokens` rows, including used magic-link markers past their expiry. `POST /api/auth/logout` revokes one token; `POST /api/auth/logout-all` revokes every token for the user.
 
 `get_current_user` decodes the Bearer token, requires an integer `sub`, rejects tokens whose `type` is anything other than absent or `"access"` (so a magic-link token cannot be used as a session), and loads the `User`; any failure is a 401. `optional_current_user` returns `None` instead of raising.
 
@@ -80,7 +84,7 @@ The login page (`src/routes/login`) drives the passkey flow with `startAuthentic
 
 ## CSRF and rate limits
 
-The CSRF middleware (see [Backend API and Routers](/openwiki/architecture/backend-api.md)) exempts the sign-in endpoints by exact path — token, signup, refresh, the four passkey routes, magic link and its verify — plus the public Pulse `/api/pulse/respond/` and `/api/pulse/confirm/` and `/api/pulse/nudge/` token routes. Rate limits are per client IP via `slowapi`, set on each endpoint with `@limiter.limit`.
+The CSRF middleware (see [Backend API and Routers](/openwiki/architecture/backend-api.md)) exempts the sign-in endpoints by exact path — token, signup, refresh, the four passkey routes, magic link and its verify — and the Postmark bounce webhook, plus the public Pulse `/api/pulse/respond/` and `/api/pulse/confirm/` and `/api/pulse/nudge/` token routes. Rate limits are per client IP via `slowapi`, set on each endpoint with `@limiter.limit`.
 
 ## Related pages
 

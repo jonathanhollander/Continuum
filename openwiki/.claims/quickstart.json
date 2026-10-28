@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:ad68a998f94d3416db0fdeb5f17e4686f03df24c0c0ea430cc9397bab66c4a20",
+  "pageVersion": "sha256:b2c5738330692d8a7756c2517aefeddc946762daa9fce47adbc440480ce5249c",
   "claims": [
     {
       "id": "claim_3c5c1d3eb1694fc6bbb80914e0e02b34",
       "statement": "Local setup installs pinned backend requirements, runs alembic upgrade head from backend/, starts the backend with python -m backend.main from the repository root, and runs the frontend with npm run dev on port 5173.",
       "evidence": [
         {
-          "resource": "repo://CLAUDE.md#L10-L30",
-          "version": "repo-lines-v1:sha256:2085f1bc7a2a0641fbbfb6c134d95e68360fd6f05ad14c52ed0593fb20d4289c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1MmQ3MTExMDNkNTBhNDM3ODMwYzZmYmNkMDRmYjRiYWI0OWEwZjgyZjZkMjZkMWM3OTFjNmU4NDg4ZGQwOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFjNDk5YmZjMTRlNjg3MjE1NzI1OWIwMGY1YmUwOWNlNjkxN2MyYmVjNDczZTk1YjczYWNlZWJiZTNmODBhYjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjViZTEyZDQxMGU5NzE0ZWY2M2IwMDVkN2IzZDE4NmM0MWQyMjEyN2YzMmVlM2I4ZWQ3ZmUyZjFlYjUwMGFlMTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4OTNkOWNmNjJlNDUzY2FhY2U5MmEzNDBjZTkxZTZiZGUxMGY5YmM4ZjdjMWJmOTI1M2ZiZjgwMmFkMmUxNzQifQ"
+          "resource": "repo://CLAUDE.md#L11-L23",
+          "version": "repo-lines-v1:sha256:d5e14ec0a01ca87cf4f2ac9bb2b10e0c54c64fcdf8cff88ed9a3045b17d5e709:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyOWE0OTAwZTI5MmM0NTU0YTQwNTliOWRkMThmOTY1YzgxYzJmMWUxMmZjNDhlODY4MmFlMzI2MzAyOWNiYjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3YzA2YzU2MWQ1YzMyNzM0MzY4NTI2OGE0NmIzMzkxZjM5OThlZWU4OTBkMmJlNTFmMGQyMWNjNGE1M2FlNmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEifQ"
         },
         {
-          "resource": "repo://backend/main.py#L508-L515",
+          "resource": "repo://backend/main.py#L539-L546",
           "version": "repo-lines-v1:sha256:3531dfbd6472dbb84119700699e4cb3ed59c3c31789b05b58abc5d928e3e376c:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjQ4NmZmNWNmOTM2M2I0NDI5MzM2ODAzYjJjOTYwZTczZGE4YzQ3ZmEwYzZmNjc2NThkMTRiMzIzY2QyMmQzNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzBjMWYxODhmMTQyZWQ3YTgyNDY4MGIyMDcxNzJjNTUxOWJjNjE0YTQ4ZmRhN2NmMTY3ZWRiOGRkZjc5OTU2YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjlhMjA5ZDdhN2RjMzNlZDZiMjVjNjgxZjRlNjI0NGRlZGRlYWRjODA3ZGI5ZWI4NzJlZDJlMjZmNTk0ZDNiYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
         }
       ]
@@ -21,8 +21,8 @@
       "statement": "Backend modules import each other with the backend. package prefix, while start.sh runs uvicorn main:app from inside backend/.",
       "evidence": [
         {
-          "resource": "repo://backend/main.py#L13-L23",
-          "version": "repo-lines-v1:sha256:9314d749060b7898d3b0a043448f7040cb201ddac56f62a2b4ce4a79bc7676a8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZDNkOTYzYzg0NGYxZmI1MWRjOWMzYTRlMjdkY2UwY2E5NTUyZDEwNzlkMjg2MGM3MWFkNWEzNTA0YzU3NGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhOTgzNDVjZGFkYzRlYzRkZDE3MTU5M2EwYzFjZTQyYzJmNDlkMjBkMzZmNzk0Njk4YzNiNzk4MTY5MDg0MTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5N2M1MzY1YTgwMDMxMzFjYjUxOGNjZDFmOTRiMmY1Y2QxNjVhODk1OGZlYmJmMzg4NDAxY2QyZDg4ODc2M2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzOGIyMzJlYjNhYTIwNDdhMjE2NDJiODEyY2NjNzUwMzE2OWE2MzRhMjY5OWM5NjRkNDg4YmZhOWE0OGViMGYifQ"
+          "resource": "repo://backend/main.py#L15-L33",
+          "version": "repo-lines-v1:sha256:579eda31f8d92dbcb9aa4bac4a70bbb429bf2c20a7dbef78196e3feb7dcf45a4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZDNkOTYzYzg0NGYxZmI1MWRjOWMzYTRlMjdkY2UwY2E5NTUyZDEwNzlkMjg2MGM3MWFkNWEzNTA0YzU3NGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxODhiNzc4NjRkNzdlOGVjMzY4OWZhODI5YTU1ODAyMzgzMjdmN2E5MTkzYzhjYTUxNmM1ZWRmNGU0ZTA2NzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5N2M1MzY1YTgwMDMxMzFjYjUxOGNjZDFmOTRiMmY1Y2QxNjVhODk1OGZlYmJmMzg4NDAxY2QyZDg4ODc2M2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwMWIwMGZjNmQxYjgyZDkzNWMwOTQ3N2JkNjNjMjZhNWMzNmU2ZTBkNDE5NjM0OGFkODQ5MzgwYWRmZTY5ODcifQ"
         },
         {
           "resource": "repo://start.sh#L1-L18",
@@ -42,37 +42,59 @@
     },
     {
       "id": "claim_dfd9d21a2f9648b7ac8c1d8a72d776d6",
-      "statement": "The backend seeds dev@continuum.im with password dev123 on startup when missing.",
+      "statement": "The backend seeds dev@continuum.im with password dev123 on startup outside production when missing.",
       "evidence": [
         {
-          "resource": "repo://backend/main.py#L188-L210",
-          "version": "repo-lines-v1:sha256:a321ebf8e5bb102acef58312328f9caa22afc9ce849ea87385e72e2a9cdab95d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyNTc2MDQ1ZjFmMWY1ZTM4Mzc5NjIyOWE0Y2UyYjg4MTU3NzFiZjI2MDliYzdjNjkzMzRhNzEyNzZmMjU3MjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliZDMwMGU2NWU4NGRlNGM0NjhhMTVhMmU5Y2I4ZGIxMTIxNjc1MDRjYjZhZmI2YTI2YmY1NmViNGZjN2JiZDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzOWVhM2UyMTNiOTU0MDFiYWQyYTYxYjU1YTVmNDhiMzQxNGE3ZDA4MmIxNjJmYWMyZTY5MTcyMDYzOTk0NzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmYmFjNDU1ZTRmOWZlYTkyNzAyMWFkYWRiNzkwOGVlNjMyYzJiMjFlYmQ2YTIxZTE3ZTYwNGU4MWYxOWUxZmYifQ"
+          "resource": "repo://backend/main.py#L195-L215",
+          "version": "repo-lines-v1:sha256:7c69477b1d5d737e14ac8e9793a3be61157a719ce50f4fa7897b8b5b11ed57aa:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyNTc2MDQ1ZjFmMWY1ZTM4Mzc5NjIyOWE0Y2UyYjg4MTU3NzFiZjI2MDliYzdjNjkzMzRhNzEyNzZmMjU3MjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmM2U2YTJhM2MxZDM0MWU3MjI1OTI3NTc1NzRkNDY2MDcyNGI0NjUzYjUzZTg4NjQyYjNhMGY3NDEyZDExMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzOWVhM2UyMTNiOTU0MDFiYWQyYTYxYjU1YTVmNDhiMzQxNGE3ZDA4MmIxNjJmYWMyZTY5MTcyMDYzOTk0NzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkY2Y0ZDIyODk5ZmExNzY4YzE3MzVkZTQ2NDRiOGNlNTJlMjE0ZmVmMjE4MWM1YzhhZTJlYmRhNzk0Mzg2NjUifQ"
+        },
+        {
+          "resource": "repo://backend/main.py#L50-L64",
+          "version": "repo-lines-v1:sha256:e0bed9d8a2061d99e0e4cab25d647747cc892f52f9064add72e775974cd47a59:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiZTcwNTgxNDU3MTZmNmM5YjY4ZTMwYWQzMjZjZjkxZjk5MzA4NWRiZmU5NWNhMTkyYzQyYWY2ZTg5OTBkZmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhY2MxMzkwNDk2YmY5OTkxNTE1NzQ4ZWUwNDQ0MTBiY2RlOWE1YjA0Y2ZkNmE2YzdlM2IyNzgzY2ViYTA1OTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ2Nzk4NjUyYmJiMTJhNTcyYjhiMDY0ZjA4ZTY0MGQ5NmYwNThmMTc5MmZkNGI4NWU0NDRjNzhlODhjYTZjNGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzNmY4Y2NkMDQ0YzUyMzYxNGU4Njg2N2FmMzdiOTM4OWQ3MzQ4ODBhN2I5N2MwZWM0MTExMTdlMzEwMmM0MGQifQ"
         }
       ]
     },
     {
       "id": "claim_c6fd90e0eb2940e98da5360628d202f5",
-      "statement": "Project documentation lives in docs/ with docs/README.md as its index and the current plan in PROJECT_RECOVERY_PLAN.md.",
+      "statement": "Project documentation lives in docs/ with docs/README.md as its index; open work is tracked in docs/PUNCHLIST.md and the recovery task cards in RECOVERY_EXECUTION_PLAN.md are complete.",
       "evidence": [
         {
-          "resource": "repo://docs/README.md#L1-L12",
-          "version": "repo-lines-v1:sha256:ef0a0bcaf9774a9d1a57a3ba82f72bc1729809ebf4ce8425524d0c42a183de72:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4ZDkyNDEwMzAwMDllZGRhYTVmOTlkOGUxOWVhYTM0YWJkYmI0ZGU3NzYwMDVkNzk1ZDY4M2QwNmZjODRlMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlMmY1YjhjZmE3Y2U2ODJjMTEzNmI5MmQ5ODg3ZmIzMWNjODYwN2E1NjljYWFkYWNjNWQxMzQ3Y2MwNTE0ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVhNDY2ZmViYmY3YzM0N2YyNjY4NGY0MzM3OTAzYjg0ZmZkYjJhMWRhZjRjZjkzMDY1ODA0Y2RmNjM0ZDEzNDIifQ"
+          "resource": "repo://CLAUDE.md#L135-L135",
+          "version": "repo-lines-v1:sha256:69c1084c309aa9c8e45ef24647816e6329ecf8efd823b921dbea6dbe87796db7:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjljMTA4NGMzMDlhYTljOGU0NWVmMjQ2NDc4MTZlNjMyOWVjZjhlZmQ4MjNiOTIxZGJlYTZkYmU4Nzc5NmRiNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjljMTA4NGMzMDlhYTljOGU0NWVmMjQ2NDc4MTZlNjMyOWVjZjhlZmQ4MjNiOTIxZGJlYTZkYmU4Nzc5NmRiNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzU1OTUwNWVjYzM5ZTA0YmY0NzU0ZGZmNWMyODU1MTFmODk1ODk2OWFiZTFiZjAyZTM3ZmMzMDFhMDFmYmMzYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTA2OTI0NGI3MTJmNTA1NjQyMzFhNTY2M2JjYzE2NzFhODM3ODc2YjRjNmE0YzRiNWJlNjY3N2RlMzk3OTZkNyJ9"
+        },
+        {
+          "resource": "repo://CLAUDE.md#L159-L159",
+          "version": "repo-lines-v1:sha256:74884574aa240deb53a3c3167a1a16b43508756799d95ba729f18858233a5ca6:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzQ4ODQ1NzRhYTI0MGRlYjUzYTNjMzE2N2ExYTE2YjQzNTA4NzU2Nzk5ZDk1YmE3MjlmMTg4NTgyMzNhNWNhNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzQ4ODQ1NzRhYTI0MGRlYjUzYTNjMzE2N2ExYTE2YjQzNTA4NzU2Nzk5ZDk1YmE3MjlmMTg4NTgyMzNhNWNhNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDk0NmI1MWI4NmE3ZTg4ZDA2ZDlkY2YwODA4OWFjYjZhYTg0NDYwNTA4ZTI4ODliMzU3YmYwNDY1ODdiMTFjMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDc1MDUxYWZiNTc2YmZhMDhjZTczZTQ1YmM0OThmOTNhY2Q5NjU5NTAwNGY5YWJmZTdhYjRjOGM5MWNmNTNmMCJ9"
         }
       ]
     },
     {
       "id": "claim_09dd5631bb6c41beaf9c33bfd88ec3a2",
-      "statement": "The current recovery prioritizes recording and preserving Jonathan's legacy/finances and a usable handover for his son, with security/admin/commercial/deployment work deferred.",
+      "statement": "Owner direction prioritizes features and usability for Jonathan's legacy/finances and a usable handover for his son; commercial features are deferred and security, administration and infrastructure work happen when Jonathan asks.",
       "evidence": [
         {
-          "resource": "repo://AGENTS.md#L5-L30",
-          "version": "repo-lines-v1:sha256:71d3ffc833ac5b2db09b70998ae57f0430486ee7b90e30137342b56dd351d21e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjczZjg1M2UwNjU2ZGUzMTg4ZGUxNmZmYThlYWJhYzQ5ZjM1NDJiMjJhYTdmYjA4OGJmMTE5NzMwNzljNjU4NGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyZDg5NTE1M2U5OTYzZWE0MDc0ZmExYWVlYTY2Y2FhMmQ2ZTljMzZlZjEyMTJhYThhNDIwZGUwZGE4YTc5ZjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5ZmZjOTU3N2JjOGMzN2Y5NDJkZjg5MmE3ZDMxMTJkNmY4ZjlmNjdlNDJkMzljMmFmZmE3MzVhNGM4NmYyYWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU5MmUxODVkM2I3NzliNTVkNzY0ZDRhOTUyMDBkYjU5MjJhNTk1M2Q4NGMxMmZjMTZmNjg0MDg0YzE0Nzg2MGYifQ"
+          "resource": "repo://AGENTS.md#L5-L13",
+          "version": "repo-lines-v1:sha256:8bd414ab1f69e4f56751b693d532dd165093e89e5047a3fdcbf6b94f57d3b749:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzNmODUzZTA2NTZkZTMxODhkZTE2ZmZhOGVhYmFjNDlmMzU0MmIyMmFhN2ZiMDg4YmYxMTk3MzA3OWM2NTg0ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzg1ZTk1MzBkNzIwNzQyMWU1Y2UwMWRlNjhhMjNhOTE1M2ZmMmVhMGRkMmNkOTcxNjc5M2FjMWEyODk3YWI0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDgxZTk2MGU4Y2JjZTNkZTNjMDMwNGNlMGY0ZWU2NTZmZjIyZTBmN2QyNGZhZjU5YjY4NjgzYmFjZDEwOGUwMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTE3OTAxNzIwOTgyZDM0M2JlYjk4ZDQwMjE4YjI5ZTdiODFhYmRlZTBjNDkyN2RlNTY2ZWRhYjU3YjI2MWZlYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d30ee50d1a3048619ad71b9c963bbafe",
+      "statement": "Registration is closed by default (SIGNUP_ENABLED defaults to False), so signing up locally requires enabling that setting.",
+      "evidence": [
+        {
+          "resource": "repo://backend/config.py#L34-L34",
+          "version": "repo-lines-v1:sha256:dc20de9cc19265042568fbbe9ba6f8d71a5157673ff59239e14145a551a33360:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGMyMGRlOWNjMTkyNjUwNDI1NjhmYmJlOWJhNmY4ZDcxYTUxNTc2NzNmZjU5MjM5ZTE0MTQ1YTU1MWEzMzM2MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGMyMGRlOWNjMTkyNjUwNDI1NjhmYmJlOWJhNmY4ZDcxYTUxNTc2NzNmZjU5MjM5ZTE0MTQ1YTU1MWEzMzM2MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2ZhYjI3YWJkZDA0OTllMjQwNjg1ZDMxYjc2MTM0NjNhOWQ0NDg2NzI3Zjc4ZDNhNjlhNTNlYmU1OTM4YjVlNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmI3ZTVmM2EyZGY3MTA5OTg3Nzc4YzE3MzYxMTAwNWY2MTI5ODFhZTg3ZTM4ZjdiMjU3ZGE1YTI4MmU1Yzk4MSJ9"
+        },
+        {
+          "resource": "repo://backend/private_access.py#L38-L44",
+          "version": "repo-lines-v1:sha256:5450c9a11f1de76568cf0b2c25819094be6579830ac58d9908e81f388baa2e2d:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDUxZDRiNTAwYzdjMTAyNTFhMmU2NDQ1YzU2ZTllMGU1MTlmNjJiMGQwMDVmOGFhZDRmZmI2ZTBhMDcyNzBhOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDkzZjhlZTEzNjBkMTgyNzZhOWVlMTQwODIwN2QzZjNhNzgzYmZhYjYxODg1M2I2Yzc3NzJiZjIyOWRjYWI5NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2RkN2FiZDMyNjcyOTVhZTNlN2JmYjhkOWY2MzUzOTA3OTkxMjdjNDMyZTQzMGNiOWI4YzA0ZDJjYWI2Mzc5MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTE5NGUxY2Q5MDkwYjdkZDQxNzcyMDYwZDM2NTU2MmYxMWM0OGE3NzVhOGJhNDg1Y2M2NTUxZmZhN2UyODNmZSJ9"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-10-27T00:41:19.118Z"
+    "at": "2026-10-28T04:26:57.052Z"
   }
 }

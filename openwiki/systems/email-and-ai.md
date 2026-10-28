@@ -32,10 +32,10 @@ sources:
     resource: repo://frontend/src/lib/services/aiConciergeService.ts
   - id: openwiki-source-ad50b7e2c2f89430d17b9018
     resource: repo://frontend/src/lib/stores/conciergeEngine.ts
-generated: { by: "claude-code", at: "2026-10-27T18:31:56.115Z" }
+generated: { by: "claude-code", at: "2026-10-28T04:26:57.052Z" }
 verified:
   - by: openwiki/0.4.3
-    at: 2026-10-27T18:31:56.115Z
+    at: 2026-10-28T04:26:57.052Z
 ---
 
 # Email and AI Services
@@ -46,11 +46,12 @@ verified:
 
 **Provider choice** happens once at startup:
 
-1. `postmark` when `POSTMARK_API_KEY` is set (using the `postmarker` client),
-2. otherwise `smtp` when `SMTP_ENABLED` and `SMTP_HOST` are set,
-3. otherwise `local`, which writes each email as an HTML file in `OUTBOX_DIR` (`backend/outbox`) named from the timestamp, subject and recipient.
+1. `resend` when `RESEND_API_KEY` is set (the production provider): an `httpx` POST to the Resend API from `SMTP_FROM_NAME <SMTP_FROM_EMAIL>` with a 15-second timeout,
+2. otherwise `postmark` when `POSTMARK_API_KEY` is set (using the `postmarker` client),
+3. otherwise `smtp` when `SMTP_ENABLED` and `SMTP_HOST` are set (15-second connection timeout),
+4. otherwise `local`, which writes each email as an HTML file in `OUTBOX_DIR` (`backend/outbox`, or `/data/outbox` on the Railway volume) named from the timestamp, subject and recipient with unsafe filename characters replaced.
 
-If a Postmark send raises, that message falls back to SMTP (when enabled) or the local outbox. If the Postmark library cannot be imported, the provider switches the same way for the whole process. Check the `provider` column in `email_logs` to see what actually happened.
+A non-2xx Resend response raises, so that send is logged as `failed` with no fallback. If a Postmark send raises, that message falls back to SMTP (when enabled) or the local outbox. If the Postmark library cannot be imported, the provider switches the same way for the whole process. Check the `provider` column in `email_logs` to see what actually happened.
 
 **Sending** — `send_email(payload, db_session)` renders `templates/emails/{template_name}.html` with Jinja2 (autoescaping on), creates a `pending` `EmailLog` row when a session is passed, sends through the provider, then updates the row with the actual provider/status/message ID or error. `saved_local` means preparation on disk; `provider_accepted` means the provider accepted the send, not that a person read it. Only provider acceptance populates `sent_at`. A template error returns a failed result without sending. Convenience wrappers:
 
@@ -93,7 +94,7 @@ The administrator surface at `/admin/ai-settings` uses `/api/ai/admin/settings` 
 
 The concierge retains per-account conversation state and immutable writing-job snapshots. It filters history to that job, excludes status messages from model history and ignores a result if the account, conversation or active writing job changed while waiting. This preserves the original brief and prevents an older reply from replacing newer writing work.
 
-`/api/support/discovery` is a separate Tavily-backed search. Missing `TAVILY_API_KEY` returns 503; provider failure returns an error rather than mock local practitioners.
+`/api/support/discovery` is a separate Tavily-backed search that now requires a signed-in user and caps `location` at 200 and `category` at 100 characters. `GET /api/support/discovery/available` tells the page whether a `TAVILY_API_KEY` is configured, so the search is shown only when it can answer. Missing `TAVILY_API_KEY` returns 503, and a provider failure also returns 503 rather than mock local practitioners.
 
 ## Related pages
 

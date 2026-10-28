@@ -16,6 +16,8 @@ sources:
     resource: repo://backend/routers/estate_data.py
   - id: openwiki-source-088afb8de4a4d25acdc7f8dc
     resource: repo://backend/seed.py
+  - id: openwiki-source-1d999dbfca06d0a1e6e27a90
+    resource: repo://backend/tests/test_signup_closure.py
   - id: openwiki-source-66d8cca2fb261b19c13013c1
     resource: repo://backend/utils/audit.py
   - id: openwiki-source-0ff495a1eaaf2069d92ec948
@@ -28,10 +30,10 @@ sources:
     resource: repo://Procfile
   - id: openwiki-source-6edb3f73cf0628642d8c8a74
     resource: repo://scripts/smoke_test.py
-generated: { by: "claude-code", at: "2026-10-27T18:31:56.115Z" }
+generated: { by: "claude-code", at: "2026-10-28T04:26:57.052Z" }
 verified:
   - by: openwiki/0.4.3
-    at: 2026-10-27T18:31:56.115Z
+    at: 2026-10-28T04:26:57.052Z
 ---
 
 # Development, Configuration and Deployment
@@ -44,30 +46,31 @@ All backend settings live in one Pydantic `Settings` class in `backend/config.py
 
 | Group | Variables (defaults) |
 |---|---|
-| Environment | `ENVIRONMENT` (`development`), `DEBUG` (`True`), `PRIVATE_ACCESS_USER_ID` (unset; a positive user id turns on private-preview mode, see [Authentication](/openwiki/systems/authentication.md)) |
+| Environment | `ENVIRONMENT` (`development`), `DEBUG` (unset: on everywhere except production), `SIGNUP_ENABLED` (`False`; closing registration leaves the website and existing accounts open), `PRIVATE_ACCESS_USER_ID` (unset; a positive user id turns on private-preview mode, see [Authentication](/openwiki/systems/authentication.md)) |
 | URLs | `FRONTEND_URL` (`http://localhost:5173`), `API_URL`, `CORS_ORIGINS` |
 | Database | `DATABASE_URL` (`sqlite:///./continuum_saas.db`), `DB_ECHO`, `DB_POOL_SIZE`, `DB_MAX_OVERFLOW` |
-| Auth | `JWT_SECRET_KEY`, `JWT_ALGORITHM` (`HS256`), `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` (15), `JWT_REFRESH_TOKEN_EXPIRE_DAYS` (7), `SECRET_KEY` |
+| Auth | `JWT_SECRET_KEY`, `JWT_ALGORITHM` (`HS256`), `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` (15), `JWT_REFRESH_TOKEN_EXPIRE_DAYS` (7) |
 | WebAuthn | `RP_ID` (`localhost`), `RP_NAME`, `ORIGIN` |
-| Email | `POSTMARK_API_KEY`, `POSTMARK_FROM_EMAIL`, `SMTP_*`, `EMAIL_MAX_RETRIES`, `OUTBOX_DIR` |
+| Email | `RESEND_API_KEY` (production provider, tried first), `POSTMARK_API_KEY`, `POSTMARK_FROM_EMAIL`, `SMTP_*` (`SMTP_FROM_EMAIL` defaults to `noreply@continuum.estate`), `EMAIL_MAX_RETRIES`, `OUTBOX_DIR` |
 | Files | `UPLOAD_DIR` (`backend/uploads`), `MAX_UPLOAD_SIZE` (10 MB), `AWS_*` for S3-compatible storage |
 | Pulse | `PULSE_SCHEDULER_ENABLED`, `PULSE_CHECK_INTERVAL_MINUTES` (15) |
 | AI and search | `OPENROUTER_API_KEY` (falls back to legacy `VITE_OPENROUTER_API_KEY`), `BIFROST_BASE_URL`, `BIFROST_VIRTUAL_KEY`, `TAVILY_API_KEY` |
-| Rate limits | `DEFAULT_RATE_LIMIT_SENSITIVE` (`5/minute`), `DEFAULT_RATE_LIMIT_STANDARD` (`30/minute`) |
 | Railway | `RAILWAY_ENVIRONMENT`, `RAILWAY_STATIC_URL`, `RAILWAY_PUBLIC_DOMAIN` |
 
 Validators adjust values at load time:
 
 - A `postgres://` `DATABASE_URL` (as Railway provides) is rewritten to `postgresql://` for SQLAlchemy 2.
 - In production, `RP_ID`, `ORIGIN` and `FRONTEND_URL` that are still at their localhost defaults become `continuum.estate` / `https://continuum.estate`. Explicitly set values win. Outside production, `RAILWAY_PUBLIC_DOMAIN` fills `RP_ID` and `ORIGIN` the same way.
+- An unset `DEBUG` becomes `not production`.
+- When `UPLOAD_DIR` is on the `/data` volume and `OUTBOX_DIR` is still the default, the outbox moves to `/data/outbox`.
 
-`ENVIRONMENT` values `production`/`prod` count as production and `development`/`dev`/`local` as development. Production mode turns on CSRF rejection (403), the HTTPS redirect, `Secure` cookies and JSON logging, and hides the `_technical` error field. On load in production, `validate_production_config()` logs warnings — default JWT or secret keys, localhost URLs, `RP_ID=localhost`, SQLite, wildcard CORS — but does not stop startup.
+`ENVIRONMENT` values `production`/`prod` count as production and `development`/`dev`/`local` as development. Production mode turns on CSRF rejection (403), the HTTPS redirect, `Secure` cookies and JSON logging, hides the `_technical` error field, skips the dev-user seed, and (with `DEBUG` unset) logs at INFO and serves no `/docs` or `/openapi.json`. On load in production, `validate_production_config()` logs warnings — default JWT key, localhost URLs, `RP_ID=localhost`, SQLite, wildcard CORS — but does not stop startup.
 
 The frontend has its own small config in `frontend/src/lib/config.ts` (`VITE_API_URL`, app name and version).
 
 ## Seed users
 
-- `backend/main.py` seeds `dev@continuum.im` / `dev123` on every startup if that user does not exist.
+- `backend/main.py` seeds `dev@continuum.im` / `dev123` at startup outside production, if that user does not exist.
 - `backend/seed.py` contains an older mock-key test-user seed routine, but currently omits the imports for its database symbols. Do not treat it as a working setup command.
 
 ## Logging and audit
@@ -82,6 +85,7 @@ The frontend package provides `check` and `build`, but no `test`, `test:watch` o
 
 - `scripts/smoke_test.py` replays the exact payloads the UI's stores send for each record type, re-fetches them, and prints a PASS/FAIL line per type. It always exits 0 and is not wired into any build or deploy.
 - `backend/tests/manual_security_check.py` is a manual security probe.
+- `backend/tests/test_signup_closure.py` is a `unittest` for signup closure, run directly from the repo root against a disposable SQLite database with startup skipped.
 
 Use a disposable database/uploads directory, synthetic records and a local outbox for checks; avoid the application lifespan scheduler in API probes and never point a smoke probe at the owner's records.
 
@@ -91,12 +95,12 @@ Before any separately authorized deployment, run `npm run check` and `npm run bu
 
 Production runs on Railway at `https://continuum.estate`, with PostgreSQL.
 
-- `.railway/railway.ts` is the Railway infrastructure-as-code definition (`railway/iac` SDK, partial `Continuum`). It declares the `Continuum` service from the `jonathanhollander/Continuum` GitHub source with the `NIXPACKS` builder, `/api/health` health check, one replica in `us-east4-eqdc4a`, the existing `continuum-volume` (50000 MB) mounted at `/data`, and every configured service variable kept through `preserve()` so no secret is stored in the file. It replaced the root `railway.toml` (card X141); Postgres and its volume are outside this partial. Changes are made by reviewing a `railway config plan` and then applying it, with the SDK installed outside application dependencies.
+- `.railway/railway.ts` is the Railway infrastructure-as-code definition (`railway/iac` SDK, partial `Continuum`). It declares the `Continuum` service from the `jonathanhollander/Continuum` GitHub source with the `NIXPACKS` builder, `/api/health` health check, one replica in `us-east4-eqdc4a`, the existing `continuum-volume` (50000 MB) mounted at `/data`, and every configured service variable kept through `preserve()` so no secret is stored in the file. It replaced the root `railway.toml` (card X141); Postgres and its volume are outside this partial. Its GitHub source sets `checkSuites: true`, so any GitHub check suite on a commit would gate that deploy. Changes are made by reviewing a `railway config plan` and then applying it, with the SDK installed outside application dependencies.
 - `nixpacks.toml` installs Python 3.11, Node 20 and build libraries, creates `/opt/venv`, installs `backend/requirements.txt`, runs `npm install` and `npm run build` in `frontend/`, and starts `uvicorn backend.main:app` on `$PORT` (default 8080). `PYTHONPATH=/app`.
 - `Procfile` carries the same start command.
 - `backend/requirements.txt` uses exact pins copied from production's `pip freeze`. Unpinned installs pulled a newer SQLModel/SQLAlchemy that broke login and seeding.
 
-Pushes to `main` deploy automatically from GitHub (`.railway/railway.ts`); `railway logs` reads the logs; refreshing this wiki does not authorize deployment. Schema changes go out by running `alembic upgrade head` against the production database (see [Data Model and Migrations](/openwiki/architecture/data-model-and-migrations.md)); the startup `create_all` and column patches also run on boot. The HTTPS redirect trusts `X-Forwarded-Proto` because Railway terminates TLS at its proxy, and never redirects `/api/health`, which Railway probes over plain HTTP.
+Pushes to `main` deploy automatically from GitHub (`.railway/railway.ts`); `railway logs` reads the logs; refreshing this wiki does not authorize deployment. Schema changes go out by running `alembic upgrade head` against the production database by hand, after a `pg_dump` (see [Data Model and Migrations](/openwiki/architecture/data-model-and-migrations.md)); deploys run no migrations, and on PostgreSQL startup only checks the connection (the `create_all` and column patches run on SQLite only). The HTTPS redirect trusts `X-Forwarded-Proto` because Railway terminates TLS at its proxy, and never redirects `/api/health`, which Railway probes over plain HTTP.
 
 ## Related pages
 

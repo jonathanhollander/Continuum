@@ -3,14 +3,15 @@ type: architecture
 title: Data Model and Migrations
 description: Where Continuum's SQLModel tables are defined, how the database engine is created for SQLite and PostgreSQL, the runtime column patching in database.py, and the Alembic migration chain.
 tags: [backend, database, sqlmodel, alembic, migrations]
-verified:
-  - by: openwiki/0.4.3
-    at: 2026-10-27T00:41:19.118Z
 sources:
   - id: openwiki-source-cd05e17dc0e73b55df1e0b66
     resource: repo://backend/alembic/env.py
+  - id: openwiki-source-b59b6a961a2fe9d52d1581dc
+    resource: repo://backend/alembic/versions/a1c3e5f7b9d1_unique_pulse_tier_per_user.py
   - id: openwiki-source-5af055e79e2d237dc33daf46
     resource: repo://backend/alembic/versions/a7c1b0e3d9f4_add_model_columns_missing_from_schema.py
+  - id: openwiki-source-9554cf083ea60330923d8fd9
+    resource: repo://backend/alembic/versions/b2d4f6a8c0e2_align_schema_with_models.py
   - id: openwiki-source-6eeeaa400fa9d57d137ace1a
     resource: repo://backend/alembic/versions/e0f2a4c6b8d0_complete_ai_request_config.py
   - id: openwiki-source-82a325da453da1db06378e6d
@@ -25,12 +26,15 @@ sources:
     resource: repo://backend/routers/auth.py
   - id: openwiki-source-4be256b5d86d6f7252b493a6
     resource: repo://backend/routers/estate_data.py
-generated: { by: "codex", at: "2026-10-27T00:41:19.118Z" }
+generated: { by: "claude-code", at: "2026-10-28T04:26:57.052Z" }
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-10-28T04:26:57.052Z
 ---
 
 # Data Model and Migrations
 
-Persistence uses SQLModel (SQLAlchemy underneath). Local development defaults to SQLite; Railway production uses PostgreSQL. Two schema mechanisms run side by side — `create_all` plus hand-written column patches at startup, and Alembic migrations — so a schema change has to account for both.
+Persistence uses SQLModel (SQLAlchemy underneath). Local development defaults to SQLite; Railway production uses PostgreSQL. Two schema mechanisms exist: on SQLite, `create_all` plus hand-written column patches build the local schema at startup; on PostgreSQL the schema belongs to Alembic alone. A schema change therefore needs an Alembic revision for production and, when an existing local SQLite table needs a new column, a matching patch.
 
 ## Where models live
 
@@ -57,7 +61,7 @@ Notable shapes:
 
 ## Startup schema creation and runtime patching
 
-On application startup `create_db_and_tables()` runs `SQLModel.metadata.create_all(engine)` and then `migrate_db()`, retrying the connection up to five times, three seconds apart, so a sleeping database does not crash boot.
+On application startup `create_db_and_tables()` runs `SQLModel.metadata.create_all(engine)` and then `migrate_db()` only when the engine is SQLite; on PostgreSQL it just runs `SELECT 1` to confirm the connection and never creates or alters tables. Either way it retries the connection up to five times, three seconds apart, so a sleeping database does not crash boot. Production schema changes come only from running Alembic by hand (deploys run no migrations).
 
 `migrate_db()` inspects live tables and issues `ALTER TABLE ... ADD COLUMN` for a hard-coded list of columns that may be missing: user onboarding and preference columns, extra `assets`, `subscriptions`, `documents` and `utilities` columns, newer `pulse_settings` and `pulse_contacts` columns. On PostgreSQL it also makes `users.public_key` nullable. Each failure is logged and rolled back rather than raised. `create_all` only creates missing tables; it never alters existing ones, which is why these patches exist.
 
@@ -86,7 +90,7 @@ Each repair checks the live schema first, so running it again changes nothing. R
 
 `estate_for_write` locks the account row before reading or creating its estate root, including before the first estate exists. `merge_profile` shallow-merges against the latest `estate_profile`, removes null-posted keys, and commits in the same transaction. This serializes cross-process/device writes; the last serialized save of the same key wins.
 
-The current revision chain continues through `e0f2a4c6b8d0`, which adds nullable JSON `ai_settings.request_config` without changing saved choices. Its downgrade preserves administrator-authored instructions. Check revision metadata without starting application lifespan or touching the owner's database; use a disposable database for actual migration tests.
+The revision chain continues through `e0f2a4c6b8d0`, which adds nullable JSON `ai_settings.request_config` without changing saved choices (its downgrade preserves administrator-authored instructions), then `a1c3e5f7b9d1`, which removes duplicate Pulse escalation tiers per user and tier number (keeping the lowest id and repointing guardians) before adding a unique constraint, and `b2d4f6a8c0e2` (current head), which aligns the schema with the models: `assets.purchaseDate` becomes text, unused `financial_accounts.customAttributes` and `calendar_events.recurrence` are dropped, model booleans become NOT NULL after filling NULLs with false, and server defaults the models do not declare are removed. Both are idempotent. Check revision metadata without starting application lifespan or touching the owner's database; use a disposable database for actual migration tests.
 
 ## Related pages
 

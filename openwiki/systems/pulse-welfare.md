@@ -3,9 +3,6 @@ type: system
 title: Pulse Welfare Check-ins
 description: How configured Pulse scheduling, owner check-ins, guardian pauses, tier and safety-timer outcomes, portal sharing and companion transparency views work together.
 tags: [pulse, scheduler, escalation, guardians, email]
-verified:
-  - by: openwiki/0.4.3
-    at: 2026-10-27T00:48:46.078Z
 sources:
   - id: openwiki-source-2cb07ade85d43d677f359e23
     resource: repo://backend/pulse_logic.py
@@ -19,7 +16,10 @@ sources:
     resource: repo://frontend/src/lib/stores/pulse.svelte.ts
   - id: openwiki-source-a8a830617ab03d4b55d49d9a
     resource: repo://frontend/src/routes/%2Blayout.svelte
-generated: { by: "codex", at: "2026-10-27T00:48:46.078Z" }
+generated: { by: "claude-code", at: "2026-10-28T04:26:57.052Z" }
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-10-28T04:26:57.052Z
 ---
 
 # Pulse Welfare Check-ins
@@ -34,7 +34,7 @@ Key files: `backend/pulse_models.py`, `backend/pulse_scheduler.py`, `backend/pul
 |---|---|
 | `PulseSettings` (`pulse_settings`, one per user) | `enabled`, `frequency_days` (default 2), `grace_period_hours` (24), `checkin_token` (permanent one-click link token), plus feature flags such as ghost mode, pet protocol, safety timer, location vault and biometric extension |
 | `PulseCheckin` (`pulse_checkins`) | Each check-in with `timestamp` and `method` (`manual`, `magic_link`, `guardian_snooze`, `guardian_confirmation`, …) |
-| `PulseEscalationTier` (`pulse_escalation_tiers`) | Per-user tiers 1–4 with `delay_hours` and `notification_method` |
+| `PulseEscalationTier` (`pulse_escalation_tiers`) | Per-user tiers 1–4 with `delay_hours` and `notification_method`; unique on (`user_id`, `tier_number`) |
 | `PulseContact` (`pulse_contacts`) | Guardians and general contacts: name, role, email, phone, executor/beneficiary flags, `tier_id`, `portal_token` |
 | `PulseEscalationLog` (`pulse_escalation_log`) | One row each time a tier fires |
 | `PulseMessage`, `PulseSafetyTimer`, `PulseVault`, `PulseCredential` | Guardian messages, short safety timers, vault items with an unlock condition, and WebAuthn credentials (used by [Authentication](/openwiki/systems/authentication.md)) |
@@ -60,10 +60,10 @@ Authenticated:
 - `POST /checkin` (5/minute) — record a manual check-in (`method`, `note` as query parameters).
 - `GET /status` — `not_configured`, `disabled`, or `active`/`grace` with the last check-in and next expected time.
 - `GET /settings` — returns defaults without a write when no row exists; saving creates settings and the check-in token. `POST /settings` (10/minute) — partial update.
-- `GET /history`, `GET|POST|PUT|DELETE /contacts` (creating a contact generates its `portal_token`), `GET /messages`, `POST /messages`.
-- `GET /tiers` — creates default tiers on first read (tier 1: 0 h, email; tiers 2–4: 6, 12 and 24 h, email+SMS); `PUT /tiers/{id}`.
+- `GET /history` (the `limit` is clamped to 1–500), `GET|POST|PUT|DELETE /contacts` (creating a contact generates its `portal_token`), `GET /messages` (newest 200), `POST /messages`.
+- `GET /tiers` — creates default tiers on first read (tier 1: 0 h, email; tiers 2–4: 6, 12 and 24 h, email+SMS). If a parallel first load saved them first, the unique constraint rejects the duplicates and the request reads the saved rows instead. `PUT /tiers/{id}` accepts `delay_hours` from 0 to 720 (30 days) and `notification_method` of `email`, `sms` or `both`, otherwise 422.
 - `GET|POST|PUT|DELETE /vault` — vault items for the logged-in user.
-- `POST /safety/start|cancel`, `GET /safety/status` — safety timers. The scheduler processes expired active timers and records attempt outcomes.
+- `POST /safety/start|cancel`, `GET /safety/status` — safety timers (1 minute to 24 hours, otherwise 422). The scheduler processes expired active timers and records attempt outcomes.
 
 Public, token-based (guardian respond/confirm/nudge POSTs are CSRF-exempt; the owner verify POST uses the normal CSRF header supplied by the client hook):
 
@@ -72,6 +72,8 @@ Public, token-based (guardian respond/confirm/nudge POSTs are CSRF-exempt; the o
 - `POST /respond/{token}?action=snooze` — guardian snooze, recorded as a check-in.
 - `POST /confirm/{token}` — guardian confirms the user is OK, recorded as a check-in.
 - `POST /nudge/{token}` — records a guardian nudge after validating the unexpired portal token.
+
+The portal view also reports `checkins_began` when the owner's latest check-in is the automatic one recorded by switching Pulse on, so the page can say check-ins began rather than show a last check-in. The owner's Pulse messages to a guardian are shown in the portal at all times; released vault notes and sensitive details wait for the guardian's reach. The former Pulse-specific `/auth/webauthn/register/*` routes have been removed; passkeys are registered through [Authentication](/openwiki/systems/authentication.md).
 
 Guardian check-in methods are excluded from `owner_last_checkin`. Their pause leaves owner timing and outage history intact. Public portal/vault reads validate token expiry and apply the same current-outage sharing rules as the owner's preview.
 

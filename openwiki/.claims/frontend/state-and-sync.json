@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:5cca8480eb3781e3d04496eed46507aabdeeaf4d36022fef78f378917513a55d",
+  "pageVersion": "sha256:c730af1b0ab8f5431f5093699b85a167fb875dc57243ecd73d7b15743f3f89eb",
   "claims": [
     {
       "id": "claim_ea5fddba782c4c67add2d34e879cb09d",
@@ -35,12 +35,12 @@
       "statement": "SyncManager create appends only a confirmed server response; updates serialize per row and roll back touched fields on failure, while delete restores only its removed row on failure and offers retry without rethrowing.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L557-L609",
-          "version": "repo-lines-v1:sha256:082a3e188996a49792a8b96340a9a4993a940b271228910b27371018a88b2fac:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiOWM1YTVjODJhYjU3NjIxNDJhMjFlYzVmNDU3ZGExZmEzOTQwNDBmZmY4NGM4MTgwZmNjNjdhNDAwY2YwMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExYjcxMzM2MGFhODg0Y2IyZTMyMWI3MTE5OGJmZjhhNDU1Y2IwODk2MDAwY2YxZjRjMDc5Njk0YjYwYTViOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmMDgxYzAxNzZjNDkwMDEyM2Q5MjBjMjI2NjRmZWRkNDc1YTFkOGU2YWI3ZTBhODI5ZTc0ZWNiMGQwNzczODAifQ"
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L572-L627",
+          "version": "repo-lines-v1:sha256:08f3d16da86476449db5ad770c3d323d4e449b64bd16399c3934c556c6b925cf:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiOWM1YTVjODJhYjU3NjIxNDJhMjFlYzVmNDU3ZGExZmEzOTQwNDBmZmY4NGM4MTgwZmNjNjdhNDAwY2YwMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExYjcxMzM2MGFhODg0Y2IyZTMyMWI3MTE5OGJmZjhhNDU1Y2IwODk2MDAwY2YxZjRjMDc5Njk0YjYwYTViOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjMjQyMDkxNzY4MzZlYjljZjQ2MDgzZDRkNGRmNTBjOTdjZmQwM2I1YWZmZDM1MTc4MGMyNDc0NGI3YjE0ZWQifQ"
         },
         {
-          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L612-L864",
-          "version": "repo-lines-v1:sha256:6415cd2e4e93ca32f19f02fb11ce9cff2dd457d089648123e8dbf047f58c7968:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI1N2Q3ZmQzYWUwNjBiNDZjZjg3MjA0NjM5ZTU0ZmU5N2E3ODZhNzA0ZmI5NGZmOTMzNTYzMWNiMjMyYzQ0YmVmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIzNmE5MGE2OWVhY2U2OWM2NGU5YTE4Yzc3MDQ2NDQwMjE5MTcyZGYzMDY5NzcxZGZhNzYzNjEyMjY3NTUyZGZlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI2ZmU1OGU0NjM5OGFhYTZjNjcyMDYwNTg1ZjU0ZjU2Njg1ODc1OGEwMzlhYzI4ZTdkOWNjZDg5MWU3ZDcxNmRiIn0"
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L629-L887",
+          "version": "repo-lines-v1:sha256:e7fcb2ecd2688ab764aafbfda821f638144f2fd914a12235cc8ab2353d0db844:eyJzZWxlY3RlZExpbmVDb3VudCI6MjU5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI1N2Q3ZmQzYWUwNjBiNDZjZjg3MjA0NjM5ZTU0ZmU5N2E3ODZhNzA0ZmI5NGZmOTMzNTYzMWNiMjMyYzQ0YmVmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIzNmE5MGE2OWVhY2U2OWM2NGU5YTE4Yzc3MDQ2NDQwMjE5MTcyZGYzMDY5NzcxZGZhNzYzNjEyMjY3NTUyZGZlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI2ZmU1OGU0NjM5OGFhYTZjNjcyMDYwNTg1ZjU0ZjU2Njg1ODc1OGEwMzlhYzI4ZTdkOWNjZDg5MWU3ZDcxNmRiIn0"
         }
       ]
     },
@@ -60,15 +60,15 @@
     },
     {
       "id": "claim_9e374295e93a4ec79ba70e9fa07a69f2",
-      "statement": "SingletonSyncManager handles object records, serializes standalone saves from a confirmed base plus explicit patch, and uses one SharedRecord for estate/profile slices so only the changed slice keys are posted.",
+      "statement": "SingletonSyncManager handles object records, serializes standalone saves from a confirmed base plus explicit patch and posts only the keys that patch changed, and uses one SharedRecord for estate/profile slices so only the changed slice keys are posted.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L1487-L1615",
-          "version": "repo-lines-v1:sha256:e5060f0f0b01bc8df6602d46e701ff9654e40e20863902bdf1777f8900d003a7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTI5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0ZGEzNjk4NGUxYTkwN2E4MjRkMzA3ZDNhOTk5Y2QzNGVlOTA2ZjFmNGZlZGFlODA1Y2U4NjY2ZDkzYzc4NTljIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI1NjIwOTI4ZGM5OTM5MWY0Y2NjNmFmMWNlMTk0NzlhNGI5OTVhZjhjOTkzNWEwMTA4ZTVlYTY5NTYyNWIyZjRlIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJiZDRjYTEyZjlkN2E0YmMwMjEzNGMxYmVkZWE5ZDAyZDcyN2Q3MjI5NDc1MjFlMjVmMjNkMmI3ZjhmMDNhNjIxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0NDE4ZTk2YzQ0ZTNhYTI0MTFkNjllNTVlZGRlNjAwMTI5NjI2YmZmNTY4MjhmY2ViNzlhMjg1YzM1ZDNlMzJkIn0"
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L1511-L1630",
+          "version": "repo-lines-v1:sha256:8325f1cc434ae25107e75357cf7c423de10783b4ec6b594f2a0a1f2a8553c7d6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI3NTJlNjY0ZTk3YWY1NzQzODY4N2JhZDE1NDY0MGFmYmExYmEwZmNmOTEzZTEwODllNDY5NDI4NDMzMTc4Y2U3IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwZTM2OTZhZDUwNmIzOWVmMTI5ZWYzY2U5NDRlMGJhN2JiZTBiMjU5OTRlMzc1NTY5NmVkOWVkMTZiMmQ2MDIxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJkOWFlNjAwYzdlMWM2YjhlNGZlMDIwMTAwMTQ5NzhmZGNhMGJmMGZlYTkwNjdiMGE0N2Q4NjhlMTEzMjQ4NmFlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI5NzkwODNlOGRjN2NhZjRjMDY4N2I0OTY5NDNmOWY5MGU3YjgwYThkZjc2MTMwYmE2YWNhY2RkZjFlZTQ2MWUzIn0"
         },
         {
-          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L1694-L1697",
-          "version": "repo-lines-v1:sha256:1e99a022d6bf07cde64c5ed0683a04fb5d2ba569ccc7575e308cf7df799604d3:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGI1NGJkMDJkY2EwNWVhYzg5MDA2MmY2ZGNkMzhkY2VlYmIxMzU0YmViM2UzZmJmMGJhMTA0MjdkNzVkMWZjZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDVmYmFjNGYzYTFhNzg3Y2IxZDY0OGUxOTY0ZWU0ZTIxNGIwZmZkZjg5N2NlMmM4ZjM2ODI3NzkzY2UxMWM1NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGZlNDBkZDhiZTEyODVjNDVhOTI2ZWNhN2FiMjQxYmM0MzYyZWFhMDMzZjgyODRjMjRjNGE2OWYzYWJmOTg1ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTMxOWMzMDg5MmEzYWZlNzg2NGM4OGYwMzBmOGM3YjAwNGZiMmUyMDJkNTdiMTIzNDRhOGZiOTIwZmJiNDQ3MSJ9"
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L1724-L1726",
+          "version": "repo-lines-v1:sha256:a172c61479e09163a8504dee35921199d6c31da10a895f455be4bf94697adc22:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjhkYTg5ZDFjYjYzZGZkMDU4ZGNhYTkzYTE5Mzk3ZGM2MTdiMGMyODFkYzIzZjFlYWM2ODM0NTM0NzRkYjBhYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjgzYjkwYjcyZmYwZTVlN2ZlZjQ2NzUzN2NjZjdhNGY3ZmYwMWE4ZjJkZjQzYzNlN2FjNmNlZTFhNzA3NzEyMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGVmM2RkZDE3MThiOTFhMTM1NTY2OGIwOWQ2OGFmM2JjYmJjN2FlOWQ1MzM2YzM5ZDFkYTNmYWNkNjEyOWQ4MCJ9"
         }
       ]
     },
@@ -77,8 +77,8 @@
       "statement": "Registration creates one manager per cache key and starts lazily registered stores after session sync begins; syncAll prioritizes displayed stores, defers the rest until idle, and leaves on-demand stores until displayed unless everything is requested.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L1655-L1760",
-          "version": "repo-lines-v1:sha256:9f23f1ed69b5abbb98f6a0f9c9eef3a3b897ccc0b6d8daccd073caf6c0807723:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI5ZWNmZDViYzIwN2MyYTQ0NjE4MGMwZmVkYzM4MzZmOGQwM2ZlYTVjNGEyNWNmZmUyYTcwZWQxOTg2MDQwZDM1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyMmQxMWNhZjQzZTk3ZWYzNjllNmJlZWQxYTI2OGJkMDU4MzhmMjliOWRkMjU0YmY2OWJhNjQ4ODQxNDcyMzRhIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI4NWMwMzhmOGY1ZWNmZjBmZTU2YTYxMjllNDc1N2U5ZTc2OGY1OTk2OTg3ZmM0NWI4OGJiMGZkOGQ1ZjE1MzUyIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0OTNjMDQ5NmYyY2VmYTVjMDdhMjQ5NTgwYjM0NzY1YmFhZmE5YmMwM2VmMGI1NzE2YzQwOWQxOGNlMThiNjFkIn0"
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L1687-L1815",
+          "version": "repo-lines-v1:sha256:44d24a0a45d509eeb770e27603586fdca898e0167f69ddba2cbd07d1559f30e0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTI5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwOGJjY2I0MjU5NGM2ODllNGQyNTRiMTkwZTNiOTE4MWU4ZTI2ZDlmMjUzYjQ0NmZhOGYyMmY2ZjY4NGExZDYzIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI3YzM3MzgxNmI1OWIzNDE2ZTE2ZmU1MzYzNDkzYzAzZjEyNWIxY2NhOThmYjczMzI1NDRhNGQzYjRmYWNmYWMxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJhMTUxODQyOWMyZTMyMmMyMjYzMGY2OTZkZmE4Nzg4ODc2MzVlMDBkMTc0YTNkMjgyNjYwYWFiZjIxNzI5NGQ4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIyZDIxYWE5OTVjYjUwOTc5NmVkYmUyYzRjNTViNTc0YmY3ZTBkZjllMDc4YjIwZDczOGU0MGZmNzM4OGFjNDI1In0"
         }
       ]
     },
@@ -87,8 +87,8 @@
       "statement": "The root layout starts syncAll for a new settled auth token once the access-status check allows the session, outside /for/ recipient routes, asks for everything on the dashboard, and clears in-memory managers when signed out.",
       "evidence": [
         {
-          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L196-L216",
-          "version": "repo-lines-v1:sha256:e3c77222a039cd18bb48f2424edf4fc53d988cd01a8e0530f3af720c5a12a9c5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1MDUzYzg3MTdhZDQ4MWE5NDE2ZWRhNzQ2YzQyYTY2ZWZiZWJjYjBiZDhmNjdiYmRjMTY1MjZiNzQxMTUzNDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhNzM0OTJkODk0NmIxZDBmOWQ5YzA0YjcwNGE5MjBmMjRmODllZjdjN2Y3MzExYTg1OTlkMTBjN2Y2MzU4ZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM2MGNmZTAzMGM4Y2Q1ZDNiZjlkY2E1NDA1MWFiY2JiOWRhYzkwN2E2NjI0ZjU1ZjZmOTFmNDM3MDIzMjM3MGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0NTZjOTI4NTRiYjRmYzI4YTE0NzkzOGYzYTMxMDk5YzM2NjQwNjgwODhkNzdiNDQ1NDg4YTZkYTZiNDlhZmQifQ"
+          "resource": "repo://frontend/src/routes/%2Blayout.svelte#L183-L205",
+          "version": "repo-lines-v1:sha256:c890f476e706335b7530746869a24b8ab81990ca0bcd1104b5ebf210bfd35298:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1MDUzYzg3MTdhZDQ4MWE5NDE2ZWRhNzQ2YzQyYTY2ZWZiZWJjYjBiZDhmNjdiYmRjMTY1MjZiNzQxMTUzNDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4ZjViZGU0ZWY3NTYzM2UwMWIyZjY3Njc0OTExYjE5M2U0YTM3YWQzMWFiNjg3NTVlMTQ4ZmY0YzE3YTBhMWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVkNzczODkzOTU0NDkxYjY0YTAzYzA4YjgyMmJjZjEzMDRhZGM1OGRiMDEyNDQ0ZGU2NWI1ZjcyNTI1MjYwMmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5MWFiYmQ4N2RlNjMyYjg3MjRlODQxYjExOGNkNDBhMWNlZGI2MTJiMjU4YWE2Njc5MTJjZTI4ZDg0NjE4N2UifQ"
         }
       ]
     },
@@ -117,16 +117,6 @@
       ]
     },
     {
-      "id": "claim_cd500094f30b45f9907dbda3029c347f",
-      "statement": "syncService.ts is a legacy debounced whole-blob sync that POSTs transparent_data to /api/estate after two seconds.",
-      "evidence": [
-        {
-          "resource": "repo://frontend/src/lib/services/syncService.ts#L18-L55",
-          "version": "repo-lines-v1:sha256:9e5cb6a999ff756443a823908b49021ffe39d725ef45f1fced64981a49277871:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlNDNlOGYzY2JhNjgwODU0YWMzM2VkMGY0MzllNjJiZmNiNmFhNTEwOGM0MTIyNzc2M2JjODdmMDMxODNlNjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdhOWZmNzFjNmE3ZmMwNGY3ODhiYzU3MTNjYTcwZTg2ZjQyYWIxYTEyYzM2ZDM3YjY2ZjYyMDNkZTczZmZjMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlNjNhMDcwNDRlMzRkNzYxYWNmYjAxN2JlMzBhNGFjMzM4ZWFjZmQyZmFhYmFjZDZkYTNhYTBhMTJkMTk0YWUifQ"
-        }
-      ]
-    },
-    {
       "id": "claim_4e3f120ac9f64cfdadb4e7baea7ba656",
       "statement": "A SyncManager create with origin admin-sample records the server-confirmed ID in the per-account sample registry immediately after the POST succeeds, logs rather than rethrows a bookkeeping failure, and carries the origin through recovered-create retries.",
       "evidence": [
@@ -135,18 +125,50 @@
           "version": "repo-lines-v1:sha256:97862d0d750ff316ff622d42309955aa3b774d07c401f8377a587b7d34fb065d:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWRiMTUyOTJiNWVhOGY2YTUyZWU2N2EyMmEyZmFlOGQ4NmU4NzNkNTE3ODRmZjRkZDJkNTEyY2ZiNGQ2YjQzYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzA0YzdkY2M4ZjJiZjMwZWE1ZTlhMDFhYTE5NWQyZWNlZmQxYWNmZDBlNTMyN2MyMzQwMzNlMDVkYWY1YWFlNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
         },
         {
-          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L278-L284",
-          "version": "repo-lines-v1:sha256:f52a355061dc3fa5f7da2d53fa3fdf009377de85afae6500e58cef5a4bf4c3be:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjI2NDhiN2YwNmY0MmZlMDA5MmMwYmQwMDc4ZDhjZTVhNmMyZTkwZWE3MWMzMmMwM2ViZjE3MDRjOTAyMjdkMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTExYzBjMDY2ZjdhMmNiYzJlMjgzYzdkMzEzOGExOTY5MzI2Mzc2OGYwMDQwZDU0MzRjZTM3YTNiYjViNzFjZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzZkZjA1ODcxZDdmZTJhMWM5YTU4M2JmMjc1OGQyOWY0MjRlNDc3MWRhMWE3MDVmN2E0MTAzM2VkMWJkNGQ5MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGI0ZTAzY2Q5ZGFmOTkwNDY3YzNhNzczMDc3OTdmNjc4ZGM2MzMwNTJiZmVhMjJmNzAyMjgwZTU0YzRiMTY0MyJ9"
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L292-L296",
+          "version": "repo-lines-v1:sha256:8956ed8f284b30d692cdd5804567b85704a2298171658fa73279a06a75525477:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjI2NDhiN2YwNmY0MmZlMDA5MmMwYmQwMDc4ZDhjZTVhNmMyZTkwZWE3MWMzMmMwM2ViZjE3MDRjOTAyMjdkMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWQwZTMxNmVkN2MzY2VjNTMzNTdiNGNhMGYwOWIwODM3Nzc3MmU1MGFiNjIxZTc5N2FjZDIyZWUyZTJmYzZjZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzZkZjA1ODcxZDdmZTJhMWM5YTU4M2JmMjc1OGQyOWY0MjRlNDc3MWRhMWE3MDVmN2E0MTAzM2VkMWJkNGQ5MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmJjNDUzOTk1ZGIyMDViZGZkZmY4NmYxNzdhZWYwNWZkNGU1MTM2OTIyMWUxODU0MWNhYWQ4ZTYyNDFhZGIxZCJ9"
         },
         {
-          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L557-L573",
-          "version": "repo-lines-v1:sha256:4b56a35c655068630709073a033325066d1a634b140b40e1e0994ba1682abc21:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiOWM1YTVjODJhYjU3NjIxNDJhMjFlYzVmNDU3ZGExZmEzOTQwNDBmZmY4NGM4MTgwZmNjNjdhNDAwY2YwMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MjJjNDJjZDE5YzZkMDNkODA4YzQ1MjcyMDU1MjgyNWI3ZWExYzViNDkxYjIxODUxMWNhYzc0MTVjZjlkOWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExYjcxMzM2MGFhODg0Y2IyZTMyMWI3MTE5OGJmZjhhNDU1Y2IwODk2MDAwY2YxZjRjMDc5Njk0YjYwYTViOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI4ZjhjMWUzMjlhZDdkYjRjYzcwZTUzMTQ3NWJmODIzZTE2OTlmMzUyNTg2ZjBhNzJlNzBjNjM3ZDhiMDQzOGEifQ"
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L572-L590",
+          "version": "repo-lines-v1:sha256:6b165167a3d38aaee627536fa49301399017d2370999295f7eec64eecd05370c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiOWM1YTVjODJhYjU3NjIxNDJhMjFlYzVmNDU3ZGExZmEzOTQwNDBmZmY4NGM4MTgwZmNjNjdhNDAwY2YwMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjMTc0OTlmMDNmODFjNmViNmRkNGVlY2IzYzZiYTBhOWNkZmEyZjc5N2M3ZjY1MjUxNjI3NDdiN2JjMGYyZjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExYjcxMzM2MGFhODg0Y2IyZTMyMWI3MTE5OGJmZjhhNDU1Y2IwODk2MDAwY2YxZjRjMDc5Njk0YjYwYTViOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI3Mzc5MWQ1ODRhZjdhZjBhYzI1ODc3ZDQwZTRhOTc2NmNlYTAxMWU3YTAwN2E3NjkxNDA0NTg2NWRhYzVkYzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_95b0fb9eae7d4def9b2bc8fabc9cbb99",
+      "statement": "A SyncManager update sends only the fields that update changed and failed creates and updates are remembered on the device so Try Again works after the form closes or the page reloads.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L608-L614",
+          "version": "repo-lines-v1:sha256:6aa3a62cafa996f94769b8e81043b809f8ac1a11b60d1ff72c3184e9123373c2:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNThmZTdhYmQ5Y2QzMDhlMTIzNjdlYjhjZWFiMmRlZDUyOTQzMGYxNWIwNjBmNGU1MWIwYzYwMTg2ODliNTEyNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzA5OTIxOWIzNDcyMGNhOGZiMThmMjZiYTM1MWFkNzNhN2JjNTg1YTNhOWNkMjQwMThhOTgwYmE1MDY3ODE5NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTMwNjUwY2EwZjViY2M5NmI5M2JlYjQ1YzJlMzg5MWYwYzYxMjI1OTNkYTE1YWYwY2JiOTFhMDI1YTcxMzhiZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzMyMWU4ZThmY2VhNGI0YTA1OGRjZjVmNGNiYjkzM2RjYzc5YjdjYWI1ZmNmMmJjNDI0OWIyODRiNmE1ZGU2NiJ9"
+        },
+        {
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L695-L700",
+          "version": "repo-lines-v1:sha256:683dbbca8bf9e892fe4625f3b331242027508bc4fb1c9b28dc867f35ea80d2d2:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2Y2MTAxYjM4OGJlYTdjODc5ZDQ4ODNjZDMwYzRhZmVjMjJmZTZlYTE4NTNiYzJiOGY1YWM0MmNiOTNhZTU5ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWM0ODhkOTk0YzgzMjE1ZjQ4MGMyN2VkOGI3ZjhmZDFhZDQ3YWRkYWU0MjhjZTVhNTJiMmFjY2RmOTA2YmNjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDBkZDg4ZTExNTI3ZDYzYTczN2MzNGRlZjQ5OWVkNmQ3ODgxOTVmZTgxM2ZmZDVhYjJjNDNjODRkNjkxYTg0NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTc5YTE5MmE3ZjgwYjI3MGVhNGNjOWRlYjg2Njk3ODBhOWU3ZDIwZGM1NGY0ZGJiZDFjMTgwMjU3NjQ4MWFjOSJ9"
+        },
+        {
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L784-L788",
+          "version": "repo-lines-v1:sha256:a48fe12736bccf580d6644ad8220fe9729f60ae26a93708223f2c3026ba232e5:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDFiMjdhY2RlNGQyYjFkYmRkNzhlMzlmNjI1Zjc3YjI4MjMzYzIyNjM4ZDBiN2Q1ZmZiMTA2NzEzYzU5OGVlMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjZkOGZmMjlhMmUzOTNlN2U2OGM4YWE4ZWRiYmYxODc4Y2Q0MGRlZGQ1NTUyMTliYjYyYjY1NmM0MTM2YzE5MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTk1ZTIxYTg0ZGM2MDYzZTY5YWY4YmFkYmE0MmE1OTVkYjcyMmNhY2Y2ZWE4ZDRmMWIzZDkxYzg2NTk1YzFlMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODJiNDYzOTFkN2E0MWMzMzUzNjQyZGU5ZjRmOTQ4NzYwMDE3YjkzNTRiYmUxMDkwN2M1NWU3NTY2YzRjNDU4OSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_bfeedb670049474fa20e6bf84e65b4a0",
+      "statement": "keepNewest(count, field) caps a SyncManager's device copy to the newest rows; the activity log store keeps 200 entries by timestamp.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/services/sync.svelte.ts#L176-L189",
+          "version": "repo-lines-v1:sha256:e021e54af3dd243c674a975609dd269cae0c2cad7f1bee3af862d4b0a9f5623b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiNWY0ZjVlOWY4Y2M2NzU2NjBhNjQ1NTFkY2MxMGIzN2QzZjA3Nzg2ZTk2YzdmOGIxNmMyNWM1N2VhZWI1MDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyNzNiMDIwZmQwMjU4Yzk3ODA0MjI4ZjVkYTViNWViN2VmYmMyMDk1N2RmZjgzNTg3ZDIyNTU5MDc0MzkxOGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk0MWRlM2QzM2Y5NWM3NTdmMGQyMDg0NTA0YWJlNTYxY2RiNzE0NzU4MmExN2Q1NzQ2YjE1ODdlMWU1Mzk0MzUifQ"
+        },
+        {
+          "resource": "repo://frontend/src/lib/stores/activityLog.svelte.ts#L26-L26",
+          "version": "repo-lines-v1:sha256:c6f1125c0c407782400f04f70c40386db99747ad72e1c500b423ef66aaaf3a65:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzZmMTEyNWMwYzQwNzc4MjQwMGYwNGY3MGM0MDM4NmRiOTk3NDdhZDcyZTFjNTAwYjQyM2VmNjZhYWFmM2E2NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzZmMTEyNWMwYzQwNzc4MjQwMGYwNGY3MGM0MDM4NmRiOTk3NDdhZDcyZTFjNTAwYjQyM2VmNjZhYWFmM2E2NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzQ2ZWJjZjdkYzY4YTQ2MDAwYTdkYjc2Yjk1NGMxYzMxNWIzYmZlYjMyNTg4MmY1NzdiN2ViM2U4ZDBjMTlkYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzgxOTU0OTU0NGY4NWI0YjUwYjA3Yzc1NGYxYjNhMDZhZDJkN2UxMThmMGQyNTkxMzQ1MGM4ODNkZTc2Zjk1NiJ9"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-10-27T18:31:56.115Z"
+    "at": "2026-10-28T04:26:57.052Z"
   }
 }

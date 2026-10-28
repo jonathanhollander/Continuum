@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:b5ae5437eb6ba80ff2855e31d25383abd56e1b59be06f76376c68d1a38e698fe",
+  "pageVersion": "sha256:4e693052fbeb02a2722101d8705fafde4fa6a7cf969f43b403b47465ea53ab51",
   "claims": [
     {
       "id": "claim_3bcc1001a8ae432f992ae062b192c755",
@@ -35,8 +35,8 @@
       "statement": "Railway builds with Nixpacks as declared in .railway/railway.ts, installs Python requirements into /opt/venv, builds the frontend with npm run build, starts uvicorn backend.main:app and health-checks /api/health.",
       "evidence": [
         {
-          "resource": "repo://.railway/railway.ts#L54-L69",
-          "version": "repo-lines-v1:sha256:555cb77e30163bf3dfaf4807e0a710f82b566c6d230751f23795a1486b7ff047:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjMTdmMzY4Yzg3NGE0MmE3NDJkMjUxZjEzNjEyYmY0Yzg0NTU0NDcyODA1OTFkYmQ0NzcwNjQxNzRlMGUwY2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyZjQxNjZkZWQ3YTQ1MjNmZmY5MmMyNGEyNWFhM2M5NmM5Y2Q2MjVlNjEyODVkZGUwZTc1OTY2ODY5YmRjOWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2NzBjZGJiOGMxMDBmZjkzYjJmOGUxOGZmNzVjZDNhMDU4NDRjMzM5MmIxMTM4MjQ3MDJkMjMzMjNjMzdkNzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjODVhOTFhZWQxODJjY2FkNmMxZTc4OThjOWU5YWU2YjZjNzg2NzkzNTE0MGYzM2U0NTg4ZDFmYzE2MDMyNmEifQ"
+          "resource": "repo://.railway/railway.ts#L53-L70",
+          "version": "repo-lines-v1:sha256:cc26d9b689237a740d543d04be94cae873c263cf6ebcf2fe56bac35ac85fd4f4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4NjAyODcwOWQ4YTlhOTM2Yzc3Yjg4NWM3ZDlkNmUxNzk4ZTZjZGY3NzYyMDFjODQ5NmI0YTA2ZmVkMmUzZWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3MDI1NGVmYmQzYzdhYzgyOTEzODk1ZDhiYjFiZmMxYmZmZmFlY2E2NDZhMzMwNmVjMWY0ZjYzNzI5MjBmODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVjMDJhZjNlMTM0ZWJmZTM3YzY3YTk1YjNhMDNmMjMxZDJlNjI2ZDU4OWI1ZTZlMjFhOGI0YTljZTZlNGQwYTQifQ"
         },
         {
           "resource": "repo://nixpacks.toml",
@@ -60,15 +60,15 @@
     },
     {
       "id": "claim_5cf03a4be2984dca8d15eb2284d0f3af",
-      "statement": "The client fetch hook adds the csrf_token cookie as X-CSRF-Token to same-origin or configured-API writes, first bootstrapping a cookie through /api/health when needed.",
+      "statement": "The client fetch hook adds the csrf_token cookie as X-CSRF-Token to same-origin or configured-API writes, first bootstrapping a cookie through /api/csrf-token when needed.",
       "evidence": [
         {
           "resource": "repo://backend/csrf.py#L155-L194",
           "version": "repo-lines-v1:sha256:11365886dc53b9109d7a25a1373a889802910231fbffb587133434d944080cff:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmZDQzNTI2NzFlMGRlODdiYjE0ZTkxYWM5YzU5MDEzZWM3MDAyNjY1M2NlZmM3NWE3ZTg2NzFkYzE5OTllNmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDMyZTk2NGQwOTMyMzUxZTVkMTg1MjY5MjgxYjE3MWEzYTA5YjA4YjI4NmU2NjFlYTQ3MDMyM2M4MmViNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM5Yzc3NWM4ZThjN2QyMmRmZjNmYTI5MDk5NmM1YWRkZTgzZDk2MWVkOTUwMGY0YjBjNTI4OWNkMjQ1NzI1M2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0MzQ5YmIzMDM3MjE2MmIzMjk1N2M4NTk3MzEzNDIyMDEwNGZmN2JiZWM3OWMzOTM0NzljNmNlZDdkYmFkYjQifQ"
         },
         {
-          "resource": "repo://frontend/src/hooks.client.ts#L21-L79",
-          "version": "repo-lines-v1:sha256:5278ae8a0a05edab2bb638c3a0f77d11c85cdd071cb66b7e1182252205124cf3:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2OTE4NTQ1NjY0MTdhZTNhZjJiYzdhOTRkODRkODVkNmFkYjZjOWVkNzQ3MzYwYzUzNjgyN2MxZTdmY2QwZWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjM2EyMDc3NGQ1YzJiYjRjNzkwYzE4ODkwYTljNDk0Y2NiNTEwZmM4ZThjMDllYzc0NTE5YmMxNjRmYzc4NGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxZmU3MmMzNTFhNWZlZTVjN2ViZWEzM2JjMTFiNGEyMmFjODNlYzgwMjg5ZDc4ZTc5ODg2MDQ2ODk0MDgwODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI4Y2MyNTRlMDM0OGUwYmIwOTNkYzU1NzhmY2JlNGMxN2NlNjgzMzViODQ0OTEyZDYxYjA2NzYwNDgxZDZmOGEifQ"
+          "resource": "repo://frontend/src/hooks.client.ts#L25-L79",
+          "version": "repo-lines-v1:sha256:54d1ed4d41fa9cfc6ded8e2d7c3880ecc8e60bd31bea070f60ebdeea25089033:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhhYTI2N2YzMTI2YTc0NGEwZmVmNjMyODU1MmU3Zjk5NjgxMzNkYzVmY2MzZDI2NThlYmZiODEwNDgwMjkzYjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjM2EyMDc3NGQ1YzJiYjRjNzkwYzE4ODkwYTljNDk0Y2NiNTEwZmM4ZThjMDllYzc0NTE5YmMxNjRmYzc4NGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5YjA3ZjJhZDQ4YTcxNmE2MTFhY2Y5NjAxODhhMTNiMTMwZWU4NzIyNjNhOTcwNjYyMDhiMTQxYjQzNDI4OWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI4Y2MyNTRlMDM0OGUwYmIwOTNkYzU1NzhmY2JlNGMxN2NlNjgzMzViODQ0OTEyZDYxYjA2NzYwNDgxZDZmOGEifQ"
         }
       ]
     },
@@ -77,14 +77,24 @@
       "statement": "The backend serves the built SPA from frontend/dist with an index.html fallback, so production runs as a single origin.",
       "evidence": [
         {
-          "resource": "repo://backend/main.py#L442-L508",
-          "version": "repo-lines-v1:sha256:c3893726029b05f42cae49362d2b5206810a935728fad7377c81acd5a16fd170:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhMTI2MDBmNDg0MDY1ZTJiMjRkZTQyZDY4YWE0OWFkMjEwZjdiMzgwMmU1ODM0NTZiNmEwYjA0MDQ1MTEwMjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhNTIwODgwZjRlMmNkODUyMTZkN2YwY2MwYWFiZGE0ZWU2ZDcxMDBjYzJjN2YwOWM5NjFmZjFhMjBiNTc5YmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZhMzZjY2RkMDY4MGUyM2MxMmZiMGVkZjkzZGUzOGE5NmQyZGQzNGY1N2E1M2NiODg2MDNjNDk3ZTAxNWRkNDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1MzZkOWE1Mzk0MDI1ODkyZWY1NWU5ODE3ZjhjNWZjZTgzZWUzOThiZTgyZjEyMzFhYjc5YmM5MGM0YmIwYjkifQ"
+          "resource": "repo://backend/main.py#L466-L530",
+          "version": "repo-lines-v1:sha256:541cd8b8c084ca3c474e024b45b6dfceb9bbb67988d466f802ed6711d7f513fa:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkYzllMmU0NWQwMDliZDdiZmMzYmI2YmViMTVmOWQ4YmJkMjgzOWU3MGM5MzBiN2RlNmE5NjA3ZDA2YWMzZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmY2FjMWE3M2UwNTg2OWViMDg5Y2Q0OGUxMmQzNGIwOWUzYjY1OTdmZGU4YzhmNjc4ZGNlODNkMzAyOTFlOTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExOTg2ZmE3YmI3YzFhMDk5Zjg0MGQ0YTk1ZDBhNDIwNjMyM2IyMDZiNDk0MzJhZTA1ZTM0MjhhOGY4MzRlNmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBlMTg3MDhjYzBhOTA1YzA2MTM5NTkxZGE1YTM2ZGI0ZWVhNjZjYWRiYjdjMzkxYmRhMTNiNDJkYThmMGJlYTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3a3fd2664eca4d4289d03154e58fde91",
+      "statement": "The Railway GitHub source is declared with checkSuites: true, so a GitHub check suite on a commit would gate its deploy.",
+      "evidence": [
+        {
+          "resource": "repo://.railway/railway.ts#L54-L54",
+          "version": "repo-lines-v1:sha256:fc17f368c874a42a742d251f13612bf4c8455447280591dbd477064174e0e0cc:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmMxN2YzNjhjODc0YTQyYTc0MmQyNTFmMTM2MTJiZjRjODQ1NTQ0NzI4MDU5MWRiZDQ3NzA2NDE3NGUwZTBjYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmMxN2YzNjhjODc0YTQyYTc0MmQyNTFmMTM2MTJiZjRjODQ1NTQ0NzI4MDU5MWRiZDQ3NzA2NDE3NGUwZTBjYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzY3MGNkYmI4YzEwMGZmOTNiMmY4ZTE4ZmY3NWNkM2EwNTg0NGMzMzkyYjExMzgyNDcwMmQyMzMyM2MzN2Q3OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTAyYzQ3YTQ3ZDQwMzgzODE5NDNlZjlmZWJjMThmMTQ4M2YyMjcyM2FmZjA1NjM3ZjJhYzY3NGM1ZTBhZmRjNyJ9"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-10-27T18:31:56.115Z"
+    "at": "2026-10-28T04:26:57.052Z"
   }
 }

@@ -15,3 +15,7 @@ docs/reviews/*/evidence/
 # /jhupdate3: generated logo-review build output and PDF rendering of docs/CONTINUUM_LOGO_REVIEW.md
 output/
 docs/CONTINUUM_LOGO_REVIEW.pdf
+# /jhupdate3: OpenWiki generated claim sidecars/run stamp and marketing photos/screenshots (same reason as *.png)
+openwiki/.claims/
+openwiki/.last-update.json
+*.jpg
