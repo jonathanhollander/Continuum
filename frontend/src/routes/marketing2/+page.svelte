@@ -16,6 +16,7 @@
         Globe,
         Heart,
         Compass,
+        Shield,
         BookOpen,
         Menu,
         X,
@@ -27,8 +28,6 @@
     } from "$lib/stores/keyringStore";
     import { auth } from "$lib/stores/auth";
     import { dictionary } from "$lib/stores/dictionary";
-    import ProductShot from "$lib/components/marketing2/ProductShot.svelte";
-    import LineArt from "$lib/components/marketing2/LineArt.svelte";
 
     // Core state
     let scrollY = $state(0);
@@ -555,28 +554,11 @@
     <main class="relative z-10">
         <!-- Section 1: The Shoebox (Hero) -->
         <section
-            class="min-h-screen flex items-end md:items-center px-6 pb-24 md:pb-0 relative overflow-hidden"
+            class="min-h-screen flex items-center justify-center px-6 relative"
             bind:this={heroRef}
         >
-            <!-- The one photograph: a shoebox of keepsakes under a bed -->
             <div
-                class="hero-photo absolute top-0 inset-x-0 h-[62vh] md:h-auto md:inset-y-0 md:start-auto md:end-0 md:w-[60%]"
-                style="opacity: {Math.max(0.35, heroOpacity)};"
-            >
-                <img
-                    src="/images/marketing2/hero-shoebox.jpg"
-                    alt={$m2t.shotHeroAlt}
-                    width="1024"
-                    height="1024"
-                    fetchpriority="high"
-                    class="w-full h-full object-cover object-[45%_55%]"
-                />
-                <div class="hero-fade absolute inset-0"></div>
-            </div>
-
-            <div class="relative w-full max-w-6xl mx-auto">
-            <div
-                class="text-center md:text-start max-w-[40rem]"
+                class="text-center max-w-3xl mx-auto"
                 style="
                     opacity: {heroOpacity};
                     transform: translateY({scrollY * 0.15}px) scale({Math.max(
@@ -624,7 +606,7 @@
                             {$m2t.heroLine3}
                         </p>
                         <p
-                            class="text-lg text-white/60 max-w-md mx-auto md:mx-0 mb-10"
+                            class="text-lg text-white/50 max-w-xl mx-auto mb-10"
                             in:fly={{ y: 20, duration: 800, delay: 1000 }}
                         >
                             {$m2t.heroDesc}
@@ -642,7 +624,6 @@
                         </a>
                     </div>
                 {/if}
-            </div>
             </div>
 
             <!-- Animated scroll indicator -->
@@ -662,7 +643,6 @@
             bind:this={kitchenRef}
         >
             <div class="max-w-2xl mx-auto reveal-section" use:reveal>
-                <LineArt name="table" class="w-48 md:w-56 mx-auto mb-10" />
                 <h2
                     class="text-2xl md:text-3xl font-serif text-white/80 text-center mb-10"
                     use:textReveal={{ text: $m2t.kitchenTitle }}
@@ -690,7 +670,6 @@
                 class="max-w-3xl mx-auto text-center reveal-section"
                 use:reveal
             >
-                <LineArt name="envelope" class="w-48 md:w-56 mx-auto mb-10" />
                 <h2
                     class="text-3xl md:text-4xl font-serif text-white/90 mb-8 leading-relaxed"
                     use:textReveal={{ text: $m2t.weightTitle }}
@@ -745,15 +724,6 @@
                     {$m2t.guideReassurance}
                 </p>
             </div>
-            <div class="max-w-4xl mx-auto mt-16 reveal-section" use:reveal={{ delay: 200 }}>
-                <ProductShot
-                    src="/images/marketing2/shot-letters.jpg"
-                    alt={$m2t.shotLettersAlt}
-                    caption={$m2t.shotLettersCaption}
-                    width={1400}
-                    height={850}
-                />
-            </div>
         </section>
 
         <!-- Section 4: The Pulse -->
@@ -781,15 +751,6 @@
                         {$m2t.pulseDesc}
                     </p>
                 </div>
-
-                <ProductShot
-                    src="/images/marketing2/shot-pulse.jpg"
-                    alt={$m2t.shotPulseAlt}
-                    caption={$m2t.shotPulseCaption}
-                    width={1400}
-                    height={802}
-                    class="mb-16"
-                />
 
                 <div class="space-y-8 text-center">
                     <p
@@ -822,7 +783,11 @@
                 class="max-w-3xl mx-auto text-center reveal-section"
                 use:reveal
             >
-                <LineArt name="folder" class="w-48 md:w-56 mx-auto mb-10" />
+                <div
+                    class="icon-container w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-8"
+                >
+                    <Shield size={24} class="text-white/50 icon-pulse" />
+                </div>
                 <h2 class="text-2xl md:text-3xl font-serif text-white/80 mb-6">
                     {$m2t.distinctionTitle}
                 </h2>
@@ -890,16 +855,6 @@
                     {$m2t.giftTitle}
                 </h2>
 
-                <ProductShot
-                    src="/images/marketing2/shot-recipient.jpg"
-                    alt={$m2t.shotRecipientAlt}
-                    caption={$m2t.shotRecipientCaption}
-                    width={1200}
-                    height={1125}
-                    fit="aspect-[16/11] object-cover object-top"
-                    class="max-w-3xl mx-auto mb-16"
-                />
-
                 <div class="grid md:grid-cols-3 gap-8">
                     {#each [{ title: $m2t.giftClarity, desc: $m2t.giftClarityDesc }, { title: $m2t.giftGuidance, desc: $m2t.giftGuidanceDesc }, { title: $m2t.giftVoice, desc: $m2t.giftVoiceDesc }] as card, i}
                         <div
@@ -963,6 +918,7 @@
                                 />
                             </button>
                         {/if}
+
                     </div>
                 {:else}
                     <div
@@ -1036,41 +992,6 @@
 </div>
 
 <style>
-    /* Hero photograph: it dissolves into the page on every side the text sits on */
-    .hero-photo {
-        -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
-        mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
-    }
-    .hero-fade {
-        background: linear-gradient(to bottom, rgba(10, 10, 11, 0.5) 0%, transparent 30%);
-    }
-    @media (min-width: 768px) {
-        .hero-photo {
-            -webkit-mask-image:
-                linear-gradient(to right, transparent 0%, black 45%),
-                linear-gradient(to bottom, black 70%, transparent 100%);
-            -webkit-mask-composite: source-in;
-            mask-image:
-                linear-gradient(to right, transparent 0%, black 45%),
-                linear-gradient(to bottom, black 70%, transparent 100%);
-            mask-composite: intersect;
-        }
-        .hero-fade {
-            background: linear-gradient(to bottom, rgba(10, 10, 11, 0.55) 0%, transparent 25%),
-                rgba(10, 10, 11, 0.15);
-        }
-    }
-    @media (min-width: 768px) {
-        [dir="rtl"] .hero-photo {
-            -webkit-mask-image:
-                linear-gradient(to left, transparent 0%, black 45%),
-                linear-gradient(to bottom, black 70%, transparent 100%);
-            mask-image:
-                linear-gradient(to left, transparent 0%, black 45%),
-                linear-gradient(to bottom, black 70%, transparent 100%);
-        }
-    }
-
     /* Reveal animations */
     .reveal-section {
         opacity: 0;

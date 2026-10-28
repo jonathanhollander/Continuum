@@ -15,10 +15,12 @@
         ArrowLeft,
         ChevronDown,
         Globe,
+        Compass,
+        Layers,
+        Bell,
         Menu,
         X,
     } from "lucide-svelte";
-    import ProductShot from "$lib/components/marketing2/ProductShot.svelte";
 
     let langMenuOpen = $state(false);
     let mobileMenuOpen = $state(false);
@@ -63,6 +65,29 @@
         return { destroy: () => observer.disconnect() };
     }
 
+    // Icon animation on hover
+    function iconAnimate(node: HTMLElement) {
+        if (prefersReducedMotion) return { destroy: () => {} };
+
+        const handleMouseEnter = () => {
+            node.style.transform = "scale(1.15) rotate(10deg)";
+        };
+
+        const handleMouseLeave = () => {
+            node.style.transform = "scale(1) rotate(0deg)";
+        };
+
+        node.addEventListener("mouseenter", handleMouseEnter);
+        node.addEventListener("mouseleave", handleMouseLeave);
+
+        return {
+            destroy() {
+                node.removeEventListener("mouseenter", handleMouseEnter);
+                node.removeEventListener("mouseleave", handleMouseLeave);
+            },
+        };
+    }
+
     function setLanguage(lang: Marketing2Language) {
         m2Language.set(lang);
         langMenuOpen = false;
@@ -98,19 +123,28 @@
             num: "01",
             title: $m2t.howBeat1Title,
             desc: $m2t.howBeat1Desc,
-            shot: { src: "/images/marketing2/shot-letters.jpg", w: 1400, h: 850, alt: $m2t.shotLettersAlt },
+            icon: Compass,
+            orb: "bg-gold/10",
+            ring: "bg-gold/5",
+            iconClass: "text-gold-text/70",
         },
         {
             num: "02",
             title: $m2t.howBeat2Title,
             desc: $m2t.howBeat2Desc,
-            shot: { src: "/images/marketing2/shot-accounts.jpg", w: 1400, h: 550, alt: $m2t.shotAccountsAlt },
+            icon: Layers,
+            orb: "bg-primary/10",
+            ring: "bg-primary/5",
+            iconClass: "text-primary/70",
         },
         {
             num: "03",
             title: $m2t.howBeat3Title,
             desc: $m2t.howBeat3Desc,
-            shot: { src: "/images/marketing2/shot-recipient.jpg", w: 1200, h: 1125, alt: $m2t.shotRecipientAlt },
+            icon: Bell,
+            orb: "bg-primary/10",
+            ring: "bg-primary/5",
+            iconClass: "text-primary/70",
         },
     ]);
     const grainBg = `background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%" height="100%" filter="url(%23noise)"/%3E%3C/svg%3E');`;
@@ -370,9 +404,9 @@
             {#each beats as beat, i}
                 <!-- Beat Section -->
                 <section class="py-24 px-6 relative">
-                    <div class="max-w-6xl mx-auto">
+                    <div class="max-w-4xl mx-auto">
                         <div
-                            class="grid md:grid-cols-2 gap-12 md:gap-16 items-center reveal-section"
+                            class="grid md:grid-cols-2 gap-12 items-center reveal-section"
                             use:reveal={{ delay: i * 100 }}
                         >
                             <!-- Text content -->
@@ -399,19 +433,28 @@
                                 </p>
                             </div>
 
-                            <!-- Product screenshot -->
+                            <!-- Icon -->
                             <div
                                 class={i % 2 === 0
-                                    ? "order-1 md:order-2"
-                                    : ""}
+                                    ? "order-1 md:order-2 flex justify-center"
+                                    : "flex justify-center"}
                             >
-                                <ProductShot
-                                    src={beat.shot.src}
-                                    alt={beat.shot.alt}
-                                    width={beat.shot.w}
-                                    height={beat.shot.h}
-                                    fit="aspect-[4/3] object-cover object-left-top"
-                                />
+                                <div
+                                    class="icon-orb w-32 h-32 rounded-full {beat.orb} flex items-center justify-center relative"
+                                    use:iconAnimate
+                                >
+                                    <!-- Animated rings -->
+                                    <div
+                                        class="icon-ring icon-ring-1 {beat.orb}"
+                                    ></div>
+                                    <div
+                                        class="icon-ring icon-ring-2 {beat.ring}"
+                                    ></div>
+                                    <beat.icon
+                                        size={48}
+                                        class={beat.iconClass}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -537,6 +580,41 @@
 
     .nav-link:hover {
         color: white;
+    }
+
+    /* Icon orb with rings */
+    .icon-orb {
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .icon-ring {
+        position: absolute;
+        border-radius: 50%;
+        animation: iconRingPulse 4s ease-in-out infinite;
+    }
+
+    .icon-ring-1 {
+        width: 150%;
+        height: 150%;
+        animation-delay: 0s;
+    }
+
+    .icon-ring-2 {
+        width: 200%;
+        height: 200%;
+        animation-delay: 2s;
+    }
+
+    @keyframes iconRingPulse {
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 0.3;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.1;
+        }
     }
 
     /* Number pop animation */
@@ -679,6 +757,7 @@
         .animate-float-slow,
         .animate-float-medium,
         .animate-float-particle,
+        .icon-ring,
         .animate-pulse-glow {
             animation: none;
         }

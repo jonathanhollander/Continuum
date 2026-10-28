@@ -8,6 +8,8 @@ The recovery plan (`RECOVERY_EXECUTION_PLAN.md`) is marked complete. This list h
 - **Security-track** items are listed separately; security hardening is outside this project phase.
 - **IDs** are `PL-n`. Tick `☐` → `☑` with the commit when done.
 
+**Owner correction, 2026-10-28:** the owner rejects the image/icon replacements and states they were not approved. D5 artwork is being reverted to the pre-Hybrid icon presentation. Do not infer permission to add, generate, replace, crop or restyle images/icons from a typography or general design request. Existing signup closure remains required. Historical completion statements below do not override this correction.
+
 **Status 2026-10-27 23:10 EST:** D5 done (`/` permanently redirects to `/marketing2`, which now has the Hybrid images with dark app screenshots; the unused name field is gone). D3 done (signed-in pages follow the light/dark setting; public login/signup/marketing/token pages stay dark). Earlier: every PL item and D4, D6, D7 is fixed (merged on main 2026-10-27; see `git log --grep 'PL-'`). Open: D1 caller notes (owner choosing), D2 Resend key and verified sending domain (owner sets `RESEND_API_KEY`; code is ready), D8 key rotation. D7 note: the 10 January remote branches are bundled at `~/Backups/Continuum/january-branches-2026-10-27.bundle`; deleting them from GitHub needs the owner (the auto-mode classifier refused `git push --delete`). PL-32 note: media rows 1–3 (user 39 test uploads) point at files lost before the `/data` volume existed. PL-46: durable backups now in `~/Backups/Continuum/`.
 
 **Since the reviews:** `f9d16c9` ended private mode, and the live site now reports `private_mode:false, signup_enabled:false`. Recipient, guardian-portal and one-click check-in links now reach the app; live, a fake token returns 404 instead of 403. Three findings closed with that change (see the end of this file). Two got worse: `/docs` and `/openapi.json` now return 200 publicly (PL-24).
@@ -157,3 +159,22 @@ The recovery plan (`RECOVERY_EXECUTION_PLAN.md`) is marked complete. This list h
 - 2 fake-credential sign-in attempts against production at about 18:40 UTC (2 `auth_password_failed` audit rows).
 - 1 grief-support search sent to Tavily with a key from the reviewer's shell; Tavily rejected it (401), so nothing was charged.
 - Everything else was local or read-only.
+
+
+## D5 artwork rollback — owner correction, 2026-10-28
+
+The owner explicitly rejects the image/icon changes. Restore the pre-Hybrid visual assets and icons; keep the smaller type and signup closure. Preserve the current routing while the optional older-homepage selection remains unanswered.
+
+Confirmed scope mistakes and changes:
+
+- Signup-only closure previously became a whole-site private gate; corrected by `f9d16c9` and not reintroduced by this rollback.
+- The font-size fix `a954a5d` also changed image crop, frame, brightness, motion and decorative presentation, and added a down-arrow icon. Those changes went beyond a font-size request. That older homepage is currently inactive after D5's redirect.
+- D5 added a hero photo, three custom line illustrations and screenshot panels across the homepage, Features and How it works.
+- The Shield, Compass, Layers and Bell presentations were replaced with custom art or screenshots.
+- A commit explicitly described as “Mockup only, not for merge” was incorporated into the live site.
+- The implementation and completion records treated a design direction as permission for specific asset/icon substitutions. The owner's correction overrides the earlier claimed acceptance.
+- Functional checks and attractive-looking mockups were treated as sufficient completion evidence without a clear disclosure of the artwork changes for owner review.
+
+Rollback: restore the three marketing routes from `b241d53^` for their visual content, remove the two new visual components and seven added JPG files, and remove their caption/alt-text keys. Retain the existing smaller hero type, unused-name-step removal, translation wording and two working Svelte selector fixes. No auth, database, app theme, existing brand asset or owner-data changes.
+
+Local verification: frontend check has zero errors/warnings; production build passes. Actual desktop 1440×900 and phone 390×844 checks on all three marketing routes show no replacement-image references or horizontal overflow. How it works renders all three restored original step icons. Live verification pending.

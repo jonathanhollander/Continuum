@@ -2,9 +2,11 @@
 
 **Last Updated:** 2026-10-27 23:10 EST
 
-## `/marketing2` with images (D5, shipped: Hybrid with dark screenshots)
+## `/marketing2` image proposals (historical; rejected for use on the live site)
 
-Owner request: keep `/marketing2`'s wording and add images. Three directions were mocked up. The owner chose Hybrid on 2026-10-27 ("go with hybrid, dark screenshots"); it is merged and live, with the app screenshots retaken in dark theme. The recipient page and the packet PDF stay light because that is how families see them. Each folder holds 1440-wide full-page shots (`marketing2.png`, `how.png`, `features.png`), a 390-wide phone shot (`marketing2-390.png`) and the agent's `PROPOSAL.md`.
+**Owner correction, 2026-10-28:** the owner explicitly rejects the image/icon changes and states that replacement artwork was not approved. The Hybrid implementation is being removed from the live routes. These mockups remain historical evidence, not an approved design or authority to reuse their artwork. The earlier record of selecting Hybrid is superseded by this instruction.
+
+Each folder holds historical 1440-wide full-page shots (`marketing2.png`, `how.png`, `features.png`), a 390-wide phone shot (`marketing2-390.png`) and the agent's `PROPOSAL.md`.
 
 | Direction | Folder | Branch / commit | Weakest part |
 |---|---|---|---|
@@ -14,4 +16,4 @@ Owner request: keep `/marketing2`'s wording and add images. Three directions wer
 
 Side-by-side comparisons (Photo-led, Product-led, Hybrid, left to right): [home](marketing2/compare/marketing2-side-by-side.png), [How it works](marketing2/compare/how-side-by-side.png), [Features](marketing2/compare/features-side-by-side.png).
 
-**Recommendation:** Hybrid, with its screenshots retaken in the app's dark theme so they blend with the page. It is the only direction where every section has a visual. Shipping it also means: drop the unused first-name field, move captions and alt text into `marketing2Dictionary.ts`, and make `/` redirect permanently (301) to `/marketing2`.
+**Current direction:** restore the original icons and remove the added photo, illustrations and product-shot panels. Preserve the smaller typography, existing functionality and signup closure. No new visual assets.

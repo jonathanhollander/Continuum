@@ -128,7 +128,6 @@
     const featureCards = $derived([
         {
             icon: FileText,
-            shot: { src: "/images/marketing2/shot-accounts.jpg", w: 1400, h: 550, pos: "object-left-top", alt: $m2t.shotAccountsAlt },
             title: $m2t.featurePracticalTitle,
             desc: $m2t.featurePracticalDesc,
             items: [
@@ -144,7 +143,6 @@
         },
         {
             icon: Heart,
-            shot: { src: "/images/marketing2/shot-heirlooms.jpg", w: 1000, h: 830, pos: "object-top", alt: $m2t.shotHeirloomsAlt },
             title: $m2t.featurePersonalTitle,
             desc: $m2t.featurePersonalDesc,
             items: [
@@ -160,7 +158,6 @@
         },
         {
             icon: Shield,
-            shot: { src: "/images/marketing2/shot-pulse.jpg", w: 1400, h: 802, pos: "object-center", alt: $m2t.shotPulseAlt },
             title: $m2t.featureProtectiveTitle,
             desc: $m2t.featureProtectiveDesc,
             items: [
@@ -176,7 +173,6 @@
         },
         {
             icon: Briefcase,
-            shot: { src: "/images/marketing2/shot-packet.jpg", w: 1400, h: 923, pos: "object-left-top", alt: $m2t.shotPacketAlt },
             title: $m2t.featurePreparedTitle,
             desc: $m2t.featurePreparedDesc,
             items: [
@@ -441,23 +437,10 @@
                 <div class="grid md:grid-cols-2 gap-8">
                     {#each featureCards as card, i}
                         <div
-                            class="card-3d reveal-section p-10 overflow-hidden rounded-3xl bg-white/[0.02] border border-white/5 {card.hoverBorder} transition-all duration-500"
+                            class="card-3d reveal-section p-10 rounded-3xl bg-white/[0.02] border border-white/5 {card.hoverBorder} transition-all duration-500"
                             use:reveal={{ delay: i * 100 }}
                             use:tilt3D
                         >
-                            <div
-                                class="-mx-10 -mt-10 mb-8 overflow-hidden rounded-t-3xl border-b border-white/5 bg-black/40"
-                            >
-                                <img
-                                    src={card.shot.src}
-                                    alt={card.shot.alt}
-                                    width={card.shot.w}
-                                    height={card.shot.h}
-                                    loading="lazy"
-                                    decoding="async"
-                                    class="block w-full aspect-[16/10] object-cover {card.shot.pos} opacity-90"
-                                />
-                            </div>
                             <div
                                 class="icon-container w-14 h-14 rounded-2xl {card.iconBg} flex items-center justify-center mb-6"
                             >

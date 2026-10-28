@@ -91,16 +91,6 @@ export const marketing2Dictionary = {
         signupEnter: "Set up account",
 
         // Marketing images
-        shotHeroAlt: "A shoebox of photographs and letters, lit softly under a bed",
-        shotLettersAlt: "The letters page with suggested prompts for writing to someone you choose",
-        shotLettersCaption: "Letters, with optional prompts to help you begin.",
-        shotPulseAlt: "The Pulse wellness check-in page with its I'm Here button",
-        shotPulseCaption: "Your Pulse check-in page.",
-        shotRecipientAlt: "A recipient page preview with first steps and a letter, shown with sample details",
-        shotRecipientCaption: "A recipient page preview, shown with sample details.",
-        shotAccountsAlt: "Saved financial accounts, each showing where it is held and who it is for",
-        shotHeirloomsAlt: "Heirloom cards with a photograph, a short story, and who each item is for",
-        shotPacketAlt: "The packet preview, with a printable PDF and a download of the full record and files",
 
         // Features page (minimal)
         featuresTitle: "What's inside",
@@ -236,16 +226,6 @@ export const marketing2Dictionary = {
         signupEnter: "Entrar a Continuum",
 
         // Marketing images
-        shotHeroAlt: "Una caja de zapatos con fotografías y cartas, iluminada suavemente bajo una cama",
-        shotLettersAlt: "La página de cartas con sugerencias para escribir a quien tú elijas",
-        shotLettersCaption: "Cartas, con sugerencias opcionales para ayudarte a empezar.",
-        shotPulseAlt: "La página de bienestar de Pulse con su botón Estoy aquí",
-        shotPulseCaption: "Tu página de bienestar de Pulse.",
-        shotRecipientAlt: "Una vista previa de la página del destinatario con primeros pasos y una carta, con datos de ejemplo",
-        shotRecipientCaption: "Una vista previa de la página del destinatario, con datos de ejemplo.",
-        shotAccountsAlt: "Cuentas financieras guardadas, cada una con dónde está y para quién es",
-        shotHeirloomsAlt: "Tarjetas de recuerdos de familia con una fotografía, una breve historia y para quién es cada uno",
-        shotPacketAlt: "La vista previa del paquete, con un PDF para imprimir y la descarga del registro completo y los archivos",
 
         // Features page
         featuresTitle: "Lo que hay dentro",
@@ -381,16 +361,6 @@ export const marketing2Dictionary = {
         signupEnter: "Entrer dans Continuum",
 
         // Marketing images
-        shotHeroAlt: "Une boîte à chaussures de photos et de lettres, doucement éclairée sous un lit",
-        shotLettersAlt: "La page des lettres avec des suggestions pour écrire à la personne de votre choix",
-        shotLettersCaption: "Les lettres, avec des suggestions facultatives pour vous aider à commencer.",
-        shotPulseAlt: "La page de bien-être Pulse avec son bouton Je suis là",
-        shotPulseCaption: "Votre page de bien-être Pulse.",
-        shotRecipientAlt: "Un aperçu de la page destinataire avec les premières étapes et une lettre, avec des exemples",
-        shotRecipientCaption: "Un aperçu de la page destinataire, avec des exemples.",
-        shotAccountsAlt: "Comptes financiers enregistrés, chacun indiquant où il est détenu et à qui il est destiné",
-        shotHeirloomsAlt: "Fiches d'objets de famille avec une photo, une courte histoire et le destinataire de chacun",
-        shotPacketAlt: "L'aperçu du dossier, avec un PDF imprimable et le téléchargement du dossier complet et des fichiers",
 
         // Features page
         featuresTitle: "Ce qu'il y a à l'intérieur",
@@ -526,16 +496,6 @@ export const marketing2Dictionary = {
         signupEnter: "Continuum betreten",
 
         // Marketing images
-        shotHeroAlt: "Ein Schuhkarton mit Fotos und Briefen, sanft beleuchtet unter einem Bett",
-        shotLettersAlt: "Die Briefseite mit Vorschlägen zum Schreiben an einen Menschen Ihrer Wahl",
-        shotLettersCaption: "Briefe, mit optionalen Anregungen für den Anfang.",
-        shotPulseAlt: "Die Pulse-Seite zum Wohlbefinden mit ihrer Schaltfläche Ich bin da",
-        shotPulseCaption: "Ihre Pulse-Seite zum Wohlbefinden.",
-        shotRecipientAlt: "Eine Vorschau der Empfängerseite mit ersten Schritten und einem Brief, mit Beispieldaten",
-        shotRecipientCaption: "Eine Vorschau der Empfängerseite, mit Beispieldaten.",
-        shotAccountsAlt: "Gespeicherte Konten, jeweils mit Ort und Begünstigten",
-        shotHeirloomsAlt: "Karten für Erbstücke mit Foto, kurzer Geschichte und dem Menschen, für den jedes bestimmt ist",
-        shotPacketAlt: "Die Paketvorschau mit druckbarem PDF und Download der vollständigen Unterlagen und Dateien",
 
         // Features page
         featuresTitle: "Was drin ist",
@@ -671,16 +631,6 @@ export const marketing2Dictionary = {
         signupEnter: "Войти в Continuum",
 
         // Marketing images
-        shotHeroAlt: "Обувная коробка с фотографиями и письмами, мягко освещённая под кроватью",
-        shotLettersAlt: "Страница писем с подсказками, как написать выбранному вами человеку",
-        shotLettersCaption: "Письма с необязательными подсказками, чтобы было легче начать.",
-        shotPulseAlt: "Страница проверки самочувствия Pulse с кнопкой «Я здесь»",
-        shotPulseCaption: "Ваша страница проверки Pulse.",
-        shotRecipientAlt: "Предпросмотр страницы получателя с первыми шагами и письмом, на примере",
-        shotRecipientCaption: "Предпросмотр страницы получателя, на примере.",
-        shotAccountsAlt: "Сохранённые финансовые счета: где хранится каждый и для кого он",
-        shotHeirloomsAlt: "Карточки семейных реликвий с фотографией, короткой историей и тем, кому предназначена каждая",
-        shotPacketAlt: "Предпросмотр пакета с PDF для печати и загрузкой всех записей и файлов",
 
         // Features page
         featuresTitle: "Что внутри",
@@ -816,16 +766,6 @@ export const marketing2Dictionary = {
         signupEnter: "להיכנס ל-Continuum",
 
         // Marketing images
-        shotHeroAlt: "קופסת נעליים עם תמונות ומכתבים, מוארת ברכות מתחת למיטה",
-        shotLettersAlt: "דף המכתבים עם הצעות לכתיבה למי שתבחרו",
-        shotLettersCaption: "מכתבים, עם הצעות רשות שיעזרו לכם להתחיל.",
-        shotPulseAlt: "דף בדיקת השלום של Pulse עם הכפתור אני כאן",
-        shotPulseCaption: "דף בדיקת השלום שלכם ב-Pulse.",
-        shotRecipientAlt: "תצוגה מקדימה של דף הנמען עם צעדים ראשונים ומכתב, עם פרטים לדוגמה",
-        shotRecipientCaption: "תצוגה מקדימה של דף הנמען, עם פרטים לדוגמה.",
-        shotAccountsAlt: "חשבונות כספיים שמורים, כל אחד עם מקומו ולמי הוא מיועד",
-        shotHeirloomsAlt: "כרטיסי חפצי מורשת עם תמונה, סיפור קצר ולמי מיועד כל פריט",
-        shotPacketAlt: "תצוגה מקדימה של החבילה, עם PDF להדפסה והורדה של כל הרשומות והקבצים",
 
         // Features page
         featuresTitle: "מה בפנים",
