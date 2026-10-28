@@ -69,7 +69,7 @@
 
 <div role="dialog" aria-modal="true" aria-labelledby="executor-welcome-title" aria-busy={saving} use:focusTrap={{ onEscape: dismiss }} class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4" in:fade>
     <div
-        class="surface-dark relative max-w-2xl w-full bg-background text-foreground rounded-2xl border border-border shadow-2xl overflow-hidden"
+        class="relative max-w-2xl w-full bg-background text-foreground rounded-2xl border border-border shadow-2xl overflow-hidden"
         in:fly={{ y: 20, duration: 500 }}
     >
         <button type="button" aria-label="Close" onclick={dismiss} disabled={saving}

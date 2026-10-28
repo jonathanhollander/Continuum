@@ -231,19 +231,19 @@
 </svelte:head>
 
 <div
-    class="surface-dark min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-foreground p-6 md:p-12"
+    class="min-h-screen bg-background text-foreground p-6 md:p-12"
 >
     {#if mounted}
         <div in:fade={{ duration: 800 }} class="grief-sanctuary max-w-6xl mx-auto">
             <!-- Header Section -->
             <header class="mb-16 text-center">
                 <div
-                    class="inline-flex items-center justify-center p-3 mb-6 bg-white/5 rounded-2xl backdrop-blur-xl border border-white/10 shadow-2xl"
+                    class="inline-flex items-center justify-center p-3 mb-6 bg-card rounded-2xl backdrop-blur-xl border border-border shadow-2xl"
                 >
                     <LucideHeart class="w-8 h-8 text-primary animate-pulse" />
                 </div>
                 <h1
-                    class="text-4xl md:text-6xl font-serif font-light mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-primary-hover to-slate-300"
+                    class="text-4xl md:text-6xl font-serif font-light mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground via-primary to-muted-foreground"
                 >
                     Grief Support Sanctuary
                 </h1>
@@ -269,18 +269,18 @@
                 <!-- Crisis Center Sidebar -->
                 <aside
                     in:fly={{ x: 20, delay: 600, duration: 600 }}
-                    class="p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 h-fit sticky top-8"
+                    class="p-8 rounded-2xl bg-card backdrop-blur-xl border border-border h-fit sticky top-8"
                 >
                     <div class="flex items-center justify-between gap-3 mb-8">
                         <div class="flex items-center gap-3">
                             <LucidePhone class="w-6 h-6 text-primary" />
-                            <h2 class="text-xl font-medium text-slate-100">Crisis Center</h2>
+                            <h2 class="text-xl font-medium text-foreground">Crisis Center</h2>
                         </div>
 
                         <select
                             aria-label="Country"
                             bind:value={selectedCountry}
-                            class="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                            class="bg-card border border-border rounded-lg px-2 py-1 text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
                         >
                             {#each countries as country}
                                 <option value={country.code}
@@ -293,7 +293,7 @@
                     <div class="space-y-6">
                         {#each emergencyNumbers as item}
                             <div
-                                class="p-5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+                                class="p-5 rounded-2xl bg-card border border-border hover:bg-muted transition-colors"
                             >
                                 <p
                                     class="text-xs text-muted-foreground uppercase tracking-widest mb-1"
@@ -301,7 +301,7 @@
                                     {item.label}
                                 </p>
                                 <p
-                                    class="text-2xl font-mono text-white tracking-wider"
+                                    class="text-2xl font-mono text-foreground tracking-wider"
                                 >
                                     {item.number}
                                 </p>
@@ -334,8 +334,8 @@
                                 onclick={() => (selectedCategory = category)}
                                 class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border {selectedCategory ===
                                 category
-                                    ? 'bg-white/10 border-white/20 text-white shadow-lg'
-                                    : 'bg-transparent border-white/5 text-muted-foreground hover:border-white/10 hover:text-slate-300'}"
+                                    ? 'bg-primary/10 border-primary/30 text-foreground shadow-lg'
+                                    : 'bg-transparent border-border/50 text-muted-foreground hover:border-border hover:text-foreground'}"
                             >
                                 {category}
                             </button>
@@ -370,7 +370,7 @@
                         {#if discoveryAvailable}
                         <div
                             in:fly={{ y: 20, delay: 500, duration: 600 }}
-                            class="p-8 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-xl border border-white/10 flex flex-col items-start text-left group transition-all duration-500 md:col-span-2 lg:col-span-3"
+                            class="p-8 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-xl border border-border flex flex-col items-start text-left group transition-all duration-500 md:col-span-2 lg:col-span-3"
                         >
                             <div
                                 class="flex items-start justify-between w-full mb-6"
@@ -384,14 +384,14 @@
                                             showDiscovery = false;
                                             searchResults = [];
                                         }}
-                                        class="text-xs text-muted-foreground hover:text-slate-300"
+                                        class="text-xs text-muted-foreground hover:text-foreground"
                                     >
                                         Done for now
                                     </button>
                                 {/if}
                             </div>
 
-                            <h3 class="text-2xl font-medium mb-3 text-slate-100">
+                            <h3 class="text-2xl font-medium mb-3 text-foreground">
                                 Find Local Help
                             </h3>
                             <p class="text-muted-foreground mb-6 max-w-md">
@@ -411,7 +411,7 @@
                                     placeholder="Enter your city or zip code..."
                                     onkeydown={(e) =>
                                         e.key === "Enter" && handleDiscovery()}
-                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-muted-foreground"
+                                    class="w-full bg-card border border-border rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-muted-foreground"
                                 />
                                 <button
                                     onclick={handleDiscovery}
@@ -426,7 +426,7 @@
                             </div>
 
                             {#if discoveryError}
-                                <div role="alert" class="w-full mb-4 p-4 rounded-2xl bg-white/5 border border-white/10 text-sm text-slate-300">
+                                <div role="alert" class="w-full mb-4 p-4 rounded-2xl bg-card border border-border text-sm text-foreground">
                                     <p>{discoveryError}</p>
                                     <button
                                         onclick={handleDiscovery}
@@ -443,7 +443,7 @@
                                         <a
                                             href={result.url}
                                             target="_blank"
-                                            class="block p-5 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/30 hover:bg-white/10 transition-all"
+                                            class="block p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:bg-muted transition-all"
                                         >
                                             <div
                                                 class="flex justify-between items-start mb-2"
@@ -467,7 +467,7 @@
                                 </div>
                             {:else if showDiscovery && !isSearching && !discoveryError}
                                 <div
-                                    class="w-full p-8 border border-dashed border-white/10 rounded-2xl text-center text-muted-foreground italic"
+                                    class="w-full p-8 border border-dashed border-border rounded-2xl text-center text-muted-foreground italic"
                                 >
                                     A nearby city may have more support. We're
                                     glad to help you find resources.
@@ -480,10 +480,10 @@
                     <!-- Companion AI Section -->
                     <div
                         in:fade={{ delay: 800 }}
-                        class="p-1 rounded-[2.5rem] bg-gradient-to-br from-white/10 to-white/5 shadow-2xl mt-12"
+                        class="p-1 rounded-[2.5rem] bg-border/60 shadow-2xl mt-12"
                     >
                         <div
-                            class="bg-slate-900/90 backdrop-blur-2xl rounded-[2.4rem] p-8 space-y-8 border border-white/5"
+                            class="bg-card/90 backdrop-blur-2xl rounded-[2.4rem] p-8 space-y-8 border border-border"
                         >
                             <div class="flex items-center gap-4 mb-4">
                                 <div
@@ -494,7 +494,7 @@
                                     />
                                 </div>
                                 <div>
-                                    <h3 class="text-xl font-medium text-slate-100">
+                                    <h3 class="text-xl font-medium text-foreground">
                                         Bespoke Support
                                     </h3>
                                     <p class="text-sm text-muted-foreground italic">
@@ -516,7 +516,7 @@
                                             class="max-w-[85%] p-4 rounded-2xl {msg.role ===
                                             'user'
                                                 ? 'bg-primary/20 border border-primary/20 text-foreground rounded-tr-none'
-                                                : 'bg-white/5 border border-white/10 text-slate-300 rounded-tl-none'}"
+                                                : 'bg-card border border-border text-foreground rounded-tl-none'}"
                                         >
                                             <p class="text-sm leading-relaxed">
                                                 {msg.content}
@@ -527,7 +527,7 @@
                                 {#if isTyping}
                                     <div class="flex justify-start">
                                         <div
-                                            class="px-6 py-4 rounded-2xl bg-white/5 border border-white/10"
+                                            class="px-6 py-4 rounded-2xl bg-card border border-border"
                                         >
                                             <div class="flex gap-1">
                                                 <div
@@ -546,11 +546,11 @@
                             </div>
 
                             {#if chatError}
-                                <div role="alert" class="p-4 rounded-2xl bg-white/5 border border-white/10 text-sm text-slate-300">
+                                <div role="alert" class="p-4 rounded-2xl bg-card border border-border text-sm text-foreground">
                                     <p>{chatError}</p>
                                     <button
                                         onclick={handleChat}
-                                        class="mt-2 px-3 py-1.5 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all text-xs font-medium"
+                                        class="mt-2 px-3 py-1.5 rounded-xl bg-muted text-foreground hover:bg-primary/10 transition-all text-xs font-medium"
                                     >
                                         Try again
                                     </button>
@@ -566,12 +566,12 @@
                                     placeholder="Share what's on your heart..."
                                     onkeydown={(e) =>
                                         e.key === "Enter" && handleChat()}
-                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-muted-foreground italic font-serif"
+                                    class="w-full bg-card border border-border rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-muted-foreground italic font-serif"
                                 />
                                 <button aria-label="Send"
                                     onclick={handleChat}
                                     disabled={!chatInput.trim() || isTyping}
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all disabled:opacity-30"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-muted text-foreground hover:bg-primary/10 transition-all disabled:opacity-30"
                                 >
                                     <LucideArrowRight class="w-5 h-5" />
                                 </button>
@@ -587,20 +587,9 @@
 </div>
 
 <style>
-    :global(body) {
-        background-color: #0f172a;
-    }
-
-    /* The global base rule paints h2/h3 in the dark foreground colour; on this
-       dark page the resource-card titles take the page's light text instead. */
+    /* The resource-card titles take the page's text colour (and its hover accent). */
     .grief-sanctuary :global(h2),
     .grief-sanctuary :global(h3) {
         color: inherit;
-    }
-
-    /* The layout's <main> keeps bottom padding in the light theme colour; keep it
-       dark while this page is shown so no light band sits under the page. */
-    :global(main:has(.grief-sanctuary)) {
-        background-color: #0f172a;
     }
 </style>

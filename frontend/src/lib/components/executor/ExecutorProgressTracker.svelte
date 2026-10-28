@@ -5,8 +5,8 @@
     /**
      * Tailwind only builds classes it sees written out in full, so every colour an executor
      * surface uses is spelled out here (a class built from a string at runtime gets no style).
-     * The keys stay as the pages name them; each one reads from a V0e token, so on `.surface-dark`
-     * it takes the dark value and keeps the person's accent. Four calm families, no alarm reds.
+     * The keys stay as the pages name them; each one reads from a V0e token, so it follows the light or dark theme
+     * and keeps the person's accent. Four calm families, no alarm reds.
      */
     const PRIMARY = { tile: 'bg-primary/10', icon: 'text-primary', bar: 'bg-primary', border: 'hover:border-primary/30', borderStrong: 'hover:border-primary/50', link: 'bg-primary/20 text-primary hover:bg-primary/30' };
     const INFO = { tile: 'bg-info/10', icon: 'text-info', bar: 'bg-info', border: 'hover:border-info/30', borderStrong: 'hover:border-info/50', link: 'bg-info/20 text-info hover:bg-info/30' };

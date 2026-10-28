@@ -194,7 +194,7 @@
             </div>
         {:else if tiers.length === 0 && !error}
             <div
-                class="text-center py-12 bg-background/30 rounded-2xl border border-slate-800 border-dashed"
+                class="text-center py-12 bg-background/30 rounded-2xl border border-border border-dashed"
             >
                 <button
                     onclick={loadData}
@@ -205,7 +205,7 @@
         {:else if (viewMode === "contacts" ? guardians.length : contacts.length) === 0 && !error}
             <!-- EMPTY STATE -->
             <div
-                class="text-center py-16 bg-background/30 rounded-[2rem] border border-slate-800 border-dashed backdrop-blur-sm"
+                class="text-center py-16 bg-background/30 rounded-[2rem] border border-border border-dashed backdrop-blur-sm"
             >
                 <div
                     class="w-16 h-16 bg-card rounded-full flex items-center justify-center mx-auto mb-6"
@@ -242,7 +242,7 @@
             <ul class="space-y-2">
                 {#each guardians as { c: contact, n } (contact.id)}
                     <li
-                        class="bg-slate-950/30 border border-slate-800/50 rounded-xl p-4 flex items-center gap-3"
+                        class="bg-card/60 border border-border/50 rounded-xl p-4 flex items-center gap-3"
                     >
                         <div
                             class="w-8 h-8 rounded-full bg-card flex items-center justify-center text-xs font-bold text-primary border border-primary/20"
@@ -281,10 +281,10 @@
             {#each tiers as tier (tier.id)}
                 {@const tierContacts = getContactsForTier(tier.tier_number)}
                 <div
-                    class="bg-background/50 border border-slate-800 rounded-2xl overflow-hidden backdrop-blur-sm"
+                    class="bg-background/50 border border-border rounded-2xl overflow-hidden backdrop-blur-sm"
                 >
                     <div
-                        class="bg-card/30 px-6 py-3 flex justify-between items-center {tierContacts.length ? 'border-b border-slate-800' : ''}"
+                        class="bg-card/30 px-6 py-3 flex justify-between items-center {tierContacts.length ? 'border-b border-border' : ''}"
                     >
                         <div class="flex items-center gap-3">
                             <span
@@ -341,7 +341,7 @@
                     <div class="p-2 space-y-2">
                         {#each tierContacts as contact (contact.id)}
                             <div
-                                class="bg-slate-950/30 border border-slate-800/50 rounded-xl p-4 group"
+                                class="bg-card/60 border border-border/50 rounded-xl p-4 group"
                             >
                                 <div
                                     class="flex justify-between items-start mb-4"
@@ -381,7 +381,7 @@
 
                                 <!-- Individual Controls -->
                                 <div
-                                    class="grid grid-cols-2 gap-4 pt-3 border-t border-slate-800/50"
+                                    class="grid grid-cols-2 gap-4 pt-3 border-t border-border/50"
                                 >
                                     <div class="space-y-2">
                                         <label
@@ -423,7 +423,7 @@
                                                         notifyOnSafetyTimer: !contact.notify_on_safety_timer,
                                                     })}
                                                 class="text-[10px] px-2 py-1 rounded border transition-colors {contact.notify_on_safety_timer
-                                                    ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400'
+                                                    ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-600 dark:text-indigo-400'
                                                     : 'bg-card border-border text-muted-foreground'}"
                                             >
                                                 {contact.notify_on_safety_timer

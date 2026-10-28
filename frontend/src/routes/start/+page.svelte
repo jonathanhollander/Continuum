@@ -83,7 +83,7 @@
 </script>
 
 <div
-    class="surface-dark min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 relative overflow-hidden"
+    class="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 relative overflow-hidden"
 >
     <!-- Ambient Background -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">

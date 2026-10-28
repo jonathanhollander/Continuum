@@ -243,13 +243,13 @@
         <p role="status" class="rounded-xl border border-border bg-background/40 p-8 text-sm text-muted-foreground">Opening your notes…</p>
     {:else if !loadError}
     <div
-        class="flex-1 bg-background/40 border border-slate-800 rounded-2xl overflow-hidden flex shadow-2xl backdrop-blur-sm"
+        class="flex-1 bg-background/40 border border-border rounded-2xl overflow-hidden flex shadow-2xl backdrop-blur-sm"
     >
         <!-- LEFT: Contact List -->
         <div
-            class="w-1/3 border-r border-slate-800 flex flex-col bg-slate-950/30"
+            class="w-1/3 border-r border-border flex flex-col bg-card/60"
         >
-            <div class="p-4 border-b border-slate-800">
+            <div class="p-4 border-b border-border">
                 <h3
                     class="text-xs font-bold text-muted-foreground uppercase tracking-widest"
                 >
@@ -260,7 +260,7 @@
                 {#each contacts as contact}
                     <button
                         disabled={sending}
-                        class="w-full text-left p-4 hover:bg-card/50 transition-colors flex items-center gap-3 border-b border-slate-800/50 {newMessage.contact_id ===
+                        class="w-full text-left p-4 hover:bg-card/50 transition-colors flex items-center gap-3 border-b border-border/50 {newMessage.contact_id ===
                         contact.id
                             ? 'bg-primary/10 border-l-2 border-l-primary'
                             : ''}"
@@ -273,7 +273,7 @@
                         }}
                     >
                         <div
-                            class="w-10 h-10 rounded-full bg-card flex items-center justify-center text-slate-300 font-bold border border-border"
+                            class="w-10 h-10 rounded-full bg-card flex items-center justify-center text-foreground font-bold border border-border"
                         >
                             {contact.name.charAt(0)}
                         </div>
@@ -326,7 +326,7 @@
                 {@const activeTier = tierNumberFor(activeContact)}
                 <!-- Thread Header -->
                 <div
-                    class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50"
+                    class="p-4 border-b border-border flex justify-between items-center bg-muted/50"
                 >
                     <div class="font-medium text-foreground">
                         {activeContact?.name ?? "Saved contact"}
@@ -370,7 +370,7 @@
                                     ? 'bg-warning-soft border border-warning/30 text-foreground rounded-tr-2xl rounded-tl-2xl w-full text-center italic'
                                     : msg.direction === 'user_to_contact'
                                       ? 'bg-primary/20 text-foreground border border-primary/20 rounded-tr-none'
-                                      : 'bg-card text-slate-300 rounded-tl-none'}"
+                                      : 'bg-card text-foreground rounded-tl-none'}"
                             >
                                 {#if msg.system}
                                     <span
@@ -409,7 +409,7 @@
                 </div>
 
                 <!-- Composer Input -->
-                <div class="p-4 border-t border-slate-800 bg-slate-950/50">
+                <div class="p-4 border-t border-border bg-muted/50">
                     <p id="portal-note-help" class="text-xs text-muted-foreground mb-3 leading-relaxed">
                         Save a note for {activeContact?.name ?? "this person"} to read in their guardian portal when
                         their link and account access allow it. These notes appear alongside check-in status.

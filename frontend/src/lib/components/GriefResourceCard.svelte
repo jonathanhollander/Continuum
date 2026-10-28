@@ -28,17 +28,16 @@
     }: Props = $props();
 
     // Written-out classes (Tailwind only generates classes it can read in full), on the
-    // site tokens: one accent (primary) plus gold. This card sits on a dark surface in both
-    // themes, so the accent text uses the on-dark member of each family.
+    // site tokens: one accent (primary) plus gold; both follow the light/dark theme.
     const tones = {
         primary: {
-            badge: "bg-primary-on-dark/10 border-primary-on-dark/20 text-primary-on-dark",
-            action: "text-primary-on-dark",
-            glow: "hover:shadow-primary-on-dark/10",
+            badge: "bg-primary/10 border-primary/20 text-primary",
+            action: "text-primary",
+            glow: "hover:shadow-primary/10",
         },
         gold: {
-            badge: "bg-gold/10 border-gold/20 text-gold",
-            action: "text-gold",
+            badge: "bg-gold/10 border-gold/20 text-gold-text",
+            action: "text-gold-text",
             glow: "hover:shadow-gold/10",
         },
     } as const;
@@ -81,7 +80,7 @@
         target="_blank"
         rel="noopener noreferrer"
         in:fly={{ y: 20, delay, duration: 600 }}
-        class="group relative block p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-xl {tone.glow} cursor-pointer"
+        class="group relative block p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-xl {tone.glow} cursor-pointer"
     >
         <div class="flex items-start justify-between mb-4">
             <div
@@ -93,7 +92,7 @@
         </div>
 
         <h3
-            class="text-lg font-medium mb-2 group-hover:text-white transition-colors"
+            class="text-lg font-medium mb-2 group-hover:text-primary transition-colors"
         >
             {title}
         </h3>
@@ -119,7 +118,7 @@
 {:else}
     <div
         in:fly={{ y: 20, delay, duration: 600 }}
-        class="group relative p-6 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300 {type === 'guide' ? `hover:border-white/20 hover:shadow-xl ${tone.glow} cursor-pointer` : ''}"
+        class="group relative p-6 rounded-2xl bg-card border border-border transition-all duration-300 {type === 'guide' ? `hover:border-primary/30 hover:shadow-xl ${tone.glow} cursor-pointer` : ''}"
     >
         <div class="flex items-start justify-between mb-4">
             <div
@@ -140,7 +139,7 @@
         </div>
 
         <h3
-            class="text-lg font-medium mb-2 {type === 'guide' ? 'group-hover:text-white' : ''} transition-colors"
+            class="text-lg font-medium mb-2 {type === 'guide' ? 'group-hover:text-primary' : ''} transition-colors"
         >
             {title}
         </h3>

@@ -70,14 +70,14 @@
     aria-modal="true"
     aria-labelledby="guardian-dialog-title"
     use:focusTrap={{ onEscape: onclose }}
-    class="surface-dark fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
     transition:fade
 >
     <div
         class="bg-background border border-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
     >
         <div
-            class="p-4 border-b border-border flex justify-between items-center bg-slate-950/50"
+            class="p-4 border-b border-border flex justify-between items-center bg-muted/50"
         >
             <h3 id="guardian-dialog-title" class="font-bold text-foreground">
                 Choose a guardian
@@ -120,7 +120,7 @@
                             class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all {selectedContactId ===
                             contact.id
                                 ? 'bg-primary/10 border-primary/50'
-                                : 'bg-card/50 border-border hover:border-slate-600'}"
+                                : 'bg-card/50 border-border hover:border-muted-foreground/40'}"
                         >
                             <input
                                 type="radio"
@@ -130,7 +130,7 @@
                                 class="sr-only"
                             />
                             <div
-                                class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300"
+                                class="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-foreground"
                             >
                                 {(contact.name ?? "").charAt(0)}
                             </div>
@@ -175,7 +175,7 @@
                 <p class="mt-4 text-sm text-warning" role="alert">{error}</p>
             {/if}
 
-            <div class="mt-4 pt-4 border-t border-slate-800 text-center">
+            <div class="mt-4 pt-4 border-t border-border text-center">
                 <a
                     href="/modules/contacts"
                     class="text-xs text-muted-foreground hover:text-foreground"

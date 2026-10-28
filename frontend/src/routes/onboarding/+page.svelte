@@ -142,7 +142,7 @@
     <title>Welcome to Continuum</title>
 </svelte:head>
 
-<div class="surface-dark min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
+<div class="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
     <!-- Ambient Background -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div

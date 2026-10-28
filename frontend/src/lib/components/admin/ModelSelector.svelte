@@ -74,7 +74,7 @@
     <p class="text-sm text-muted-foreground" aria-live="polite">{value ? 1 : 0} selected · {filtered.length} of {models.length} catalogue models shown</p>
     <div class="max-h-80 overflow-auto rounded-lg border border-border">
         <table class="w-full text-sm text-left">
-            <thead class="sticky top-0 bg-slate-900"><tr><th class="p-3">Choose model</th><th class="p-3">Provider</th><th class="p-3">Context / output</th><th class="p-3">Input / output per 1M</th></tr></thead>
+            <thead class="sticky top-0 bg-card"><tr><th class="p-3">Choose model</th><th class="p-3">Provider</th><th class="p-3">Context / output</th><th class="p-3">Input / output per 1M</th></tr></thead>
             <tbody>{#each filtered as model (model.id)}
                 <tr class="border-t border-border" data-model-id={model.id}>
                     <td class="p-3"><label class="flex items-start gap-3 cursor-pointer"><input class="mt-1" type="radio" name={uid} checked={value === model.id} onchange={() => value = model.id} aria-label={model.id} /><span><strong>{model.name || model.id}</strong><code class="block text-xs break-all text-muted-foreground">{model.id}</code></span></label></td>

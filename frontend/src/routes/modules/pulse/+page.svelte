@@ -184,7 +184,7 @@
             ></div>
 
             <button
-                class="relative w-48 h-48 md:w-64 md:h-64 rounded-full bg-background border-2 border-slate-800 shadow-[0_0_50px_-10px_color-mix(in_srgb,var(--color-primary)_20%,transparent)] flex flex-col items-center justify-center transition-all duration-700 active:scale-95 group-hover:border-primary/40"
+                class="relative w-48 h-48 md:w-64 md:h-64 rounded-full bg-background border-2 border-border shadow-[0_0_50px_-10px_color-mix(in_srgb,var(--color-primary)_20%,transparent)] flex flex-col items-center justify-center transition-all duration-700 active:scale-95 group-hover:border-primary/40"
             >
                 {#if localStatus.checkingIn}
                     <Loader2 class="w-12 h-12 text-primary animate-spin" />
@@ -351,7 +351,7 @@
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- SAFETY TIMER CARD (Fidelity Update) -->
         <div
-            class="bg-slate-950/20 border border-slate-800/50 rounded-[2rem] p-8 backdrop-blur-md relative overflow-hidden group hover:border-primary/30 transition-all"
+            class="bg-card/60 border border-border/50 rounded-[2rem] p-8 backdrop-blur-md relative overflow-hidden group hover:border-primary/30 transition-all"
         >
             <div
                 class="absolute -right-4 -top-4 opacity-10 group-hover:opacity-20 transition-opacity"
@@ -402,7 +402,7 @@
                     <select
                         aria-label="Purpose"
                         bind:value={localStatus.purpose}
-                        class="w-full bg-background border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-300"
+                        class="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground"
                     >
                         <option>Walking home</option>
                         <option>Meeting someone new</option>
@@ -447,7 +447,7 @@
                 </p>
                 <button
                     onclick={() => (localStatus.showSafetyConfig = true)}
-                    class="w-full bg-background border border-slate-800 text-slate-300 py-3 rounded-2xl text-xs font-bold hover:border-primary/50 hover:text-foreground transition-all"
+                    class="w-full bg-background border border-border text-foreground py-3 rounded-2xl text-xs font-bold hover:border-primary/50 hover:text-foreground transition-all"
                 >
                     Begin a safety timer
                 </button>
@@ -457,12 +457,12 @@
         <!-- MESSAGES HUD -->
         <a
             href="/modules/pulse/messages"
-            class="bg-slate-950/40 border border-slate-800 rounded-[2rem] p-8 hover:border-primary/30 transition-all flex flex-col justify-between group"
+            class="bg-card/60 border border-border rounded-[2rem] p-8 hover:border-primary/30 transition-all flex flex-col justify-between group"
         >
             <div>
                 <div class="flex items-center gap-3 mb-4">
                     <div
-                        class="w-10 h-10 rounded-full bg-background flex items-center justify-center border border-slate-800"
+                        class="w-10 h-10 rounded-full bg-background flex items-center justify-center border border-border"
                     >
                         <Activity
                             class="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors"
@@ -487,12 +487,12 @@
         <!-- TRANSPARENCY HUB -->
         <a
             href="/modules/pulse/transparency"
-            class="bg-slate-950/40 border border-slate-800 rounded-[2rem] p-8 hover:border-warning/30 transition-all flex flex-col justify-between group"
+            class="bg-card/60 border border-border rounded-[2rem] p-8 hover:border-warning/30 transition-all flex flex-col justify-between group"
         >
             <div>
                 <div class="flex items-center gap-3 mb-4">
                     <div
-                        class="w-10 h-10 rounded-full bg-background flex items-center justify-center border border-slate-800"
+                        class="w-10 h-10 rounded-full bg-background flex items-center justify-center border border-border"
                     >
                         <Shield
                             class="w-5 h-5 text-muted-foreground group-hover:text-warning transition-colors"
@@ -517,7 +517,7 @@
 
     <!-- ECOSYSTEM SCORE integration simplified -->
     <div
-        class="bg-background/40 border border-slate-800/50 rounded-[2.5rem] p-8 md:p-12 text-center backdrop-blur-sm relative overflow-hidden"
+        class="bg-background/40 border border-border/50 rounded-[2.5rem] p-8 md:p-12 text-center backdrop-blur-sm relative overflow-hidden"
     >
         <div
             class="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent"

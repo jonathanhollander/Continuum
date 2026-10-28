@@ -10,62 +10,62 @@
     <title>Treasure Hunt - Continuum</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 p-6 md:p-10">
+<div class="min-h-screen bg-background p-6 md:p-10">
     <div class="max-w-3xl mx-auto">
         <!-- Header -->
         <div class="text-center mb-12">
-            <div class="inline-flex p-5 rounded-2xl bg-amber-500/10 text-amber-400 mb-6 border border-amber-500/20">
+            <div class="inline-flex p-5 rounded-2xl bg-warning-soft text-warning mb-6 border border-warning/20">
                 <MapPin size={48} />
             </div>
-            <h1 class="text-4xl md:text-5xl font-serif font-bold text-white mb-4">
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
                 Treasure Hunt
             </h1>
-            <p class="text-xl text-slate-400 max-w-2xl mx-auto">
+            <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Discover unclaimed money and property that may belong to you or your loved ones.
             </p>
         </div>
 
         <!-- Main Card -->
-        <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 mb-8">
-            <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                <Search size={24} class="text-amber-400" />
+        <div class="bg-card border border-border rounded-2xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-foreground mb-4 flex items-center gap-3">
+                <Search size={24} class="text-warning" />
                 What is Unclaimed Property?
             </h2>
-            <p class="text-slate-300 leading-relaxed mb-6">
+            <p class="text-foreground/90 leading-relaxed mb-6">
                 Unclaimed property searches may show records such as:
             </p>
 
             <div class="grid md:grid-cols-2 gap-4 mb-6">
-                <div class="bg-slate-900/50 rounded-xl p-4 flex items-start gap-3">
-                    <DollarSign size={20} class="text-emerald-400 mt-1 shrink-0" />
+                <div class="bg-muted rounded-xl p-4 flex items-start gap-3">
+                    <DollarSign size={20} class="text-success mt-1 shrink-0" />
                     <div>
-                        <h3 class="font-semibold text-white">Financial Assets</h3>
-                        <p class="text-sm text-slate-400">Bank accounts, stocks, dividends, uncashed checks, insurance payouts</p>
+                        <h3 class="font-semibold text-foreground">Financial Assets</h3>
+                        <p class="text-sm text-muted-foreground">Bank accounts, stocks, dividends, uncashed checks, insurance payouts</p>
                     </div>
                 </div>
-                <div class="bg-slate-900/50 rounded-xl p-4 flex items-start gap-3">
-                    <Building2 size={20} class="text-blue-400 mt-1 shrink-0" />
+                <div class="bg-muted rounded-xl p-4 flex items-start gap-3">
+                    <Building2 size={20} class="text-info mt-1 shrink-0" />
                     <div>
-                        <h3 class="font-semibold text-white">Property & Deposits</h3>
-                        <p class="text-sm text-slate-400">Safe deposit boxes, security deposits, utility refunds, tax refunds</p>
+                        <h3 class="font-semibold text-foreground">Property & Deposits</h3>
+                        <p class="text-sm text-muted-foreground">Safe deposit boxes, security deposits, utility refunds, tax refunds</p>
                     </div>
                 </div>
             </div>
 
-            <p class="text-slate-300 leading-relaxed">
+            <p class="text-foreground/90 leading-relaxed">
                 The National Association of Unclaimed Property Administrators (NAUPA) maintains
-                <strong class="text-white">unclaimed.org</strong>, a free resource to search for
+                <strong class="text-foreground">unclaimed.org</strong>, a free resource to search for
                 unclaimed property across all U.S. states and Canadian provinces.
             </p>
         </div>
 
         <!-- Why This Matters Card -->
-        <div class="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-8 mb-8">
-            <h2 class="text-xl font-bold text-white mb-3 flex items-center gap-3">
-                <AlertCircle size={20} class="text-amber-400" />
+        <div class="bg-warning-soft border border-warning/20 rounded-2xl p-8 mb-8">
+            <h2 class="text-xl font-bold text-foreground mb-3 flex items-center gap-3">
+                <AlertCircle size={20} class="text-warning" />
                 Why This Matters for Estate Planning
             </h2>
-            <p class="text-slate-300 leading-relaxed">
+            <p class="text-foreground/90 leading-relaxed">
                 Search for possible matches under your name or a deceased relative's name.
                 Check the administrator's record and claim requirements before treating a match
                 as an asset. Keep the source and any reference number with your financial notes.
@@ -81,12 +81,12 @@
                 <span>Search for Unclaimed Property</span>
                 <ExternalLink size={20} class="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </button>
-            <p class="text-slate-400 text-sm mt-4">
+            <p class="text-muted-foreground text-sm mt-4">
                 Opens unclaimed.org in a new tab to find the relevant property administrator.
             </p>
             <a
                 href="/modules/financial-accounts"
-                class="inline-flex items-center gap-2 mt-6 text-amber-400 hover:text-amber-300 font-semibold"
+                class="inline-flex items-center gap-2 mt-6 text-warning hover:text-warning/80 font-semibold"
             >
                 Verified a record? Add it to your Financial Accounts
                 <ArrowRight size={18} />
@@ -94,23 +94,23 @@
         </div>
 
         <!-- Tips Section -->
-        <div class="mt-12 bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
-            <h3 class="font-semibold text-white mb-3">Search Tips</h3>
-            <ul class="space-y-2 text-sm text-slate-400">
+        <div class="mt-12 bg-card border border-border rounded-xl p-6">
+            <h3 class="font-semibold text-foreground mb-3">Search Tips</h3>
+            <ul class="space-y-2 text-sm text-muted-foreground">
                 <li class="flex items-start gap-2">
-                    <span class="text-amber-400 mt-1">1.</span>
+                    <span class="text-warning mt-1">1.</span>
                     <span>Search using your current name and any previous names (maiden name, etc.)</span>
                 </li>
                 <li class="flex items-start gap-2">
-                    <span class="text-amber-400 mt-1">2.</span>
+                    <span class="text-warning mt-1">2.</span>
                     <span>Check all states where you've lived, worked, or done business</span>
                 </li>
                 <li class="flex items-start gap-2">
-                    <span class="text-amber-400 mt-1">3.</span>
+                    <span class="text-warning mt-1">3.</span>
                     <span>Search for deceased relatives, then check who is authorized to make a claim</span>
                 </li>
                 <li class="flex items-start gap-2">
-                    <span class="text-amber-400 mt-1">4.</span>
+                    <span class="text-warning mt-1">4.</span>
                     <span>Use the administrator’s official instructions to check evidence and any claim requirements</span>
                 </li>
             </ul>

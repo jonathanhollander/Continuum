@@ -16,7 +16,7 @@
         >
     </div>
 
-    <div class="bg-background/30 p-6 rounded-2xl border border-slate-800">
+    <div class="bg-background/30 p-6 rounded-2xl border border-border">
         <p class="text-muted-foreground mb-6 max-w-2xl">
             These people are assigned to Pulse alert tiers. An explicit Pulse tier takes precedence;
             otherwise Pulse uses the call order in Family &amp; Contacts (Tier 1, 2 or 3).
