@@ -1,8 +1,17 @@
 # Continuum active implementation handoff
 
-**Last Updated:** 2026-10-27 16:15 EST
+**Last Updated:** 2026-10-30 14:25 EST
 
 > The recovery plan is complete. Open work is [PUNCHLIST.md](PUNCHLIST.md). Private mode ended with `f9d16c9` (signups stay closed); the private-mode notes below are historical.
+
+## Current state, 2026-10-30
+
+- **Open work** is [PUNCHLIST.md](PUNCHLIST.md). Every PL item and D3–D7 are done and live. Still open: D1 caller notes on the recipient page (owner choosing), D2 email provider (owner sets `RESEND_API_KEY` and verifies continuum.estate in Resend), D8 OpenRouter key rotation, and deleting the 10 January branches (bundled at `~/Backups/Continuum/january-branches-2026-10-27.bundle`).
+- **D3:** signed-in pages follow the light/dark setting (`e6a875b`). Login, signup, marketing and the token pages stay dark.
+- **D5:** `/` answers 301 to `/marketing2` (backend `serve_root` and `routes/+page.ts`), and the unused first-name step is gone (`b4fcee8`). The Hybrid images were reverted on owner correction (`6ad4df0`). Add, replace or restyle images and icons only on the owner's explicit approval of those specific assets. The rejected mockups are kept as history in [mockups/](mockups/README.md).
+- **Site:** public, signups closed (`private_mode:false, signup_enabled:false`). Loops and crons stay paused until the owner restarts them.
+
+Everything below this point is historical.
 
 The only board is [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md). This checkpoint supersedes earlier operational snapshots; Git retains them.
 
@@ -10,7 +19,7 @@ The only board is [RECOVERY_EXECUTION_PLAN.md](RECOVERY_EXECUTION_PLAN.md). This
 
 Improve every page's useful content and align each AI interaction with the actual question/action on screen. Draft requests produce usable proposed text from supplied answers, not generic encouragement or repeated questions. Keep all model-facing instructions/context/settings Admin-visible, use Fireworks DeepSeek V4.1 Flash as the shared default, and attribute all calls to Continuum. Keep the implementation small and preserve existing capabilities.
 
-**The site remains private to owner user38. Do not unset PRIVATE_ACCESS_USER_ID, enable signups, or reopen token routes on completion or cleanup.** Existing owner session works. No paid inference or real correspondence has been used for this work.
+**(Historical, superseded by `f9d16c9`: the site was then private to owner user38.)** Existing owner session works. No paid inference or real correspondence has been used for this work.
 
 ## Latest accepted followups, 2026-10-27
 
